@@ -141,6 +141,11 @@ dialog#sheet::backdrop{background:rgba(20,30,25,.45)}
 .emo-row{display:flex;flex-wrap:wrap;gap:6px}
 .emo-in{width:64px;text-align:center;font-size:1.4rem!important;padding:6px!important}
 .emo{width:44px;height:44px;border:0;border-radius:12px;background:var(--sky);font-size:1.4rem}
+.emo-row{align-items:center}
+.emo-box{max-height:230px;overflow-y:auto;border:2px solid var(--line);border-radius:14px;padding:8px;margin-top:6px}
+.emo-grp{margin-bottom:8px}
+.emo-grp small{display:block;color:var(--muted);font-weight:700;margin:0 0 4px 2px}
+.emo.on{box-shadow:inset 0 0 0 3px var(--leaf)}
 .seg{display:flex;flex-wrap:wrap;gap:6px}
 .seg button{border:0;border-radius:999px;padding:8px 12px;background:var(--sky);font-weight:400}
 .seg button.on{background:var(--leaf);color:#fff;font-weight:700}
@@ -335,8 +340,28 @@ const MOMENTS = [["matin", "Le matin", "Matin", "🌅"], ["midi", "Le midi", "Mi
 const momentLabel = k => (MOMENTS.find(m => m[0] === k) || MOMENTS[0])[2];
 const PLACES = ["Chambre", "Salle de bain", "Cuisine", "Salon", "Entrée", "Dehors", "École"];
 const COLORS = ["#2E8B57", "#E8484F", "#3D7BD9", "#F29E1F", "#8E5BD0", "#1FA5A0"];
-const EMO_R = ["🛏️", "👕", "🪥", "🧼", "🥣", "👟", "🎒", "🧸", "🛁", "📖", "✏️", "🍽️", "🧺", "🌙", "🪴", "🐟", "💇", "🎹", "⚽", "🚽"];
-const EMO_W = ["🎁", "🍦", "🌳", "🎬", "📖", "🎲", "🍕", "🏊", "🎨", "🧁", "🚲", "🧸", "⏰", "🎮"];
+const EMO_R = [
+  ["Hygiène", ["🪥", "🧼", "🛁", "🚿", "🧴", "💇", "🚽", "🧻", "🤧", "✂️", "💅", "🦷"]],
+  ["Habillage", ["👕", "👖", "🧦", "👟", "🧥", "🧢", "🧤", "🩳", "👗", "🩴", "🥾", "🎽"]],
+  ["Repas", ["🥣", "🍽️", "🥛", "💧", "🍎", "🍌", "🥕", "🥦", "🥪", "🍳", "🥄", "🧃"]],
+  ["Rangement", ["🛏️", "🧸", "🧺", "🧹", "🧽", "🗑️", "📦", "🪣", "🧦", "👞", "🪑", "🚪"]],
+  ["École", ["🎒", "✏️", "📚", "📖", "🖍️", "📝", "🧮", "🔤", "🔢", "📏", "🎹", "🎻"]],
+  ["Maison et animaux", ["🪴", "🌱", "🐟", "🐶", "🐱", "🐹", "🐰", "🐦", "🔑", "📬", "🧑‍🍳", "🛒"]],
+  ["Activités", ["⚽", "🚲", "🏃", "🤸", "🧘", "🏊", "🎨", "🧩", "🎵", "🥁", "🏀", "🛴"]],
+  ["Soir et sommeil", ["🌙", "😴", "🛌", "⏰", "🦉", "⭐", "📖", "🧸", "💤", "🕯️", "🌜", "🛋️"]],
+  ["Gentillesse", ["😊", "🤗", "💛", "🙋", "🤝", "👋", "💬", "🙌", "🫶", "👂", "🎁", "🌈"]]
+];
+const EMO_W = [
+  ["Gourmandises", ["🍦", "🍫", "🍭", "🍬", "🧁", "🍰", "🍪", "🍩", "🍿", "🥞", "🍕", "🍔"]],
+  ["Moments partagés", ["🎲", "🧩", "🎨", "🖍️", "📖", "🎬", "📺", "🎮", "🎤", "🎵", "🏕️", "🛁"]],
+  ["Dehors", ["🌳", "🧺", "🛝", "🏞️", "🏖️", "🚲", "🛴", "⚽", "🏀", "🪁", "🦆", "🌻"]],
+  ["Sorties", ["🏊", "🎢", "🎡", "🎠", "🐐", "🐠", "🦁", "🦒", "🏛️", "📚", "🎪", "🎟️"]],
+  ["Grands projets", ["🎁", "🧸", "🚲", "👑", "🎉", "🎈", "🚂", "✈️", "🚗", "🏰", "🎂", "🌟"]],
+  ["Petits privilèges", ["⏰", "🌙", "🍽️", "🎧", "🎵", "📱", "🛋️", "👕", "🥤", "⭐", "🏆", "💌"]]
+];
+function emoPicker(target, groups) {
+  return `<div class="emo-box">${groups.map(([lbl, list]) => `<div class="emo-grp"><small>${lbl}</small><div class="emo-row">${[...new Set(list)].map(e => `<button type="button" class="emo" data-act="pickEmoji" data-target="${target}" data-e="${e}" aria-label="${e}">${e}</button>`).join("")}</div></div>`).join("")}</div>`;
+}
 const EMO_K = ["🧒", "👧", "👦", "👶", "🐻", "🦊", "🐰", "🦁", "🐼", "🦄", "🐸", "🐯", "🐱", "🐶"];
 function fmtDay(s) { const t = todayISO(); if (s === t) return "Aujourd'hui"; if (s === addDays(t, -1)) return "Hier"; return DAYS_LONG[dowOf(s) - 1] + " " + parseISO(s).getDate(); }
 function fmtDate(ts) { const d = new Date(ts); return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" }); }
@@ -368,7 +393,7 @@ const S = {
   screen: "loading", tab: "today", day: todayISO(), authMode: "login",
   session: null, family: null, me: null, children: [], routines: [], rewards: [], completions: [], redemptions: [],
   stats: {}, members: [], devices: [], currentChild: null, tip: null, offline: false,
-  penalties: [], pevents: [], badges: {}, autoValidate: true, pauses: [], gardens: {},
+  penalties: [], pevents: [], badges: {}, autoValidate: true, pauses: [], gardens: {}, oneoffTpl: [],
   cs: null, ctab: "today", form: {}
 };
 
@@ -509,13 +534,15 @@ function gardenNow(gd) {
   const pausedToday = (gd.pauses || []).some(p => p.start_day <= t && p.end_day >= t);
   const prior = (gd.flowers || []).filter(f => f.season === seasonOfISO(gd.period_end) && f.garden_year === gardenYearOfISO(gd.period_end)).length;
   const list = SEASON_SP[seasonOfISO(gd.period_end)], species = list[prior % list.length];
-  return { good, dayIdx, stage: Math.min(12, good), species, pausedToday, end: gd.period_end, days };
+  const len = gd.period_len || 14;
+  // Croissance adaptée à la durée : une première fleur plus courte pousse plus vite
+  return { good, dayIdx, len, stage: Math.min(12, Math.floor(good * 14 / len)), species, pausedToday, end: gd.period_end, days, waiting: dayIdx < 1, start: gd.period_start };
 }
 function seasonOfISO(s) { const md = s.slice(5, 7) + s.slice(8, 10); return md >= "0320" && md < "0621" ? "printemps" : md >= "0621" && md < "0923" ? "ete" : md >= "0923" && md < "1221" ? "automne" : "hiver"; }
 function gardenYearOfISO(s) { const y = +s.slice(0, 4), md = s.slice(5, 7) + s.slice(8, 10); return md >= "0923" ? `${y}-${y + 1}` : `${y - 1}-${y}`; }
 function dots14(gd) {
   const map = Object.fromEntries((gd.days || []).map(d => [d.day, d])); let h = "";
-  for (let i = 0; i < 14; i++) { const day = addDays(gd.period_start, i), d = map[day];
+  for (let i = 0; i < (gd.period_len || 14); i++) { const day = addDays(gd.period_start, i), d = map[day];
     const cls = day > gd.today ? "future" : !d ? "future" : (d.paused || d.due === 0) ? "neutral" : d.good ? "good" : day === gd.today ? "today" : "miss";
     h += `<span class="d14 ${cls} ${day === gd.today ? "today" : ""}" title="${fmtDay(day)}"></span>`; }
   return `<div class="days14" aria-label="Jours de la quinzaine">${h}</div>`;
@@ -523,10 +550,26 @@ function dots14(gd) {
 const fmtLong = s => parseISO(s).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
 
 /* ================= Calculs ================= */
-function dueOn(routines, childId, day) {
+function dueOn(routines, childId, day, comps) {
   const dw = dowOf(day);
-  return routines.filter(r => r.child_id === childId && r.active !== false && (r.days || []).includes(dw) && String(r.created_at || "").slice(0, 10) <= day);
+  return routines.filter(r => {
+    if (r.child_id !== childId || r.active === false) return false;
+    if (r.kind === "oneoff") {
+      if (!(r.start_day <= day && day <= r.end_day)) return false;
+      return !(comps || []).some(c => c.routine_id === r.id && c.day !== day);   // déjà faite un autre jour
+    }
+    return (r.days || []).includes(dw) && String(r.created_at || "").slice(0, 10) <= day;
+  });
 }
+const isOneoff = r => r.kind === "oneoff";
+const oneoffNote = r => r.start_day === r.end_day ? "Exceptionnelle" : `Exceptionnelle, avant ${fmtLong(r.end_day)}`;
+const TPL_X = [
+  { t: "Préparer sa valise", e: "🧳", s: 2, m: "journee" }, { t: "Ranger sa chambre à fond", e: "🧹", s: 3, m: "journee" },
+  { t: "Préparer son sac de piscine", e: "🏊", s: 1, m: "matin" }, { t: "Mettre la table pour les invités", e: "🍽️", s: 2, m: "soir" },
+  { t: "Aider à porter les courses", e: "🛒", s: 1, m: "journee" }, { t: "Aider à cuisiner", e: "🧑‍🍳", s: 2, m: "soir" },
+  { t: "Trier ses jouets à donner", e: "🧸", s: 3, m: "journee" }, { t: "Faire une carte d'anniversaire", e: "🎂", s: 2, m: "journee" },
+  { t: "Arroser le jardin", e: "🪴", s: 1, m: "soir" }, { t: "Ranger le coffre de la voiture", e: "🚗", s: 1, m: "journee" }
+];
 const BADGES = [
   { k: "first", e: "🌱", n: "Première routine", ok: s => s.done >= 1 },
   { k: "r10", e: "🌿", n: "10 routines", ok: s => s.done >= 10 },
@@ -723,12 +766,24 @@ function renderPair() {
 }
 function renderOnboard() {
   app.innerHTML = `<main class="wrap auth"><div class="auth-hero">${plantSVG(1)}<h1>Bienvenue</h1><p>Crée l'espace de ta famille, ou rejoins celui de l'autre parent.</p></div>
-    <form class="card" novalidate><h2>Créer ma famille</h2><label class="f">Nom de la famille<input id="o-name" placeholder="Famille Martin" maxlength="40"></label>
+    <form class="card" novalidate><h2>Créer ma famille</h2><label class="f">Nom de la famille<input id="o-name" placeholder="Famille Martin" maxlength="40"></label><label class="f">Je suis<select id="o-rel">${RELATIONS.map(r => `<option>${r}</option>`).join("")}</select></label>
     <button class="btn wide" data-act="createFamily">Créer</button></form>
     <form class="card" novalidate><h2>Rejoindre une famille</h2><label class="f">Code d'invitation<input id="o-code" class="pin" maxlength="6" autocapitalize="characters" autocomplete="off"></label>
     <button class="btn ghost wide" data-act="joinFamily">Rejoindre</button></form>
     <p class="center"><button class="link" data-act="logout">Se déconnecter</button></p></main>`;
 }
+
+/* ---------- Membres ---------- */
+const RELATIONS = ["Papa", "Maman", "Papy", "Mamie", "Tonton", "Tata", "Parrain", "Marraine", "Nounou"];
+const isParent = () => !S.me || S.me.role !== "helper";
+function memberLabel(uid) { const m = S.members.find(x => x.user_id === uid); return m ? (m.relation || m.display_name || "Un parent") : "Un membre"; }
+function whoValidated(x) { if (!x.validated_at) return ""; return x.validated_by ? memberLabel(x.validated_by) : "validée automatiquement"; }
+function relationField(cur, idp = "rel") {
+  const known = RELATIONS.includes(cur);
+  return `<label class="f">Lien avec les enfants<select id="${idp}-sel">${RELATIONS.map(r => `<option ${r === cur ? "selected" : ""}>${r}</option>`).join("")}<option value="__autre" ${cur && !known ? "selected" : ""}>Autre…</option></select></label>
+    <label class="f">Libellé personnalisé (facultatif)<input id="${idp}-txt" maxlength="40" placeholder="Mamie Josette, Tonton Karim…" value="${cur && !known ? esc(cur) : ""}"></label>`;
+}
+const readRelation = (idp = "rel") => ($("#" + idp + "-txt").value.trim() || ($("#" + idp + "-sel").value === "__autre" ? "" : $("#" + idp + "-sel").value)) || null;
 
 /* ---------- Parent ---------- */
 const curChild = () => S.children.find(c => c.id === S.currentChild) || S.children[0];
@@ -739,7 +794,7 @@ function chips() {
   return `<div class="chips" role="tablist">${S.children.map(c => `<button role="tab" aria-selected="${c.id === S.currentChild}" class="chip ${c.id === S.currentChild ? "on" : ""}" style="--c:${esc(c.color)}" data-act="pickChild" data-id="${c.id}">${esc(c.emoji)} ${esc(c.name)}</button>`).join("")}</div>`;
 }
 function renderParent() {
-  const tabs = [["today", "Aujourd'hui", "☀️"], ["routines", "Routines", "📋"], ["rewards", "Récompenses", "🎁"], ["family", "Famille", "🏡"]];
+  const tabs = [["today", "Aujourd'hui", "☀️"], ["routines", "Routines", "📋"], ["rewards", "Récompenses", "🎁"], ["family", "Famille", "🏡"]].filter(t => isParent() || t[0] !== "routines");
   let body;
   if (!S.children.length && S.tab !== "family") body = `<section class="card center">${plantSVG(0)}<h1>On commence ?</h1><p>Ajoute ton premier enfant. Tu pourras ensuite choisir ses routines parmi des modèles.</p><button class="btn" data-act="newChild">Ajouter un enfant</button></section>`;
   else body = { today: pToday, routines: pRoutines, rewards: pRewards, family: pFamily }[S.tab]();
@@ -751,7 +806,7 @@ function rowP(c, r, day, v) {
   const k = r.id + "|" + day, d = v.done.has(k), val = v.valid.has(k);
   return `<li><button class="rt ${val ? "done" : d ? "pending" : ""}" data-act="pToggle" data-child="${c.id}" data-id="${r.id}" aria-pressed="${d}">
     <span class="rt-emo" aria-hidden="true">${esc(r.emoji)}</span>
-    <span class="rt-txt"><b>${esc(r.title)}</b><small>${momentLabel(r.moment)}${r.is_bonus ? ", bonus" : ""}${d && !val ? ", en attente de validation" : ""}</small></span>
+    <span class="rt-txt"><b>${esc(r.title)}</b><small>${isOneoff(r) ? "⭐ " + oneoffNote(r) + ", " : ""}${momentLabel(r.moment)}${r.is_bonus ? ", bonus" : ""}${d && !val ? ", en attente de validation" : ""}${val ? (() => { const x = S.completions.find(y => y.routine_id === r.id && y.day === day); return x ? ", ✓ " + esc(whoValidated(x)) : ""; })() : ""}</small></span>
     <span class="rt-stars">+${r.stars} ⭐</span><span class="pot" aria-hidden="true">${val ? "🌱" : d ? "⏳" : ""}</span></button></li>`;
 }
 function pendingBlock() {
@@ -761,7 +816,7 @@ function pendingBlock() {
     <ul class="vlist">${pend.map(x => {
       const r = S.routines.find(y => y.id === x.routine_id) || { title: "Routine supprimée", emoji: "⭐", stars: x.stars };
       const c = S.children.find(y => y.id === x.child_id) || { name: "" };
-      return `<li><span class="rt-emo" aria-hidden="true">${esc(r.emoji)}</span><span class="grow"><b>${esc(r.title)}</b><small>${esc(c.name)}, ${fmtDay(x.day).toLowerCase()}, +${x.stars} ⭐${x.source === "timer" ? ", défi chrono réussi" : ""}</small></span>
+      return `<li><span class="rt-emo" aria-hidden="true">${esc(r.emoji)}</span><span class="grow"><b>${esc(r.title)}</b><small>${esc(c.name)}, ${fmtDay(x.day).toLowerCase()}, +${x.stars} ⭐${x.source === "timer" ? ", défi chrono réussi" : ""}, cochée par ${x.created_by ? esc(memberLabel(x.created_by)) : esc(c.name)}</small></span>
         <button class="vbtn no" data-act="refuseOne" data-id="${x.routine_id}" data-day="${x.day}" aria-label="Refuser">✕</button>
         <button class="vbtn yes" data-act="validateOne" data-id="${x.routine_id}" data-day="${x.day}" aria-label="Valider">✓</button></li>`;
     }).join("")}</ul>
@@ -772,21 +827,25 @@ function pToday() {
   const nav = `<div class="daynav"><button data-act="dayPrev" aria-label="Jour précédent" ${day <= addDays(t, -6) ? "disabled" : ""}>‹</button><h1>${fmtDay(day)}</h1><button data-act="dayNext" aria-label="Jour suivant" ${day >= t ? "disabled" : ""}>›</button></div>`;
   const tip = S.tip && day === t ? `<aside class="tip"><span aria-hidden="true">💡</span><p>${esc(S.tip)}</p></aside>` : "";
   const blocks = S.children.map(c => {
-    const v = viewFor(c), due = dueOn(S.routines, c.id, day);
+    const v = viewFor(c), due = dueOn(S.routines, c.id, day, S.completions);
     const main = due.filter(r => !r.is_bonus), bonus = due.filter(r => r.is_bonus);
     const nd = main.filter(r => v.done.has(r.id + "|" + day)).length;
     return `<section class="kid" style="--c:${esc(c.color)}">
       <div class="kid-head"><button class="kid-plant" data-act="showGarden" data-id="${c.id}" aria-label="Voir le jardin de ${esc(c.name)}" style="border:0;background:none;padding:0">${(() => { const n = gardenNow(S.gardens[c.id]); return n ? stageSVG(n.stage, n.species, c.color) : plantSVG(0, c.color); })()}</button>
-        <div><h2>${esc(c.emoji)} ${esc(c.name)}</h2><p class="meta"><span>⭐ ${v.balance} à dépenser</span>${(() => { const n = gardenNow(S.gardens[c.id]); return n ? `<span>🌱 Jour ${n.dayIdx}/14, ${n.good} bonne${n.good > 1 ? "s" : ""} journée${n.good > 1 ? "s" : ""}</span>` : ""; })()}${v.current > 1 ? `<span>🔥 ${v.current} de suite</span>` : ""}</p></div>
+        <div><h2>${esc(c.emoji)} ${esc(c.name)}</h2><p class="meta"><span>⭐ ${v.balance} à dépenser</span>${(() => { const n = gardenNow(S.gardens[c.id]); return !n ? "" : n.waiting ? `<span>🌱 Première fleur à partir de ${fmtLong(n.start)}</span>` : `<span>🌱 Jour ${n.dayIdx}/${n.len}, ${n.good} bonne${n.good > 1 ? "s" : ""} journée${n.good > 1 ? "s" : ""}</span>`; })()}${v.current > 1 ? `<span>🔥 ${v.current} de suite</span>` : ""}</p></div>
         <div class="ring" style="--p:${main.length ? Math.round(nd / main.length * 100) : 0}" aria-label="${nd} routines faites sur ${main.length}"><span>${nd}/${main.length}</span></div></div>
-      ${due.length ? `<ul class="rlist">${[...main, ...bonus].map(r => rowP(c, r, day, v)).join("")}</ul>`
-        : `<p class="empty">Rien de prévu ce jour-là. <button class="link" data-act="tab" data-tab="routines" data-child="${c.id}">Ajouter des routines</button></p>`}
+      ${due.length ? `<ul class="rlist">${[...due.filter(isOneoff), ...main.filter(r => !isOneoff(r)), ...bonus.filter(r => !isOneoff(r))].map(r => rowP(c, r, day, v)).join("")}</ul>`
+        : `<p class="empty">Rien de prévu ce jour-là.${isParent() ? ` <button class="link" data-act="tab" data-tab="routines" data-child="${c.id}">Ajouter des routines</button>` : ""}</p>`}
+      ${day === t ? `<div class="actions" style="margin:10px 0 0"><button class="btn sm ghost" data-act="newOneoff" data-child="${c.id}">+ Routine exceptionnelle</button></div>` : ""}
     </section>`;
   }).join("");
   return nav + (day === t ? pendingBlock() : "") + tip + blocks;
 }
 function pRoutines() {
-  const c = curChild(); const list = S.routines.filter(r => r.child_id === c.id);
+  const c = curChild(), t0 = todayISO(); const list = S.routines.filter(r => r.child_id === c.id && !isOneoff(r));
+  const oneoffs = S.routines.filter(r => r.child_id === c.id && isOneoff(r) && r.end_day >= t0).sort((a, b) => a.start_day < b.start_day ? -1 : 1);
+  const extra = `<h3 class="grp">⭐ Exceptionnelles en cours ou à venir</h3>${oneoffs.length ? `<ul class="hist">${oneoffs.map(r => `<li><span>${esc(r.emoji)} ${esc(r.title)}</span><span class="muted">${r.start_day === r.end_day ? fmtDate(r.start_day) : "avant le " + fmtDate(r.end_day)}${r.is_bonus ? ", bonus" : ", obligatoire"}</span><button class="link" data-act="delOneoff" data-id="${r.id}">Supprimer</button></li>`).join("")}</ul>` : `<p class="muted">Aucune.</p>`}
+    <div class="actions"><button class="btn ghost" data-act="newOneoff" data-child="${c.id}">+ Routine exceptionnelle</button><button class="btn ghost" data-act="manageOneoffTpl">Gérer les modèles</button></div>`;
   const groups = MOMENTS.map(([k, l, , e]) => {
     const rs = list.filter(r => r.moment === k); if (!rs.length) return "";
     return `<h3 class="grp">${e} ${l}</h3><ul class="rlist">${rs.map(r => `<li><button class="rt" data-act="editRoutine" data-id="${r.id}">
@@ -795,7 +854,7 @@ function pRoutines() {
       <span class="rt-stars">${r.stars} ⭐</span></button></li>`).join("")}</ul>`;
   }).join("");
   return chips() + `<div class="actions"><button class="btn" data-act="routineTemplates">Choisir des modèles</button><button class="btn ghost" data-act="newRoutine">Créer une routine</button></div>`
-    + (groups || `<p class="empty">${esc(c.name)} n'a pas encore de routine. Les modèles couvrent le matin, le midi et le soir : coches-en trois ou quatre pour commencer.</p>`);
+    + (groups || `<p class="empty">${esc(c.name)} n'a pas encore de routine. Les modèles couvrent le matin, le midi et le soir : coches-en trois ou quatre pour commencer.</p>`) + extra;
 }
 function pRewards() {
   const c = curChild(), v = viewFor(c), r = rhythmOf(c.id), t = todayISO();
@@ -805,41 +864,46 @@ function pRewards() {
     ...S.pevents.filter(z => z.child_id === c.id).map(z => ({ ...z, kind: "broken" }))
   ].sort((a, b) => a.created_at < b.created_at ? 1 : -1).slice(0, 20);
   const drift = c.price_rhythm && Math.abs(r - c.price_rhythm) / c.price_rhythm > .2;
-  const row = w => { const cost = costFor(w, c.id); return `<li class="gift"><button class="gift-main" data-act="editReward" data-id="${w.id}"><span class="g-emo" aria-hidden="true">${esc(w.emoji)}</span><span><b>${esc(w.title)}</b><small>${w.child_id ? "Pour " + esc(c.name) : "Pour tous les enfants"}, ${daysLabelFor(cost, c.id)}</small>${w.event_date || w.place ? `<small class="when">${w.event_date ? "📅 " + fmtLong(w.event_date) : ""}${w.event_date && w.place ? ", " : ""}${w.place ? "📍 " + esc(w.place) : ""}</small>` : ""}</span></button>
+  const P = isParent();
+  const row = w => { const cost = costFor(w, c.id); return `<li class="gift"><button class="gift-main" ${P ? `data-act="editReward" data-id="${w.id}"` : "disabled"}><span class="g-emo" aria-hidden="true">${esc(w.emoji)}</span><span><b>${esc(w.title)}</b><small>${w.child_id ? "Pour " + esc(c.name) : "Pour tous les enfants"}, ${daysLabelFor(cost, c.id)}</small>${w.event_date || w.place ? `<small class="when">${w.event_date ? "📅 " + fmtLong(w.event_date) : ""}${w.event_date && w.place ? ", " : ""}${w.place ? "📍 " + esc(w.place) : ""}</small>` : ""}</span></button>
       <button class="btn sm ${v.balance >= cost ? "" : "ghost"}" data-act="pRedeem" data-id="${w.id}" ${v.balance >= cost ? "" : "disabled"} aria-label="Échanger ${cost} étoiles">${cost} ⭐</button></li>`; };
   const groups = TIERS.map(([k, l, d]) => { const ws = list.filter(w => (w.tier || "moment") === k).sort((a, b) => costFor(a, c.id) - costFor(b, c.id)); return ws.length ? `<h3 class="tier-h">${l}<small>${d}</small></h3><ul class="glist">${ws.map(row).join("")}</ul>` : ""; }).join("");
   return chips() + `<div class="balance"><span class="big">⭐ ${v.balance}</span><span>étoiles à dépenser pour ${esc(c.name)}</span>${v.pendingStars ? `<span class="muted">+${v.pendingStars} en attente de validation</span>` : ""}<span class="muted">Rythme : environ ${Math.round(r * 10) / 10} ⭐ par jour</span></div>
-    ${drift ? `<div class="banner"><p>Le rythme de ${esc(c.name)} a changé depuis le calcul des prix (${Math.round(c.price_rhythm * 10) / 10} ⭐ par jour, contre ${Math.round(r * 10) / 10} aujourd'hui).</p><button class="btn sm" data-act="repriceChild">Recalculer ses prix</button></div>` : ""}
-    <div class="actions"><button class="btn" data-act="rewardTemplates">Choisir dans le référentiel</button><button class="btn ghost" data-act="newReward">Créer une récompense</button><button class="btn ghost" data-act="suggestOutings">📍 Sorties près de chez nous</button><button class="btn danger ghost" data-act="breakStar">${brokenStar(18)} Casser une étoile</button></div>
+    ${drift && P ? `<div class="banner"><p>Le rythme de ${esc(c.name)} a changé depuis le calcul des prix (${Math.round(c.price_rhythm * 10) / 10} ⭐ par jour, contre ${Math.round(r * 10) / 10} aujourd'hui).</p><button class="btn sm" data-act="repriceChild">Recalculer ses prix</button></div>` : ""}
+    ${P ? `<div class="actions"><button class="btn" data-act="rewardTemplates">Choisir dans le référentiel</button><button class="btn ghost" data-act="newReward">Créer une récompense</button><button class="btn ghost" data-act="suggestOutings">📍 Sorties près de chez nous</button><button class="btn danger ghost" data-act="breakStar">${brokenStar(18)} Casser une étoile</button></div>` : ""}
     ${groups || `<p class="empty">Aucune récompense pour l'instant. Commence par le référentiel : les prix s'adaptent au rythme de ${esc(c.name)}.</p>`}
     ${hist.length ? `<h3 class="grp">Historique</h3><ul class="hist">${hist.map(z => z.kind === "gift"
-      ? `<li><span>${esc(z.emoji)} ${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span><span>−${z.cost} ⭐</span><button class="link" data-act="cancelRedeem" data-id="${z.id}">Annuler</button></li>`
-      : `<li>${brokenStar(20)}<span>${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span><span>−${z.stars} ⭐</span><button class="link" data-act="cancelPenalty" data-id="${z.id}">Annuler</button></li>`).join("")}</ul>` : ""}`;
+      ? `<li><span>${esc(z.emoji)} ${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span><span>−${z.cost} ⭐</span><span class="muted">par ${z.created_by ? esc(memberLabel(z.created_by)) : esc(c.name)}</span>${P ? `<button class="link" data-act="cancelRedeem" data-id="${z.id}">Annuler</button>` : ""}</li>`
+      : `<li>${brokenStar(20)}<span>${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span><span>−${z.stars} ⭐</span><span class="muted">par ${esc(memberLabel(z.created_by))}</span>${P ? `<button class="link" data-act="cancelPenalty" data-id="${z.id}">Annuler</button>` : ""}</li>`).join("")}</ul>` : ""}`;
 }
 function pFamily() {
   const kids = S.children.map(c => {
     const v = viewFor(c); const devs = S.devices.filter(d => d.child_id === c.id);
     const gn = gardenNow(S.gardens[c.id]);
     return `<div class="krow">${gn ? stageSVG(gn.stage, gn.species, c.color) : plantSVG(0, c.color)}<div class="grow"><b>${esc(c.emoji)} ${esc(c.name)}</b>
-      ${devs.map(d => `<div class="dev">📱 Appareil connecté le ${fmtDate(d.created_at)} <button class="link" data-act="revokeDevice" data-id="${d.id}">Déconnecter</button></div>`).join("")}</div>
-      <div class="btns"><button class="btn sm ghost" data-act="editChild" data-id="${c.id}">Modifier</button><button class="btn sm ghost" data-act="deviceCode" data-id="${c.id}">Connecter son appareil</button><button class="btn sm ghost" data-act="childHere" data-id="${c.id}">Mode enfant ici</button></div></div>`;
+      ${devs.map(d => `<div class="dev">📱 Appareil connecté le ${fmtDate(d.created_at)} ${isParent() ? `<button class="link" data-act="revokeDevice" data-id="${d.id}">Déconnecter</button>` : ""}</div>`).join("")}</div>
+      ${isParent() ? `<div class="btns"><button class="btn sm ghost" data-act="editChild" data-id="${c.id}">Modifier</button><button class="btn sm ghost" data-act="deviceCode" data-id="${c.id}">Connecter son appareil</button><button class="btn sm ghost" data-act="childHere" data-id="${c.id}">Mode enfant ici</button></div>` : ""}</div>`;
   }).join("");
   const pushOn = store.get("pushOn", false), times = store.get("pushTimes", ["07:30", "18:30"]);
-  return `<section class="sec"><h2>Enfants</h2>${kids || `<p class="muted">Aucun enfant pour l'instant.</p>`}<div class="actions"><button class="btn" data-act="newChild">Ajouter un enfant</button></div></section>
-    <section class="sec"><h2>Parents</h2>${S.members.map(m => `<p>👤 ${esc(m.display_name || "Parent")}${m.user_id === S.session?.user.id ? " (toi)" : ""}</p>`).join("")}
-      <div class="actions"><button class="btn ghost" data-act="invite">Inviter l'autre parent</button></div></section>
-    <section class="sec"><h2>Pauses vacances ou maladie</h2><p class="muted">Les jours en pause ne comptent ni pour ni contre la fleur.</p>
+  const P = isParent(), me = S.session?.user.id;
+  const members = S.members.map(m => `<div class="krow"><div class="grow"><b>${esc(m.relation || m.display_name || "Parent")}</b>${m.user_id === me ? " (toi)" : ""}
+      <div class="dev">${m.relation && m.display_name ? esc(m.display_name) + ", " : ""}${m.role === "helper" ? "Proche" : "Parent"}</div></div>
+      ${P || m.user_id === me ? `<div class="btns"><button class="btn sm ghost" data-act="editMember" data-id="${m.user_id}">Modifier</button></div>` : ""}</div>`).join("");
+  return `<section class="sec"><h2>Enfants</h2>${kids || `<p class="muted">Aucun enfant pour l'instant.</p>`}${P ? `<div class="actions"><button class="btn" data-act="newChild">Ajouter un enfant</button></div>` : ""}</section>
+    <section class="sec"><h2>Membres de la famille</h2>${members}
+      ${P ? `<p class="muted small">Un parent gère tout. Un proche coche et valide les routines et échange les récompenses, mais ne casse pas d'étoile et ne modifie pas la configuration.</p><div class="actions"><button class="btn ghost" data-act="invite">Inviter un membre</button></div>` : ""}</section>
+    ${P ? `<section class="sec"><h2>Pauses vacances ou maladie</h2><p class="muted">Les jours en pause ne comptent ni pour ni contre la fleur.</p>
       ${S.pauses.length ? `<ul class="hist">${S.pauses.map(p => { const k = S.children.find(c => c.id === p.child_id); return `<li><span>${esc(k ? k.emoji + " " + k.name : "")}, ${esc(p.reason || "Pause")}</span><span class="muted">${fmtDate(p.start_day)} au ${fmtDate(p.end_day)}</span><button class="link" data-act="delPause" data-id="${p.id}">Supprimer</button></li>`; }).join("")}</ul>` : ""}
       <div class="actions"><button class="btn ghost" data-act="newPause">Programmer une pause</button></div></section>
     <section class="sec"><h2>Validation des routines</h2><p class="muted">Quand ton enfant coche une routine, ses étoiles attendent ta validation. Celles que tu coches toi-même sont validées directement.</p>
-      <label class="check"><input type="checkbox" data-act="toggleAuto" ${S.autoValidate ? "checked" : ""}> Valider automatiquement à minuit ce qui n'a pas été refusé</label></section>
+      <label class="check"><input type="checkbox" data-act="toggleAuto" ${S.autoValidate ? "checked" : ""}> Valider automatiquement à minuit ce qui n'a pas été refusé</label></section>` : ""}
     <section class="sec"><h2>Rappels</h2><p class="muted">Un résumé des routines restantes arrive sur ce téléphone aux heures choisies.</p>
       <div class="f two"><label>Matin<input type="time" id="t1" value="${esc(times[0] || "")}"></label><label>Soir<input type="time" id="t2" value="${esc(times[1] || "")}"></label></div>
       <div class="actions"><button class="btn" data-act="pushParent">${pushOn ? "Mettre à jour les rappels" : "Activer les rappels"}</button>${pushOn ? `<button class="btn ghost" data-act="pushOff">Désactiver</button>` : ""}</div></section>
     <section class="sec"><h2>Planning à imprimer</h2><p class="muted">La semaine de chaque enfant sur une page A4, à cocher au crayon.</p><div class="actions"><button class="btn ghost" data-act="printPlan">Imprimer le planning</button></div></section>
     <section class="sec"><h2>Code parent</h2><p class="muted">Il protège la sortie du mode enfant sur ce téléphone.</p><div class="actions"><button class="btn ghost" data-act="setPin">${store.get("pin") ? "Changer le code" : "Créer un code"}</button></div></section>
     <section class="sec"><h2>Sauvegarde</h2><p class="muted">Tes données sont dans ton espace Supabase. Tu peux aussi en garder une copie.</p><div class="actions"><button class="btn ghost" data-act="exportData">Télécharger une copie (JSON)</button></div></section>
-    <section class="sec"><h2>Compte</h2><p class="muted">${esc(S.session?.user.email || "")}</p><div class="actions">${installBtn()}<button class="btn ghost" data-act="renameFamily">Renommer la famille</button><button class="btn danger ghost" data-act="logout">Se déconnecter</button></div></section>`;
+    <section class="sec"><h2>Compte</h2><p class="muted">${esc(S.session?.user.email || "")}</p><div class="actions">${installBtn()}${P ? `<button class="btn ghost" data-act="renameFamily">Renommer la famille</button>` : ""}<button class="btn danger ghost" data-act="logout">Se déconnecter</button></div></section>`;
 }
 
 /* ---------- Enfant ---------- */
@@ -856,25 +920,27 @@ function renderChild() {
     <nav class="tabbar" aria-label="Navigation">${tabs.map(([k, l, e]) => `<button data-act="ctab" data-tab="${k}" class="${S.ctab === k ? "on" : ""}" aria-current="${S.ctab === k ? "page" : "false"}"><span aria-hidden="true">${e}</span>${l}</button>`).join("")}</nav>`;
 }
 function cToday(v, routines) {
-  const t = todayISO(), due = dueOn(routines, v.child.id, t);
+  const t = todayISO(), due = dueOn(routines, v.child.id, t, S.cs.completions);
   const main = due.filter(r => !r.is_bonus), bonus = due.filter(r => r.is_bonus);
   const nd = main.filter(r => v.done.has(r.id + "|" + t)).length;
   const card = r => {
     const d = v.done.has(r.id + "|" + t), val = v.valid.has(r.id + "|" + t);
     return `<li><button class="kcard ${val ? "done" : d ? "pending" : ""}" data-act="cToggle" data-id="${r.id}" aria-pressed="${d}">
       <span class="k-emo" aria-hidden="true">${esc(r.emoji)}</span>
-      <span class="k-txt"><b>${esc(r.title)}</b>${d && !val ? `<small>⏳ Tes parents vont valider</small>` : r.place ? `<small>📍 ${esc(r.place)}</small>` : ""}</span>
+      <span class="k-txt">${isOneoff(r) ? `<small>⭐ ${oneoffNote(r)}</small>` : ""}<b>${esc(r.title)}</b>${d && !val ? `<small>⏳ Tes parents vont valider</small>` : val ? (() => { const x = (S.cs.completions || []).find(y => y.routine_id === r.id && y.day === t); return x && x.validated_label && x.validated_label !== "auto" ? `<small>✓ Validée par ${esc(x.validated_label)}</small>` : `<small>✓ Validée</small>`; })() : r.place ? `<small>📍 ${esc(r.place)}</small>` : ""}</span>
       <span class="k-stars ${d && !val ? "wait" : ""}" aria-label="${r.stars} étoiles">${"⭐".repeat(Math.min(r.stars, 5))}</span><span class="k-pot" aria-hidden="true">${val ? "✓" : d ? "⏳" : ""}</span></button>
       ${r.timer_minutes && !d ? `<button class="k-timer" data-act="cTimer" data-id="${r.id}">⏱ Défi ${r.timer_minutes} min</button>` : ""}</li>`;
   };
-  const groups = MOMENTS.map(([k, l, , e]) => { const rs = main.filter(r => r.moment === k); return rs.length ? `<h3 class="grp">${e} ${l}</h3><ul class="kcards">${rs.map(card).join("")}</ul>` : ""; }).join("");
+  const ones = due.filter(isOneoff);
+  const groups = (ones.length ? `<h3 class="grp">⭐ Exceptionnelles</h3><ul class="kcards">${ones.map(card).join("")}</ul>` : "")
+    + MOMENTS.map(([k, l, , e]) => { const rs = main.filter(r => r.moment === k && !isOneoff(r)); return rs.length ? `<h3 class="grp">${e} ${l}</h3><ul class="kcards">${rs.map(card).join("")}</ul>` : ""; }).join("");
   const gn = gardenNow(v.garden);
   return `<section class="hero"><div class="hero-plant ${S.bump ? "bump" : ""}" style="width:120px">${gn ? stageSVG(gn.stage, gn.species, v.child.color) : plantSVG(0, v.child.color)}</div>
-      <div class="hero-txt">${gn ? `<h1>${STAGE_NAME[gn.stage]}</h1>${dots14(v.garden)}
-      <p>${gn.pausedToday ? "En pause : profite bien !" : `Jour ${gn.dayIdx} sur 14. Ta fleur s'ouvre ${fmtLong(gn.end)}.`}</p>` : `<h1>Ton pot t'attend</h1>`}
+      <div class="hero-txt">${gn && gn.waiting ? `<h1>Ton pot attend sa graine</h1><p>Ta première fleur commence ${fmtLong(gn.start)}. Tes étoiles comptent déjà pour tes récompenses !</p>` : gn ? `<h1>${STAGE_NAME[gn.stage]}</h1>${dots14(v.garden)}
+      <p>${gn.pausedToday ? "En pause : profite bien !" : `Jour ${gn.dayIdx} sur ${gn.len}. Ta fleur s'ouvre ${fmtLong(gn.end)}.`}</p>` : `<h1>Ton pot t'attend</h1>`}
       ${v.pendingStars ? `<p class="wait-note">⏳ ${v.pendingStars} ⭐ en attente de validation</p>` : ""}</div></section>
     <p class="today-count">${main.length ? (nd === main.length ? "Tout est fait aujourd'hui ! 🎉" : `${nd} sur ${main.length} routines faites`) : "Pas de routine aujourd'hui. Profite !"}</p>
-    ${groups}${bonus.length ? `<h3 class="grp">💪 Défis bonus</h3><ul class="kcards">${bonus.map(card).join("")}</ul>` : ""}`;
+    ${groups}${bonus.filter(r => !isOneoff(r)).length ? `<h3 class="grp">💪 Défis bonus</h3><ul class="kcards">${bonus.filter(r => !isOneoff(r)).map(card).join("")}</ul>` : ""}`;
 }
 function cGifts(v, routines, cs) {
   const hist = [
@@ -922,24 +988,27 @@ async function refreshParent() {
     sb.from("children").select("*").eq("family_id", fid).order("position").order("created_at"),
     sb.from("routines").select("*").eq("family_id", fid).eq("active", true).order("position").order("created_at"),
     sb.from("rewards").select("*").eq("family_id", fid).eq("active", true).order("cost"),
-    sb.from("completions").select("child_id,routine_id,day,stars,source,validated_at").eq("family_id", fid).gte("day", since),
+    sb.from("completions").select("child_id,routine_id,day,stars,source,validated_at,validated_by,created_by").eq("family_id", fid).gte("day", since),
     sb.from("redemptions").select("*").eq("family_id", fid).order("created_at", { ascending: false }).limit(100),
     sb.from("child_stats").select("*").eq("family_id", fid),
-    sb.from("family_members").select("user_id,display_name").eq("family_id", fid),
+    sb.from("family_members").select("user_id,display_name,relation,role").eq("family_id", fid),
     sb.from("child_devices").select("id,child_id,created_at,last_seen").eq("family_id", fid).order("created_at"),
     sb.from("families").select("name,auto_validate,outing_radii").eq("id", fid),
     sb.from("penalties").select("*").eq("family_id", fid).eq("active", true).order("stars").order("created_at"),
     sb.from("penalty_events").select("*").eq("family_id", fid).order("created_at", { ascending: false }).limit(100),
     sb.from("child_badges").select("child_id,badge_key").eq("family_id", fid),
     sb.from("pauses").select("*").eq("family_id", fid).gte("end_day", todayISO()).order("start_day"),
-    sb.rpc("family_gardens", { p_family: fid })
+    sb.rpc("family_gardens", { p_family: fid }),
+    sb.from("oneoff_templates").select("*").eq("family_id", fid).order("use_count", { ascending: false }).order("last_used", { ascending: false })
   ]);
   for (const q of qs) if (q.error) throw q.error;
-  const [c, r, w, x, z, s, m, d, f, pe, pv, b, pz, gdn] = qs.map(q => q.data);
+  const [c, r, w, x, z, s, m, d, f, pe, pv, b, pz, gdn, ot] = qs.map(q => q.data);
   const badges = {}; b.forEach(o => (badges[o.child_id] = badges[o.child_id] || []).push(o.badge_key));
   Object.assign(S, { children: c, routines: r, rewards: w, completions: x, redemptions: z, stats: Object.fromEntries(s.map(o => [o.child_id, o])),
-    members: m, devices: d, autoValidate: f[0] ? f[0].auto_validate : true, radii: (f[0] && f[0].outing_radii) || RADII_DEF, penalties: pe, pevents: pv, badges, pauses: pz, gardens: gdn || {}, offline: false });
+    members: m, devices: d, autoValidate: f[0] ? f[0].auto_validate : true, radii: (f[0] && f[0].outing_radii) || RADII_DEF, penalties: pe, pevents: pv, badges, pauses: pz, gardens: gdn || {}, oneoffTpl: ot || [], offline: false });
   if (f[0]) S.family.name = f[0].name;
+  const meRow = m.find(x => x.user_id === S.session?.user.id); if (meRow) S.me = { ...S.me, ...meRow };
+  if (!isParent() && S.tab === "routines") S.tab = "today";
   if (!S.children.find(k => k.id === S.currentChild)) S.currentChild = S.children[0]?.id || null;
   // Badges obtenus : enregistrés une fois pour toutes
   const rows = [];
@@ -1042,7 +1111,7 @@ function childToggle(rid, makeDone, source = "child") {
   if (makeDone) {
     S.bump = true; render(); S.bump = false;
     const routines = cs.routines.map(x => ({ ...x, child_id: cs.child.id }));
-    const main = dueOn(routines, cs.child.id, day).filter(x => !x.is_bonus);
+    const main = dueOn(routines, cs.child.id, day, cs.completions).filter(x => !x.is_bonus);
     const all = main.length && main.every(x => cs.completions.some(c => c.routine_id === x.id && c.day === day));
     celebrate(all);
     toast(all ? "Tout est fait ! Tes parents vont valider tes étoiles 🎉" : "Bravo ! Tes parents vont valider ton étoile.");
@@ -1073,7 +1142,7 @@ const readTimes = () => [$("#t1")?.value, $("#t2")?.value].filter(v => /^\d{2}:\
 function printPlanning(ids) {
   const t = todayISO(), monday = addDays(t, -(dowOf(t) - 1));
   const pages = S.children.filter(c => ids.includes(c.id)).map(c => {
-    const rs = S.routines.filter(r => r.child_id === c.id);
+    const rs = S.routines.filter(r => r.child_id === c.id && !isOneoff(r));
     const rows = MOMENTS.map(([k, l, , e]) => {
       const list = rs.filter(r => r.moment === k); if (!list.length) return "";
       return `<tr class="grp-row"><td colspan="8">${e} ${l}</td></tr>` + list.map(r => `<tr><td class="n">${esc(r.emoji)} ${esc(r.title)} (${r.stars} ⭐)${r.is_bonus ? ", bonus" : ""}</td>${DAYS.map((_, i) => (r.days || []).includes(i + 1) ? `<td><span class="circ"></span></td>` : `<td class="off"></td>`).join("")}</tr>`).join("");
@@ -1093,7 +1162,7 @@ function routineForm(r) {
   S.form = { moment: r.moment, days: [...r.days] };
   openSheet(`<h2>${isNew ? "Nouvelle routine" : "Modifier la routine"}</h2>
     <label class="f">Nom<input id="f-title" maxlength="60" value="${esc(r.title)}" placeholder="Se brosser les dents"></label>
-    <div class="f"><span>Icône</span><div class="emo-row"><input id="f-emoji" class="emo-in" value="${esc(r.emoji)}" maxlength="8" aria-label="Icône choisie">${EMO_R.map(e => `<button type="button" class="emo" data-act="pickEmoji" data-e="${e}" aria-label="${e}">${e}</button>`).join("")}</div></div>
+    <div class="f"><span>Icône</span><div class="emo-row"><input id="f-emoji" class="emo-in" value="${esc(r.emoji)}" maxlength="8" aria-label="Icône choisie"><small class="muted">Choisis ci-dessous ou tape un emoji</small></div>${emoPicker("f-emoji", EMO_R)}</div>
     <div class="f"><span>Moment</span><div class="seg" role="radiogroup">${MOMENTS.map(([k, , s, e]) => `<button type="button" role="radio" aria-checked="${r.moment === k}" class="${r.moment === k ? "on" : ""}" data-act="seg" data-group="moment" data-v="${k}">${e} ${s}</button>`).join("")}</div></div>
     <div class="f"><span>Jours</span><div class="days">${DAYS.map((d, i) => `<button type="button" class="day ${r.days.includes(i + 1) ? "on" : ""}" data-act="toggleDay" data-v="${i + 1}" aria-pressed="${r.days.includes(i + 1)}" aria-label="${DAYS_LONG[i]}">${d}</button>`).join("")}</div>
       <div class="presets"><button type="button" class="link" data-act="daysPreset" data-v="all">Tous les jours</button><button type="button" class="link" data-act="daysPreset" data-v="week">En semaine</button><button type="button" class="link" data-act="daysPreset" data-v="we">Le week-end</button></div></div>
@@ -1109,7 +1178,7 @@ function rewardForm(w, preset) {
   const fixed = !w.duration_days;
   openSheet(`<h2>${isNew ? (w.tier === "event" ? "Nouvel événement" : "Nouvelle récompense") : "Modifier la récompense"}</h2>
     <label class="f">Nom<input id="w-title" maxlength="60" value="${esc(w.title)}" placeholder="${w.tier === "event" ? "Spectacle de marionnettes" : "Pique-nique au parc"}"></label>
-    <div class="f"><span>Icône</span><div class="emo-row"><input id="w-emoji" class="emo-in" value="${esc(w.emoji)}" maxlength="8" aria-label="Icône choisie">${EMO_W.map(e => `<button type="button" class="emo" data-act="pickEmoji" data-target="w-emoji" data-e="${e}" aria-label="${e}">${e}</button>`).join("")}</div></div>
+    <div class="f"><span>Icône</span><div class="emo-row"><input id="w-emoji" class="emo-in" value="${esc(w.emoji)}" maxlength="8" aria-label="Icône choisie"><small class="muted">Choisis ci-dessous ou tape un emoji</small></div>${emoPicker("w-emoji", EMO_W)}</div>
     <div class="f two"><label>Niveau<select id="w-tier" data-act="tierChange">${TIERS.map(([k, l]) => `<option value="${k}" ${w.tier === k ? "selected" : ""}>${l}</option>`).join("")}</select></label>
       <label>Pour<select id="w-for">${S.children.length > 1 ? `<option value="">Tous les enfants</option>` : ""}${S.children.map(k => `<option value="${k.id}" ${w.child_id === k.id ? "selected" : ""}>${esc(k.name)}</option>`).join("")}</select></label></div>
     <label class="check"><input type="checkbox" id="w-fixed" ${fixed ? "checked" : ""} data-act="pricePreview"> Prix fixe, identique pour tous, au lieu d'un prix calculé selon le rythme</label>
@@ -1205,7 +1274,9 @@ A.logout = async () => {
 };
 A.createFamily = async () => {
   const name = $("#o-name").value.trim();
-  const { error } = await sb.rpc("create_family", { p_name: name, p_display_name: S.session.user.user_metadata?.display_name || "" }); if (error) throw error;
+  const rel = $("#o-rel").value;
+  const { data: fid, error } = await sb.rpc("create_family", { p_name: name, p_display_name: S.session.user.user_metadata?.display_name || "" }); if (error) throw error;
+  await sb.from("family_members").update({ relation: rel }).eq("family_id", fid).eq("user_id", S.session.user.id);
   await enterParent();
 };
 A.joinFamily = async () => {
@@ -1272,7 +1343,7 @@ A.showGarden = el => {
   const c = S.children.find(k => k.id === el.dataset.id), gd = S.gardens[c.id]; if (!gd) return;
   const n = gardenNow(gd), se = seasonOfISO(gd.today), yr = gardenYearOfISO(gd.today), fl = gd.flowers || [];
   openSheet(`<h2>Le jardin de ${esc(c.name)}</h2>
-    <div class="scene" style="max-width:240px;margin:0 auto">${stageSVG(n.stage, n.species, c.color)}<p>${STAGE_NAME[n.stage]} : jour ${n.dayIdx}/14, ${n.good} bonne(s) journée(s). Floraison ${fmtLong(n.end)}.</p></div>
+    <div class="scene" style="max-width:240px;margin:0 auto">${stageSVG(n.stage, n.species, c.color)}<p>${n.waiting ? `Première fleur à partir de ${fmtLong(n.start)}.` : `${STAGE_NAME[n.stage]} : jour ${n.dayIdx}/${n.len}, ${n.good} bonne(s) journée(s). Floraison ${fmtLong(n.end)}.`}</p></div>
     ${dots14(gd)}
     <h3 class="grp">Parterre ${SEASON_NAME[se]}</h3><div class="scene">${parterreSVG(se, fl.filter(f => f.season === se && f.garden_year === yr), true)}</div>
     <h3 class="grp">Jardin ${yr}</h3><div class="scene">${gardenSVG(c.name, yr, fl.filter(f => f.garden_year === yr), { season: se })}</div>
@@ -1362,6 +1433,52 @@ A.addOutings = async () => {
   await markPriced(ids); closeSheet(); await reloadParent(`${rows.length} sortie${rows.length > 1 ? "s ajoutées" : " ajoutée"}.`);
 };
 
+// Routines exceptionnelles
+A.newOneoff = el => {
+  const c = S.children.find(k => k.id === el.dataset.child) || curChild(); S.oneoffChild = c.id;
+  const saved = S.oneoffTpl, have = new Set(saved.map(x => x.title.toLowerCase()));
+  const base = TPL_X.map((t, i) => ({ ...t, i })).filter(t => !have.has(t.t.toLowerCase()));
+  openSheet(`<h2>Routine exceptionnelle pour ${esc(c.name)}</h2>
+    ${saved.length ? `<h3 class="grp">Mes modèles</h3><ul class="tpl">${saved.map(x => `<li><button class="pen" data-act="oneoffFrom" data-tpl="${x.id}"><span>${esc(x.emoji)} ${esc(x.title)}</span><span>${x.stars} ⭐</span></button></li>`).join("")}</ul>` : ""}
+    ${base.length ? `<h3 class="grp">Suggestions</h3><ul class="tpl">${base.map(t => `<li><button class="pen" data-act="oneoffFrom" data-base="${t.i}"><span>${t.e} ${esc(t.t)}</span><span>${t.s} ⭐</span></button></li>`).join("")}</ul>` : ""}
+    <div class="sheet-actions"><button class="btn" data-act="oneoffFrom">Créer une nouvelle</button></div>`);
+};
+A.oneoffFrom = el => {
+  const tp = el.dataset.tpl ? S.oneoffTpl.find(x => x.id === el.dataset.tpl) : null, b = el.dataset.base != null ? TPL_X[+el.dataset.base] : null;
+  const r = tp ? { title: tp.title, emoji: tp.emoji, stars: tp.stars, moment: tp.moment, is_bonus: tp.is_bonus } : b ? { title: b.t, emoji: b.e, stars: b.s, moment: b.m, is_bonus: true } : { title: "", emoji: "⭐", stars: 1, moment: "journee", is_bonus: true };
+  const t = todayISO(), c = S.children.find(k => k.id === S.oneoffChild);
+  S.form = { moment: r.moment, when: "le", type: r.is_bonus ? "bonus" : "oblig", tpl: tp ? tp.id : null };
+  const seg = (group, opts, cur) => `<div class="seg" role="radiogroup">${opts.map(([k, l]) => `<button type="button" role="radio" aria-checked="${cur === k}" class="${cur === k ? "on" : ""}" data-act="seg" data-group="${group}" data-v="${k}">${l}</button>`).join("")}</div>`;
+  openSheet(`<h2>Routine exceptionnelle pour ${esc(c.name)}</h2>
+    <label class="f">Nom<input id="x-title" maxlength="60" value="${esc(r.title)}" placeholder="Préparer sa valise"></label>
+    <div class="f"><span>Icône</span><div class="emo-row"><input id="x-emoji" class="emo-in" value="${esc(r.emoji)}" maxlength="8" aria-label="Icône choisie"><small class="muted">Choisis ci-dessous ou tape un emoji</small></div>${emoPicker("x-emoji", EMO_R)}</div>
+    <div class="f"><span>Quand</span>${seg("when", [["le", "Le"], ["avant", "Avant le"]], "le")}<input id="x-date" type="date" min="${t}" value="${t}" style="margin-top:6px"></div>
+    <div class="f"><span>Type</span>${seg("type", [["bonus", "Bonus"], ["oblig", "Obligatoire"]], S.form.type)}<small class="muted" style="font-weight:400">Bonus : elle rapporte des étoiles sans pouvoir gâcher la journée. Obligatoire : elle compte dans la bonne journée.</small></div>
+    <div class="f two"><label>Étoiles<select id="x-stars">${[1, 2, 3, 4, 5].map(n => `<option ${n === r.stars ? "selected" : ""}>${n}</option>`).join("")}</select></label>
+      <label>Moment<select id="x-moment">${MOMENTS.map(([k, , l]) => `<option value="${k}" ${k === r.moment ? "selected" : ""}>${l}</option>`).join("")}</select></label></div>
+    ${tp ? "" : `<label class="check"><input type="checkbox" id="x-keep"> Garder comme modèle</label>`}
+    <div class="sheet-actions"><button class="btn" data-act="saveOneoff">Ajouter</button></div>`);
+};
+A.saveOneoff = async () => {
+  const title = $("#x-title").value.trim(), date = $("#x-date").value, t = todayISO(); if (!title) return toast("Donne un nom à la routine.", true);
+  if (!date || date < t) return toast("Choisis une date à partir d'aujourd'hui.", true);
+  const row = { family_id: S.family.id, child_id: S.oneoffChild, kind: "oneoff", title, emoji: $("#x-emoji").value.trim() || "⭐", stars: +$("#x-stars").value,
+    moment: $("#x-moment").value, is_bonus: S.form.type !== "oblig", start_day: S.form.when === "avant" ? t : date, end_day: date, days: [], position: 0 };
+  const { error } = await sb.from("routines").insert(row); if (error) throw error;
+  if (S.form.tpl) { const tp = S.oneoffTpl.find(x => x.id === S.form.tpl); await sb.from("oneoff_templates").update({ use_count: (tp.use_count || 0) + 1, last_used: new Date().toISOString() }).eq("id", tp.id); }
+  else if ($("#x-keep") && $("#x-keep").checked) await sb.from("oneoff_templates").upsert({ family_id: S.family.id, title, emoji: row.emoji, stars: row.stars, moment: row.moment, is_bonus: row.is_bonus }, { onConflict: "family_id,title" });
+  closeSheet(); await reloadParent("Routine exceptionnelle ajoutée.");
+};
+A.delOneoff = async el => {
+  if (!await confirmSheet("Supprimer cette routine exceptionnelle ?", "Les étoiles déjà gagnées sont conservées.", "Supprimer", true)) return;
+  const { error } = await sb.from("routines").update({ active: false }).eq("id", el.dataset.id); if (error) throw error;
+  await reloadParent("Supprimée.");
+};
+A.manageOneoffTpl = () => openSheet(`<h2>Modèles exceptionnels</h2><p class="muted">Partagés par toute la famille. Classés du plus utilisé au moins utilisé.</p>
+  ${S.oneoffTpl.length ? `<ul class="hist">${S.oneoffTpl.map(x => `<li><span>${esc(x.emoji)} ${esc(x.title)}</span><span class="muted">${x.use_count} fois</span><button class="link" data-act="delOneoffTpl" data-id="${x.id}">Supprimer</button></li>`).join("")}</ul>` : `<p class="empty">Aucun modèle. Coche « Garder comme modèle » en créant une routine exceptionnelle.</p>`}
+  <div class="sheet-actions"><button class="btn" data-act="closeSheet">Fermer</button></div>`);
+A.delOneoffTpl = async el => { const { error } = await sb.from("oneoff_templates").delete().eq("id", el.dataset.id); if (error) throw error; await reloadParent("Modèle supprimé."); A.manageOneoffTpl(); };
+
 // Étoiles cassées
 A.breakStar = () => {
   const c = curChild(), v = viewFor(c);
@@ -1413,7 +1530,7 @@ A.delPenalty = async el => {
 // Routines
 A.newRoutine = () => routineForm(null);
 A.editRoutine = el => routineForm(S.routines.find(r => r.id === el.dataset.id));
-A.pickEmoji = el => { const t = $("#" + (el.dataset.target || "f-emoji")); if (t) t.value = el.dataset.e; };
+A.pickEmoji = el => { const t = $("#" + (el.dataset.target || "f-emoji")); if (t) t.value = el.dataset.e; $$(".emo-box .emo", dlg).forEach(b => b.classList.toggle("on", b === el)); };
 A.seg = el => { S.form[el.dataset.group] = el.dataset.v; $$("button", el.parentElement).forEach(b => { const on = b === el; b.classList.toggle("on", on); b.setAttribute("aria-checked", on); }); };
 const syncDays = () => $$(".day", dlg).forEach(b => { const on = S.form.days.includes(+b.dataset.v); b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); });
 A.toggleDay = el => { const v = +el.dataset.v; S.form.days = S.form.days.includes(v) ? S.form.days.filter(d => d !== v) : [...S.form.days, v]; syncDays(); };
@@ -1630,10 +1747,33 @@ A.pushOff = async () => {
 };
 
 // Famille et réglages
-A.invite = async () => {
-  const { data, error } = await sb.rpc("create_invite", { p_family: S.family.id }); if (error) throw error;
-  openSheet(`<h2>Inviter l'autre parent</h2><div class="code">${esc(data)}</div><p>L'autre parent crée son compte SoisFier, puis choisit « Rejoindre une famille » et saisit ce code. Il est valable 48 heures.</p>
+A.invite = () => openSheet(`<h2>Inviter un membre</h2>${relationField("Maman", "inv")}
+    <div class="f"><span>Droits</span><div class="seg" role="radiogroup"><button type="button" role="radio" aria-checked="true" class="on" data-act="seg" data-group="role" data-v="parent">Parent</button><button type="button" role="radio" aria-checked="false" data-act="seg" data-group="role" data-v="helper">Proche</button></div></div>
+    <div class="sheet-actions"><button class="btn" data-act="makeInvite">Créer le code</button></div>`, S.form = { role: "parent" });
+A.makeInvite = async () => {
+  const rel = readRelation("inv"), role = S.form.role || "parent";
+  const { data, error } = await sb.rpc("create_invite", { p_family: S.family.id, p_relation: rel, p_role: role }); if (error) throw error;
+  openSheet(`<h2>Inviter ${esc(rel || "un membre")}</h2><div class="code">${esc(data)}</div><p>${esc(rel || "La personne")} crée son compte SoisFier, puis choisit « Rejoindre une famille » et saisit ce code. Il est valable 48 heures. Droits : ${role === "helper" ? "proche" : "parent"}.</p>
     <div class="sheet-actions">${navigator.share ? `<button class="btn ghost" data-act="shareInvite" data-code="${esc(data)}">Partager</button>` : ""}<button class="btn" data-act="closeSheet">Terminé</button></div>`);
+};
+A.editMember = el => {
+  const m = S.members.find(x => x.user_id === el.dataset.id), self = m.user_id === S.session?.user.id;
+  S.form = { role: m.role };
+  openSheet(`<h2>${esc(m.relation || m.display_name || "Membre")}</h2>${relationField(m.relation, "mem")}
+    ${isParent() && !self ? `<div class="f"><span>Droits</span><div class="seg" role="radiogroup">${[["parent", "Parent"], ["helper", "Proche"]].map(([k, l]) => `<button type="button" role="radio" aria-checked="${m.role === k}" class="${m.role === k ? "on" : ""}" data-act="seg" data-group="role" data-v="${k}">${l}</button>`).join("")}</div></div>` : ""}
+    <div class="sheet-actions">${isParent() && !self ? `<button class="btn danger ghost" data-act="removeMember" data-id="${m.user_id}">Retirer de la famille</button>` : ""}<button class="btn" data-act="saveMember" data-id="${m.user_id}">Enregistrer</button></div>`);
+};
+A.saveMember = async el => {
+  const id = el.dataset.id, self = id === S.session?.user.id, row = { relation: readRelation("mem") };
+  if (isParent() && !self) row.role = S.form.role;
+  const { error } = await sb.from("family_members").update(row).eq("family_id", S.family.id).eq("user_id", id); if (error) throw error;
+  closeSheet(); await reloadParent("Membre enregistré.");
+};
+A.removeMember = async el => {
+  const m = S.members.find(x => x.user_id === el.dataset.id);
+  if (!await confirmSheet(`Retirer ${m.relation || m.display_name || "ce membre"} ?`, "Cette personne n'aura plus accès à la famille. L'historique de ses validations est conservé.", "Retirer", true)) return;
+  const { error } = await sb.from("family_members").delete().eq("family_id", S.family.id).eq("user_id", m.user_id); if (error) throw error;
+  await reloadParent("Membre retiré.");
 };
 A.shareInvite = async el => { try { await navigator.share({ title: "SoisFier", text: `Rejoins notre famille sur SoisFier avec le code ${el.dataset.code} : ${location.origin + location.pathname}` }); } catch {} };
 A.setPin = async () => {

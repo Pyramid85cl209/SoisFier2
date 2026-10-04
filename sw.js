@@ -1,5 +1,5 @@
 /* SoisFier – service worker : hors ligne + notifications */
-const CACHE = "soisfier-v4";
+const CACHE = "soisfier-v7";
 const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 const CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js";
 
