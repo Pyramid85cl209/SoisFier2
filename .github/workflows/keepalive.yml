@@ -1,0 +1,16 @@
+# Garde le projet Supabase gratuit actif (il est mis en pause après 7 jours sans activité).
+name: Supabase keep-alive
+on:
+  schedule:
+    - cron: "17 6 */2 * *"   # tous les 2 jours, 6h17 UTC
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    environment: github-pages
+    steps:
+      - name: Ping Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: curl -fsS "$SUPABASE_URL/rest/v1/tips?select=id&limit=1" -H "apikey: $SUPABASE_KEY" > /dev/null
