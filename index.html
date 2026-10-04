@@ -1,0 +1,1705 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SoisFier</title>
+<meta name="description" content="Routines, étoiles et récompenses pour les enfants.">
+<meta name="theme-color" content="#2E8B57">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{
+  --sky:#E3F1FB; --paper:#FFFFFF; --leaf:#2E8B57; --leaf-d:#1F6B41; --leaf-l:#DDF2E5;
+  --sun:#FFC233; --sun-l:#FFF1C9; --earth:#4A2E1F; --muted:#7A6A5F; --poppy:#E8484F;
+  --line:#CFE2EF; --lift:0 2px 0 rgba(74,46,31,.10);
+  --display:"Fredoka", ui-rounded, "Segoe UI", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --sky:#0F2219; --paper:#18322A; --leaf:#5CC48A; --leaf-d:#3FA36D; --leaf-l:#1E4535;
+    --sun:#FFCB4D; --sun-l:#3A3318; --earth:#F1ECE4; --muted:#A9B8AF; --poppy:#FF6B70; --line:#24463A; --lift:none; }
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--sky);color:var(--earth);font:17px/1.5 var(--body);-webkit-tap-highlight-color:transparent;
+  padding-top:env(safe-area-inset-top,0px)}
+h1,h2,h3{font-family:var(--display);font-weight:600;line-height:1.15;margin:0}
+h1{font-size:1.75rem} h2{font-size:1.3rem} h3{font-size:1.05rem}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.wrap{max-width:560px;margin:0 auto;padding:12px 16px calc(110px + env(safe-area-inset-bottom,0px))}
+.muted{color:var(--muted)}
+
+/* En-tête */
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px;justify-content:space-between;
+  max-width:560px;margin:0 auto;padding:10px 16px;background:var(--sky)}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:600;font-size:1.15rem}
+.brand svg{width:30px;height:30px}
+.pill{font-size:.8rem;padding:3px 10px;border-radius:999px;background:var(--sun-l)}
+
+/* Navigation basse */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:center;gap:4px;
+  background:var(--paper);border-top:2px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
+.tabbar button{flex:1;max-width:140px;border:0;background:none;padding:6px 4px;border-radius:14px;display:flex;flex-direction:column;
+  align-items:center;gap:2px;font-size:.78rem;color:var(--muted)}
+.tabbar button span{font-size:1.35rem;line-height:1}
+.tabbar button.on{color:var(--leaf-d);background:var(--leaf-l);font-weight:700}
+
+/* Boutons */
+.btn{border:0;border-radius:999px;background:var(--leaf);color:#fff;font-weight:700;padding:12px 20px;box-shadow:var(--lift)}
+.btn:disabled{opacity:.45}
+.btn.ghost{background:transparent;color:var(--leaf-d);box-shadow:inset 0 0 0 2px var(--leaf)}
+.btn.danger{background:var(--poppy)}
+.btn.danger.ghost{background:transparent;color:var(--poppy);box-shadow:inset 0 0 0 2px var(--poppy)}
+.btn.sm{padding:8px 14px;font-size:.92rem}
+.btn.wide{width:100%}
+.link{border:0;background:none;color:var(--leaf-d);text-decoration:underline;padding:6px 2px;font-weight:700}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+
+/* Puces enfants */
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 0 8px;scrollbar-width:none}
+.chip{border:0;border-radius:999px;padding:8px 14px;background:var(--paper);white-space:nowrap;box-shadow:inset 0 0 0 2px var(--line)}
+.chip.on{background:var(--c);color:#fff;box-shadow:none;font-weight:700}
+
+/* Jour */
+.daynav{display:flex;align-items:center;justify-content:space-between;margin:4px 0 12px}
+.daynav button{width:44px;height:44px;border-radius:50%;border:0;background:var(--paper);font-size:1.5rem;box-shadow:var(--lift)}
+.daynav button:disabled{opacity:.3}
+
+.tip{display:flex;gap:10px;align-items:flex-start;background:var(--sun-l);border-radius:18px;padding:12px 14px;margin-bottom:14px}
+.tip p{margin:0;font-size:.95rem}
+
+/* Bloc enfant (parent) */
+.kid{background:var(--paper);border-radius:24px;padding:14px;margin-bottom:16px;box-shadow:var(--lift);border-top:6px solid var(--c)}
+.kid-head{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.kid-head>div:nth-child(2){flex:1}
+.kid-plant svg{width:58px;height:78px}
+.meta{margin:2px 0 0;color:var(--muted);font-size:.9rem;display:flex;gap:12px;flex-wrap:wrap}
+.ring{--p:0;width:54px;height:54px;border-radius:50%;flex:none;display:grid;place-items:center;
+  background:conic-gradient(var(--leaf) calc(var(--p)*1%), var(--line) 0)}
+.ring span{width:42px;height:42px;border-radius:50%;background:var(--paper);display:grid;place-items:center;font-weight:700;font-size:.88rem}
+
+/* Lignes de routines */
+.rlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.rt{width:100%;display:flex;align-items:center;gap:12px;text-align:left;border:0;border-radius:16px;padding:10px 12px;
+  background:var(--sky)}
+.rt-emo{font-size:1.6rem;width:42px;height:42px;display:grid;place-items:center;background:var(--paper);border-radius:12px;flex:none}
+.rt-txt{flex:1;display:flex;flex-direction:column;min-width:0}
+.rt-txt small{color:var(--muted)}
+.rt-stars{font-weight:700;font-size:.92rem;white-space:nowrap}
+.pot{width:32px;height:32px;border-radius:9px 9px 14px 14px;border:3px solid var(--line);display:grid;place-items:center;flex:none;font-size:1rem}
+.rt.done{background:var(--leaf-l)}
+.rt.done .pot{border-color:var(--leaf);background:var(--paper)}
+.rt.done b{text-decoration:line-through;text-decoration-thickness:2px;text-decoration-color:var(--leaf)}
+.grp{margin:18px 0 8px;color:var(--muted)}
+.empty{color:var(--muted);background:var(--paper);border-radius:18px;padding:14px}
+
+/* Récompenses */
+.balance{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;background:var(--sun-l);border-radius:20px;padding:14px 16px;margin:8px 0}
+.balance .big{font-family:var(--display);font-size:2rem;font-weight:600}
+.glist{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.gift{display:flex;align-items:center;gap:10px;background:var(--paper);border-radius:18px;padding:10px 12px;box-shadow:var(--lift)}
+.gift-main{flex:1;display:flex;align-items:center;gap:12px;border:0;background:none;text-align:left;padding:0}
+.gift-main span:last-child{display:flex;flex-direction:column}
+.gift-main small{color:var(--muted)}
+.g-emo{font-size:1.8rem}
+.hist{list-style:none;padding:0;margin:0;display:grid;gap:6px}
+.hist li{display:flex;gap:10px;align-items:center;background:var(--paper);border-radius:14px;padding:8px 12px;font-size:.95rem}
+.hist li span:first-child{flex:1}
+
+/* Famille */
+.sec{background:var(--paper);border-radius:22px;padding:16px;margin-bottom:14px;box-shadow:var(--lift)}
+.sec h2{margin-bottom:10px}
+.sec p{margin:6px 0}
+.krow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:2px solid var(--sky)}
+.krow:first-of-type{border-top:0}
+.krow>svg{width:44px;height:58px}
+.krow .grow{flex:1}
+.krow .btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.dev{font-size:.88rem;color:var(--muted);display:flex;gap:8px;align-items:center;margin:2px 0}
+
+/* Feuille (dialog) */
+dialog#sheet{border:0;padding:0;margin:auto auto 0;width:100%;max-width:560px;max-height:92vh;border-radius:28px 28px 0 0;
+  background:var(--paper);color:var(--earth)}
+dialog#sheet::backdrop{background:rgba(20,30,25,.45)}
+.sheet-in{padding:20px 18px calc(22px + env(safe-area-inset-bottom,0px));overflow:auto;max-height:92vh}
+.sheet-in h2{margin-bottom:14px}
+.sheet-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+.f{display:flex;flex-direction:column;gap:6px;margin:12px 0;font-weight:700;font-size:.95rem}
+.f input,.f select{font-weight:400;border:2px solid var(--line);border-radius:14px;padding:11px 12px;background:var(--sky);font-size:1rem}
+.f.two{flex-direction:row;gap:12px}
+.f.two label{flex:1;display:flex;flex-direction:column;gap:6px}
+.check{display:flex;gap:10px;align-items:flex-start;margin:12px 0}
+.check input{width:22px;height:22px;flex:none;accent-color:var(--leaf)}
+.emo-row{display:flex;flex-wrap:wrap;gap:6px}
+.emo-in{width:64px;text-align:center;font-size:1.4rem!important;padding:6px!important}
+.emo{width:44px;height:44px;border:0;border-radius:12px;background:var(--sky);font-size:1.4rem}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:0;border-radius:999px;padding:8px 12px;background:var(--sky);font-weight:400}
+.seg button.on{background:var(--leaf);color:#fff;font-weight:700}
+.seg.wide{background:var(--paper);border-radius:999px;padding:4px;margin:16px 0;flex-wrap:nowrap}
+.seg.wide button{flex:1;background:none}
+.seg.wide button.on{background:var(--leaf)}
+.days{display:flex;gap:6px}
+.day{flex:1;height:42px;border:0;border-radius:12px;background:var(--sky);font-weight:700}
+.day.on{background:var(--leaf);color:#fff}
+.presets{display:flex;gap:10px;flex-wrap:wrap}
+.swatches{display:flex;gap:8px;flex-wrap:wrap}
+.sw{width:40px;height:40px;border-radius:50%;border:3px solid transparent}
+.sw.on{border-color:var(--earth)}
+.tpl{list-style:none;padding:0;margin:0;display:grid;gap:6px}
+.tpl label{display:flex;gap:10px;align-items:center;background:var(--sky);border-radius:14px;padding:10px 12px;font-weight:400}
+.tpl input{width:22px;height:22px;accent-color:var(--leaf)}
+.tpl .had{opacity:.5}
+.code{font-family:var(--display);font-size:2.6rem;letter-spacing:.18em;text-align:center;background:var(--sun-l);border-radius:20px;padding:16px;margin:10px 0;user-select:all}
+.pin{font-size:2rem!important;letter-spacing:.4em;text-align:center}
+
+/* Toast */
+#toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:50;
+  background:var(--earth);color:var(--paper);padding:10px 18px;border-radius:999px;max-width:90vw;font-weight:700;
+  opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:1}
+#toast.err{background:var(--poppy);color:#fff}
+
+/* Connexion */
+.auth{padding-top:24px}
+.auth-hero{text-align:center}
+.auth-hero svg{width:140px;height:154px}
+.auth-hero h1{font-size:2.6rem;color:var(--leaf-d)}
+.auth-hero p{margin:4px 0 0;color:var(--muted)}
+.card{background:var(--paper);border-radius:24px;padding:16px;margin:12px 0;box-shadow:var(--lift)}
+.card.alt{background:transparent;box-shadow:inset 0 0 0 2px var(--line);text-align:center}
+.card.alt p{margin:0 0 10px}
+.center{text-align:center}
+.loading{display:grid;place-items:center;min-height:70vh}
+.loading svg{width:90px;height:100px}
+
+/* ===== Mode enfant ===== */
+.kid-top .hello{font-family:var(--display);font-weight:600;font-size:1.2rem}
+.star-count{margin-left:auto;font-family:var(--display);font-weight:600;font-size:1.25rem;background:var(--sun-l);padding:4px 14px;border-radius:999px}
+.lock{width:40px;height:40px;border-radius:50%;border:0;background:var(--paper);opacity:.7}
+.hero{display:flex;align-items:center;gap:14px;background:var(--paper);border-radius:28px;padding:12px 16px;margin-bottom:12px;box-shadow:var(--lift)}
+.hero-plant svg{width:120px;height:auto;display:block}
+.hero-txt{flex:1}
+.hero-txt h1{font-size:1.6rem;color:var(--leaf-d)}
+.hero-txt p{margin:6px 0 0;font-size:.95rem}
+.bar{height:14px;border-radius:999px;background:var(--sky);margin-top:8px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--sun);border-radius:999px}
+.today-count{font-family:var(--display);font-weight:600;font-size:1.15rem;margin:6px 4px 4px}
+.kcards{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.kcard{width:100%;display:flex;align-items:center;gap:14px;border:0;border-radius:22px;padding:12px 14px;background:var(--paper);text-align:left;
+  box-shadow:var(--lift);min-height:78px}
+.k-emo{font-size:2.3rem;width:58px;height:58px;display:grid;place-items:center;background:var(--sky);border-radius:18px;flex:none}
+.k-txt{flex:1;display:flex;flex-direction:column}
+.k-txt b{font-size:1.12rem}
+.k-txt small{color:var(--muted)}
+.k-stars{font-size:.95rem;white-space:nowrap}
+.k-pot{width:46px;height:46px;flex:none;border-radius:12px 12px 20px 20px;border:4px solid var(--line);display:grid;place-items:center;font-size:1.5rem;font-weight:700;color:#fff}
+.kcard.done{background:var(--leaf-l)}
+.kcard.done .k-pot{background:var(--leaf);border-color:var(--leaf)}
+.kcard.done .k-emo{background:var(--paper)}
+.k-timer{margin:-4px 0 4px 72px;align-self:flex-start;border:0;border-radius:999px;background:var(--sun);color:#3B2A00;font-weight:700;padding:8px 14px}
+.kgift{display:flex;align-items:center;gap:14px;background:var(--paper);border-radius:22px;padding:12px 14px;box-shadow:var(--lift)}
+.kgift .g-emo{font-size:2.4rem}
+.kgift .grow{flex:1}
+.kgift b{font-size:1.1rem;display:block}
+.week{display:flex;justify-content:space-between;background:var(--paper);border-radius:22px;padding:14px 10px;box-shadow:var(--lift)}
+.wd{display:flex;flex-direction:column;align-items:center;gap:6px;font-weight:700;font-size:.9rem}
+.wd .ring{width:38px;height:38px}
+.wd .ring span{width:28px;height:28px;font-size:.8rem}
+.wd.today{color:var(--leaf-d)}
+.wd.future{opacity:.4}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
+.badge{background:var(--paper);border-radius:18px;padding:12px 6px;text-align:center;box-shadow:var(--lift);font-size:.82rem;line-height:1.25}
+.badge .be{font-size:2rem;display:block;margin-bottom:4px}
+.badge.off{opacity:.35;filter:grayscale(1)}
+.streak{font-family:var(--display);font-weight:600;font-size:1.1rem;margin:10px 4px}
+
+/* Validation et étoiles cassées */
+.rt.pending{background:var(--sun-l)}
+.rt.pending .pot{border-color:var(--sun)}
+.kcard.pending{background:var(--sun-l)}
+.kcard.pending .k-pot{border-color:var(--sun);color:var(--earth);font-size:1.2rem}
+.k-stars.wait{opacity:.4}
+.validate{background:var(--sun-l);border-radius:24px;padding:14px;margin-bottom:16px}
+.v-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.vlist{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.vlist li{display:flex;align-items:center;gap:10px;background:var(--paper);border-radius:16px;padding:8px 10px}
+.vlist .grow{flex:1;display:flex;flex-direction:column;min-width:0}
+.vlist small{color:var(--muted)}
+.vbtn{width:44px;height:44px;flex:none;border-radius:50%;border:0;font-size:1.15rem;font-weight:700}
+.vbtn.yes{background:var(--leaf);color:#fff}
+.vbtn.no{background:var(--paper);color:var(--poppy);box-shadow:inset 0 0 0 2px var(--poppy)}
+.pen{width:100%;display:flex;justify-content:space-between;gap:10px;border:0;border-radius:14px;padding:12px;background:var(--sky);text-align:left}
+.bstar{vertical-align:-4px;flex:none}
+.small{font-size:.88rem}
+.wait-note{margin:4px 0 0;font-size:.92rem;color:var(--muted)}
+
+/* Jardin */
+.pot-art svg{display:block;width:100%;height:auto}
+.days14{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
+.d14{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:9px}
+.d14.good{background:var(--leaf);border-color:var(--leaf)}
+.d14.miss{background:var(--paper)}
+.d14.neutral{background:var(--line);border-color:var(--line);transform:scale(.6)}
+.d14.today{border-color:var(--sun);border-width:3px}
+.d14.future{opacity:.35}
+.scene{border-radius:20px;overflow:hidden;background:var(--paper);box-shadow:var(--lift);margin:8px 0 14px}
+.scene svg{display:block;width:100%;height:auto}
+.scene p{margin:0;padding:8px 14px 12px;font-weight:700}
+.yr{display:flex;flex-wrap:wrap;gap:8px}
+.grade{font-family:var(--display);font-size:1.6rem;text-align:center;color:var(--leaf-d);margin:6px 0}
+.tier-h{margin:18px 0 6px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.tier-h small{color:var(--muted);font-family:var(--body);font-weight:400}
+.gift small.when{display:block;color:var(--muted)}
+.banner{background:var(--sun-l);border-radius:16px;padding:12px 14px;margin:10px 0}
+.banner p{margin:0 0 8px}
+.osm li label{align-items:flex-start}
+.osm small{color:var(--muted);display:block}
+
+/* Minuteur */
+.timer{text-align:center}
+.timer svg{width:220px;height:220px}
+.timer .tleft{font-family:var(--display);font-size:2.6rem;font-weight:600}
+
+/* Animations (réponse à une action) */
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.12) rotate(-3deg)}100%{transform:scale(1)}}
+.bump{animation:bump .6s ease-out}
+@keyframes sway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+.hero-plant .sway{transform-origin:100px 166px;animation:sway 5s ease-in-out infinite}
+@media (prefers-reduced-motion: reduce){ .bump,.hero-plant .sway{animation:none} }
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:40}
+
+/* Impression */
+#print{display:none}
+@media print{
+  body{background:#fff;color:#000;padding:0}
+  body>*:not(#print){display:none!important}
+  #print{display:block;font-family:var(--body)}
+  .pp{page-break-after:always;padding:8mm}
+  .pp h1{font-family:var(--display);font-size:22pt;margin-bottom:4mm}
+  .pp table{width:100%;border-collapse:collapse;font-size:12pt}
+  .pp th,.pp td{border:1.5px solid #444;padding:5px;text-align:center}
+  .pp td.n{text-align:left}
+  .pp .grp-row td{background:#eef6ee;font-weight:700;text-align:left}
+  .pp .circ{display:inline-block;width:20px;height:20px;border:2px solid #333;border-radius:50%}
+  .pp .off{background:#e6e6e6}
+  .pp .gifts{margin-top:6mm;font-size:12pt}
+}
+</style>
+</head>
+<body>
+<div id="app" aria-live="polite"></div>
+<dialog id="sheet" aria-label="Fenêtre"></dialog>
+<div id="toast" role="status"></div>
+<div id="print"></div>
+
+<script>
+"use strict";
+/* ================= Configuration ================= */
+const CFG = {
+  url: "__SUPABASE_URL__",   // injecté au déploiement depuis le secret GitHub SUPABASE_URL
+  key: "__SUPABASE_KEY__"    // injecté au déploiement depuis le secret GitHub SUPABASE_KEY
+};
+const CFG_OK = !CFG.url.startsWith("__") && !CFG.key.startsWith("__");
+let sb = null;
+try { if (!CFG_OK) throw new Error("config"); sb = window.supabase.createClient(CFG.url, CFG.key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }); }
+catch (e) { console.warn("Supabase indisponible", e); }
+
+/* ================= Outils ================= */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const app = $("#app");
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("sf:" + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("sf:" + k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem("sf:" + k); } catch {} }
+};
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const pad = n => String(n).padStart(2, "0");
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const todayISO = () => iso(new Date());
+const parseISO = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const addDays = (s, n) => { const d = parseISO(s); d.setDate(d.getDate() + n); return iso(d); };
+const dowOf = s => { const g = parseISO(s).getDay(); return g === 0 ? 7 : g; };
+const DAYS = ["L", "M", "M", "J", "V", "S", "D"];
+const DAYS_LONG = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+const MOMENTS = [["matin", "Le matin", "Matin", "🌅"], ["midi", "Le midi", "Midi", "🌞"], ["journee", "Dans la journée", "Journée", "🌤️"], ["soir", "Le soir", "Soir", "🌙"]];
+const momentLabel = k => (MOMENTS.find(m => m[0] === k) || MOMENTS[0])[2];
+const PLACES = ["Chambre", "Salle de bain", "Cuisine", "Salon", "Entrée", "Dehors", "École"];
+const COLORS = ["#2E8B57", "#E8484F", "#3D7BD9", "#F29E1F", "#8E5BD0", "#1FA5A0"];
+const EMO_R = ["🛏️", "👕", "🪥", "🧼", "🥣", "👟", "🎒", "🧸", "🛁", "📖", "✏️", "🍽️", "🧺", "🌙", "🪴", "🐟", "💇", "🎹", "⚽", "🚽"];
+const EMO_W = ["🎁", "🍦", "🌳", "🎬", "📖", "🎲", "🍕", "🏊", "🎨", "🧁", "🚲", "🧸", "⏰", "🎮"];
+const EMO_K = ["🧒", "👧", "👦", "👶", "🐻", "🦊", "🐰", "🦁", "🐼", "🦄", "🐸", "🐯", "🐱", "🐶"];
+function fmtDay(s) { const t = todayISO(); if (s === t) return "Aujourd'hui"; if (s === addDays(t, -1)) return "Hier"; return DAYS_LONG[dowOf(s) - 1] + " " + parseISO(s).getDate(); }
+function fmtDate(ts) { const d = new Date(ts); return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" }); }
+function daysLabel(days) {
+  const s = [...(days || [])].sort((a, b) => a - b).join(",");
+  if (s === "1,2,3,4,5,6,7") return "Tous les jours";
+  if (s === "1,2,3,4,5") return "En semaine";
+  if (s === "6,7") return "Le week-end";
+  return (days || []).slice().sort((a, b) => a - b).map(d => DAYS_LONG[d - 1].slice(0, 3)).join(" ");
+}
+function toast(msg, err = false) {
+  const t = $("#toast"); t.textContent = msg; t.className = "show" + (err ? " err" : "");
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.className = "", 2800);
+}
+function errMsg(e) {
+  const m = (e && (e.message || e.error_description || e.msg)) || String(e);
+  if (/Failed to fetch|NetworkError|Load failed|fetch/i.test(m)) return "Pas de connexion internet. Réessaie dans un instant.";
+  if (/Invalid login credentials/i.test(m)) return "E-mail ou mot de passe incorrect.";
+  if (/Email not confirmed/i.test(m)) return "Confirme d'abord ton adresse e-mail avec le lien reçu, puis reconnecte-toi.";
+  if (/already registered/i.test(m)) return "Un compte existe déjà avec cet e-mail. Connecte-toi.";
+  if (/Password should be at least/i.test(m)) return "Le mot de passe doit contenir au moins 6 caractères.";
+  if (/rate limit/i.test(m)) return "Trop de tentatives. Patiente quelques minutes.";
+  return m;
+}
+const isNetErr = e => /Failed to fetch|NetworkError|Load failed|fetch/i.test((e && e.message) || String(e)) || !navigator.onLine;
+
+/* ================= État ================= */
+const S = {
+  screen: "loading", tab: "today", day: todayISO(), authMode: "login",
+  session: null, family: null, me: null, children: [], routines: [], rewards: [], completions: [], redemptions: [],
+  stats: {}, members: [], devices: [], currentChild: null, tip: null, offline: false,
+  penalties: [], pevents: [], badges: {}, autoValidate: true, pauses: [], gardens: {},
+  cs: null, ctab: "today", form: {}
+};
+
+/* ================= Jardin : dessins ================= */
+const GC = { leaf: "#66B84C", leafD: "#3F8C35", stem: "#4F9B3B", soil: "#6B4430", soilD: "#523222", yel: "#FFCB2E", yelD: "#F0A30F", ctr: "#7A4A22", ctrD: "#5A3416", cheek: "#F59A9A", ink: "#3B2418" };
+const SP = {
+  "tournesol": { n: "Tournesol", k: "sun", pe: "#FFCB2E", pd: "#F0A30F", ct: "#7A4A22" },
+  "marguerite": { n: "Marguerite", k: "sun", pe: "#FFFFFF", pd: "#EEF0F5", ct: "#FFCB2E", np: 14 },
+  "cosmos-rose": { n: "Cosmos rose", k: "cosmos", pe: "#FF8FB1", pd: "#F06A97" },
+  "cosmos-orange": { n: "Cosmos orange", k: "cosmos", pe: "#F28C28", pd: "#D86F10" },
+  "cosmos-rouge": { n: "Cosmos rouge", k: "cosmos", pe: "#E0474C", pd: "#BE3036" },
+  "tulipe-rose": { n: "Tulipe rose", k: "tulip", pe: "#F0607A", pd: "#C93E5A" },
+  "tulipe-jaune": { n: "Tulipe jaune", k: "tulip", pe: "#FFCB2E", pd: "#E0A400" },
+  "tulipe-violette": { n: "Tulipe violette", k: "tulip", pe: "#B07CE0", pd: "#8A55C0" },
+  "tulipe-rouge": { n: "Tulipe rouge", k: "tulip", pe: "#E0474C", pd: "#BE3036" },
+  "hellebore": { n: "Rose de Noël", k: "hell", pe: "#FFFFFF", pd: "#F3E6EE" }
+};
+const SEASON_SP = { printemps: ["tulipe-rose", "marguerite", "tulipe-jaune", "tulipe-violette"], ete: ["tournesol", "cosmos-rose", "marguerite", "tournesol"],
+  automne: ["cosmos-orange", "tournesol", "cosmos-rouge", "marguerite"], hiver: ["hellebore", "tulipe-rouge", "hellebore", "marguerite"] };
+const SEASON_NAME = { printemps: "du printemps", ete: "de l'été", automne: "de l'automne", hiver: "de l'hiver" };
+const GRADE_NAME = ["Un joli bouton", "Une petite fleur", "Une belle fleur", "Une grande fleur"];
+const STAGE_NAME = ["Pot vide", "Graine", "Germe", "Pousse", "2 feuilles", "4 feuilles", "6 feuilles", "Premier bouton", "Deuxième bouton", "Les boutons grossissent", "Éclosion", "Mi-ouverte", "Grande ouverture", "Fleur complète"];
+function shade(hex, f) { const n = parseInt(hex.slice(1), 16); const c = [n >> 16, (n >> 8) & 255, n & 255].map(v => Math.max(0, Math.min(255, Math.round(f < 0 ? v * (1 + f) : v + (255 - v) * f)))); return "#" + c.map(v => v.toString(16).padStart(2, "0")).join(""); }
+const leafG = (x, y, a, s = 1) => `<g transform="translate(${x} ${y}) rotate(${a}) scale(${s})"><path d="M0 0 C 8 -12, 27 -13, 36 0 C 27 11, 8 12, 0 0 Z" fill="${GC.leaf}" stroke="${GC.leafD}" stroke-width="1.6" stroke-linejoin="round"/><path d="M3 0 Q 18 -1.5 31 0" stroke="${GC.leafD}" stroke-width="1.3" fill="none" stroke-linecap="round"/></g>`;
+const stemG = (h, w = 5, x = 100, y = 140) => `<path d="M${x} ${y} C ${x - 4} ${y - h * .4}, ${x + 4} ${y - h * .72}, ${x} ${y - h}" stroke="${GC.stem}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`;
+const sparkG = (x, y, s) => `<path transform="translate(${x} ${y}) scale(${s})" d="M0 -10 Q2 -2 10 0 Q2 2 0 10 Q-2 2 -10 0 Q-2 -2 0 -10 Z" fill="${GC.yel}"/>`;
+const beeG = (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><ellipse cx="-3" cy="-9" rx="6" ry="4" fill="#E4F2FF" stroke="#9AB8D8"/><ellipse cx="4" cy="-9" rx="6" ry="4" fill="#E4F2FF" stroke="#9AB8D8"/><ellipse rx="9" ry="7" fill="${GC.yel}"/><path d="M-3 -6 L-3 6 M2 -6.5 L2 6.5" stroke="#2A170C" stroke-width="2.4"/><circle cx="8" cy="-1" r="1.4" fill="#2A170C"/></g>`;
+function faceG(k) {
+  const ch = `<circle cx="77" cy="186" r="5.5" fill="${GC.cheek}" opacity=".8"/><circle cx="123" cy="186" r="5.5" fill="${GC.cheek}" opacity=".8"/>`;
+  if (k === "sleep") return ch + `<path d="M82 177 q5 4 10 0 M108 177 q5 4 10 0" stroke="${GC.ink}" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M96 189 q4 2 8 0" stroke="${GC.ink}" stroke-width="2.4" fill="none" stroke-linecap="round"/><text x="130" y="128" font-family="sans-serif" font-size="15" font-weight="bold" fill="#9AA9C4">z</text><text x="140" y="114" font-family="sans-serif" font-size="20" font-weight="bold" fill="#9AA9C4">z</text>`;
+  if (k === "joy") return ch + `<path d="M82 179 q5 -7 10 0 M108 179 q5 -7 10 0" stroke="${GC.ink}" stroke-width="2.8" fill="none" stroke-linecap="round"/><path d="M91 185 q9 12 18 0 Z" fill="#9B3434" stroke="${GC.ink}" stroke-width="2" stroke-linejoin="round"/>`;
+  return ch + `<ellipse cx="87" cy="177" rx="3.2" ry="4.2" fill="${GC.ink}"/><ellipse cx="113" cy="177" rx="3.2" ry="4.2" fill="${GC.ink}"/><circle cx="88.2" cy="175.5" r="1.2" fill="#fff"/><circle cx="114.2" cy="175.5" r="1.2" fill="#fff"/><path d="M93 186 q7 6 14 0" stroke="${GC.ink}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
+}
+function potG(k, color = "#E58358") {
+  const d = shade(color, -.16), l = shade(color, .35);
+  return `<path d="M60 150 L140 150 L131 208 Q130 215 123 215 L77 215 Q70 215 69 208 Z" fill="${color}"/><path d="M118 150 L140 150 L131 208 Q130 215 123 215 L114 215 Z" fill="${d}" opacity=".55"/><rect x="51" y="137" width="98" height="21" rx="9" fill="${d}"/><rect x="58" y="141" width="44" height="5" rx="2.5" fill="${l}"/><ellipse cx="100" cy="139" rx="43" ry="6.5" fill="${GC.soil}"/><circle cx="84" cy="139" r="1.6" fill="${GC.soilD}"/><circle cx="113" cy="140" r="1.6" fill="${GC.soilD}"/><circle cx="124" cy="138" r="1.3" fill="${GC.soilD}"/>${faceG(k)}`;
+}
+function headG(key, cx, cy, r, open = 1, smile = false) {
+  const sp = SP[key] || SP.tournesol; let p = "";
+  if (sp.k === "sun") {
+    const n = sp.np || 16;
+    for (let k = 0; k < n; k++) p += `<ellipse cx="${cx}" cy="${(cy - r * (.6 + .85 * open)).toFixed(1)}" rx="${(r * .38).toFixed(1)}" ry="${(r * .85 * open).toFixed(1)}" fill="${k % 2 ? sp.pd : sp.pe}" ${sp.pe === "#FFFFFF" ? 'stroke="#E2E4EA" stroke-width=".8"' : ""} transform="rotate(${k * 360 / n} ${cx} ${cy})"/>`;
+    p += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${sp.ct}"/>`;
+    if (sp.ct !== GC.yel) p += `<circle cx="${cx}" cy="${cy}" r="${(r * .72).toFixed(1)}" fill="none" stroke="${GC.ctrD}" stroke-width="1.4" stroke-dasharray="2 3"/>`;
+  } else if (sp.k === "cosmos" || sp.k === "hell") {
+    const n = sp.k === "cosmos" ? 8 : 5, rx = sp.k === "cosmos" ? r * .62 : r * .82;
+    for (let k = 0; k < n; k++) p += `<ellipse cx="${cx}" cy="${(cy - r * (.45 + .75 * open)).toFixed(1)}" rx="${rx.toFixed(1)}" ry="${(r * .95 * open).toFixed(1)}" fill="${k % 2 ? sp.pd : sp.pe}" ${sp.k === "hell" ? 'stroke="#D9C2D0" stroke-width="1"' : ""} transform="rotate(${k * 360 / n} ${cx} ${cy})"/>`;
+    p += sp.k === "hell" ? `<circle cx="${cx}" cy="${cy}" r="${(r * .5).toFixed(1)}" fill="#C9D86B"/><circle cx="${cx}" cy="${cy}" r="${(r * .25).toFixed(1)}" fill="${GC.yel}"/>` : `<circle cx="${cx}" cy="${cy}" r="${(r * .5).toFixed(1)}" fill="${GC.yel}"/>`;
+  } else {
+    const s = r / 11, w = 11 * s * (.55 + .45 * open);
+    p += `<path d="M${cx - w} ${cy - 14 * s} Q${cx - w} ${cy + 10 * s} ${cx} ${cy + 12 * s} Q${cx + w} ${cy + 10 * s} ${cx + w} ${cy - 14 * s} L${cx + w * .45} ${cy - 6 * s} L${cx} ${cy - 18 * s} L${cx - w * .45} ${cy - 6 * s} Z" fill="${sp.pe}" stroke="${sp.pd}" stroke-width="1.8" stroke-linejoin="round"/>`;
+  }
+  if (smile) p += `<ellipse cx="${cx - r * .35}" cy="${cy - r * .15}" rx="2.4" ry="3.2" fill="#2A170C"/><ellipse cx="${cx + r * .35}" cy="${cy - r * .15}" rx="2.4" ry="3.2" fill="#2A170C"/><path d="M${cx - r * .35} ${cy + r * .25} q${r * .35} ${r * .4} ${r * .7} 0" stroke="#2A170C" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+  return p;
+}
+const budG = (x, y, rx, ry) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="${GC.leaf}" stroke="${GC.leafD}" stroke-width="1.7"/><path d="M${x - rx * .7} ${y - ry * .3} L${x} ${y + ry * .7} L${x + rx * .7} ${y - ry * .3}" stroke="${GC.leafD}" stroke-width="1.5" fill="none" stroke-linejoin="round"/>`;
+function tipsG(key, x, y, s) { const c = (SP[key] || SP.tournesol).pe; let g = ""; for (let k = -2; k <= 2; k++) g += `<ellipse cx="${x + k * 6 * s}" cy="${y - 14 * s}" rx="${4 * s}" ry="${9 * s}" fill="${c}" stroke="${c === "#FFFFFF" ? "#D9DCE4" : "none"}" transform="rotate(${k * 18} ${x} ${y})"/>`; return g + budG(x, y, 13 * s, 12 * s); }
+/* Une étape (0 à 13) de la fleur en pot */
+function stageArt(st, key = "tournesol", color = "#E58358", final = null) {
+  st = Math.max(0, Math.min(13, st | 0)); let g = "";
+  if (st === 0) return potG("sleep", color);
+  if (st === 1) return potG("smile", color) + `<ellipse cx="100" cy="137" rx="17" ry="5" fill="${GC.soilD}"/><g transform="translate(103 128) rotate(-25)"><ellipse rx="7" ry="11" fill="#3B2C25"/><path d="M-3.2 -8 L-3.2 8 M0 -10.5 L0 10.5 M3.2 -8 L3.2 8" stroke="#EDE3D6" stroke-width="1.2"/></g>`;
+  if (st === 2) return stemG(26, 4.5) + `<ellipse cx="88" cy="113" rx="12" ry="7" fill="${GC.leaf}" stroke="${GC.leafD}" stroke-width="1.6" transform="rotate(-25 88 113)"/><ellipse cx="112" cy="113" rx="12" ry="7" fill="${GC.leaf}" stroke="${GC.leafD}" stroke-width="1.6" transform="rotate(25 112 113)"/>` + potG("smile", color);
+  const H = { 3: 40, 4: 52, 5: 64, 6: 78, 7: 90, 8: 96, 9: 100, 10: 102, 11: 104, 12: 106, 13: 106 }[st], ty = 140 - H;
+  const side = st >= 8, sy = 140 - H * .55, sx = 58, sty = sy - 10;
+  if (side) g += `<path d="M100 ${sy} Q 76 ${sy + 2} ${sx} ${sty}" stroke="${GC.stem}" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+  g += stemG(H, st >= 7 ? 6 : 5);
+  if (st === 3) g += leafG(100, 140 - H * .5, 205, .85) + leafG(100, 140 - H * .56, -25, .85);
+  if (st === 4) g += leafG(100, 140 - H * .45, 205, 1) + leafG(100, 140 - H * .5, -25, 1);
+  if (st === 5) g += leafG(100, 140 - H * .3, 202, 1.05) + leafG(100, 140 - H * .34, -22, 1.05) + leafG(100, 140 - H * .62, 208, .8) + leafG(100, 140 - H * .66, -28, .8);
+  if (st >= 6) { g += leafG(100, 140 - H * .2, 200, 1.12) + leafG(100, 140 - H * .24, -20, 1.12) + leafG(100, 140 - H * .44, -26, .95);
+    g += side ? leafG(100, 140 - H * .72, -30, .72) : leafG(100, 140 - H * .47, 206, .95) + leafG(100, 140 - H * .68, -30, .75); }
+  if (st >= 3 && st <= 6) g += `<ellipse cx="100" cy="${ty - 3}" rx="4.5" ry="7" fill="${GC.leaf}" stroke="${GC.leafD}" stroke-width="1.4"/>`;
+  if (st === 7) g += budG(100, ty - 7, 7, 9);
+  if (st === 8) g += budG(100, ty - 8, 8.5, 11) + budG(sx, sty - 5, 5, 7);
+  if (st === 9) g += budG(100, ty - 10, 11, 14) + budG(sx, sty - 6, 6.5, 8.5);
+  if (st === 10) g += tipsG(key, 100, ty - 7, 1) + budG(sx, sty - 7, 7, 9);
+  if (st === 11) g += headG(key, 100, ty - 12, 12, .5) + tipsG(key, sx, sty - 6, .6);
+  if (st === 12) g += headG(key, 100, ty - 14, 15) + headG(key, sx, sty - 8, 7, .5);
+  if (st === 13) {
+    const gr = final == null ? 3 : final;
+    if (gr === 0) g += tipsG(key, 100, ty - 7, 1.05) + budG(sx, sty - 7, 7, 9);
+    else { const R = [0, 10, 14, 16][gr]; g += headG(key, 100, ty - 14, R, 1, SP[key]?.k === "sun") + headG(key, sx, sty - 9, gr >= 2 ? 8 : 6, gr >= 2 ? 1 : .6); }
+    if (gr === 3) g += sparkG(150, 6, 1) + sparkG(160, 62, .65) + sparkG(40, -10, .7) + beeG(152, 104);
+  }
+  return g + potG(st >= 12 ? "joy" : "smile", color);
+}
+function stageSVG(st, key, color, label, final) { return `<svg viewBox="0 -48 200 268" role="img" aria-label="${esc(label || STAGE_NAME[Math.max(0, Math.min(13, st | 0))])}"><g class="sway">${stageArt(st, key, color, final)}</g></svg>`; }
+/* Compatibilité : petites illustrations des écrans d'accueil */
+function plantSVG(level, color = "#E58358", label) { return stageSVG([0, 2, 5, 7, 12, 13][Math.max(0, Math.min(5, level | 0))], "tournesol", color, label || "Plante"); }
+const miniLogo = () => `<svg viewBox="0 -48 200 268" aria-hidden="true">${stageArt(13, "tournesol", "#E8484F")}</svg>`;
+
+/* Fleur plantée dans un parterre */
+function bedFlower(x, y, f) {
+  const gr = f.grade, h = [70, 95, 118, 140][gr], sc = [1, 1.15, 1.45, 1.75][gr], t = y - h;
+  let g = `<path d="M${x} ${y} C ${x - 4} ${y - h * .4}, ${x + 4} ${y - h * .7}, ${x} ${t}" stroke="${GC.stem}" stroke-width="${gr ? 5 : 4}" fill="none" stroke-linecap="round"/>` + leafG(x, y - h * .3, 203, gr ? .95 : .75) + leafG(x, y - h * .45, -25, gr ? .95 : .75);
+  g += gr === 0 ? `<g transform="translate(${x} ${t}) scale(.75) translate(${-x} ${-t})">${tipsG(f.species, x, t - 2, 1)}</g>` : headG(f.species, x, t - 4, 7 * sc);
+  if (gr === 3) g += sparkG(x + 22, t - 28, .5);
+  return g;
+}
+const SCENE = {
+  printemps: { sky: "#E4F3FF", grass: "#A6DB84", grassD: "#86C463", border: "#C9C2B8",
+    deco: () => { const fly = (x, y, c) => `<g transform="translate(${x} ${y})"><ellipse cx="-6" cy="-3" rx="7" ry="9" fill="${c}" transform="rotate(-25 -6 -3)"/><ellipse cx="6" cy="-3" rx="7" ry="9" fill="${c}" transform="rotate(25 6 -3)"/><ellipse cx="-5" cy="7" rx="4.5" ry="5" fill="${c}"/><ellipse cx="5" cy="7" rx="4.5" ry="5" fill="${c}"/><rect x="-1.5" y="-8" width="3" height="18" rx="1.5" fill="#4A2E1F"/></g>`; return fly(60, 40, "#7FB8F0") + fly(470, 36, "#FF9EC2") + fly(552, 92, "#FFCB2E"); } },
+  ete: { sky: "#DDEFFF", grass: "#9BD07A", grassD: "#7DBB5C", border: "#C9C2B8",
+    deco: () => `<circle cx="540" cy="58" r="28" fill="${GC.yel}"/>` + Array.from({ length: 10 }, (_, k) => `<rect x="538" y="8" width="4" height="13" rx="2" fill="${GC.yel}" transform="rotate(${k * 36} 540 58)"/>`).join("") + beeG(50, 40) + beeG(330, 34, .8) },
+  automne: { sky: "#FFF2E2", grass: "#C7C67A", grassD: "#A9A85C", border: "#A8865E",
+    deco: () => { const lf = (x, y, a, c) => `<g transform="translate(${x} ${y}) rotate(${a})"><path d="M0 -12 C 9 -8 9 6 0 12 C -9 6 -9 -8 0 -12 Z" fill="${c}"/><path d="M0 -12 L0 12" stroke="#7A3E10" stroke-width="1"/></g>`; return lf(60, 50, 30, "#E8862A") + lf(150, 90, -40, "#C9442A") + lf(470, 60, 60, "#E8B12A") + lf(552, 110, -20, "#E8862A") + lf(360, 34, 15, "#C9442A") + `<g transform="translate(566 268)"><rect x="-4" y="-10" width="8" height="12" rx="3" fill="#F3E3C8"/><path d="M-14 -8 Q0 -26 14 -8 Z" fill="#D8462E"/><circle cx="-5" cy="-14" r="2" fill="#fff"/><circle cx="5" cy="-12" r="1.6" fill="#fff"/></g>`; } },
+  hiver: { sky: "#EDF2FA", grass: "#F6F8FC", grassD: "#DDE5F1", border: "#C9C2B8", snow: true,
+    deco: () => { const fl = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})" stroke="#A9BEDD" stroke-width="2.4" stroke-linecap="round"><path d="M0 -10 L0 10 M-8.7 -5 L8.7 5 M-8.7 5 L8.7 -5"/></g>`; return fl(60, 50, 1) + fl(160, 100, .7) + fl(460, 40, 1.1) + fl(550, 110, .8) + fl(330, 30, .7) + fl(250, 70, .6); } }
+};
+function parterreArt(season, flowers, growing) {
+  const s = SCENE[season] || SCENE.ete; let g = `<rect width="600" height="330" fill="${s.sky}"/>${s.deco()}<rect y="190" width="600" height="140" fill="${s.grass}"/><rect y="190" width="600" height="6" fill="${s.grassD}"/><rect x="50" y="222" width="500" height="76" rx="38" fill="${GC.soil}"/>`;
+  const list = flowers.slice(0, 8), n = Math.max(6, list.length + (growing ? 1 : 0)), step = 440 / Math.max(1, n - 1);
+  const slots = list.map((f, i) => ({ f, i })).concat(growing ? [{ grow: true, i: list.length }] : []);
+  const order = slots.slice().sort((a, b) => (a.i % 2) - (b.i % 2));
+  order.forEach(o => { const x = 80 + o.i * step, y = o.i % 2 ? 286 : 262;
+    if (o.grow) g += `<g transform="translate(${x} ${y - 8})"><ellipse rx="16" ry="6" fill="${GC.soilD}"/><path d="M0 -2 q-2 -14 6 -18" stroke="${GC.leaf}" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse cx="7" cy="-19" rx="6" ry="3.5" fill="${GC.leaf}" transform="rotate(-30 7 -19)"/></g>`;
+    else g += bedFlower(x, y, o.f); });
+  for (let k = 0; k < 16; k++) { const x = 56 + k * 32.5; g += `<ellipse cx="${x}" cy="${k % 2 ? 300 : 298}" rx="15" ry="8" fill="${s.border}"/>`; if (s.snow) g += `<ellipse cx="${x}" cy="${k % 2 ? 294 : 292}" rx="12" ry="4.5" fill="#FFFFFF"/>`; }
+  return g;
+}
+const parterreSVG = (season, flowers, growing, label) => `<svg viewBox="0 0 600 330" role="img" aria-label="${esc(label || "Parterre")}">${parterreArt(season, flowers, growing)}</svg>`;
+const YEAR_ORDER = ["automne", "hiver", "printemps", "ete"];
+function gardenSVG(name, year, flowers, cur) {
+  let g = `<rect width="1300" height="900" fill="#BFE3A3"/><rect width="1300" height="120" fill="#DDEFFF"/>`;
+  for (let k = 0; k < 27; k++) { const x = 10 + k * 48; g += `<path d="M${x} 150 L${x} 108 L${x + 12} 96 L${x + 24} 108 L${x + 24} 150 Z" fill="#E9C99A" stroke="#B88A55" stroke-width="2"/>`; }
+  g += `<rect y="118" width="1300" height="10" fill="#C9A26E"/><rect y="138" width="1300" height="10" fill="#C9A26E"/><rect x="610" y="150" width="80" height="750" fill="#E8D3AE"/><rect y="505" width="1300" height="60" fill="#E8D3AE"/>`;
+  YEAR_ORDER.forEach((se, i) => { const x = i % 2 ? 710 : 20, y = i < 2 ? 165 : 580, fl = flowers.filter(f => f.season === se);
+    g += `<g transform="translate(${x},${y}) scale(.95)"><clipPath id="gy${year}${i}"><rect width="600" height="330" rx="28"/></clipPath><g clip-path="url(#gy${year}${i})">${fl.length || (cur && cur.season === se) ? parterreArt(se, fl, cur && cur.season === se) : `<rect width="600" height="330" fill="#E9F1E3"/><text x="300" y="175" text-anchor="middle" font-family="sans-serif" font-size="30" fill="#8FA585">Parterre ${SEASON_NAME[se]}</text>`}</g></g>`; });
+  g += `<g transform="translate(650 42)"><rect x="-290" y="-30" width="580" height="64" rx="14" fill="#8A5A34"/><rect x="-282" y="-23" width="564" height="50" rx="10" fill="#B07A4C"/><text x="0" y="12" text-anchor="middle" font-family="sans-serif" font-size="28" font-weight="bold" fill="#FFF6E6">${esc("Le jardin de " + name + " " + year)}</text></g>`;
+  return `<svg viewBox="0 0 1300 900" role="img" aria-label="${esc("Jardin " + year)}">${g}</svg>`;
+}
+/* Quinzaine en cours */
+function gardenNow(gd) {
+  if (!gd) return null;
+  const t = gd.today, days = gd.days || [], good = days.filter(d => d.good).length;
+  const dayIdx = Math.round((parseISO(t) - parseISO(gd.period_start)) / 864e5) + 1;
+  const pausedToday = (gd.pauses || []).some(p => p.start_day <= t && p.end_day >= t);
+  const prior = (gd.flowers || []).filter(f => f.season === seasonOfISO(gd.period_end) && f.garden_year === gardenYearOfISO(gd.period_end)).length;
+  const list = SEASON_SP[seasonOfISO(gd.period_end)], species = list[prior % list.length];
+  return { good, dayIdx, stage: Math.min(12, good), species, pausedToday, end: gd.period_end, days };
+}
+function seasonOfISO(s) { const md = s.slice(5, 7) + s.slice(8, 10); return md >= "0320" && md < "0621" ? "printemps" : md >= "0621" && md < "0923" ? "ete" : md >= "0923" && md < "1221" ? "automne" : "hiver"; }
+function gardenYearOfISO(s) { const y = +s.slice(0, 4), md = s.slice(5, 7) + s.slice(8, 10); return md >= "0923" ? `${y}-${y + 1}` : `${y - 1}-${y}`; }
+function dots14(gd) {
+  const map = Object.fromEntries((gd.days || []).map(d => [d.day, d])); let h = "";
+  for (let i = 0; i < 14; i++) { const day = addDays(gd.period_start, i), d = map[day];
+    const cls = day > gd.today ? "future" : !d ? "future" : (d.paused || d.due === 0) ? "neutral" : d.good ? "good" : day === gd.today ? "today" : "miss";
+    h += `<span class="d14 ${cls} ${day === gd.today ? "today" : ""}" title="${fmtDay(day)}"></span>`; }
+  return `<div class="days14" aria-label="Jours de la quinzaine">${h}</div>`;
+}
+const fmtLong = s => parseISO(s).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+
+/* ================= Calculs ================= */
+function dueOn(routines, childId, day) {
+  const dw = dowOf(day);
+  return routines.filter(r => r.child_id === childId && r.active !== false && (r.days || []).includes(dw) && String(r.created_at || "").slice(0, 10) <= day);
+}
+const BADGES = [
+  { k: "first", e: "🌱", n: "Première routine", ok: s => s.done >= 1 },
+  { k: "r10", e: "🌿", n: "10 routines", ok: s => s.done >= 10 },
+  { k: "r50", e: "🪴", n: "50 routines", ok: s => s.done >= 50 },
+  { k: "r100", e: "🌳", n: "100 routines", ok: s => s.done >= 100 },
+  { k: "f1", e: "🌼", n: "Première fleur", ok: s => s.flowers >= 1 },
+  { k: "f5", e: "💐", n: "5 fleurs", ok: s => s.flowers >= 5 },
+  { k: "f10", e: "🌺", n: "10 fleurs", ok: s => s.flowers >= 10 },
+  { k: "big", e: "🌻", n: "Grande fleur", ok: s => s.big },
+  { k: "parterre", e: "🏡", n: "Premier parterre", ok: s => s.parterre },
+  { k: "jardin", e: "🏞️", n: "Premier jardin", ok: s => s.jardin },
+  { k: "st3", e: "🔥", n: "3 bonnes journées de suite", ok: s => s.best >= 3 },
+  { k: "st7", e: "☀️", n: "7 bonnes journées de suite", ok: s => s.best >= 7 },
+  { k: "st30", e: "🏆", n: "30 bonnes journées de suite", ok: s => s.best >= 30 },
+  { k: "timer", e: "⚡", n: "Défi chrono", ok: s => s.timers >= 1 },
+  { k: "bonus", e: "💪", n: "Routine bonus", ok: s => s.bonus >= 1 },
+  { k: "gift", e: "🎁", n: "Première récompense", ok: s => s.redeemed >= 1 }
+];
+function computeView({ child, routines, completions, stats, badges, garden }) {
+  const t = todayISO();
+  const mine = routines.filter(r => r.child_id === child.id);
+  const isVal = c => c.validated === true || !!c.validated_at;
+  const done = new Set(completions.map(c => c.routine_id + "|" + c.day));
+  const valid = new Set(completions.filter(isVal).map(c => c.routine_id + "|" + c.day));
+  const run = garden ? garden.streak || 0 : 0, best = garden ? garden.best_streak || 0 : 0;
+  const fl = garden ? garden.flowers || [] : [];
+  const curSeason = garden ? seasonOfISO(garden.today) : "", curYear = garden ? gardenYearOfISO(garden.today) : "";
+  const bonusIds = new Set(mine.filter(r => r.is_bonus).map(r => r.id));
+  const st = stats || {};
+  const earned = st.earned || 0;
+  return {
+    child, done, valid, earned, balance: Math.max(0, earned - (st.spent || 0) - (st.broken || 0)), current: run, best,
+    timers: completions.filter(c => isVal(c) && c.source === "timer").length,
+    bonus: completions.filter(c => isVal(c) && bonusIds.has(c.routine_id)).length,
+    doneCount: st.done_count || 0, redeemed: st.redeemed_count || 0, flowers: fl.length, big: fl.some(f => f.grade === 3),
+    parterre: fl.some(f => f.season !== curSeason || f.garden_year !== curYear), jardin: fl.some(f => f.garden_year !== curYear), garden,
+    pendingStars: st.pending_stars || 0, pendingCount: st.pending_count || 0, stored: new Set(badges || [])
+  };
+}
+const badgeStats = v => ({ done: v.doneCount, earned: v.earned, best: v.best, timers: v.timers, bonus: v.bonus, redeemed: v.redeemed, flowers: v.flowers, big: v.big, parterre: v.parterre, jardin: v.jardin });
+const hasBadge = (v, b) => v.stored.has(b.k) || b.ok(badgeStats(v));
+const newBadges = v => BADGES.filter(b => !v.stored.has(b.k) && b.ok(badgeStats(v))).map(b => b.k);
+function brokenStar(s = 20) {
+  return `<svg class="bstar" width="${s}" height="${s}" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z" fill="#B9A89B"/><path d="M12.6 2.5 L10.8 7.6 L13.4 10.6 L10.6 13.8 L12 17" fill="none" stroke="var(--paper)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
+
+/* ================= Modèles ================= */
+const TPL_R = [
+  { t: "Faire son lit", e: "🛏️", m: "matin", p: "Chambre" },
+  { t: "S'habiller", e: "👕", m: "matin", p: "Chambre" },
+  { t: "Prendre son petit-déjeuner", e: "🥣", m: "matin", p: "Cuisine" },
+  { t: "Se brosser les dents (matin)", e: "🪥", m: "matin", p: "Salle de bain", tm: 2 },
+  { t: "Se laver le visage", e: "🧼", m: "matin", p: "Salle de bain" },
+  { t: "Se coiffer", e: "💇", m: "matin", p: "Salle de bain" },
+  { t: "Mettre ses chaussures", e: "👟", m: "matin", p: "Entrée", tm: 3 },
+  { t: "Préparer son cartable", e: "🎒", m: "matin", p: "Entrée", d: [1, 2, 3, 4, 5] },
+  { t: "Se laver les mains", e: "🧼", m: "midi", p: "Salle de bain" },
+  { t: "Mettre le couvert", e: "🍽️", m: "midi", p: "Cuisine", s: 2 },
+  { t: "Débarrasser son assiette", e: "🍽️", m: "midi", p: "Cuisine" },
+  { t: "Ranger ses jouets", e: "🧸", m: "journee", p: "Chambre", s: 2, tm: 10 },
+  { t: "Faire ses devoirs", e: "✏️", m: "journee", p: "Chambre", d: [1, 2, 4, 5], s: 2 },
+  { t: "Lire un livre", e: "📚", m: "journee", p: "Salon", b: true },
+  { t: "Arroser les plantes", e: "🪴", m: "journee", p: "Salon", b: true },
+  { t: "Nourrir l'animal", e: "🐟", m: "journee", p: "Cuisine" },
+  { t: "Prendre son bain", e: "🛁", m: "soir", p: "Salle de bain" },
+  { t: "Mettre son pyjama", e: "🌙", m: "soir", p: "Chambre", tm: 5 },
+  { t: "Se brosser les dents (soir)", e: "🪥", m: "soir", p: "Salle de bain", tm: 2 },
+  { t: "Mettre le linge sale au panier", e: "🧺", m: "soir", p: "Salle de bain" },
+  { t: "Préparer ses habits pour demain", e: "👕", m: "soir", p: "Chambre" },
+  { t: "Aller aux toilettes avant le dodo", e: "🚽", m: "soir", p: "Salle de bain" }
+];
+const TIERS = [["coup", "Coup de pouce", "pour les 3-5 ans, environ 1 jour"], ["petit", "Petits plaisirs", "2 à 4 jours"], ["moment", "Moments partagés", "1 à 2 semaines"],
+  ["sortie", "Sorties", "environ 1 mois"], ["grand", "Grands projets", "environ 3 mois"], ["event", "Événements", "à une date précise"]];
+const TIER_DAYS = { coup: 1, petit: 3, moment: 10, sortie: 30, grand: 90, event: 30 };
+const TPL_W = [
+  { t: "Une histoire de plus", e: "📖", tier: "coup", d: 1 }, { t: "Choisir la musique en voiture", e: "🎵", tier: "coup", d: 1 }, { t: "Un autocollant", e: "⭐", tier: "coup", d: 1 },
+  { t: "Une partie de jeu avec papa ou maman", e: "🎲", tier: "petit", d: 2 }, { t: "Choisir le dessert", e: "🍽️", tier: "petit", d: 2 },
+  { t: "Bain moussant avec jouets", e: "🛁", tier: "petit", d: 3 }, { t: "15 minutes de coucher plus tard", e: "⏰", tier: "petit", d: 3 }, { t: "Un dessin animé en plus", e: "📺", tier: "petit", d: 4 },
+  { t: "Atelier dessin ou peinture ensemble", e: "🎨", tier: "moment", d: 7 }, { t: "Faire un gâteau ensemble", e: "🧁", tier: "moment", d: 7 },
+  { t: "Choisir le repas du soir", e: "🍕", tier: "moment", d: 10 }, { t: "Cabane dans le salon", e: "🏕️", tier: "moment", d: 10 }, { t: "Soirée film en famille", e: "🎬", tier: "moment", d: 14 },
+  { t: "Pique-nique au parc", e: "🧺", tier: "sortie", d: 21 }, { t: "Sortie à la médiathèque avec goûter", e: "📚", tier: "sortie", d: 21 },
+  { t: "Après-midi à la piscine", e: "🏊", tier: "sortie", d: 30 }, { t: "Visite d'une ferme pédagogique", e: "🐐", tier: "sortie", d: 30 },
+  { t: "Un jouet ou équipement choisi", e: "🚲", tier: "grand", d: 90 }, { t: "Journée parc d'attractions", e: "🎢", tier: "grand", d: 90 }, { t: "Une journée « c'est moi qui décide »", e: "👑", tier: "grand", d: 90 }
+];
+const TIER_RANK = { coup: 0, petit: 1, moment: 2, sortie: 3, grand: 4, event: 3 };
+function rhythmOf(childId) {
+  const rs = S.routines.filter(r => r.child_id === childId && !r.is_bonus); let tot = 0;
+  for (let d = 1; d <= 7; d++) tot += rs.filter(r => (r.days || []).includes(d)).reduce((a, r) => a + r.stars, 0);
+  const v = tot / 7 * .75; return v > 0 ? v : 5;
+}
+function roundPrice(x) { if (x < 20) return Math.max(1, Math.round(x)); if (x < 100) return Math.round(x / 5) * 5; if (x < 500) return Math.round(x / 10) * 10; return Math.round(x / 50) * 50; }
+const stepOf = p => p < 20 ? 1 : p < 100 ? 5 : p < 500 ? 10 : 50;
+const costFor = (w, childId) => (w.costs && w.costs[childId] != null) ? +w.costs[childId] : w.cost;
+const daysLabelFor = (cost, childId) => { const d = Math.max(1, Math.round(cost / rhythmOf(childId))); return d < 14 ? `≈ ${d} jour${d > 1 ? "s" : ""}` : d < 60 ? `≈ ${Math.round(d / 7)} semaines` : `≈ ${Math.round(d / 30)} mois`; };
+function pricesFor(days, childIds) { const o = {}; childIds.forEach(id => o[id] = roundPrice(days * rhythmOf(id))); return o; }
+
+const TPL_P = [
+  { t: "Refus de ranger après plusieurs rappels", e: "😤", s: 1 },
+  { t: "Gros mot", e: "🗯️", s: 1 },
+  { t: "Dispute avec frère ou sœur", e: "😠", s: 1 },
+  { t: "Ne pas écouter", e: "🙉", s: 1 },
+  { t: "Geste brusque", e: "✋", s: 2 },
+  { t: "Mensonge", e: "🤥", s: 2 }
+];
+
+/* ================= Feuille / dialogues ================= */
+const dlg = $("#sheet");
+function openSheet(html) { dlg.innerHTML = `<div class="sheet-in">${html}</div>`; if (!dlg.open) dlg.showModal(); const f = dlg.querySelector("input:not([type=checkbox]),select"); if (f && f.dataset.autofocus !== undefined) f.focus(); }
+function closeSheet() { if (dlg.open) dlg.close(); }
+dlg.addEventListener("click", e => { if (e.target === dlg) closeSheet(); });
+function confirmSheet(title, text, okLabel, danger = false) {
+  return new Promise(res => {
+    openSheet(`<h2>${esc(title)}</h2><p>${esc(text)}</p><div class="sheet-actions"><button class="btn ghost" id="c-no">Annuler</button><button class="btn ${danger ? "danger" : ""}" id="c-yes">${esc(okLabel)}</button></div>`);
+    $("#c-no").onclick = () => { closeSheet(); res(false); };
+    $("#c-yes").onclick = () => { closeSheet(); res(true); };
+    dlg.addEventListener("close", () => res(false), { once: true });
+  });
+}
+
+/* ================= Célébration ================= */
+let audioCtx = null;
+function chime(big) {
+  if (store.get("sound", true) === false) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const notes = big ? [523, 659, 784, 1047] : [659, 988];
+    notes.forEach((f, i) => {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain(), t = audioCtx.currentTime + i * .09;
+      o.type = "sine"; o.frequency.value = f; g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.18, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + .35);
+      o.connect(g).connect(audioCtx.destination); o.start(t); o.stop(t + .4);
+    });
+  } catch {}
+}
+function celebrate(big = false) {
+  chime(big);
+  if (navigator.vibrate) navigator.vibrate(big ? [60, 40, 60] : 40);
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const c = document.createElement("canvas"); c.id = "confetti"; document.body.appendChild(c);
+  const dpr = window.devicePixelRatio || 1; c.width = innerWidth * dpr; c.height = innerHeight * dpr;
+  const x = c.getContext("2d"); x.scale(dpr, dpr);
+  const cols = ["#FFC233", "#E8484F", "#2E8B57", "#3D7BD9", "#FF8FB1"];
+  const P = Array.from({ length: big ? 130 : 55 }, () => ({
+    x: innerWidth / 2 + (Math.random() - .5) * 80, y: innerHeight * .45, vx: (Math.random() - .5) * 9, vy: -Math.random() * 11 - 4,
+    r: Math.random() * 6 + 4, a: Math.random() * 6, va: (Math.random() - .5) * .3, c: cols[(Math.random() * cols.length) | 0]
+  }));
+  const t0 = performance.now();
+  (function frame(now) {
+    const k = (now - t0) / 1600; x.clearRect(0, 0, innerWidth, innerHeight);
+    P.forEach(p => { p.vy += .32; p.x += p.vx; p.y += p.vy; p.a += p.va; x.save(); x.translate(p.x, p.y); x.rotate(p.a); x.globalAlpha = Math.max(0, 1 - k); x.fillStyle = p.c; x.beginPath(); x.ellipse(0, 0, p.r, p.r * .55, 0, 0, Math.PI * 2); x.fill(); x.restore(); });
+    if (k < 1) requestAnimationFrame(frame); else c.remove();
+  })(t0);
+}
+
+/* ================= Rendu ================= */
+function render() {
+  const s = S.screen;
+  if (s === "loading") app.innerHTML = `<div class="loading">${plantSVG(1)}</div>`;
+  else if (s === "auth") renderAuth();
+  else if (s === "pair") renderPair();
+  else if (s === "onboard") renderOnboard();
+  else if (s === "parent") renderParent();
+  else if (s === "child") renderChild();
+  else if (s === "error") app.innerHTML = `<main class="wrap"><div class="card center"><h2>Impossible de charger</h2><p>${esc(S.err)}</p><button class="btn" data-act="reload">Réessayer</button></div></main>`;
+}
+
+/* ---------- Connexion ---------- */
+let installEvt = null;
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; if (S.screen === "auth" || (S.screen === "parent" && S.tab === "family")) render(); });
+const installBtn = () => installEvt ? `<button class="btn ghost wide" data-act="install">Installer l'application sur ce téléphone</button>` : "";
+function renderAuth() {
+  const m = S.authMode;
+  app.innerHTML = `<main class="wrap auth">
+    <div class="auth-hero">${plantSVG(4, "#E8484F", "SoisFier")}<h1>SoisFier</h1><p>Les routines des enfants, une étoile à la fois.</p></div>
+    <div class="seg wide" role="tablist">
+      <button role="tab" aria-selected="${m === "login"}" class="${m === "login" ? "on" : ""}" data-act="authMode" data-v="login">Connexion</button>
+      <button role="tab" aria-selected="${m === "signup"}" class="${m === "signup" ? "on" : ""}" data-act="authMode" data-v="signup">Créer un compte</button>
+    </div>
+    <form class="card" novalidate>
+      ${m === "signup" ? `<label class="f">Ton prénom<input id="a-name" autocomplete="given-name" maxlength="40"></label>` : ""}
+      <label class="f">E-mail<input id="a-email" type="email" autocomplete="email" inputmode="email" required></label>
+      <label class="f">Mot de passe<input id="a-pass" type="password" minlength="6" autocomplete="${m === "signup" ? "new-password" : "current-password"}" required></label>
+      <button class="btn wide" data-act="${m === "signup" ? "signup" : "login"}">${m === "signup" ? "Créer mon compte" : "Me connecter"}</button>
+      ${m === "login" ? `<p class="center"><button class="link" data-act="forgot">Mot de passe oublié</button></p>` : ""}
+    </form>
+    <div class="card alt"><p>Ce téléphone est celui de ton enfant ?</p><button class="btn ghost wide" data-act="goPair">J'ai un code enfant</button></div>
+    ${installBtn()}
+  </main>`;
+}
+function renderPair() {
+  app.innerHTML = `<main class="wrap auth"><div class="auth-hero">${plantSVG(0)}<h1>Code enfant</h1><p>Sur le téléphone d'un parent : Famille, puis « Connecter son appareil ».</p></div>
+    <form class="card" novalidate><label class="f">Code à 6 caractères<input id="p-code" class="pin" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false"></label>
+    <button class="btn wide" data-act="pair">Connecter ce téléphone</button></form>
+    <p class="center"><button class="link" data-act="toAuth">Retour</button></p></main>`;
+}
+function renderOnboard() {
+  app.innerHTML = `<main class="wrap auth"><div class="auth-hero">${plantSVG(1)}<h1>Bienvenue</h1><p>Crée l'espace de ta famille, ou rejoins celui de l'autre parent.</p></div>
+    <form class="card" novalidate><h2>Créer ma famille</h2><label class="f">Nom de la famille<input id="o-name" placeholder="Famille Martin" maxlength="40"></label>
+    <button class="btn wide" data-act="createFamily">Créer</button></form>
+    <form class="card" novalidate><h2>Rejoindre une famille</h2><label class="f">Code d'invitation<input id="o-code" class="pin" maxlength="6" autocapitalize="characters" autocomplete="off"></label>
+    <button class="btn ghost wide" data-act="joinFamily">Rejoindre</button></form>
+    <p class="center"><button class="link" data-act="logout">Se déconnecter</button></p></main>`;
+}
+
+/* ---------- Parent ---------- */
+const curChild = () => S.children.find(c => c.id === S.currentChild) || S.children[0];
+function viewFor(c) {
+  return computeView({ child: c, routines: S.routines, completions: S.completions.filter(x => x.child_id === c.id), stats: S.stats[c.id], badges: S.badges[c.id], garden: S.gardens[c.id] });
+}
+function chips() {
+  return `<div class="chips" role="tablist">${S.children.map(c => `<button role="tab" aria-selected="${c.id === S.currentChild}" class="chip ${c.id === S.currentChild ? "on" : ""}" style="--c:${esc(c.color)}" data-act="pickChild" data-id="${c.id}">${esc(c.emoji)} ${esc(c.name)}</button>`).join("")}</div>`;
+}
+function renderParent() {
+  const tabs = [["today", "Aujourd'hui", "☀️"], ["routines", "Routines", "📋"], ["rewards", "Récompenses", "🎁"], ["family", "Famille", "🏡"]];
+  let body;
+  if (!S.children.length && S.tab !== "family") body = `<section class="card center">${plantSVG(0)}<h1>On commence ?</h1><p>Ajoute ton premier enfant. Tu pourras ensuite choisir ses routines parmi des modèles.</p><button class="btn" data-act="newChild">Ajouter un enfant</button></section>`;
+  else body = { today: pToday, routines: pRoutines, rewards: pRewards, family: pFamily }[S.tab]();
+  app.innerHTML = `<header class="top"><div class="brand">${miniLogo()}<span>${esc(S.family?.name || "SoisFier")}</span></div>${S.offline ? `<span class="pill">Hors ligne</span>` : ""}</header>
+    <main class="wrap">${body}</main>
+    <nav class="tabbar" aria-label="Navigation">${tabs.map(([k, l, e]) => `<button data-act="tab" data-tab="${k}" class="${S.tab === k ? "on" : ""}" aria-current="${S.tab === k ? "page" : "false"}"><span aria-hidden="true">${e}</span>${l}</button>`).join("")}</nav>`;
+}
+function rowP(c, r, day, v) {
+  const k = r.id + "|" + day, d = v.done.has(k), val = v.valid.has(k);
+  return `<li><button class="rt ${val ? "done" : d ? "pending" : ""}" data-act="pToggle" data-child="${c.id}" data-id="${r.id}" aria-pressed="${d}">
+    <span class="rt-emo" aria-hidden="true">${esc(r.emoji)}</span>
+    <span class="rt-txt"><b>${esc(r.title)}</b><small>${momentLabel(r.moment)}${r.is_bonus ? ", bonus" : ""}${d && !val ? ", en attente de validation" : ""}</small></span>
+    <span class="rt-stars">+${r.stars} ⭐</span><span class="pot" aria-hidden="true">${val ? "🌱" : d ? "⏳" : ""}</span></button></li>`;
+}
+function pendingBlock() {
+  const pend = S.completions.filter(x => !x.validated_at).sort((a, b) => a.day < b.day ? -1 : 1);
+  if (!pend.length) return "";
+  return `<section class="validate"><div class="v-head"><h2>À valider</h2><button class="btn sm" data-act="validateAll">Tout valider (${pend.length})</button></div>
+    <ul class="vlist">${pend.map(x => {
+      const r = S.routines.find(y => y.id === x.routine_id) || { title: "Routine supprimée", emoji: "⭐", stars: x.stars };
+      const c = S.children.find(y => y.id === x.child_id) || { name: "" };
+      return `<li><span class="rt-emo" aria-hidden="true">${esc(r.emoji)}</span><span class="grow"><b>${esc(r.title)}</b><small>${esc(c.name)}, ${fmtDay(x.day).toLowerCase()}, +${x.stars} ⭐${x.source === "timer" ? ", défi chrono réussi" : ""}</small></span>
+        <button class="vbtn no" data-act="refuseOne" data-id="${x.routine_id}" data-day="${x.day}" aria-label="Refuser">✕</button>
+        <button class="vbtn yes" data-act="validateOne" data-id="${x.routine_id}" data-day="${x.day}" aria-label="Valider">✓</button></li>`;
+    }).join("")}</ul>
+    <p class="muted small">${S.autoValidate ? "Sans action de ta part, elles seront validées automatiquement à minuit." : "Validation automatique désactivée : elles attendent ta décision."}</p></section>`;
+}
+function pToday() {
+  const day = S.day, t = todayISO();
+  const nav = `<div class="daynav"><button data-act="dayPrev" aria-label="Jour précédent" ${day <= addDays(t, -6) ? "disabled" : ""}>‹</button><h1>${fmtDay(day)}</h1><button data-act="dayNext" aria-label="Jour suivant" ${day >= t ? "disabled" : ""}>›</button></div>`;
+  const tip = S.tip && day === t ? `<aside class="tip"><span aria-hidden="true">💡</span><p>${esc(S.tip)}</p></aside>` : "";
+  const blocks = S.children.map(c => {
+    const v = viewFor(c), due = dueOn(S.routines, c.id, day);
+    const main = due.filter(r => !r.is_bonus), bonus = due.filter(r => r.is_bonus);
+    const nd = main.filter(r => v.done.has(r.id + "|" + day)).length;
+    return `<section class="kid" style="--c:${esc(c.color)}">
+      <div class="kid-head"><button class="kid-plant" data-act="showGarden" data-id="${c.id}" aria-label="Voir le jardin de ${esc(c.name)}" style="border:0;background:none;padding:0">${(() => { const n = gardenNow(S.gardens[c.id]); return n ? stageSVG(n.stage, n.species, c.color) : plantSVG(0, c.color); })()}</button>
+        <div><h2>${esc(c.emoji)} ${esc(c.name)}</h2><p class="meta"><span>⭐ ${v.balance} à dépenser</span>${(() => { const n = gardenNow(S.gardens[c.id]); return n ? `<span>🌱 Jour ${n.dayIdx}/14, ${n.good} bonne${n.good > 1 ? "s" : ""} journée${n.good > 1 ? "s" : ""}</span>` : ""; })()}${v.current > 1 ? `<span>🔥 ${v.current} de suite</span>` : ""}</p></div>
+        <div class="ring" style="--p:${main.length ? Math.round(nd / main.length * 100) : 0}" aria-label="${nd} routines faites sur ${main.length}"><span>${nd}/${main.length}</span></div></div>
+      ${due.length ? `<ul class="rlist">${[...main, ...bonus].map(r => rowP(c, r, day, v)).join("")}</ul>`
+        : `<p class="empty">Rien de prévu ce jour-là. <button class="link" data-act="tab" data-tab="routines" data-child="${c.id}">Ajouter des routines</button></p>`}
+    </section>`;
+  }).join("");
+  return nav + (day === t ? pendingBlock() : "") + tip + blocks;
+}
+function pRoutines() {
+  const c = curChild(); const list = S.routines.filter(r => r.child_id === c.id);
+  const groups = MOMENTS.map(([k, l, , e]) => {
+    const rs = list.filter(r => r.moment === k); if (!rs.length) return "";
+    return `<h3 class="grp">${e} ${l}</h3><ul class="rlist">${rs.map(r => `<li><button class="rt" data-act="editRoutine" data-id="${r.id}">
+      <span class="rt-emo" aria-hidden="true">${esc(r.emoji)}</span>
+      <span class="rt-txt"><b>${esc(r.title)}</b><small>${daysLabel(r.days)}${r.place ? ", " + esc(r.place) : ""}${r.timer_minutes ? `, ⏱ ${r.timer_minutes} min` : ""}${r.is_bonus ? ", bonus" : ""}</small></span>
+      <span class="rt-stars">${r.stars} ⭐</span></button></li>`).join("")}</ul>`;
+  }).join("");
+  return chips() + `<div class="actions"><button class="btn" data-act="routineTemplates">Choisir des modèles</button><button class="btn ghost" data-act="newRoutine">Créer une routine</button></div>`
+    + (groups || `<p class="empty">${esc(c.name)} n'a pas encore de routine. Les modèles couvrent le matin, le midi et le soir : coches-en trois ou quatre pour commencer.</p>`);
+}
+function pRewards() {
+  const c = curChild(), v = viewFor(c), r = rhythmOf(c.id), t = todayISO();
+  const list = S.rewards.filter(w => (!w.child_id || w.child_id === c.id) && (!w.event_date || w.event_date >= t));
+  const hist = [
+    ...S.redemptions.filter(z => z.child_id === c.id).map(z => ({ ...z, kind: "gift" })),
+    ...S.pevents.filter(z => z.child_id === c.id).map(z => ({ ...z, kind: "broken" }))
+  ].sort((a, b) => a.created_at < b.created_at ? 1 : -1).slice(0, 20);
+  const drift = c.price_rhythm && Math.abs(r - c.price_rhythm) / c.price_rhythm > .2;
+  const row = w => { const cost = costFor(w, c.id); return `<li class="gift"><button class="gift-main" data-act="editReward" data-id="${w.id}"><span class="g-emo" aria-hidden="true">${esc(w.emoji)}</span><span><b>${esc(w.title)}</b><small>${w.child_id ? "Pour " + esc(c.name) : "Pour tous les enfants"}, ${daysLabelFor(cost, c.id)}</small>${w.event_date || w.place ? `<small class="when">${w.event_date ? "📅 " + fmtLong(w.event_date) : ""}${w.event_date && w.place ? ", " : ""}${w.place ? "📍 " + esc(w.place) : ""}</small>` : ""}</span></button>
+      <button class="btn sm ${v.balance >= cost ? "" : "ghost"}" data-act="pRedeem" data-id="${w.id}" ${v.balance >= cost ? "" : "disabled"} aria-label="Échanger ${cost} étoiles">${cost} ⭐</button></li>`; };
+  const groups = TIERS.map(([k, l, d]) => { const ws = list.filter(w => (w.tier || "moment") === k).sort((a, b) => costFor(a, c.id) - costFor(b, c.id)); return ws.length ? `<h3 class="tier-h">${l}<small>${d}</small></h3><ul class="glist">${ws.map(row).join("")}</ul>` : ""; }).join("");
+  return chips() + `<div class="balance"><span class="big">⭐ ${v.balance}</span><span>étoiles à dépenser pour ${esc(c.name)}</span>${v.pendingStars ? `<span class="muted">+${v.pendingStars} en attente de validation</span>` : ""}<span class="muted">Rythme : environ ${Math.round(r * 10) / 10} ⭐ par jour</span></div>
+    ${drift ? `<div class="banner"><p>Le rythme de ${esc(c.name)} a changé depuis le calcul des prix (${Math.round(c.price_rhythm * 10) / 10} ⭐ par jour, contre ${Math.round(r * 10) / 10} aujourd'hui).</p><button class="btn sm" data-act="repriceChild">Recalculer ses prix</button></div>` : ""}
+    <div class="actions"><button class="btn" data-act="rewardTemplates">Choisir dans le référentiel</button><button class="btn ghost" data-act="newReward">Créer une récompense</button><button class="btn ghost" data-act="suggestOutings">📍 Sorties près de chez nous</button><button class="btn danger ghost" data-act="breakStar">${brokenStar(18)} Casser une étoile</button></div>
+    ${groups || `<p class="empty">Aucune récompense pour l'instant. Commence par le référentiel : les prix s'adaptent au rythme de ${esc(c.name)}.</p>`}
+    ${hist.length ? `<h3 class="grp">Historique</h3><ul class="hist">${hist.map(z => z.kind === "gift"
+      ? `<li><span>${esc(z.emoji)} ${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span><span>−${z.cost} ⭐</span><button class="link" data-act="cancelRedeem" data-id="${z.id}">Annuler</button></li>`
+      : `<li>${brokenStar(20)}<span>${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span><span>−${z.stars} ⭐</span><button class="link" data-act="cancelPenalty" data-id="${z.id}">Annuler</button></li>`).join("")}</ul>` : ""}`;
+}
+function pFamily() {
+  const kids = S.children.map(c => {
+    const v = viewFor(c); const devs = S.devices.filter(d => d.child_id === c.id);
+    const gn = gardenNow(S.gardens[c.id]);
+    return `<div class="krow">${gn ? stageSVG(gn.stage, gn.species, c.color) : plantSVG(0, c.color)}<div class="grow"><b>${esc(c.emoji)} ${esc(c.name)}</b>
+      ${devs.map(d => `<div class="dev">📱 Appareil connecté le ${fmtDate(d.created_at)} <button class="link" data-act="revokeDevice" data-id="${d.id}">Déconnecter</button></div>`).join("")}</div>
+      <div class="btns"><button class="btn sm ghost" data-act="editChild" data-id="${c.id}">Modifier</button><button class="btn sm ghost" data-act="deviceCode" data-id="${c.id}">Connecter son appareil</button><button class="btn sm ghost" data-act="childHere" data-id="${c.id}">Mode enfant ici</button></div></div>`;
+  }).join("");
+  const pushOn = store.get("pushOn", false), times = store.get("pushTimes", ["07:30", "18:30"]);
+  return `<section class="sec"><h2>Enfants</h2>${kids || `<p class="muted">Aucun enfant pour l'instant.</p>`}<div class="actions"><button class="btn" data-act="newChild">Ajouter un enfant</button></div></section>
+    <section class="sec"><h2>Parents</h2>${S.members.map(m => `<p>👤 ${esc(m.display_name || "Parent")}${m.user_id === S.session?.user.id ? " (toi)" : ""}</p>`).join("")}
+      <div class="actions"><button class="btn ghost" data-act="invite">Inviter l'autre parent</button></div></section>
+    <section class="sec"><h2>Pauses vacances ou maladie</h2><p class="muted">Les jours en pause ne comptent ni pour ni contre la fleur.</p>
+      ${S.pauses.length ? `<ul class="hist">${S.pauses.map(p => { const k = S.children.find(c => c.id === p.child_id); return `<li><span>${esc(k ? k.emoji + " " + k.name : "")}, ${esc(p.reason || "Pause")}</span><span class="muted">${fmtDate(p.start_day)} au ${fmtDate(p.end_day)}</span><button class="link" data-act="delPause" data-id="${p.id}">Supprimer</button></li>`; }).join("")}</ul>` : ""}
+      <div class="actions"><button class="btn ghost" data-act="newPause">Programmer une pause</button></div></section>
+    <section class="sec"><h2>Validation des routines</h2><p class="muted">Quand ton enfant coche une routine, ses étoiles attendent ta validation. Celles que tu coches toi-même sont validées directement.</p>
+      <label class="check"><input type="checkbox" data-act="toggleAuto" ${S.autoValidate ? "checked" : ""}> Valider automatiquement à minuit ce qui n'a pas été refusé</label></section>
+    <section class="sec"><h2>Rappels</h2><p class="muted">Un résumé des routines restantes arrive sur ce téléphone aux heures choisies.</p>
+      <div class="f two"><label>Matin<input type="time" id="t1" value="${esc(times[0] || "")}"></label><label>Soir<input type="time" id="t2" value="${esc(times[1] || "")}"></label></div>
+      <div class="actions"><button class="btn" data-act="pushParent">${pushOn ? "Mettre à jour les rappels" : "Activer les rappels"}</button>${pushOn ? `<button class="btn ghost" data-act="pushOff">Désactiver</button>` : ""}</div></section>
+    <section class="sec"><h2>Planning à imprimer</h2><p class="muted">La semaine de chaque enfant sur une page A4, à cocher au crayon.</p><div class="actions"><button class="btn ghost" data-act="printPlan">Imprimer le planning</button></div></section>
+    <section class="sec"><h2>Code parent</h2><p class="muted">Il protège la sortie du mode enfant sur ce téléphone.</p><div class="actions"><button class="btn ghost" data-act="setPin">${store.get("pin") ? "Changer le code" : "Créer un code"}</button></div></section>
+    <section class="sec"><h2>Sauvegarde</h2><p class="muted">Tes données sont dans ton espace Supabase. Tu peux aussi en garder une copie.</p><div class="actions"><button class="btn ghost" data-act="exportData">Télécharger une copie (JSON)</button></div></section>
+    <section class="sec"><h2>Compte</h2><p class="muted">${esc(S.session?.user.email || "")}</p><div class="actions">${installBtn()}<button class="btn ghost" data-act="renameFamily">Renommer la famille</button><button class="btn danger ghost" data-act="logout">Se déconnecter</button></div></section>`;
+}
+
+/* ---------- Enfant ---------- */
+function renderChild() {
+  const cs = S.cs;
+  if (!cs) { app.innerHTML = `<div class="loading">${plantSVG(1)}</div>`; return; }
+  const c = cs.child; const routines = cs.routines.map(r => ({ ...r, child_id: c.id }));
+  const v = computeView({ child: c, routines, completions: cs.completions, stats: cs.stats, badges: cs.badges, garden: cs.garden });
+  const tabs = [["today", "Mes routines", "☀️"], ["gifts", "Récompenses", "🎁"], ["garden", "Mon jardin", "🌼"]];
+  const body = { today: cToday, gifts: cGifts, garden: cGarden }[S.ctab](v, routines, cs);
+  app.innerHTML = `<header class="top kid-top"><span class="hello">Salut ${esc(c.name)} ${esc(c.emoji)}</span><span class="star-count" aria-label="${v.balance} étoiles">⭐ ${v.balance}</span><button class="lock" data-act="exitChild" aria-label="Espace parent">🔒</button></header>
+    ${S.offline ? `<p class="center"><span class="pill">Hors ligne : tes routines seront envoyées plus tard</span></p>` : ""}
+    <main class="wrap">${body}</main>
+    <nav class="tabbar" aria-label="Navigation">${tabs.map(([k, l, e]) => `<button data-act="ctab" data-tab="${k}" class="${S.ctab === k ? "on" : ""}" aria-current="${S.ctab === k ? "page" : "false"}"><span aria-hidden="true">${e}</span>${l}</button>`).join("")}</nav>`;
+}
+function cToday(v, routines) {
+  const t = todayISO(), due = dueOn(routines, v.child.id, t);
+  const main = due.filter(r => !r.is_bonus), bonus = due.filter(r => r.is_bonus);
+  const nd = main.filter(r => v.done.has(r.id + "|" + t)).length;
+  const card = r => {
+    const d = v.done.has(r.id + "|" + t), val = v.valid.has(r.id + "|" + t);
+    return `<li><button class="kcard ${val ? "done" : d ? "pending" : ""}" data-act="cToggle" data-id="${r.id}" aria-pressed="${d}">
+      <span class="k-emo" aria-hidden="true">${esc(r.emoji)}</span>
+      <span class="k-txt"><b>${esc(r.title)}</b>${d && !val ? `<small>⏳ Tes parents vont valider</small>` : r.place ? `<small>📍 ${esc(r.place)}</small>` : ""}</span>
+      <span class="k-stars ${d && !val ? "wait" : ""}" aria-label="${r.stars} étoiles">${"⭐".repeat(Math.min(r.stars, 5))}</span><span class="k-pot" aria-hidden="true">${val ? "✓" : d ? "⏳" : ""}</span></button>
+      ${r.timer_minutes && !d ? `<button class="k-timer" data-act="cTimer" data-id="${r.id}">⏱ Défi ${r.timer_minutes} min</button>` : ""}</li>`;
+  };
+  const groups = MOMENTS.map(([k, l, , e]) => { const rs = main.filter(r => r.moment === k); return rs.length ? `<h3 class="grp">${e} ${l}</h3><ul class="kcards">${rs.map(card).join("")}</ul>` : ""; }).join("");
+  const gn = gardenNow(v.garden);
+  return `<section class="hero"><div class="hero-plant ${S.bump ? "bump" : ""}" style="width:120px">${gn ? stageSVG(gn.stage, gn.species, v.child.color) : plantSVG(0, v.child.color)}</div>
+      <div class="hero-txt">${gn ? `<h1>${STAGE_NAME[gn.stage]}</h1>${dots14(v.garden)}
+      <p>${gn.pausedToday ? "En pause : profite bien !" : `Jour ${gn.dayIdx} sur 14. Ta fleur s'ouvre ${fmtLong(gn.end)}.`}</p>` : `<h1>Ton pot t'attend</h1>`}
+      ${v.pendingStars ? `<p class="wait-note">⏳ ${v.pendingStars} ⭐ en attente de validation</p>` : ""}</div></section>
+    <p class="today-count">${main.length ? (nd === main.length ? "Tout est fait aujourd'hui ! 🎉" : `${nd} sur ${main.length} routines faites`) : "Pas de routine aujourd'hui. Profite !"}</p>
+    ${groups}${bonus.length ? `<h3 class="grp">💪 Défis bonus</h3><ul class="kcards">${bonus.map(card).join("")}</ul>` : ""}`;
+}
+function cGifts(v, routines, cs) {
+  const hist = [
+    ...cs.redemptions.map(z => ({ ...z, kind: "gift" })),
+    ...(cs.penalties || []).map(z => ({ ...z, kind: "broken" }))
+  ].sort((a, b) => a.created_at < b.created_at ? 1 : -1).slice(0, 12);
+  return `<div class="balance"><span class="big">⭐ ${v.balance}</span><span>étoiles à dépenser</span>${v.pendingStars ? `<span class="muted">+${v.pendingStars} en attente</span>` : ""}</div>
+    ${cs.rewards.length ? `<ul class="glist">${cs.rewards.map(w => `<li class="kgift"><span class="g-emo" aria-hidden="true">${esc(w.emoji)}</span><span class="grow"><b>${esc(w.title)}</b><span>${w.cost} ⭐</span></span>
+      ${v.balance >= w.cost ? `<button class="btn" data-act="cRedeem" data-id="${w.id}">Je choisis</button>` : `<span class="muted">Encore ${w.cost - v.balance} ⭐</span>`}</li>`).join("")}</ul>`
+      : `<p class="empty">Demande à tes parents d'ajouter des récompenses.</p>`}
+    ${hist.length ? `<h3 class="grp">Mon histoire</h3><ul class="hist">${hist.map(z => z.kind === "gift"
+      ? `<li><span>${esc(z.emoji)} ${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span></li>`
+      : `<li>${brokenStar(20)}<span>Étoile cassée : ${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span><span>−${z.stars}</span></li>`).join("")}</ul>` : ""}`;
+}
+function cGarden(v, routines) {
+  const gd = v.garden, bs = badgeStats(v), pushOn = store.get("cpushOn", false), ct = store.get("cpushTimes", ["07:30", "18:00"]);
+  let scenes = "";
+  if (gd) {
+    const se = seasonOfISO(gd.today), yr = gardenYearOfISO(gd.today), fl = gd.flowers || [];
+    scenes = `<h2 class="grp">Mon parterre ${SEASON_NAME[se]}</h2><div class="scene">${parterreSVG(se, fl.filter(f => f.season === se && f.garden_year === yr), true)}<p>${fl.filter(f => f.season === se && f.garden_year === yr).length} fleur(s), et une qui pousse</p></div>
+      <h2 class="grp">Mon jardin ${yr}</h2><div class="scene">${gardenSVG(v.child.name, yr, fl.filter(f => f.garden_year === yr), { season: se })}</div>`;
+    const past = [...new Set(fl.map(f => f.garden_year))].filter(y => y !== yr);
+    if (past.length) scenes += `<h2 class="grp">Mes anciens jardins</h2><div class="yr">${past.map(y => `<button class="btn ghost sm" data-act="showYear" data-y="${y}">${y}</button>`).join("")}</div>`;
+  }
+  return scenes + `<p class="streak">${v.current > 0 ? `🔥 ${v.current} bonne${v.current > 1 ? "s" : ""} journée${v.current > 1 ? "s" : ""} de suite` : "Fais une bonne journée pour lancer une série !"}</p>
+    <h2 class="grp">Mes badges</h2><div class="badges">${BADGES.map(b => `<div class="badge ${hasBadge(v, b) ? "" : "off"}"><span class="be" aria-hidden="true">${b.e}</span>${b.n}</div>`).join("")}</div>
+    <section class="sec" style="margin-top:18px"><h2>Réglages</h2>
+      <label class="check"><input type="checkbox" id="snd" data-act="sound" ${store.get("sound", true) ? "checked" : ""}> Son quand je coche une routine</label>
+      <div class="f two"><label>Rappel matin<input type="time" id="t1" value="${esc(ct[0] || "")}"></label><label>Rappel soir<input type="time" id="t2" value="${esc(ct[1] || "")}"></label></div>
+      <div class="actions"><button class="btn ghost" data-act="pushChild">${pushOn ? "Mettre à jour les rappels" : "Activer les rappels"}</button>${pushOn ? `<button class="btn ghost" data-act="pushOff">Désactiver</button>` : ""}</div></section>`;
+}
+
+/* ================= Données parent ================= */
+async function loadParent() {
+  const uid = S.session.user.id;
+  const { data: mem, error } = await sb.from("family_members").select("family_id,display_name,role,created_at,families(name)").eq("user_id", uid).order("created_at").limit(1);
+  if (error) throw error;
+  if (!mem.length) { S.screen = "onboard"; return; }
+  S.family = { id: mem[0].family_id, name: mem[0].families?.name || "Ma famille" }; S.me = mem[0];
+  await refreshParent();
+}
+async function refreshParent() {
+  const fid = S.family.id, since = addDays(todayISO(), -62);
+  const qs = await Promise.all([
+    sb.from("children").select("*").eq("family_id", fid).order("position").order("created_at"),
+    sb.from("routines").select("*").eq("family_id", fid).eq("active", true).order("position").order("created_at"),
+    sb.from("rewards").select("*").eq("family_id", fid).eq("active", true).order("cost"),
+    sb.from("completions").select("child_id,routine_id,day,stars,source,validated_at").eq("family_id", fid).gte("day", since),
+    sb.from("redemptions").select("*").eq("family_id", fid).order("created_at", { ascending: false }).limit(100),
+    sb.from("child_stats").select("*").eq("family_id", fid),
+    sb.from("family_members").select("user_id,display_name").eq("family_id", fid),
+    sb.from("child_devices").select("id,child_id,created_at,last_seen").eq("family_id", fid).order("created_at"),
+    sb.from("families").select("name,auto_validate,outing_radii").eq("id", fid),
+    sb.from("penalties").select("*").eq("family_id", fid).eq("active", true).order("stars").order("created_at"),
+    sb.from("penalty_events").select("*").eq("family_id", fid).order("created_at", { ascending: false }).limit(100),
+    sb.from("child_badges").select("child_id,badge_key").eq("family_id", fid),
+    sb.from("pauses").select("*").eq("family_id", fid).gte("end_day", todayISO()).order("start_day"),
+    sb.rpc("family_gardens", { p_family: fid })
+  ]);
+  for (const q of qs) if (q.error) throw q.error;
+  const [c, r, w, x, z, s, m, d, f, pe, pv, b, pz, gdn] = qs.map(q => q.data);
+  const badges = {}; b.forEach(o => (badges[o.child_id] = badges[o.child_id] || []).push(o.badge_key));
+  Object.assign(S, { children: c, routines: r, rewards: w, completions: x, redemptions: z, stats: Object.fromEntries(s.map(o => [o.child_id, o])),
+    members: m, devices: d, autoValidate: f[0] ? f[0].auto_validate : true, radii: (f[0] && f[0].outing_radii) || RADII_DEF, penalties: pe, pevents: pv, badges, pauses: pz, gardens: gdn || {}, offline: false });
+  if (f[0]) S.family.name = f[0].name;
+  if (!S.children.find(k => k.id === S.currentChild)) S.currentChild = S.children[0]?.id || null;
+  // Badges obtenus : enregistrés une fois pour toutes
+  const rows = [];
+  S.children.forEach(k => newBadges(viewFor(k)).forEach(key => { rows.push({ child_id: k.id, family_id: fid, badge_key: key }); (S.badges[k.id] = S.badges[k.id] || []).push(key); }));
+  if (rows.length) sb.from("child_badges").upsert(rows, { onConflict: "child_id,badge_key", ignoreDuplicates: true }).then(() => {}, () => {});
+  store.set("parentCache", { family: S.family, me: S.me, children: c, routines: r, rewards: w, completions: x, redemptions: z, stats: S.stats, members: m, devices: d,
+    autoValidate: S.autoValidate, penalties: pe, pevents: pv, badges: S.badges, pauses: pz, gardens: S.gardens });
+}
+async function loadTip() {
+  try {
+    const { data } = await sb.from("tips").select("text").order("id");
+    if (data && data.length) { const n = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 864e5); S.tip = data[n % data.length].text; if (S.screen === "parent") render(); }
+  } catch {}
+}
+async function enterParent() {
+  S.screen = "loading"; render();
+  try { await loadParent(); if (S.screen !== "onboard") { S.screen = "parent"; loadTip(); } }
+  catch (e) {
+    const cache = store.get("parentCache");
+    if (cache && isNetErr(e)) { Object.assign(S, cache); S.offline = true; S.screen = "parent"; }
+    else { S.screen = "error"; S.err = errMsg(e); }
+  }
+  render();
+}
+async function reloadParent(msg) { await refreshParent(); render(); if (msg) toast(msg); }
+
+/* ================= Données enfant ================= */
+async function loadChild() {
+  const tok = store.get("childToken");
+  try {
+    const { data, error } = await sb.rpc("child_state", { p_token: tok });
+    if (error) throw error;
+    S.cs = data; S.offline = false;
+    S.cs.badges = S.cs.badges || []; S.cs.penalties = S.cs.penalties || [];
+    applyQueueToState();
+    const last = store.get("lastEarned"), e = S.cs.stats.earned || 0;
+    let gain = null;
+    if (last != null && e > last) gain = { diff: e - last };
+    store.set("lastEarned", e);
+    const fls = (S.cs.garden && S.cs.garden.flowers) || [], seen = store.get("seenFlowers");
+    const fresh = seen == null ? [] : fls.slice(seen);
+    store.set("seenFlowers", fls.length);
+    if (fresh.length) setTimeout(() => bloomCeremony(fresh[fresh.length - 1]), 900);
+    const routines = S.cs.routines.map(r => ({ ...r, child_id: S.cs.child.id }));
+    const nb = newBadges(computeView({ child: S.cs.child, routines, completions: S.cs.completions, stats: S.cs.stats, badges: S.cs.badges, garden: S.cs.garden }));
+    if (nb.length) { sb.rpc("child_award_badges", { p_token: tok, p_keys: nb }).then(() => {}, () => {}); S.cs.badges.push(...nb); }
+    store.set("childCache", S.cs);
+    if (gain || nb.length) setTimeout(() => {
+      celebrate(true);
+      const names = nb.map(k => BADGES.find(b => b.k === k)).map(b => b.e + " " + b.n).join(", ");
+      toast(gain ? `+${gain.diff} ⭐ validées par tes parents !` : `Nouveau badge : ${names}`);
+      if (gain && nb.length) setTimeout(() => toast(`Nouveau badge : ${names}`), 3000);
+    }, 400);
+  } catch (e) {
+    if (/Appareil non reconnu/.test(e.message || "")) {
+      store.del("childToken"); store.del("childCache"); store.del("queue");
+      S.screen = "auth"; render(); toast("Ce téléphone a été déconnecté par un parent.", true); return;
+    }
+    S.cs = store.get("childCache"); S.offline = true;
+    if (!S.cs) { S.screen = "error"; S.err = errMsg(e); }
+  }
+  render();
+}
+function applyQueueToState() {
+  const q = store.get("queue", []), st = S.cs.stats;
+  for (const op of q) {
+    const i = S.cs.completions.findIndex(c => c.routine_id === op.rid && c.day === op.day);
+    const r = S.cs.routines.find(x => x.id === op.rid); if (!r) continue;
+    if (op.done && i < 0) { S.cs.completions.push({ routine_id: op.rid, day: op.day, stars: r.stars, source: op.source, validated: false }); st.pending_stars = (st.pending_stars || 0) + r.stars; st.pending_count = (st.pending_count || 0) + 1; }
+    if (!op.done && i >= 0 && !S.cs.completions[i].validated) { st.pending_stars -= S.cs.completions[i].stars; st.pending_count--; S.cs.completions.splice(i, 1); }
+  }
+}
+let flushing = false;
+async function flushQueue() {
+  if (flushing || !store.get("childToken")) return; flushing = true;
+  try {
+    let q = store.get("queue", []);
+    while (q.length) {
+      const op = q[0];
+      let res;
+      try { res = await sb.rpc("child_toggle", { p_token: store.get("childToken"), p_routine: op.rid, p_day: op.day, p_done: op.done, p_source: op.source }); }
+      catch (e) { res = { error: e }; }
+      if (res.error && isNetErr(res.error)) { S.offline = true; break; }
+      q.shift(); store.set("queue", q);
+    }
+    if (!q.length && S.offline) { S.offline = false; if (S.screen === "child") await loadChild(); }
+  } finally { flushing = false; }
+}
+function childToggle(rid, makeDone, source = "child") {
+  const cs = S.cs, st = cs.stats, day = todayISO(), r = cs.routines.find(x => x.id === rid); if (!r) return;
+  const i = cs.completions.findIndex(c => c.routine_id === rid && c.day === day);
+  if (makeDone && i < 0) { cs.completions.push({ routine_id: rid, day, stars: r.stars, source, validated: false }); st.pending_stars = (st.pending_stars || 0) + r.stars; st.pending_count = (st.pending_count || 0) + 1; }
+  else if (!makeDone && i >= 0) {
+    if (cs.completions[i].validated) return toast("Tes parents ont déjà validé cette routine ✓");
+    st.pending_stars -= cs.completions[i].stars; st.pending_count--; cs.completions.splice(i, 1);
+  }
+  else return;
+  store.set("childCache", cs);
+  const q = store.get("queue", []); q.push({ rid, day, done: makeDone, source }); store.set("queue", q);
+  if (makeDone) {
+    S.bump = true; render(); S.bump = false;
+    const routines = cs.routines.map(x => ({ ...x, child_id: cs.child.id }));
+    const main = dueOn(routines, cs.child.id, day).filter(x => !x.is_bonus);
+    const all = main.length && main.every(x => cs.completions.some(c => c.routine_id === x.id && c.day === day));
+    celebrate(all);
+    toast(all ? "Tout est fait ! Tes parents vont valider tes étoiles 🎉" : "Bravo ! Tes parents vont valider ton étoile.");
+  } else render();
+  flushQueue();
+}
+
+/* ================= Notifications ================= */
+function urlB64(base64) {
+  const p = "=".repeat((4 - base64.length % 4) % 4), b = (base64 + p).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = atob(b); return Uint8Array.from([...raw].map(ch => ch.charCodeAt(0)));
+}
+async function getPushSub() {
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) throw new Error("Ce navigateur ne gère pas les notifications. Installe l'application depuis Chrome.");
+  const perm = await Notification.requestPermission();
+  if (perm !== "granted") throw new Error("Les notifications sont bloquées. Autorise-les dans les réglages de Chrome pour ce site.");
+  const reg = await navigator.serviceWorker.ready;
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) {
+    const { data: vk, error } = await sb.rpc("get_vapid_public"); if (error) throw error;
+    sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64(vk) });
+  }
+  return sub.toJSON();
+}
+const readTimes = () => [$("#t1")?.value, $("#t2")?.value].filter(v => /^\d{2}:\d{2}$/.test(v || ""));
+
+/* ================= Impression ================= */
+function printPlanning(ids) {
+  const t = todayISO(), monday = addDays(t, -(dowOf(t) - 1));
+  const pages = S.children.filter(c => ids.includes(c.id)).map(c => {
+    const rs = S.routines.filter(r => r.child_id === c.id);
+    const rows = MOMENTS.map(([k, l, , e]) => {
+      const list = rs.filter(r => r.moment === k); if (!list.length) return "";
+      return `<tr class="grp-row"><td colspan="8">${e} ${l}</td></tr>` + list.map(r => `<tr><td class="n">${esc(r.emoji)} ${esc(r.title)} (${r.stars} ⭐)${r.is_bonus ? ", bonus" : ""}</td>${DAYS.map((_, i) => (r.days || []).includes(i + 1) ? `<td><span class="circ"></span></td>` : `<td class="off"></td>`).join("")}</tr>`).join("");
+    }).join("");
+    const gifts = S.rewards.filter(w => !w.child_id || w.child_id === c.id);
+    return `<section class="pp"><h1>${esc(c.emoji)} La semaine de ${esc(c.name)}</h1><p>Semaine du ${parseISO(monday).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}</p>
+      <table><thead><tr><th class="n">Routine</th>${DAYS_LONG.map(d => `<th>${d.slice(0, 3)}</th>`).join("")}</tr></thead><tbody>${rows || `<tr><td colspan="8">Aucune routine.</td></tr>`}</tbody></table>
+      ${gifts.length ? `<div class="gifts"><b>Mes récompenses :</b> ${gifts.map(w => `${esc(w.emoji)} ${esc(w.title)} (${w.cost} ⭐)`).join(", ")}</div>` : ""}</section>`;
+  }).join("");
+  $("#print").innerHTML = pages; setTimeout(() => window.print(), 50);
+}
+
+/* ================= Formulaires ================= */
+function routineForm(r) {
+  const isNew = !r;
+  r = r || { title: "", emoji: "⭐", place: "", moment: "matin", stars: 1, days: [1, 2, 3, 4, 5, 6, 7], is_bonus: false, timer_minutes: null };
+  S.form = { moment: r.moment, days: [...r.days] };
+  openSheet(`<h2>${isNew ? "Nouvelle routine" : "Modifier la routine"}</h2>
+    <label class="f">Nom<input id="f-title" maxlength="60" value="${esc(r.title)}" placeholder="Se brosser les dents"></label>
+    <div class="f"><span>Icône</span><div class="emo-row"><input id="f-emoji" class="emo-in" value="${esc(r.emoji)}" maxlength="8" aria-label="Icône choisie">${EMO_R.map(e => `<button type="button" class="emo" data-act="pickEmoji" data-e="${e}" aria-label="${e}">${e}</button>`).join("")}</div></div>
+    <div class="f"><span>Moment</span><div class="seg" role="radiogroup">${MOMENTS.map(([k, , s, e]) => `<button type="button" role="radio" aria-checked="${r.moment === k}" class="${r.moment === k ? "on" : ""}" data-act="seg" data-group="moment" data-v="${k}">${e} ${s}</button>`).join("")}</div></div>
+    <div class="f"><span>Jours</span><div class="days">${DAYS.map((d, i) => `<button type="button" class="day ${r.days.includes(i + 1) ? "on" : ""}" data-act="toggleDay" data-v="${i + 1}" aria-pressed="${r.days.includes(i + 1)}" aria-label="${DAYS_LONG[i]}">${d}</button>`).join("")}</div>
+      <div class="presets"><button type="button" class="link" data-act="daysPreset" data-v="all">Tous les jours</button><button type="button" class="link" data-act="daysPreset" data-v="week">En semaine</button><button type="button" class="link" data-act="daysPreset" data-v="we">Le week-end</button></div></div>
+    <div class="f two"><label>Étoiles<select id="f-stars">${[1, 2, 3, 4, 5].map(n => `<option ${n === r.stars ? "selected" : ""}>${n}</option>`).join("")}</select></label>
+      <label>Lieu<select id="f-place"><option value="">Aucun</option>${PLACES.map(p => `<option ${p === r.place ? "selected" : ""}>${p}</option>`).join("")}</select></label></div>
+    <label class="f">Défi chrono<select id="f-timer"><option value="">Sans minuteur</option>${[2, 3, 5, 10, 15, 20, 30].map(n => `<option value="${n}" ${n === r.timer_minutes ? "selected" : ""}>${n} minutes</option>`).join("")}</select></label>
+    <label class="check"><input type="checkbox" id="f-bonus" ${r.is_bonus ? "checked" : ""}> Routine bonus : facultative, elle rapporte des étoiles sans compter dans la journée</label>
+    <div class="sheet-actions">${isNew ? "" : `<button class="btn danger ghost" data-act="delRoutine" data-id="${r.id}">Supprimer</button>`}<button class="btn" data-act="saveRoutine" data-id="${r.id || ""}">${isNew ? "Ajouter" : "Enregistrer"}</button></div>`);
+}
+function rewardForm(w, preset) {
+  const isNew = !w;
+  w = w || { title: "", emoji: "🎁", tier: "moment", duration_days: 10, child_id: null, costs: {}, cost: 10, event_date: null, place: "", ...(preset || {}) };
+  const fixed = !w.duration_days;
+  openSheet(`<h2>${isNew ? (w.tier === "event" ? "Nouvel événement" : "Nouvelle récompense") : "Modifier la récompense"}</h2>
+    <label class="f">Nom<input id="w-title" maxlength="60" value="${esc(w.title)}" placeholder="${w.tier === "event" ? "Spectacle de marionnettes" : "Pique-nique au parc"}"></label>
+    <div class="f"><span>Icône</span><div class="emo-row"><input id="w-emoji" class="emo-in" value="${esc(w.emoji)}" maxlength="8" aria-label="Icône choisie">${EMO_W.map(e => `<button type="button" class="emo" data-act="pickEmoji" data-target="w-emoji" data-e="${e}" aria-label="${e}">${e}</button>`).join("")}</div></div>
+    <div class="f two"><label>Niveau<select id="w-tier" data-act="tierChange">${TIERS.map(([k, l]) => `<option value="${k}" ${w.tier === k ? "selected" : ""}>${l}</option>`).join("")}</select></label>
+      <label>Pour<select id="w-for">${S.children.length > 1 ? `<option value="">Tous les enfants</option>` : ""}${S.children.map(k => `<option value="${k.id}" ${w.child_id === k.id ? "selected" : ""}>${esc(k.name)}</option>`).join("")}</select></label></div>
+    <label class="check"><input type="checkbox" id="w-fixed" ${fixed ? "checked" : ""} data-act="pricePreview"> Prix fixe, identique pour tous, au lieu d'un prix calculé selon le rythme</label>
+    <div class="f two"><label>Durée d'effort (jours)<input id="w-days" type="number" inputmode="numeric" min="1" max="365" value="${w.duration_days || TIER_DAYS[w.tier] || 10}"></label>
+      <label>Prix fixe (étoiles)<input id="w-cost" type="number" inputmode="numeric" min="1" max="5000" value="${w.cost}"></label></div>
+    <p class="muted" id="w-preview"></p>
+    <div class="f two"><label>Date (facultatif)<input id="w-date" type="date" value="${esc(w.event_date || "")}"></label><label>Lieu (facultatif)<input id="w-place" maxlength="80" value="${esc(w.place || "")}"></label></div>
+    <div class="sheet-actions">${isNew ? "" : `<button class="btn danger ghost" data-act="delReward" data-id="${w.id}">Supprimer</button>`}<button class="btn" data-act="saveReward" data-id="${w.id || ""}">${isNew ? "Ajouter" : "Enregistrer"}</button></div>`);
+  const upd = () => { const d = +$("#w-days").value || 0, fx = $("#w-fixed").checked, who = $("#w-for").value;
+    $("#w-preview").textContent = fx ? "Même prix pour tous les enfants." : "Prix calculé : " + (who ? [S.children.find(k => k.id === who)] : S.children).map(k => `${k.name} ${roundPrice(d * rhythmOf(k.id))} ⭐`).join(", ") + "."; };
+  ["#w-days", "#w-for"].forEach(q => $(q).addEventListener("input", upd)); $("#w-fixed").addEventListener("change", upd); upd();
+  $("#w-tier").addEventListener("change", e => { $("#w-days").value = TIER_DAYS[e.target.value]; upd(); });
+  if (isNew && preset && preset.child_id === undefined && S.children.length > 1) $("#w-for").value = "";
+}
+function childForm(c) {
+  const isNew = !c;
+  c = c || { name: "", emoji: "🧒", color: COLORS[S.children.length % COLORS.length] };
+  S.form = { color: c.color };
+  openSheet(`<h2>${isNew ? "Ajouter un enfant" : "Modifier"}</h2>
+    <label class="f">Prénom<input id="k-name" maxlength="40" value="${esc(c.name)}" autocomplete="off"></label>
+    <div class="f"><span>Avatar</span><div class="emo-row"><input id="k-emoji" class="emo-in" value="${esc(c.emoji)}" maxlength="8" aria-label="Avatar choisi">${EMO_K.map(e => `<button type="button" class="emo" data-act="pickEmoji" data-target="k-emoji" data-e="${e}" aria-label="${e}">${e}</button>`).join("")}</div></div>
+    <div class="f"><span>Couleur de son pot</span><div class="swatches">${COLORS.map(col => `<button type="button" class="sw ${col === c.color ? "on" : ""}" style="background:${col}" data-act="pickColor" data-v="${col}" aria-label="Couleur ${col}"></button>`).join("")}</div></div>
+    <p class="muted">Seul le prénom est enregistré. Pas de nom de famille ni de date de naissance.</p>
+    <div class="sheet-actions">${isNew ? "" : `<button class="btn danger ghost" data-act="delChild" data-id="${c.id}">Supprimer</button>`}<button class="btn" data-act="saveChild" data-id="${c.id || ""}">${isNew ? "Ajouter" : "Enregistrer"}</button></div>`);
+}
+function pinSheet(title, text) {
+  return new Promise(res => {
+    openSheet(`<h2>${esc(title)}</h2><p>${esc(text)}</p><label class="f">Code à 4 chiffres<input id="pin-in" class="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off"></label>
+      <div class="sheet-actions"><button class="btn ghost" id="pin-no">Annuler</button><button class="btn" id="pin-ok">Valider</button></div>`);
+    const inp = $("#pin-in"); setTimeout(() => inp.focus(), 50);
+    $("#pin-no").onclick = () => { closeSheet(); res(null); };
+    $("#pin-ok").onclick = () => { const v = inp.value.trim(); closeSheet(); res(v); };
+    dlg.addEventListener("close", () => res(null), { once: true });
+  });
+}
+async function ensurePin() {
+  if (store.get("pin")) return true;
+  const p = await pinSheet("Crée un code parent", "Il sera demandé pour quitter le mode enfant sur ce téléphone.");
+  if (!p) return false;
+  if (!/^\d{4}$/.test(p)) { toast("Le code doit contenir 4 chiffres.", true); return false; }
+  store.set("pin", p); toast("Code parent enregistré."); return true;
+}
+
+/* ================= Actions ================= */
+const A = {};
+document.addEventListener("submit", e => e.preventDefault());
+document.addEventListener("click", async e => {
+  const el = e.target.closest("[data-act]"); if (!el) return;
+  const fn = A[el.dataset.act]; if (!fn) return;
+  if (el.tagName !== "INPUT") e.preventDefault();
+  if (el.dataset.busy) return; el.dataset.busy = "1";
+  try { await fn(el, e); } catch (err) { console.error(err); toast(errMsg(err), true); }
+  finally { delete el.dataset.busy; }
+});
+
+// Navigation
+A.reload = () => location.reload();
+A.tab = el => { S.tab = el.dataset.tab; if (el.dataset.child) S.currentChild = el.dataset.child; if (S.tab === "today") S.day = todayISO(); render(); scrollTo(0, 0); };
+A.ctab = el => { S.ctab = el.dataset.tab; render(); scrollTo(0, 0); };
+A.pickChild = el => { S.currentChild = el.dataset.id; render(); };
+A.dayPrev = () => { S.day = addDays(S.day, -1); render(); };
+A.dayNext = () => { if (S.day < todayISO()) S.day = addDays(S.day, 1); render(); };
+A.install = async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice; installEvt = null; render(); };
+
+// Connexion
+A.authMode = el => { S.authMode = el.dataset.v; render(); };
+A.goPair = () => { S.screen = "pair"; render(); };
+A.toAuth = () => { S.screen = "auth"; render(); };
+A.login = async () => {
+  const email = $("#a-email").value.trim(), password = $("#a-pass").value;
+  if (!email || !password) return toast("Saisis ton e-mail et ton mot de passe.", true);
+  const { data, error } = await sb.auth.signInWithPassword({ email, password }); if (error) throw error;
+  S.session = data.session; await enterParent();
+};
+A.signup = async () => {
+  const email = $("#a-email").value.trim(), password = $("#a-pass").value, name = ($("#a-name")?.value || "").trim();
+  if (!email || password.length < 6) return toast("Saisis un e-mail et un mot de passe de 6 caractères minimum.", true);
+  const { data, error } = await sb.auth.signUp({ email, password, options: { data: { display_name: name }, emailRedirectTo: location.origin + location.pathname } });
+  if (error) throw error;
+  if (data.session) { S.session = data.session; await enterParent(); }
+  else { S.authMode = "login"; render(); openSheet(`<h2>Vérifie ta boîte mail</h2><p>Un lien de confirmation a été envoyé à <b>${esc(email)}</b>. Ouvre-le, puis reviens ici pour te connecter.</p><div class="sheet-actions"><button class="btn" data-act="closeSheet">Compris</button></div>`); }
+};
+A.forgot = async () => {
+  const email = $("#a-email").value.trim(); if (!email) return toast("Saisis d'abord ton e-mail.", true);
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname }); if (error) throw error;
+  toast("E-mail de réinitialisation envoyé.");
+};
+A.closeSheet = () => closeSheet();
+A.logout = async () => {
+  if (sb) await sb.auth.signOut().catch(() => {});
+  ["parentCache", "pushOn"].forEach(k => store.del(k));
+  Object.assign(S, { session: null, family: null, children: [], routines: [], screen: "auth", tab: "today" }); render();
+};
+A.createFamily = async () => {
+  const name = $("#o-name").value.trim();
+  const { error } = await sb.rpc("create_family", { p_name: name, p_display_name: S.session.user.user_metadata?.display_name || "" }); if (error) throw error;
+  await enterParent();
+};
+A.joinFamily = async () => {
+  const code = $("#o-code").value.trim(); if (code.length < 6) return toast("Le code contient 6 caractères.", true);
+  const { error } = await sb.rpc("join_family", { p_code: code, p_display_name: S.session.user.user_metadata?.display_name || "" }); if (error) throw error;
+  await enterParent(); toast("Tu as rejoint la famille.");
+};
+A.pair = async () => {
+  const code = $("#p-code").value.trim(); if (code.length < 6) return toast("Le code contient 6 caractères.", true);
+  const { data, error } = await sb.rpc("child_pair", { p_code: code }); if (error) throw error;
+  store.set("childToken", data.token); store.del("queue"); store.del("pin"); store.del("lastEarned"); store.del("seenFlowers");
+  S.screen = "child"; S.ctab = "today"; S.cs = null; render(); await loadChild(); celebrate(true);
+};
+
+// Aujourd'hui (parent)
+A.pToggle = async el => {
+  const childId = el.dataset.child, rid = el.dataset.id, day = S.day;
+  const cur = S.completions.find(c => c.routine_id === rid && c.day === day);
+  if (!cur) {
+    S.completions.push({ child_id: childId, routine_id: rid, day, stars: 0, source: "parent", validated_at: new Date().toISOString() }); render(); celebrate(false);
+    const { error } = await sb.from("completions").insert({ family_id: S.family.id, child_id: childId, routine_id: rid, day, source: "parent" });
+    if (error && error.code !== "23505") throw error;
+  } else if (!cur.validated_at) {
+    return A.validateOne({ dataset: { id: rid, day } });
+  } else if (Date.now() - new Date(cur.validated_at).getTime() < 5 * 60 * 1000) {
+    S.completions = S.completions.filter(c => c !== cur); render();
+    const { error } = await sb.from("completions").delete().eq("routine_id", rid).eq("day", day); if (error) throw error;
+    toast("Routine décochée.");
+  } else {
+    return toast("Routine déjà validée. Pour retirer des étoiles, utilise une étoile cassée (onglet Récompenses).", true);
+  }
+  await reloadParent();
+};
+A.validateOne = async el => {
+  const { id, day } = el.dataset;
+  const { error } = await sb.from("completions").update({ validated_at: new Date().toISOString() }).eq("routine_id", id).eq("day", day).is("validated_at", null);
+  if (error) throw error; celebrate(false); await reloadParent("Routine validée.");
+};
+A.refuseOne = async el => {
+  const { id, day } = el.dataset;
+  const { error } = await sb.from("completions").delete().eq("routine_id", id).eq("day", day).is("validated_at", null);
+  if (error) throw error; await reloadParent("Refusée : la routine est à refaire, sans pénalité.");
+};
+A.validateAll = async () => {
+  const { error } = await sb.from("completions").update({ validated_at: new Date().toISOString() }).eq("family_id", S.family.id).is("validated_at", null);
+  if (error) throw error; celebrate(true); await reloadParent("Tout est validé.");
+};
+A.toggleAuto = async el => {
+  const v = el.checked;
+  const { error } = await sb.from("families").update({ auto_validate: v }).eq("id", S.family.id);
+  if (error) { el.checked = !v; throw error; }
+  S.autoValidate = v; toast(v ? "Validation automatique à minuit activée." : "Validation manuelle uniquement.");
+};
+
+// Jardin
+function bloomCeremony(f) {
+  const c = S.cs ? S.cs.child : null;
+  openSheet(`<div class="center"><h2>Ta fleur s'est ouverte !</h2><div style="max-width:220px;margin:0 auto">${stageSVG(13, f.species, c ? c.color : "#E58358", (SP[f.species] || {}).n, f.grade)}</div>
+    <p class="grade">${GRADE_NAME[f.grade]}</p><p>${esc((SP[f.species] || {}).n || "Ta fleur")} rejoint ton parterre ${SEASON_NAME[f.season]}. Un nouveau pot t'attend !</p>
+    <div class="sheet-actions" style="justify-content:center"><button class="btn" data-act="closeSheet">Voir mon jardin</button></div></div>`);
+  celebrate(f.grade >= 2); S.ctab = "garden"; render();
+}
+A.showGarden = el => {
+  const c = S.children.find(k => k.id === el.dataset.id), gd = S.gardens[c.id]; if (!gd) return;
+  const n = gardenNow(gd), se = seasonOfISO(gd.today), yr = gardenYearOfISO(gd.today), fl = gd.flowers || [];
+  openSheet(`<h2>Le jardin de ${esc(c.name)}</h2>
+    <div class="scene" style="max-width:240px;margin:0 auto">${stageSVG(n.stage, n.species, c.color)}<p>${STAGE_NAME[n.stage]} : jour ${n.dayIdx}/14, ${n.good} bonne(s) journée(s). Floraison ${fmtLong(n.end)}.</p></div>
+    ${dots14(gd)}
+    <h3 class="grp">Parterre ${SEASON_NAME[se]}</h3><div class="scene">${parterreSVG(se, fl.filter(f => f.season === se && f.garden_year === yr), true)}</div>
+    <h3 class="grp">Jardin ${yr}</h3><div class="scene">${gardenSVG(c.name, yr, fl.filter(f => f.garden_year === yr), { season: se })}</div>
+    <div class="sheet-actions"><button class="btn" data-act="closeSheet">Fermer</button></div>`);
+};
+A.showYear = el => {
+  const y = el.dataset.y, fl = (S.cs.garden.flowers || []).filter(f => f.garden_year === y);
+  openSheet(`<h2>Mon jardin ${esc(y)}</h2><div class="scene">${gardenSVG(S.cs.child.name, y, fl, null)}</div><p>${fl.length} fleurs, dont ${fl.filter(f => f.grade === 3).length} grandes.</p><div class="sheet-actions"><button class="btn" data-act="closeSheet">Fermer</button></div>`);
+};
+A.newPause = () => {
+  const t = todayISO();
+  openSheet(`<h2>Programmer une pause</h2><p class="muted">Pendant la pause, les jours ne comptent ni pour ni contre la fleur.</p>
+    <div class="f"><span>Enfants</span><ul class="tpl">${S.children.map(c => `<li><label><input type="checkbox" value="${c.id}" checked> ${esc(c.emoji)} ${esc(c.name)}</label></li>`).join("")}</ul></div>
+    <div class="f two"><label>Du<input type="date" id="pz-from" value="${t}"></label><label>Au<input type="date" id="pz-to" value="${addDays(t, 6)}"></label></div>
+    <label class="f">Motif<select id="pz-why"><option>Vacances</option><option>Maladie</option><option>Autre</option></select></label>
+    <div class="sheet-actions"><button class="btn" data-act="savePause">Enregistrer</button></div>`);
+};
+A.savePause = async () => {
+  const ids = $$(".tpl input:checked", dlg).map(i => i.value), a = $("#pz-from").value, b = $("#pz-to").value;
+  if (!ids.length) return toast("Choisis au moins un enfant.", true);
+  if (!a || !b || b < a) return toast("Vérifie les dates : la fin doit être après le début.", true);
+  const { error } = await sb.from("pauses").insert(ids.map(id => ({ family_id: S.family.id, child_id: id, start_day: a, end_day: b, reason: $("#pz-why").value })));
+  if (error) throw error; closeSheet(); await reloadParent("Pause enregistrée.");
+};
+A.delPause = async el => {
+  if (!await confirmSheet("Supprimer cette pause ?", "Les jours concernés compteront à nouveau normalement.", "Supprimer", true)) return;
+  const { error } = await sb.from("pauses").delete().eq("id", el.dataset.id); if (error) throw error;
+  await reloadParent("Pause supprimée.");
+};
+A.repriceChild = async () => {
+  const c = curChild(), r = rhythmOf(c.id), ws = S.rewards.filter(w => w.duration_days && (!w.child_id || w.child_id === c.id) && w.costs && w.costs[c.id] != null);
+  for (const w of ws) { const costs = { ...w.costs, [c.id]: roundPrice(w.duration_days * r) }; const { error } = await sb.from("rewards").update({ costs, ...(w.child_id ? { cost: costs[c.id] } : {}) }).eq("id", w.id); if (error) throw error; }
+  const { error } = await sb.from("children").update({ price_rhythm: r }).eq("id", c.id); if (error) throw error;
+  await reloadParent(`Prix de ${c.name} recalculés.`);
+};
+async function markPriced(ids) { for (const id of ids) { const c = S.children.find(k => k.id === id); if (c && !c.price_rhythm) await sb.from("children").update({ price_rhythm: rhythmOf(id) }).eq("id", id); } }
+
+// Sorties autour de chez soi (OpenStreetMap)
+const RADII_DEF = { proche: 5, moyen: 15, loin: 60 };
+const RADII_OPT = { proche: [2, 5, 10], moyen: [10, 15, 30], loin: [30, 60, 100] };
+const RADII_LBL = { proche: "Proche : aires de jeux, parcs, médiathèques, piscines", moyen: "Moyen : musées", loin: "Loin : zoos, fermes, aquariums, parcs aquatiques et d'attractions" };
+const OSM_KINDS = [
+  { q: '["leisure"="playground"]["name"]', l: "Aire de jeux", e: "🛝", d: 14, g: "proche", m: t => t.leisure === "playground" },
+  { q: '["leisure"="park"]["name"]', l: "Parc", e: "🌳", d: 21, g: "proche", m: t => t.leisure === "park" },
+  { q: '["amenity"="library"]["name"]', l: "Médiathèque", e: "📚", d: 21, g: "proche", m: t => t.amenity === "library" },
+  { q: '["leisure"="swimming_pool"]["access"!="private"]["name"]', l: "Piscine", e: "🏊", d: 30, g: "proche", m: t => t.leisure === "swimming_pool" },
+  { q: '["leisure"="sports_centre"]["sport"="swimming"]["name"]', l: "Piscine", e: "🏊", d: 30, g: "proche", m: t => t.sport === "swimming" },
+  { q: '["tourism"="museum"]["name"]', l: "Musée", e: "🏛️", d: 30, g: "moyen", m: t => t.tourism === "museum" },
+  { q: '["tourism"="zoo"]["name"]', l: "Zoo ou ferme", e: "🐐", d: 30, g: "loin", m: t => t.tourism === "zoo" },
+  { q: '["tourism"="aquarium"]["name"]', l: "Aquarium", e: "🐠", d: 30, g: "loin", m: t => t.tourism === "aquarium" },
+  { q: '["leisure"="water_park"]["name"]', l: "Parc aquatique", e: "🌊", d: 30, g: "loin", m: t => t.leisure === "water_park" },
+  { q: '["tourism"="theme_park"]["name"]', l: "Parc d'attractions", e: "🎢", d: 90, g: "loin", m: t => t.tourism === "theme_park" }
+];
+A.suggestOutings = () => {
+  const r = { ...RADII_DEF, ...(S.radii || {}) };
+  openSheet(`<h2>Sorties près de chez nous</h2><p class="muted">Recherche d'après OpenStreetMap. Ta position sert uniquement à cette recherche, elle n'est pas enregistrée. Les rayons sont partagés avec l'autre parent.</p>
+    ${Object.keys(RADII_DEF).map(k => `<label class="f">${RADII_LBL[k]}<select id="rad-${k}">${RADII_OPT[k].map(v => `<option value="${v}" ${v === +r[k] ? "selected" : ""}>${v} km</option>`).join("")}</select></label>`).join("")}
+    <div class="sheet-actions"><button class="btn" data-act="findOutings">Chercher autour de moi</button></div><div id="osm-res"></div>`);
+};
+A.findOutings = async () => {
+  const radii = {}; Object.keys(RADII_DEF).forEach(k => radii[k] = +$("#rad-" + k).value);
+  if (JSON.stringify(radii) !== JSON.stringify({ ...RADII_DEF, ...(S.radii || {}) })) {
+    S.radii = radii; sb.from("families").update({ outing_radii: radii }).eq("id", S.family.id).then(() => {}, () => {});
+  }
+  const box = $("#osm-res"); box.innerHTML = `<p class="muted">Recherche de ta position…</p>`;
+  const pos = await new Promise((res, rej) => navigator.geolocation ? navigator.geolocation.getCurrentPosition(res, () => rej(new Error("Position refusée. Autorise la localisation pour ce site dans Chrome.")), { timeout: 15000 }) : rej(new Error("Localisation indisponible sur cet appareil.")));
+  const { latitude: la, longitude: lo } = pos.coords;
+  box.innerHTML = `<p class="muted">Recherche des lieux… Les grands rayons peuvent prendre quelques secondes.</p>`;
+  const q = `[out:json][timeout:40];(${OSM_KINDS.map(k => `nwr${k.q}(around:${radii[k.g] * 1000},${la},${lo});`).join("")});out center 600;`;
+  const resp = await fetch("https://overpass-api.de/api/interpreter", { method: "POST", body: "data=" + encodeURIComponent(q), headers: { "Content-Type": "application/x-www-form-urlencoded" } });
+  if (!resp.ok) throw new Error("Le service OpenStreetMap est saturé. Réessaie dans une minute ou réduis les rayons.");
+  const data = await resp.json();
+  const dist = p => { const t = Math.PI / 180, x = (p.lon - lo) * t * Math.cos((p.lat + la) / 2 * t), y = (p.lat - la) * t; return Math.round(Math.sqrt(x * x + y * y) * 6371e3); };
+  const seen = new Set(), per = {};
+  const items = data.elements.map(el => { const p = el.center || el, k = OSM_KINDS.find(o => o.m(el.tags)) || OSM_KINDS[0]; return { name: el.tags.name, k, m: dist(p) }; })
+    .filter(it => it.m <= radii[it.k.g] * 1000)
+    .sort((a, b) => a.m - b.m).filter(it => { const key = it.k.l + it.name; if (seen.has(key)) return false; seen.add(key); per[it.k.l] = (per[it.k.l] || 0) + 1; return per[it.k.l] <= 6; });
+  S.osm = items;
+  const groups = Object.keys(RADII_DEF).map(g => { const li = items.map((it, i) => ({ it, i })).filter(o => o.it.k.g === g); return li.length ? `<h3 class="tier-h">${RADII_LBL[g].split(" :")[0]}<small>jusqu'à ${radii[g]} km</small></h3><ul class="tpl osm">${li.map(({ it, i }) => `<li><label><input type="checkbox" value="${i}"><span>${it.k.e} ${esc(it.name)}<small>${it.k.l}, à ${it.m < 1000 ? it.m + " m" : (Math.round(it.m / 100) / 10) + " km"}</small></span></label></li>`).join("")}</ul>` : ""; }).join("");
+  box.innerHTML = groups ? groups + `<div class="sheet-actions"><button class="btn" data-act="addOutings">Ajouter aux récompenses</button></div><p class="muted small">Données © contributeurs OpenStreetMap.</p>` : `<p class="empty">Aucun lieu trouvé. Essaie des rayons plus grands.</p>`;
+};
+A.addOutings = async () => {
+  const picks = $$(".osm input:checked", dlg).map(i => S.osm[+i.value]); if (!picks.length) return toast("Coche au moins un lieu.", true);
+  const ids = S.children.map(c => c.id);
+  const rows = picks.map(it => { const tier = it.k.d >= 90 ? "grand" : "sortie"; return { family_id: S.family.id, title: `${it.k.l} : ${it.name}`.slice(0, 60), emoji: it.k.e, tier, duration_days: it.k.d, place: it.name, costs: pricesFor(it.k.d, ids), cost: roundPrice(it.k.d * 5) }; });
+  const { error } = await sb.from("rewards").insert(rows); if (error) throw error;
+  await markPriced(ids); closeSheet(); await reloadParent(`${rows.length} sortie${rows.length > 1 ? "s ajoutées" : " ajoutée"}.`);
+};
+
+// Étoiles cassées
+A.breakStar = () => {
+  const c = curChild(), v = viewFor(c);
+  if (v.balance <= 0) return toast(`${c.name} n'a aucune étoile à dépenser : rien à casser.`, true);
+  openSheet(`<h2>${brokenStar(26)} Casser une étoile</h2>
+    <p class="muted">Pour un écart immédiat de ${esc(c.name)} (solde : ${v.balance} ⭐). 3 étoiles au maximum, jamais en dessous de zéro. La plante et les badges ne bougent pas.</p>
+    ${S.penalties.length ? `<ul class="tpl">${S.penalties.map(p => `<li><button class="pen" data-act="applyPenalty" data-id="${p.id}"><span>${esc(p.emoji)} ${esc(p.title)}</span><span aria-label="${p.stars} étoiles">${brokenStar(18).repeat(p.stars)}</span></button></li>`).join("")}</ul>`
+      : `<p class="empty">Aucun malus prédéfini. Crée-les pour rester cohérent d'un parent à l'autre.</p>`}
+    <h3 class="grp">Autre motif</h3>
+    <div class="f two"><label>Motif<input id="pen-title" maxlength="60" placeholder="A jeté son assiette"></label><label>Étoiles<select id="pen-stars"><option>1</option><option>2</option><option>3</option></select></label></div>
+    <div class="sheet-actions"><button class="btn ghost" data-act="penaltyCatalog">Gérer les malus prédéfinis</button><button class="btn danger" data-act="applyPenalty">Casser</button></div>`);
+};
+A.applyPenalty = async el => {
+  const c = curChild(), pid = el.dataset.id || null;
+  let title = null, stars = null;
+  if (!pid) { title = $("#pen-title").value.trim(); stars = +$("#pen-stars").value; if (!title) return toast("Indique un motif.", true); }
+  const { data, error } = await sb.rpc("apply_penalty", { p_child: c.id, p_penalty: pid, p_title: title, p_emoji: null, p_stars: stars });
+  if (error) throw error;
+  closeSheet(); await reloadParent(`${data} étoile${data > 1 ? "s cassées" : " cassée"} pour ${c.name}.`);
+};
+A.cancelPenalty = async el => {
+  if (!await confirmSheet("Annuler cette étoile cassée ?", "Les étoiles sont rendues à l'enfant.", "Annuler le malus")) return;
+  const { error } = await sb.from("penalty_events").delete().eq("id", el.dataset.id); if (error) throw error;
+  await reloadParent("Malus annulé, étoiles rendues.");
+};
+A.penaltyCatalog = () => {
+  const have = new Set(S.penalties.map(p => p.title.toLowerCase()));
+  const sugg = TPL_P.map((t, i) => ({ ...t, i })).filter(t => !have.has(t.t.toLowerCase()));
+  openSheet(`<h2>Malus prédéfinis</h2><p class="muted">Communs à tous les enfants, de 1 à 3 étoiles.</p>
+    ${S.penalties.length ? `<ul class="hist">${S.penalties.map(p => `<li><span>${esc(p.emoji)} ${esc(p.title)}</span><span>${p.stars} ⭐</span><button class="link" data-act="delPenalty" data-id="${p.id}">Supprimer</button></li>`).join("")}</ul>` : ""}
+    ${sugg.length ? `<h3 class="grp">Suggestions</h3><ul class="tpl">${sugg.map(t => `<li><label><input type="checkbox" value="${t.i}"><span>${t.e} ${esc(t.t)} (${t.s} ⭐)</span></label></li>`).join("")}</ul>` : ""}
+    <h3 class="grp">Créer un malus</h3>
+    <div class="f two"><label>Motif<input id="np-title" maxlength="60"></label><label>Étoiles<select id="np-stars"><option>1</option><option>2</option><option>3</option></select></label></div>
+    <div class="sheet-actions"><button class="btn ghost" data-act="breakStar">Retour</button><button class="btn" data-act="savePenalties">Enregistrer</button></div>`);
+};
+A.savePenalties = async () => {
+  const rows = $$(".tpl input:checked", dlg).map(i => TPL_P[+i.value]).map(t => ({ family_id: S.family.id, title: t.t, emoji: t.e, stars: t.s }));
+  const t = $("#np-title").value.trim();
+  if (t) rows.push({ family_id: S.family.id, title: t, emoji: "💔", stars: +$("#np-stars").value });
+  if (!rows.length) return toast("Coche une suggestion ou saisis un motif.", true);
+  const { error } = await sb.from("penalties").insert(rows); if (error) throw error;
+  await reloadParent(`${rows.length} malus ajouté${rows.length > 1 ? "s" : ""}.`); A.penaltyCatalog();
+};
+A.delPenalty = async el => {
+  const { error } = await sb.from("penalties").update({ active: false }).eq("id", el.dataset.id); if (error) throw error;
+  await reloadParent("Malus supprimé."); A.penaltyCatalog();
+};
+
+// Routines
+A.newRoutine = () => routineForm(null);
+A.editRoutine = el => routineForm(S.routines.find(r => r.id === el.dataset.id));
+A.pickEmoji = el => { const t = $("#" + (el.dataset.target || "f-emoji")); if (t) t.value = el.dataset.e; };
+A.seg = el => { S.form[el.dataset.group] = el.dataset.v; $$("button", el.parentElement).forEach(b => { const on = b === el; b.classList.toggle("on", on); b.setAttribute("aria-checked", on); }); };
+const syncDays = () => $$(".day", dlg).forEach(b => { const on = S.form.days.includes(+b.dataset.v); b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); });
+A.toggleDay = el => { const v = +el.dataset.v; S.form.days = S.form.days.includes(v) ? S.form.days.filter(d => d !== v) : [...S.form.days, v]; syncDays(); };
+A.daysPreset = el => { S.form.days = { all: [1, 2, 3, 4, 5, 6, 7], week: [1, 2, 3, 4, 5], we: [6, 7] }[el.dataset.v]; syncDays(); };
+A.saveRoutine = async el => {
+  const title = $("#f-title").value.trim();
+  if (!title) return toast("Donne un nom à la routine.", true);
+  if (!S.form.days.length) return toast("Choisis au moins un jour.", true);
+  const row = { title, emoji: $("#f-emoji").value.trim() || "⭐", moment: S.form.moment, days: [...S.form.days].sort((a, b) => a - b),
+    stars: +$("#f-stars").value, place: $("#f-place").value || null, timer_minutes: $("#f-timer").value ? +$("#f-timer").value : null, is_bonus: $("#f-bonus").checked };
+  const id = el.dataset.id;
+  const { error } = id ? await sb.from("routines").update(row).eq("id", id)
+    : await sb.from("routines").insert({ ...row, family_id: S.family.id, child_id: S.currentChild, position: S.routines.filter(r => r.child_id === S.currentChild).length });
+  if (error) throw error;
+  closeSheet(); await reloadParent(id ? "Routine enregistrée." : "Routine ajoutée.");
+};
+A.delRoutine = async el => {
+  if (!await confirmSheet("Supprimer cette routine ?", "Elle disparaît des journées à venir. Les étoiles déjà gagnées sont conservées.", "Supprimer", true)) return;
+  const { error } = await sb.from("routines").update({ active: false }).eq("id", el.dataset.id); if (error) throw error;
+  await reloadParent("Routine supprimée.");
+};
+A.routineTemplates = () => {
+  const c = curChild(); const have = new Set(S.routines.filter(r => r.child_id === c.id).map(r => r.title.toLowerCase()));
+  openSheet(`<h2>Modèles de routines pour ${esc(c.name)}</h2>${MOMENTS.map(([k, l, , e]) => {
+    const list = TPL_R.map((t, i) => ({ ...t, i })).filter(t => t.m === k); if (!list.length) return "";
+    return `<h3 class="grp">${e} ${l}</h3><ul class="tpl">${list.map(t => { const had = have.has(t.t.toLowerCase()); return `<li><label class="${had ? "had" : ""}"><input type="checkbox" value="${t.i}" ${had ? "disabled" : ""}><span>${t.e} ${esc(t.t)}${t.b ? " (bonus)" : ""}${t.d ? ", en semaine" : ""}${had ? ", déjà ajoutée" : ""}</span></label></li>`; }).join("")}</ul>`;
+  }).join("")}<div class="sheet-actions"><button class="btn" data-act="addRoutineTpl">Ajouter la sélection</button></div>`);
+};
+A.addRoutineTpl = async () => {
+  const picks = $$(".tpl input:checked", dlg).map(i => TPL_R[+i.value]);
+  if (!picks.length) return toast("Coche au moins une routine.", true);
+  const base = S.routines.filter(r => r.child_id === S.currentChild).length;
+  const rows = picks.map((t, i) => ({ family_id: S.family.id, child_id: S.currentChild, title: t.t, emoji: t.e, moment: t.m, place: t.p || null,
+    stars: t.s || 1, days: t.d || [1, 2, 3, 4, 5, 6, 7], is_bonus: !!t.b, timer_minutes: t.tm || null, position: base + i }));
+  const { error } = await sb.from("routines").insert(rows); if (error) throw error;
+  closeSheet(); await reloadParent(`${rows.length} routine${rows.length > 1 ? "s ajoutées" : " ajoutée"}.`);
+};
+
+// Récompenses
+A.newReward = () => rewardForm(null);
+A.editReward = el => rewardForm(S.rewards.find(w => w.id === el.dataset.id));
+A.saveReward = async el => {
+  const title = $("#w-title").value.trim(), fixed = $("#w-fixed").checked, days = parseInt($("#w-days").value, 10), cost = parseInt($("#w-cost").value, 10);
+  if (!title) return toast("Donne un nom à la récompense.", true);
+  if (fixed && !(cost >= 1 && cost <= 5000)) return toast("Le prix doit être entre 1 et 5000 étoiles.", true);
+  if (!fixed && !(days >= 1 && days <= 365)) return toast("La durée doit être entre 1 et 365 jours.", true);
+  const who = $("#w-for").value || null, ids = who ? [who] : S.children.map(k => k.id);
+  const costs = fixed ? {} : pricesFor(days, ids);
+  const row = { title, emoji: $("#w-emoji").value.trim() || "🎁", tier: $("#w-tier").value, child_id: who, duration_days: fixed ? null : days, costs,
+    cost: fixed ? cost : (who ? costs[who] : roundPrice(days * 5)), event_date: $("#w-date").value || null, place: $("#w-place").value.trim() || null };
+  if (!fixed) await markPriced(ids);
+  const id = el.dataset.id;
+  const { error } = id ? await sb.from("rewards").update(row).eq("id", id) : await sb.from("rewards").insert({ ...row, family_id: S.family.id });
+  if (error) throw error;
+  closeSheet(); await reloadParent(id ? "Récompense enregistrée." : "Récompense ajoutée.");
+};
+A.delReward = async el => {
+  if (!await confirmSheet("Supprimer cette récompense ?", "L'historique des échanges est conservé.", "Supprimer", true)) return;
+  const { error } = await sb.from("rewards").update({ active: false }).eq("id", el.dataset.id); if (error) throw error;
+  await reloadParent("Récompense supprimée.");
+};
+A.rewardTemplates = () => {
+  const have = new Set(S.rewards.map(w => w.title.toLowerCase())), c = curChild();
+  openSheet(`<h2>Référentiel de récompenses</h2><p class="muted">Proposées à tous les enfants. Le prix est calculé selon le rythme de chacun (pour ${esc(c.name)} : environ ${Math.round(rhythmOf(c.id) * 10) / 10} ⭐ par jour).</p>
+    ${TIERS.filter(([k]) => k !== "event").map(([k, l, d]) => `<h3 class="tier-h">${l}<small>${d}</small></h3><ul class="tpl">${TPL_W.map((t, i) => ({ ...t, i })).filter(t => t.tier === k).map(t => { const had = have.has(t.t.toLowerCase()); return `<li><label class="${had ? "had" : ""}"><input type="checkbox" value="${t.i}" ${had ? "disabled" : ""}><span>${t.e} ${esc(t.t)} (${roundPrice(t.d * rhythmOf(c.id))} ⭐ pour ${esc(c.name)})${had ? ", déjà ajoutée" : ""}</span></label></li>`; }).join("")}</ul>`).join("")}
+    <h3 class="tier-h">Événements<small>à une date précise</small></h3><p class="muted">Un spectacle, un atelier, une fête de quartier : crée-le à partir du modèle et adapte-le.</p>
+    <div class="sheet-actions"><button class="btn ghost" data-act="newEvent">Créer un événement</button><button class="btn" data-act="addRewardTpl">Ajouter la sélection</button></div>`);
+};
+A.newEvent = () => rewardForm(null, { tier: "event", emoji: "🎪", title: "Spectacle", duration_days: 30 });
+A.addRewardTpl = async () => {
+  const picks = $$(".tpl input:checked", dlg).map(i => TPL_W[+i.value]).sort((a, b) => TIER_RANK[a.tier] - TIER_RANK[b.tier] || a.d - b.d);
+  if (!picks.length) return toast("Coche au moins une récompense.", true);
+  const ids = S.children.map(k => k.id);
+  // Les niveaux restent dans l'ordre : un niveau supérieur ne peut pas coûter autant qu'un niveau inférieur
+  const maxBelow = {}; ids.forEach(id => maxBelow[id] = {});
+  S.rewards.filter(w => w.duration_days).forEach(w => ids.forEach(id => { const r = TIER_RANK[w.tier || "moment"], v = costFor(w, id); maxBelow[id][r] = Math.max(maxBelow[id][r] || 0, v); }));
+  const rows = picks.map(t => { const costs = pricesFor(t.d, ids);
+    ids.forEach(id => { const r = TIER_RANK[t.tier]; const lower = Math.max(0, ...Object.entries(maxBelow[id]).filter(([k]) => +k < r).map(([, v]) => v));
+      while (costs[id] <= lower) costs[id] += stepOf(costs[id]); maxBelow[id][r] = Math.max(maxBelow[id][r] || 0, costs[id]); });
+    return { family_id: S.family.id, title: t.t, emoji: t.e, tier: t.tier, duration_days: t.d, costs, cost: roundPrice(t.d * 5) }; });
+  const { error } = await sb.from("rewards").insert(rows); if (error) throw error;
+  await markPriced(ids); closeSheet(); await reloadParent(`${rows.length} récompense${rows.length > 1 ? "s ajoutées" : " ajoutée"}.`);
+};
+A.pRedeem = async el => {
+  const w = S.rewards.find(x => x.id === el.dataset.id), c = curChild(), cost = costFor(w, c.id);
+  if (!await confirmSheet("Échanger des étoiles ?", `${cost} étoiles de ${c.name} contre « ${w.title} ».`, "Échanger")) return;
+  const { error } = await sb.from("redemptions").insert({ family_id: S.family.id, child_id: c.id, reward_id: w.id, title: w.title, emoji: w.emoji, cost }); if (error) throw error;
+  celebrate(true); await reloadParent("Récompense échangée.");
+};
+A.cancelRedeem = async el => {
+  if (!await confirmSheet("Annuler cet échange ?", "Les étoiles sont rendues à l'enfant.", "Annuler l'échange", true)) return;
+  const { error } = await sb.from("redemptions").delete().eq("id", el.dataset.id); if (error) throw error;
+  await reloadParent("Échange annulé, étoiles rendues.");
+};
+
+// Enfants
+A.newChild = () => childForm(null);
+A.editChild = el => childForm(S.children.find(c => c.id === el.dataset.id));
+A.pickColor = el => { S.form.color = el.dataset.v; $$(".sw", dlg).forEach(b => b.classList.toggle("on", b === el)); };
+A.saveChild = async el => {
+  const name = $("#k-name").value.trim(); if (!name) return toast("Saisis un prénom.", true);
+  const row = { name, emoji: $("#k-emoji").value.trim() || "🧒", color: S.form.color };
+  const id = el.dataset.id;
+  const res = id ? await sb.from("children").update(row).eq("id", id).select().single()
+    : await sb.from("children").insert({ ...row, family_id: S.family.id, position: S.children.length }).select().single();
+  if (res.error) throw res.error;
+  S.currentChild = res.data.id; closeSheet();
+  await reloadParent(id ? "Enregistré." : `${name} a rejoint la famille.`);
+  if (!id) { S.tab = "routines"; render(); A.routineTemplates(); }
+};
+A.delChild = async el => {
+  const c = S.children.find(k => k.id === el.dataset.id);
+  if (!await confirmSheet(`Supprimer ${c.name} ?`, "Ses routines, ses étoiles et son historique seront effacés définitivement.", "Supprimer", true)) return;
+  const { error } = await sb.from("children").delete().eq("id", c.id); if (error) throw error;
+  await reloadParent("Supprimé.");
+};
+A.deviceCode = async el => {
+  const c = S.children.find(k => k.id === el.dataset.id);
+  const { data, error } = await sb.rpc("create_child_code", { p_child: c.id }); if (error) throw error;
+  openSheet(`<h2>Téléphone de ${esc(c.name)}</h2><div class="code" aria-label="Code ${data.split("").join(" ")}">${esc(data)}</div>
+    <p>Sur son téléphone, ouvre SoisFier, touche « J'ai un code enfant » et saisis ce code. Il expire dans 15 minutes.</p>
+    <div class="sheet-actions"><button class="btn" data-act="closeSheetReload">Terminé</button></div>`);
+};
+A.closeSheetReload = async () => { closeSheet(); await reloadParent(); };
+A.revokeDevice = async el => {
+  if (!await confirmSheet("Déconnecter cet appareil ?", "Il faudra un nouveau code pour le reconnecter.", "Déconnecter", true)) return;
+  const { error } = await sb.from("child_devices").delete().eq("id", el.dataset.id); if (error) throw error;
+  await reloadParent("Appareil déconnecté.");
+};
+A.childHere = async el => {
+  if (!await ensurePin()) return;
+  const { data: code, error } = await sb.rpc("create_child_code", { p_child: el.dataset.id }); if (error) throw error;
+  const r = await sb.rpc("child_pair", { p_code: code }); if (r.error) throw r.error;
+  store.set("childToken", r.data.token); store.set("childFromParent", true); store.del("queue"); store.del("lastEarned"); store.del("seenFlowers");
+  S.screen = "child"; S.ctab = "today"; S.cs = null; render(); await loadChild();
+};
+A.exitChild = async () => {
+  const pin = store.get("pin");
+  if (pin) {
+    const v = await pinSheet("Espace parent", "Saisis le code parent pour quitter le mode enfant.");
+    if (v === null) return; if (v !== pin) return toast("Code incorrect.", true);
+  } else {
+    const a = 6 + Math.floor(Math.random() * 4), b = 6 + Math.floor(Math.random() * 4);
+    const v = await new Promise(res => {
+      openSheet(`<h2>Espace parent</h2><p>Pour déconnecter ce téléphone, combien font ${a} × ${b} ?</p><label class="f">Réponse<input id="m-in" class="pin" inputmode="numeric" maxlength="3"></label>
+        <div class="sheet-actions"><button class="btn ghost" id="m-no">Annuler</button><button class="btn" id="m-ok">Valider</button></div>`);
+      $("#m-no").onclick = () => { closeSheet(); res(null); };
+      $("#m-ok").onclick = () => { const x = $("#m-in").value; closeSheet(); res(x); };
+      dlg.addEventListener("close", () => res(null), { once: true });
+    });
+    if (v === null) return; if (+v !== a * b) return toast("Ce n'est pas la bonne réponse.", true);
+  }
+  await flushQueue();
+  if (store.get("cpushOn")) {
+    try { const reg = await navigator.serviceWorker.ready; const sub = await reg.pushManager.getSubscription();
+      if (sub) { await sb.rpc("push_unsubscribe", { p_endpoint: sub.endpoint }); await sub.unsubscribe(); } } catch {}
+    store.set("pushOn", false);
+  }
+  ["childToken", "childCache", "queue", "childFromParent", "cpushOn", "lastEarned", "seenFlowers"].forEach(k => store.del(k));
+  S.cs = null;
+  const { data } = await sb.auth.getSession();
+  if (data.session) { S.session = data.session; S.tab = "family"; await enterParent(); } else { S.screen = "auth"; render(); }
+};
+
+// Mode enfant
+A.cToggle = el => { const rid = el.dataset.id, day = todayISO(); const done = S.cs.completions.some(c => c.routine_id === rid && c.day === day); childToggle(rid, !done); };
+A.cRedeem = async el => {
+  const w = S.cs.rewards.find(x => x.id === el.dataset.id);
+  if (!await confirmSheet(`${w.emoji} ${w.title}`, `Tu échanges ${w.cost} étoiles. Tu es sûr ?`, "Oui, je choisis !")) return;
+  await flushQueue();
+  const { error } = await sb.rpc("child_redeem", { p_token: store.get("childToken"), p_reward: w.id });
+  if (error) { if (isNetErr(error)) return toast("Il faut internet pour choisir une récompense.", true); throw error; }
+  celebrate(true); await loadChild();
+  openSheet(`<h2>Bravo ! ${esc(w.emoji)}</h2><p>Montre cet écran à tes parents : tu as gagné « ${esc(w.title)} ».</p><div class="sheet-actions"><button class="btn" data-act="closeSheet">Super !</button></div>`);
+};
+A.cTimer = el => {
+  const r = S.cs.routines.find(x => x.id === el.dataset.id); const total = r.timer_minutes * 60; let left = total; let iv;
+  const C = 2 * Math.PI * 92;
+  openSheet(`<div class="timer"><h2>${esc(r.emoji)} ${esc(r.title)}</h2><p>Fais-le avant la fin du temps !</p>
+    <svg viewBox="0 0 220 220" aria-hidden="true"><circle cx="110" cy="110" r="92" fill="none" stroke="var(--line)" stroke-width="18"/>
+    <circle id="tc" cx="110" cy="110" r="92" fill="none" stroke="var(--sun)" stroke-width="18" stroke-linecap="round" transform="rotate(-90 110 110)" stroke-dasharray="${C}" stroke-dashoffset="0"/></svg>
+    <div class="tleft" id="tl" role="timer">${Math.floor(left / 60)}:${pad(left % 60)}</div>
+    <div class="sheet-actions" style="justify-content:center"><button class="btn ghost" id="t-stop">Arrêter</button><button class="btn" id="t-done">J'ai fini !</button></div></div>`);
+  const stop = () => clearInterval(iv);
+  iv = setInterval(() => {
+    left--; const tl = $("#tl"), tc = $("#tc"); if (!tl) return stop();
+    tl.textContent = `${Math.floor(Math.max(left, 0) / 60)}:${pad(Math.max(left, 0) % 60)}`;
+    tc.setAttribute("stroke-dashoffset", (C * (1 - Math.max(left, 0) / total)).toFixed(1));
+    if (left <= 0) { stop(); tl.textContent = "Temps écoulé !"; $("#t-done").textContent = "C'est fait quand même"; if (navigator.vibrate) navigator.vibrate([200, 100, 200]); }
+  }, 1000);
+  $("#t-stop").onclick = () => { stop(); closeSheet(); };
+  $("#t-done").onclick = () => { stop(); closeSheet(); childToggle(r.id, true, left > 0 ? "timer" : "child"); if (left > 0) toast("Défi réussi ! ⚡"); };
+  dlg.addEventListener("close", stop, { once: true });
+};
+A.sound = el => store.set("sound", el.checked);
+
+// Rappels
+A.pushParent = async () => {
+  const times = readTimes(); if (!times.length) return toast("Choisis au moins une heure.", true);
+  const j = await getPushSub();
+  const { error } = await sb.rpc("parent_push_subscribe", { p_family: S.family.id, p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_times: times }); if (error) throw error;
+  store.set("pushOn", true); store.set("pushTimes", times); render(); toast("Rappels activés.");
+};
+A.pushChild = async () => {
+  const times = readTimes(); if (!times.length) return toast("Choisis au moins une heure.", true);
+  const j = await getPushSub();
+  const { error } = await sb.rpc("child_push_subscribe", { p_token: store.get("childToken"), p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_times: times }); if (error) throw error;
+  store.set("cpushOn", true); store.set("cpushTimes", times); render(); toast("Rappels activés.");
+};
+A.pushOff = async () => {
+  const reg = await navigator.serviceWorker.ready; const sub = await reg.pushManager.getSubscription();
+  if (sub) { await sb.rpc("push_unsubscribe", { p_endpoint: sub.endpoint }); await sub.unsubscribe(); }
+  store.set(S.screen === "child" ? "cpushOn" : "pushOn", false); render(); toast("Rappels désactivés.");
+};
+
+// Famille et réglages
+A.invite = async () => {
+  const { data, error } = await sb.rpc("create_invite", { p_family: S.family.id }); if (error) throw error;
+  openSheet(`<h2>Inviter l'autre parent</h2><div class="code">${esc(data)}</div><p>L'autre parent crée son compte SoisFier, puis choisit « Rejoindre une famille » et saisit ce code. Il est valable 48 heures.</p>
+    <div class="sheet-actions">${navigator.share ? `<button class="btn ghost" data-act="shareInvite" data-code="${esc(data)}">Partager</button>` : ""}<button class="btn" data-act="closeSheet">Terminé</button></div>`);
+};
+A.shareInvite = async el => { try { await navigator.share({ title: "SoisFier", text: `Rejoins notre famille sur SoisFier avec le code ${el.dataset.code} : ${location.origin + location.pathname}` }); } catch {} };
+A.setPin = async () => {
+  const p = await pinSheet("Code parent", "Choisis 4 chiffres. Ils protègent la sortie du mode enfant sur ce téléphone.");
+  if (p === null) return; if (!/^\d{4}$/.test(p)) return toast("Le code doit contenir 4 chiffres.", true);
+  store.set("pin", p); render(); toast("Code parent enregistré.");
+};
+A.renameFamily = async () => {
+  openSheet(`<h2>Renommer la famille</h2><label class="f">Nom<input id="fam-name" maxlength="40" value="${esc(S.family.name)}"></label><div class="sheet-actions"><button class="btn" data-act="saveFamilyName">Enregistrer</button></div>`);
+};
+A.saveFamilyName = async () => {
+  const name = $("#fam-name").value.trim(); if (!name) return toast("Saisis un nom.", true);
+  const { error } = await sb.from("families").update({ name }).eq("id", S.family.id); if (error) throw error;
+  S.family.name = name; closeSheet(); render(); toast("Nom enregistré.");
+};
+A.printPlan = () => {
+  if (S.children.length === 1) return printPlanning([S.children[0].id]);
+  openSheet(`<h2>Planning à imprimer</h2><ul class="tpl">${S.children.map(c => `<li><label><input type="checkbox" value="${c.id}" checked> ${esc(c.emoji)} ${esc(c.name)}</label></li>`).join("")}</ul>
+    <div class="sheet-actions"><button class="btn" data-act="doPrint">Imprimer</button></div>`);
+};
+A.doPrint = () => { const ids = $$(".tpl input:checked", dlg).map(i => i.value); closeSheet(); if (ids.length) printPlanning(ids); };
+A.exportData = async () => {
+  const fid = S.family.id;
+  const names = ["children", "routines", "rewards", "completions", "redemptions", "penalties", "penalty_events", "child_badges", "flowers", "pauses"];
+  const res = await Promise.all(names.map(t => sb.from(t).select("*").eq("family_id", fid)));
+  for (const q of res) if (q.error) throw q.error;
+  const out = { exported_at: new Date().toISOString(), family: S.family }; names.forEach((n, i) => out[n] = res[i].data);
+  const blob = new Blob([JSON.stringify(out, null, 2)], { type: "application/json" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `soisfier-${todayISO()}.json`; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000); toast("Copie téléchargée.");
+};
+
+/* ================= Démarrage ================= */
+window.addEventListener("online", () => { flushQueue(); if (S.screen === "parent" && S.offline) enterParent(); });
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible") return;
+  if (S.screen === "child") { flushQueue().then(loadChild); }
+  else if (S.screen === "parent" && S.family) { if (S.day > todayISO()) S.day = todayISO(); refreshParent().then(render).catch(() => {}); }
+});
+if (sb) sb.auth.onAuthStateChange((event, session) => {
+  if (event === "PASSWORD_RECOVERY") {
+    S.session = session;
+    setTimeout(() => {
+      openSheet(`<h2>Nouveau mot de passe</h2><label class="f">Mot de passe (6 caractères minimum)<input id="np" type="password" minlength="6" autocomplete="new-password"></label><div class="sheet-actions"><button class="btn" data-act="savePass">Enregistrer</button></div>`);
+    }, 300);
+  }
+});
+A.savePass = async () => {
+  const p = $("#np").value; if (p.length < 6) return toast("6 caractères minimum.", true);
+  const { error } = await sb.auth.updateUser({ password: p }); if (error) throw error;
+  closeSheet(); toast("Mot de passe modifié."); await enterParent();
+};
+
+async function boot() {
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+  if (!sb) { S.screen = "error"; S.err = CFG_OK ? "La connexion au service n'a pas pu démarrer. Vérifie ta connexion internet puis réessaie." : "Configuration manquante : l'app doit être publiée par la GitHub Action, qui injecte SUPABASE_URL et SUPABASE_KEY."; return render(); }
+  if (store.get("childToken")) {
+    S.screen = "child"; S.cs = store.get("childCache"); render();
+    await flushQueue(); await loadChild(); return;
+  }
+  const { data } = await sb.auth.getSession();
+  S.session = data.session;
+  if (!S.session) { S.screen = "auth"; return render(); }
+  await enterParent();
+}
+boot();
+</script>
+</body>
+</html>
