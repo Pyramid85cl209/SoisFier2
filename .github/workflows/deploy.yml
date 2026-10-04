@@ -1,0 +1,46 @@
+# Publie l'app sur GitHub Pages en injectant la configuration Supabase depuis les secrets d'environnement.
+name: Déploiement GitHub Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Injecter la configuration Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_KEY" ]; then
+            echo "::error::Secrets SUPABASE_URL ou SUPABASE_KEY absents de l'environnement github-pages"; exit 1
+          fi
+          # Garde-fou : jamais de clé secrète (service_role / sb_secret_) dans une page publique
+          case "$SUPABASE_KEY" in sb_secret_*) echo "::error::SUPABASE_KEY est une clé secrète. Utilise la clé anon ou publishable."; exit 1;; esac
+          PAYLOAD=$(echo "$SUPABASE_KEY" | cut -d. -f2 | tr '_-' '/+')
+          while [ $(( ${#PAYLOAD} % 4 )) -ne 0 ]; do PAYLOAD="$PAYLOAD="; done
+          if echo "$PAYLOAD" | base64 -d 2>/dev/null | grep -q '"service_role"'; then
+            echo "::error::SUPABASE_KEY est la clé service_role. Utilise la clé anon ou publishable."; exit 1
+          fi
+          mkdir _site
+          rsync -a --exclude .git --exclude .github --exclude README.md ./ _site/
+          sed -i "s|__SUPABASE_URL__|${SUPABASE_URL}|; s|__SUPABASE_KEY__|${SUPABASE_KEY}|" _site/index.html
+          if grep -q "__SUPABASE_" _site/index.html; then echo "::error::Injection incomplète"; exit 1; fi
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
