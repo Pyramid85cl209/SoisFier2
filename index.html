@@ -47,7 +47,7 @@ button{cursor:pointer}
 /* Navigation basse */
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:center;gap:4px;
   background:var(--paper);border-top:2px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
-.tabbar button{flex:1;max-width:140px;border:0;background:none;padding:6px 4px;border-radius:14px;display:flex;flex-direction:column;
+.tabbar button{flex:1;min-width:0;max-width:140px;border:0;background:none;padding:6px 4px;border-radius:14px;display:flex;flex-direction:column;
   align-items:center;gap:2px;font-size:.78rem;color:var(--muted)}
 .tabbar button span{font-size:1.35rem;line-height:1}
 .tabbar button.on{color:var(--leaf-d);background:var(--leaf-l);font-weight:700}
@@ -794,10 +794,10 @@ function chips() {
   return `<div class="chips" role="tablist">${S.children.map(c => `<button role="tab" aria-selected="${c.id === S.currentChild}" class="chip ${c.id === S.currentChild ? "on" : ""}" style="--c:${esc(c.color)}" data-act="pickChild" data-id="${c.id}">${esc(c.emoji)} ${esc(c.name)}</button>`).join("")}</div>`;
 }
 function renderParent() {
-  const tabs = [["today", "Aujourd'hui", "☀️"], ["routines", "Routines", "📋"], ["rewards", "Récompenses", "🎁"], ["family", "Famille", "🏡"]].filter(t => isParent() || t[0] !== "routines");
+  const tabs = [["today", "Aujourd'hui", "☀️"], ["routines", "Routines", "📋"], ["rewards", "Récompenses", "🎁"], ["malus", "Malus", "💔"], ["family", "Famille", "🏡"]].filter(t => isParent() || t[0] !== "routines");
   let body;
   if (!S.children.length && S.tab !== "family") body = `<section class="card center">${plantSVG(0)}<h1>On commence ?</h1><p>Ajoute ton premier enfant. Tu pourras ensuite choisir ses routines parmi des modèles.</p><button class="btn" data-act="newChild">Ajouter un enfant</button></section>`;
-  else body = { today: pToday, routines: pRoutines, rewards: pRewards, family: pFamily }[S.tab]();
+  else body = { today: pToday, routines: pRoutines, rewards: pRewards, malus: pMalus, family: pFamily }[S.tab]();
   app.innerHTML = `<header class="top"><div class="brand">${miniLogo()}<span>${esc(S.family?.name || "SoisFier")}</span></div>${S.offline ? `<span class="pill">Hors ligne</span>` : ""}</header>
     <main class="wrap">${body}</main>
     <nav class="tabbar" aria-label="Navigation">${tabs.map(([k, l, e]) => `<button data-act="tab" data-tab="${k}" class="${S.tab === k ? "on" : ""}" aria-current="${S.tab === k ? "page" : "false"}"><span aria-hidden="true">${e}</span>${l}</button>`).join("")}</nav>`;
@@ -861,7 +861,7 @@ function pRewards() {
   const list = S.rewards.filter(w => (!w.child_id || w.child_id === c.id) && (!w.event_date || w.event_date >= t));
   const hist = [
     ...S.redemptions.filter(z => z.child_id === c.id).map(z => ({ ...z, kind: "gift" })),
-    ...S.pevents.filter(z => z.child_id === c.id).map(z => ({ ...z, kind: "broken" }))
+
   ].sort((a, b) => a.created_at < b.created_at ? 1 : -1).slice(0, 20);
   const drift = c.price_rhythm && Math.abs(r - c.price_rhythm) / c.price_rhythm > .2;
   const P = isParent();
@@ -870,7 +870,7 @@ function pRewards() {
   const groups = TIERS.map(([k, l, d]) => { const ws = list.filter(w => (w.tier || "moment") === k).sort((a, b) => costFor(a, c.id) - costFor(b, c.id)); return ws.length ? `<h3 class="tier-h">${l}<small>${d}</small></h3><ul class="glist">${ws.map(row).join("")}</ul>` : ""; }).join("");
   return chips() + `<div class="balance"><span class="big">⭐ ${v.balance}</span><span>étoiles à dépenser pour ${esc(c.name)}</span>${v.pendingStars ? `<span class="muted">+${v.pendingStars} en attente de validation</span>` : ""}<span class="muted">Rythme : environ ${Math.round(r * 10) / 10} ⭐ par jour</span></div>
     ${drift && P ? `<div class="banner"><p>Le rythme de ${esc(c.name)} a changé depuis le calcul des prix (${Math.round(c.price_rhythm * 10) / 10} ⭐ par jour, contre ${Math.round(r * 10) / 10} aujourd'hui).</p><button class="btn sm" data-act="repriceChild">Recalculer ses prix</button></div>` : ""}
-    ${P ? `<div class="actions"><button class="btn" data-act="rewardTemplates">Choisir dans le référentiel</button><button class="btn ghost" data-act="newReward">Créer une récompense</button><button class="btn ghost" data-act="suggestOutings">📍 Sorties près de chez nous</button><button class="btn danger ghost" data-act="breakStar">${brokenStar(18)} Casser une étoile</button></div>` : ""}
+    ${P ? `<div class="actions"><button class="btn" data-act="rewardTemplates">Choisir dans le référentiel</button><button class="btn ghost" data-act="newReward">Créer une récompense</button><button class="btn ghost" data-act="suggestOutings">📍 Sorties près de chez nous</button></div>` : ""}
     ${groups || `<p class="empty">Aucune récompense pour l'instant. Commence par le référentiel : les prix s'adaptent au rythme de ${esc(c.name)}.</p>`}
     ${hist.length ? `<h3 class="grp">Historique</h3><ul class="hist">${hist.map(z => z.kind === "gift"
       ? `<li><span>${esc(z.emoji)} ${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span><span>−${z.cost} ⭐</span><span class="muted">par ${z.created_by ? esc(memberLabel(z.created_by)) : esc(c.name)}</span>${P ? `<button class="link" data-act="cancelRedeem" data-id="${z.id}">Annuler</button>` : ""}</li>`
@@ -904,6 +904,23 @@ function pFamily() {
     <section class="sec"><h2>Code parent</h2><p class="muted">Il protège la sortie du mode enfant sur ce téléphone.</p><div class="actions"><button class="btn ghost" data-act="setPin">${store.get("pin") ? "Changer le code" : "Créer un code"}</button></div></section>
     <section class="sec"><h2>Sauvegarde</h2><p class="muted">Tes données sont dans ton espace Supabase. Tu peux aussi en garder une copie.</p><div class="actions"><button class="btn ghost" data-act="exportData">Télécharger une copie (JSON)</button></div></section>
     <section class="sec"><h2>Compte</h2><p class="muted">${esc(S.session?.user.email || "")}</p><div class="actions">${installBtn()}${P ? `<button class="btn ghost" data-act="renameFamily">Renommer la famille</button>` : ""}<button class="btn danger ghost" data-act="logout">Se déconnecter</button></div></section>`;
+}
+
+function pMalus() {
+  const P = isParent(), f = S.mfilter || "all", now = Date.now();
+  const chipsM = `<div class="chips" role="tablist">${[["all", "Tous", "#7A6A5F"], ...S.children.map(c => [c.id, c.emoji + " " + c.name, c.color])].map(([k, l, col]) =>
+    `<button role="tab" aria-selected="${f === k}" class="chip ${f === k ? "on" : ""}" style="--c:${esc(col)}" data-act="mFilter" data-id="${k}">${esc(l)}</button>`).join("")}</div>`;
+  const list = S.pevents.filter(e => f === "all" || e.child_id === f).sort((a, b) => a.created_at < b.created_at ? 1 : -1);
+  const sum = d => list.filter(e => now - new Date(e.created_at) < d * 864e5).reduce((a, e) => a + e.stars, 0);
+  const dayLbl = k => { const t = todayISO(); return k === t ? "Aujourd'hui" : k === addDays(t, -1) ? "Hier" : parseISO(k).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }); };
+  const byDay = []; list.forEach(e => { const k = iso(new Date(e.created_at)); const g = byDay.find(x => x.k === k); g ? g.items.push(e) : byDay.push({ k, items: [e] }); });
+  const item = e => { const k = S.children.find(c => c.id === e.child_id) || { name: "", emoji: "" };
+    return `<li>${brokenStar(24)}<span class="grow"><b>${esc(e.emoji)} ${esc(e.title)}</b><small>${f === "all" ? esc(k.emoji + " " + k.name) + ", " : ""}par ${esc(memberLabel(e.created_by))}, à ${new Date(e.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</small></span>
+      <span>−${e.stars} ⭐</span>${P ? `<button class="vbtn no" data-act="cancelPenalty" data-id="${e.id}" aria-label="Annuler ce malus">↺</button>` : ""}</li>`; };
+  return chipsM + `<div class="balance"><span class="big">${brokenStar(28)} ${sum(7)}</span><span>étoile${sum(7) > 1 ? "s cassées" : " cassée"} ces 7 derniers jours</span><span class="muted">${sum(30)} sur 30 jours, ${list.length} malus au total</span></div>
+    ${P ? `<div class="actions"><button class="btn danger" data-act="breakStar">${brokenStar(18)} Casser une étoile</button><button class="btn ghost" data-act="penaltyCatalog">Malus prédéfinis</button></div>` : ""}
+    ${byDay.length ? byDay.map(g => `<h3 class="grp">${dayLbl(g.k)}</h3><ul class="vlist">${g.items.map(item).join("")}</ul>`).join("")
+      : `<p class="empty">Aucun malus${f === "all" ? "" : " pour cet enfant"}. Tant mieux !</p>`}`;
 }
 
 /* ---------- Enfant ---------- */
@@ -995,7 +1012,7 @@ async function refreshParent() {
     sb.from("child_devices").select("id,child_id,created_at,last_seen").eq("family_id", fid).order("created_at"),
     sb.from("families").select("name,auto_validate,outing_radii").eq("id", fid),
     sb.from("penalties").select("*").eq("family_id", fid).eq("active", true).order("stars").order("created_at"),
-    sb.from("penalty_events").select("*").eq("family_id", fid).order("created_at", { ascending: false }).limit(100),
+    sb.from("penalty_events").select("*").eq("family_id", fid).order("created_at", { ascending: false }).limit(500),
     sb.from("child_badges").select("child_id,badge_key").eq("family_id", fid),
     sb.from("pauses").select("*").eq("family_id", fid).gte("end_day", todayISO()).order("start_day"),
     sb.rpc("family_gardens", { p_family: fid }),
@@ -1480,10 +1497,14 @@ A.manageOneoffTpl = () => openSheet(`<h2>Modèles exceptionnels</h2><p class="mu
 A.delOneoffTpl = async el => { const { error } = await sb.from("oneoff_templates").delete().eq("id", el.dataset.id); if (error) throw error; await reloadParent("Modèle supprimé."); A.manageOneoffTpl(); };
 
 // Étoiles cassées
+A.mFilter = el => { S.mfilter = el.dataset.id; if (el.dataset.id !== "all") S.currentChild = el.dataset.id; render(); };
+A.pickPenChild = el => { S.currentChild = el.value; A.breakStar(); };
 A.breakStar = () => {
+  if (S.tab === "malus" && S.mfilter && S.mfilter !== "all") S.currentChild = S.mfilter;
   const c = curChild(), v = viewFor(c);
-  if (v.balance <= 0) return toast(`${c.name} n'a aucune étoile à dépenser : rien à casser.`, true);
-  openSheet(`<h2>${brokenStar(26)} Casser une étoile</h2>
+  const pick = S.children.length > 1 ? `<label class="f">Enfant<select id="pen-child" onchange="A.pickPenChild(this)">${S.children.map(k => `<option value="${k.id}" ${k.id === c.id ? "selected" : ""}>${esc(k.emoji + " " + k.name)}</option>`).join("")}</select></label>` : "";
+  if (v.balance <= 0 && !pick) return toast(`${c.name} n'a aucune étoile à dépenser : rien à casser.`, true);
+  openSheet(`<h2>${brokenStar(26)} Casser une étoile</h2>${pick}
     <p class="muted">Pour un écart immédiat de ${esc(c.name)} (solde : ${v.balance} ⭐). 3 étoiles au maximum, jamais en dessous de zéro. La plante et les badges ne bougent pas.</p>
     ${S.penalties.length ? `<ul class="tpl">${S.penalties.map(p => `<li><button class="pen" data-act="applyPenalty" data-id="${p.id}"><span>${esc(p.emoji)} ${esc(p.title)}</span><span aria-label="${p.stars} étoiles">${brokenStar(18).repeat(p.stars)}</span></button></li>`).join("")}</ul>`
       : `<p class="empty">Aucun malus prédéfini. Crée-les pour rester cohérent d'un parent à l'autre.</p>`}
