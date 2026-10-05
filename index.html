@@ -120,7 +120,7 @@ button{cursor:pointer}
 .sec p{margin:6px 0}
 .krow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:2px solid var(--sky)}
 .krow:first-of-type{border-top:0}
-.krow>svg{width:44px;height:58px}
+.krow>svg{width:44px;height:58px;flex:none}
 .krow .grow{flex:1}
 .krow .btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .dev{font-size:.88rem;color:var(--muted);display:flex;gap:8px;align-items:center;margin:2px 0}
@@ -224,7 +224,13 @@ dialog#sheet::backdrop{background:rgba(20,30,25,.45)}
 .badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
 .badge{background:var(--paper);border-radius:18px;padding:12px 6px;text-align:center;box-shadow:var(--lift);font-size:.82rem;line-height:1.25}
 .badge .be{font-size:2rem;display:block;margin-bottom:4px}
-.badge.off{opacity:.35;filter:grayscale(1)}
+.badge.off{opacity:.45;filter:grayscale(1)}
+.badge .bdate{display:block;color:var(--muted);font-size:.72rem;margin-top:3px}
+.bprog{display:block;height:6px;border-radius:999px;background:var(--line);margin:6px 8px 0;overflow:hidden}
+.bprog i{display:block;height:100%;background:var(--leaf)}
+.hero.mini{padding:8px 12px}
+.hero.mini .hero-plant{width:76px;flex:none}
+.hero.mini h2{font-size:1.1rem;color:var(--leaf-d)}
 .streak{font-family:var(--display);font-weight:600;font-size:1.1rem;margin:10px 4px}
 
 /* Validation et étoiles cassées */
@@ -570,25 +576,38 @@ const TPL_X = [
   { t: "Trier ses jouets à donner", e: "🧸", s: 3, m: "journee" }, { t: "Faire une carte d'anniversaire", e: "🎂", s: 2, m: "journee" },
   { t: "Arroser le jardin", e: "🪴", s: 1, m: "soir" }, { t: "Ranger le coffre de la voiture", e: "🚗", s: 1, m: "journee" }
 ];
+const B = (k, e, n, c, field, target) => ({ k, e, n, c, ok: s => (typeof target === "number" ? (s[field] || 0) >= target : !!s[field]), p: typeof target === "number" ? s => [Math.min(s[field] || 0, target), target] : null });
+const SERIES = (c, field, key, name, list) => list.map(([n, e], i) => B(i === 0 && key.first ? key.first : key.p + n, e, name(n), c, field, n));
 const BADGES = [
-  { k: "first", e: "🌱", n: "Première routine", ok: s => s.done >= 1 },
-  { k: "r10", e: "🌿", n: "10 routines", ok: s => s.done >= 10 },
-  { k: "r50", e: "🪴", n: "50 routines", ok: s => s.done >= 50 },
-  { k: "r100", e: "🌳", n: "100 routines", ok: s => s.done >= 100 },
-  { k: "f1", e: "🌼", n: "Première fleur", ok: s => s.flowers >= 1 },
-  { k: "f5", e: "💐", n: "5 fleurs", ok: s => s.flowers >= 5 },
-  { k: "f10", e: "🌺", n: "10 fleurs", ok: s => s.flowers >= 10 },
-  { k: "big", e: "🌻", n: "Grande fleur", ok: s => s.big },
-  { k: "parterre", e: "🏡", n: "Premier parterre", ok: s => s.parterre },
-  { k: "jardin", e: "🏞️", n: "Premier jardin", ok: s => s.jardin },
-  { k: "st3", e: "🔥", n: "3 bonnes journées de suite", ok: s => s.best >= 3 },
-  { k: "st7", e: "☀️", n: "7 bonnes journées de suite", ok: s => s.best >= 7 },
-  { k: "st30", e: "🏆", n: "30 bonnes journées de suite", ok: s => s.best >= 30 },
-  { k: "timer", e: "⚡", n: "Défi chrono", ok: s => s.timers >= 1 },
-  { k: "bonus", e: "💪", n: "Routine bonus", ok: s => s.bonus >= 1 },
-  { k: "gift", e: "🎁", n: "Première récompense", ok: s => s.redeemed >= 1 }
+  ...SERIES("Routines", "done", { p: "r", first: "first" }, n => n === 1 ? "Première routine" : `${n.toLocaleString("fr-FR")} routines`,
+    [[1, "🌱"], [10, "🌿"], [50, "🪴"], [100, "🌳"], [250, "🌲"], [500, "🏔️"], [1000, "🚀"], [2500, "🛰️"], [5000, "🌍"], [10000, "🌌"], [15000, "👑"]]),
+  ...SERIES("Étoiles", "earned", { p: "s" }, n => `${n.toLocaleString("fr-FR")} étoiles`,
+    [[25, "⭐"], [100, "🌟"], [250, "✨"], [500, "💫"], [1000, "🌠"], [2500, "☄️"], [5000, "🌙"], [10000, "🪐"], [15000, "🏅"]]),
+  ...SERIES("Régularité", "best", { p: "st" }, n => `${n} bonnes journées de suite`,
+    [[3, "🔥"], [7, "☀️"], [14, "🌈"], [30, "🏆"], [60, "🥇"], [100, "💯"], [200, "🎖️"], [365, "📅"], [500, "🏛️"]]),
+  ...SERIES("Jardin", "flowers", { p: "f" }, n => n === 1 ? "Première fleur" : `${n} fleurs`, [[1, "🌼"], [5, "💐"], [10, "🌺"], [25, "🌸"], [50, "🏵️"], [75, "🌷"]]),
+  ...SERIES("Jardin", "bigCount", { p: "big", first: "big" }, n => n === 1 ? "Une grande fleur" : `${n} grandes fleurs`, [[1, "🌻"], [5, "🌻"], [10, "🌻"], [25, "🌻"], [50, "🌻"]]),
+  ...SERIES("Jardin", "parterres", { p: "parterre", first: "parterre" }, n => n === 1 ? "Premier parterre" : `${n} parterres`, [[1, "🏡"], [5, "🏘️"], [10, "🌳"], [15, "🏞️"]]),
+  B("p_printemps", "🦋", "Parterre du printemps", "Jardin", "p_printemps"), B("p_ete", "🐝", "Parterre de l'été", "Jardin", "p_ete"),
+  B("p_automne", "🍂", "Parterre de l'automne", "Jardin", "p_automne"), B("p_hiver", "❄️", "Parterre de l'hiver", "Jardin", "p_hiver"),
+  ...SERIES("Jardin", "jardins", { p: "jardin", first: "jardin" }, n => n === 1 ? "Premier jardin" : `${n} jardins`, [[1, "🏞️"], [2, "🗺️"], [5, "🏰"]]),
+  B("parfait", "💎", "Parterre parfait (6 grandes fleurs)", "Jardin", "parfait", 1), B("jcomplet", "🌍", "Jardin complet (4 saisons)", "Jardin", "jcomplet", 1),
+  ...SERIES("Défis", "timers", { p: "timer", first: "timer" }, n => n === 1 ? "Défi chrono réussi" : `${n} défis chrono`, [[1, "⚡"], [10, "⏱️"], [50, "🏎️"]]),
+  ...SERIES("Défis", "bonus", { p: "bonus", first: "bonus" }, n => n === 1 ? "Routine bonus" : `${n} routines bonus`, [[1, "💪"], [10, "🦾"], [50, "🦸"]]),
+  ...SERIES("Défis", "oneoff", { p: "oneoff" }, n => n === 1 ? "Routine exceptionnelle" : `${n} routines exceptionnelles`, [[1, "🎯"], [10, "🏹"], [25, "🧭"]]),
+  ...SERIES("Défis", "matin", { p: "matin", first: "matin" }, n => n === 1 ? "Matin parfait" : `${n} matins parfaits`, [[1, "🌅"], [10, "🐓"], [50, "🌄"]]),
+  ...SERIES("Défis", "soir", { p: "soir", first: "soir" }, n => n === 1 ? "Soir parfait" : `${n} soirs parfaits`, [[1, "🌙"], [10, "🦉"], [50, "🌜"]]),
+  ...SERIES("Défis", "full", { p: "full" }, n => n === 1 ? "Journée à 100 %, bonus compris" : `${n} journées à 100 %`, [[1, "✅"], [10, "🎆"]]),
+  ...SERIES("Défis", "weekends", { p: "we" }, n => n === 1 ? "Week-end parfait" : `${n} week-ends parfaits`, [[1, "🎈"], [10, "🎉"]]),
+  B("week1", "🗓️", "Semaine parfaite", "Défis", "weeks", 1),
+  ...SERIES("Épargne", "balance", { p: "save" }, n => `${n.toLocaleString("fr-FR")} étoiles de côté`, [[50, "🐷"], [100, "🪙"], [250, "💰"], [500, "🏦"], [1000, "🗝️"]]),
+  ...SERIES("Épargne", "sortie", { p: "sortie" }, n => n === 1 ? "Première sortie gagnée" : `${n} sorties gagnées`, [[1, "🎟️"], [5, "🎪"]]),
+  ...SERIES("Épargne", "grand", { p: "grand" }, n => n === 1 ? "Premier grand projet" : `${n} grands projets`, [[1, "🎁"], [3, "🏰"]]),
+  ...SERIES("Épargne", "patience", { p: "patience" }, n => `${n} jours d'économies`, [[30, "⏳"], [90, "🐢"]]),
+  ...SERIES("Sérénité", "calm", { p: "calme" }, n => `${n} jours sans étoile cassée`, [[7, "🕊️"], [14, "🍃"], [30, "🧘"], [60, "🌊"], [100, "⛰️"], [200, "🌤️"], [365, "🌞"], [500, "🏝️"]])
 ];
-function computeView({ child, routines, completions, stats, badges, garden }) {
+const BADGE_CATS = ["Routines", "Étoiles", "Régularité", "Jardin", "Défis", "Épargne", "Sérénité"];
+function computeView({ child, routines, completions, stats, badges, garden, penalties, oneoffDone }) {
   const t = todayISO();
   const mine = routines.filter(r => r.child_id === child.id);
   const isVal = c => c.validated === true || !!c.validated_at;
@@ -606,10 +625,37 @@ function computeView({ child, routines, completions, stats, badges, garden }) {
     bonus: completions.filter(c => isVal(c) && bonusIds.has(c.routine_id)).length,
     doneCount: st.done_count || 0, redeemed: st.redeemed_count || 0, flowers: fl.length, big: fl.some(f => f.grade === 3),
     parterre: fl.some(f => f.season !== curSeason || f.garden_year !== curYear), jardin: fl.some(f => f.garden_year !== curYear), garden,
-    pendingStars: st.pending_stars || 0, pendingCount: st.pending_count || 0, stored: new Set(badges || [])
+    pendingStars: st.pending_stars || 0, pendingCount: st.pending_count || 0, stored: new Set(badges || []),
+    bigCount: fl.filter(f => f.grade === 3).length, cn: (garden && garden.counters) || {},
+    groups: (() => { const g = {}; fl.filter(f => f.season !== curSeason || f.garden_year !== curYear).forEach(f => { const k = f.garden_year + "|" + f.season; (g[k] = g[k] || []).push(f); }); return g; })(),
+    pastYears: [...new Set(fl.map(f => f.garden_year))].filter(y => y !== curYear),
+    todayPerfect: m => { const due = dueOn(mine, child.id, t).filter(r => (m ? r.moment === m && !r.is_bonus : true) && !isOneoff(r)); return due.length > 0 && due.every(r => valid.has(r.id + "|" + t)); },
+    seasonsDone: new Set(fl.filter(f => f.season !== curSeason || f.garden_year !== curYear).map(f => f.season)),
+    oneoff: oneoffDone != null ? oneoffDone : completions.filter(c => isVal(c) && mine.some(r => r.id === c.routine_id && isOneoff(r))).length,
+    matin: perfect(mine, child, completions, valid, "matin"), soir: perfect(mine, child, completions, valid, "soir"),
+    calm: (() => { const last = (penalties || []).map(p => p.created_at).sort().pop(); const start = child.garden_start || t;
+      const from = last && last.slice(0, 10) > start ? last.slice(0, 10) : start; return Math.max(0, Math.round((parseISO(t) - parseISO(from)) / 864e5)); })()
   };
 }
-const badgeStats = v => ({ done: v.doneCount, earned: v.earned, best: v.best, timers: v.timers, bonus: v.bonus, redeemed: v.redeemed, flowers: v.flowers, big: v.big, parterre: v.parterre, jardin: v.jardin });
+function perfect(mine, child, completions, valid, moment) {
+  const days = [...new Set(completions.map(c => c.day))];
+  return days.some(day => { const due = dueOn(mine, child.id, day).filter(r => r.moment === moment && !r.is_bonus && !isOneoff(r)); return due.length > 0 && due.every(r => valid.has(r.id + "|" + day)); });
+}
+const badgeStats = v => {
+  const cn = v.cn, groups = Object.values(v.groups), t = todayISO();
+  const lastR = cn.last_redeem ? cn.last_redeem.slice(0, 10) : null, start = v.child.garden_start || t;
+  const from = lastR && lastR > start ? lastR : start;
+  return { done: v.doneCount, earned: v.earned, best: v.best, flowers: v.flowers, bigCount: v.bigCount,
+    parterres: groups.length, jardins: v.pastYears.length,
+    parfait: groups.filter(g => g.length >= 6 && g.every(f => f.grade === 3)).length,
+    jcomplet: v.pastYears.filter(y => ["printemps", "ete", "automne", "hiver"].every(se => v.groups[y + "|" + se])).length,
+    p_printemps: v.seasonsDone.has("printemps"), p_ete: v.seasonsDone.has("ete"), p_automne: v.seasonsDone.has("automne"), p_hiver: v.seasonsDone.has("hiver"),
+    timers: cn.timers != null ? cn.timers : v.timers, bonus: cn.bonus != null ? cn.bonus : v.bonus, oneoff: cn.oneoff != null ? cn.oneoff : v.oneoff,
+    matin: (cn.matin || 0) + (v.todayPerfect("matin") ? 1 : 0), soir: (cn.soir || 0) + (v.todayPerfect("soir") ? 1 : 0), full: (cn.full || 0) + (v.todayPerfect(null) ? 1 : 0),
+    weekends: cn.weekends || 0, weeks: cn.weeks || 0,
+    balance: v.balance, sortie: cn.sortie || 0, grand: cn.grand || 0,
+    patience: Math.max(0, Math.round((parseISO(t) - parseISO(from)) / 864e5)), calm: v.calm };
+};
 const hasBadge = (v, b) => v.stored.has(b.k) || b.ok(badgeStats(v));
 const newBadges = v => BADGES.filter(b => !v.stored.has(b.k) && b.ok(badgeStats(v))).map(b => b.k);
 function brokenStar(s = 20) {
@@ -788,7 +834,7 @@ const readRelation = (idp = "rel") => ($("#" + idp + "-txt").value.trim() || ($(
 /* ---------- Parent ---------- */
 const curChild = () => S.children.find(c => c.id === S.currentChild) || S.children[0];
 function viewFor(c) {
-  return computeView({ child: c, routines: S.routines, completions: S.completions.filter(x => x.child_id === c.id), stats: S.stats[c.id], badges: S.badges[c.id], garden: S.gardens[c.id] });
+  return computeView({ child: c, routines: S.routines, completions: S.completions.filter(x => x.child_id === c.id), stats: S.stats[c.id], badges: S.badges[c.id], garden: S.gardens[c.id], penalties: S.pevents.filter(e => e.child_id === c.id) });
 }
 function chips() {
   return `<div class="chips" role="tablist">${S.children.map(c => `<button role="tab" aria-selected="${c.id === S.currentChild}" class="chip ${c.id === S.currentChild ? "on" : ""}" style="--c:${esc(c.color)}" data-act="pickChild" data-id="${c.id}">${esc(c.emoji)} ${esc(c.name)}</button>`).join("")}</div>`;
@@ -881,7 +927,7 @@ function pFamily() {
     const v = viewFor(c); const devs = S.devices.filter(d => d.child_id === c.id);
     const gn = gardenNow(S.gardens[c.id]);
     return `<div class="krow">${gn ? stageSVG(gn.stage, gn.species, c.color) : plantSVG(0, c.color)}<div class="grow"><b>${esc(c.emoji)} ${esc(c.name)}</b>
-      ${devs.map(d => `<div class="dev">📱 Appareil connecté le ${fmtDate(d.created_at)} ${isParent() ? `<button class="link" data-act="revokeDevice" data-id="${d.id}">Déconnecter</button>` : ""}</div>`).join("")}</div>
+      ${devs.map(d => `<div class="dev">📱 ${esc(d.label || "Son téléphone")}, depuis le ${fmtDate(d.created_at)} ${isParent() ? `<button class="link" data-act="revokeDevice" data-id="${d.id}">Déconnecter</button>` : ""}</div>`).join("")}</div>
       ${isParent() ? `<div class="btns"><button class="btn sm ghost" data-act="editChild" data-id="${c.id}">Modifier</button><button class="btn sm ghost" data-act="deviceCode" data-id="${c.id}">Connecter son appareil</button><button class="btn sm ghost" data-act="childHere" data-id="${c.id}">Mode enfant ici</button></div>` : ""}</div>`;
   }).join("");
   const pushOn = store.get("pushOn", false), times = store.get("pushTimes", ["07:30", "18:30"]);
@@ -928,9 +974,9 @@ function renderChild() {
   const cs = S.cs;
   if (!cs) { app.innerHTML = `<div class="loading">${plantSVG(1)}</div>`; return; }
   const c = cs.child; const routines = cs.routines.map(r => ({ ...r, child_id: c.id }));
-  const v = computeView({ child: c, routines, completions: cs.completions, stats: cs.stats, badges: cs.badges, garden: cs.garden });
-  const tabs = [["today", "Mes routines", "☀️"], ["gifts", "Récompenses", "🎁"], ["garden", "Mon jardin", "🌼"]];
-  const body = { today: cToday, gifts: cGifts, garden: cGarden }[S.ctab](v, routines, cs);
+  const v = computeView({ child: c, routines, completions: cs.completions, stats: cs.stats, badges: cs.badges, garden: cs.garden, penalties: cs.penalties, oneoffDone: cs.oneoff_done });
+  const tabs = [["today", "Mes routines", "☀️"], ["gifts", "Récompenses", "🎁"], ["garden", "Mon jardin", "🌼"], ["badges", "Badges", "🏅"]];
+  const body = { today: cToday, gifts: cGifts, garden: cGarden, badges: cBadges }[S.ctab](v, routines, cs);
   app.innerHTML = `<header class="top kid-top"><span class="hello">Salut ${esc(c.name)} ${esc(c.emoji)}</span><span class="star-count" aria-label="${v.balance} étoiles">⭐ ${v.balance}</span><button class="lock" data-act="exitChild" aria-label="Espace parent">🔒</button></header>
     ${S.offline ? `<p class="center"><span class="pill">Hors ligne : tes routines seront envoyées plus tard</span></p>` : ""}
     <main class="wrap">${body}</main>
@@ -964,7 +1010,9 @@ function cGifts(v, routines, cs) {
     ...cs.redemptions.map(z => ({ ...z, kind: "gift" })),
     ...(cs.penalties || []).map(z => ({ ...z, kind: "broken" }))
   ].sort((a, b) => a.created_at < b.created_at ? 1 : -1).slice(0, 12);
-  return `<div class="balance"><span class="big">⭐ ${v.balance}</span><span>étoiles à dépenser</span>${v.pendingStars ? `<span class="muted">+${v.pendingStars} en attente</span>` : ""}</div>
+  const gn = gardenNow(v.garden);
+  const mini = gn ? `<section class="hero mini"><div class="hero-plant">${stageSVG(gn.waiting ? 0 : gn.stage, gn.species, v.child.color)}</div><div class="hero-txt"><h2>${gn.waiting ? "Ton pot attend sa graine" : STAGE_NAME[gn.stage]}</h2>${gn.waiting ? "" : dots14(v.garden)}<p class="small">${gn.waiting ? "" : `Ta fleur s'ouvre ${fmtLong(gn.end)}.`}</p></div></section>` : "";
+  return mini + `<div class="balance"><span class="big">⭐ ${v.balance}</span><span>étoiles à dépenser</span>${v.pendingStars ? `<span class="muted">+${v.pendingStars} en attente</span>` : ""}</div>
     ${cs.rewards.length ? `<ul class="glist">${cs.rewards.map(w => `<li class="kgift"><span class="g-emo" aria-hidden="true">${esc(w.emoji)}</span><span class="grow"><b>${esc(w.title)}</b><span>${w.cost} ⭐</span></span>
       ${v.balance >= w.cost ? `<button class="btn" data-act="cRedeem" data-id="${w.id}">Je choisis</button>` : `<span class="muted">Encore ${w.cost - v.balance} ⭐</span>`}</li>`).join("")}</ul>`
       : `<p class="empty">Demande à tes parents d'ajouter des récompenses.</p>`}
@@ -983,11 +1031,20 @@ function cGarden(v, routines) {
     if (past.length) scenes += `<h2 class="grp">Mes anciens jardins</h2><div class="yr">${past.map(y => `<button class="btn ghost sm" data-act="showYear" data-y="${y}">${y}</button>`).join("")}</div>`;
   }
   return scenes + `<p class="streak">${v.current > 0 ? `🔥 ${v.current} bonne${v.current > 1 ? "s" : ""} journée${v.current > 1 ? "s" : ""} de suite` : "Fais une bonne journée pour lancer une série !"}</p>
-    <h2 class="grp">Mes badges</h2><div class="badges">${BADGES.map(b => `<div class="badge ${hasBadge(v, b) ? "" : "off"}"><span class="be" aria-hidden="true">${b.e}</span>${b.n}</div>`).join("")}</div>
+    <p class="center"><button class="btn ghost" data-act="ctab" data-tab="badges">🏅 Voir mes badges</button></p>
     <section class="sec" style="margin-top:18px"><h2>Réglages</h2>
       <label class="check"><input type="checkbox" id="snd" data-act="sound" ${store.get("sound", true) ? "checked" : ""}> Son quand je coche une routine</label>
       <div class="f two"><label>Rappel matin<input type="time" id="t1" value="${esc(ct[0] || "")}"></label><label>Rappel soir<input type="time" id="t2" value="${esc(ct[1] || "")}"></label></div>
       <div class="actions"><button class="btn ghost" data-act="pushChild">${pushOn ? "Mettre à jour les rappels" : "Activer les rappels"}</button>${pushOn ? `<button class="btn ghost" data-act="pushOff">Désactiver</button>` : ""}</div></section>`;
+}
+
+function cBadges(v, routines, cs) {
+  const bs = badgeStats(v), dates = cs.badge_dates || {}, got = BADGES.filter(b => hasBadge(v, b)).length;
+  const card = b => { const on = hasBadge(v, b), pr = !on && b.p ? b.p(bs) : null;
+    return `<div class="badge ${on ? "" : "off"}"><span class="be" aria-hidden="true">${b.e}</span>${b.n}${on && dates[b.k] ? `<small class="bdate">${fmtDate(dates[b.k])}</small>` : ""}${pr ? `<span class="bprog"><i style="width:${Math.round(pr[0] / pr[1] * 100)}%"></i></span><small class="bdate">${pr[0]} / ${pr[1]}</small>` : ""}</div>`; };
+  return `<div class="balance"><span class="big">🏅 ${got}</span><span>badge${got > 1 ? "s" : ""} sur ${BADGES.length}</span></div>
+    ${BADGE_CATS.map(c => { const list = BADGES.filter(b => b.c === c); const n = list.filter(b => hasBadge(v, b)).length;
+      return `<h2 class="tier-h">${c}<small>${n} sur ${list.length}</small></h2><div class="badges">${list.map(card).join("")}</div>`; }).join("")}`;
 }
 
 /* ================= Données parent ================= */
@@ -1009,7 +1066,7 @@ async function refreshParent() {
     sb.from("redemptions").select("*").eq("family_id", fid).order("created_at", { ascending: false }).limit(100),
     sb.from("child_stats").select("*").eq("family_id", fid),
     sb.from("family_members").select("user_id,display_name,relation,role").eq("family_id", fid),
-    sb.from("child_devices").select("id,child_id,created_at,last_seen").eq("family_id", fid).order("created_at"),
+    sb.from("child_devices").select("id,child_id,created_at,last_seen,label").eq("family_id", fid).order("created_at"),
     sb.from("families").select("name,auto_validate,outing_radii").eq("id", fid),
     sb.from("penalties").select("*").eq("family_id", fid).eq("active", true).order("stars").order("created_at"),
     sb.from("penalty_events").select("*").eq("family_id", fid).order("created_at", { ascending: false }).limit(500),
@@ -1070,7 +1127,7 @@ async function loadChild() {
     store.set("seenFlowers", fls.length);
     if (fresh.length) setTimeout(() => bloomCeremony(fresh[fresh.length - 1]), 900);
     const routines = S.cs.routines.map(r => ({ ...r, child_id: S.cs.child.id }));
-    const nb = newBadges(computeView({ child: S.cs.child, routines, completions: S.cs.completions, stats: S.cs.stats, badges: S.cs.badges, garden: S.cs.garden }));
+    const nb = newBadges(computeView({ child: S.cs.child, routines, completions: S.cs.completions, stats: S.cs.stats, badges: S.cs.badges, garden: S.cs.garden, penalties: S.cs.penalties, oneoffDone: S.cs.oneoff_done }));
     if (nb.length) { sb.rpc("child_award_badges", { p_token: tok, p_keys: nb }).then(() => {}, () => {}); S.cs.badges.push(...nb); }
     store.set("childCache", S.cs);
     if (gain || nb.length) setTimeout(() => {
@@ -1303,7 +1360,7 @@ A.joinFamily = async () => {
 };
 A.pair = async () => {
   const code = $("#p-code").value.trim(); if (code.length < 6) return toast("Le code contient 6 caractères.", true);
-  const { data, error } = await sb.rpc("child_pair", { p_code: code }); if (error) throw error;
+  const { data, error } = await sb.rpc("child_pair", { p_code: code, p_label: null }); if (error) throw error;
   store.set("childToken", data.token); store.del("queue"); store.del("pin"); store.del("lastEarned"); store.del("seenFlowers");
   S.screen = "child"; S.ctab = "today"; S.cs = null; render(); await loadChild(); celebrate(true);
 };
@@ -1683,9 +1740,18 @@ A.revokeDevice = async el => {
 };
 A.childHere = async el => {
   if (!await ensurePin()) return;
-  const { data: code, error } = await sb.rpc("create_child_code", { p_child: el.dataset.id }); if (error) throw error;
-  const r = await sb.rpc("child_pair", { p_code: code }); if (r.error) throw r.error;
-  store.set("childToken", r.data.token); store.set("childFromParent", true); store.del("queue"); store.del("lastEarned"); store.del("seenFlowers");
+  const cid = el.dataset.id, map = store.get("sameDevice", {});
+  let tok = map[cid];
+  if (tok) {   // déjà connecté sur ce téléphone : on réutilise le même appareil
+    const chk = await sb.rpc("child_state", { p_token: tok });
+    if (chk.error) { if (/Appareil non reconnu/.test(chk.error.message || "")) tok = null; else throw chk.error; }
+  }
+  if (!tok) {
+    const { data: code, error } = await sb.rpc("create_child_code", { p_child: cid }); if (error) throw error;
+    const r = await sb.rpc("child_pair", { p_code: code, p_label: `Téléphone de ${memberLabel(S.session.user.id)} (mode enfant)` }); if (r.error) throw r.error;
+    tok = r.data.token; map[cid] = tok; store.set("sameDevice", map);
+  }
+  store.set("childToken", tok); store.set("childFromParent", true); store.del("queue"); store.del("lastEarned"); store.del("seenFlowers");
   S.screen = "child"; S.ctab = "today"; S.cs = null; render(); await loadChild();
 };
 A.exitChild = async () => {
