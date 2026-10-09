@@ -43,6 +43,10 @@ button{cursor:pointer}
 .brand{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:600;font-size:1.15rem}
 .brand svg{width:30px;height:30px}
 .pill{font-size:.8rem;padding:3px 10px;border-radius:999px;background:var(--sun-l)}
+.top-r{display:flex;align-items:center;gap:8px}
+.help{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--paper);color:var(--leaf-d);
+  font-family:var(--display);font-weight:600;font-size:1.15rem;text-decoration:none;box-shadow:inset 0 0 0 2px var(--leaf)}
+.help-float{position:fixed;z-index:5;top:calc(12px + env(safe-area-inset-top,0px));right:12px}
 
 /* Navigation basse */
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:center;gap:4px;
@@ -787,7 +791,7 @@ window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); instal
 const installBtn = () => installEvt ? `<button class="btn ghost wide" data-act="install">Installer l'application sur ce téléphone</button>` : "";
 function renderAuth() {
   const m = S.authMode;
-  app.innerHTML = `<main class="wrap auth">
+  app.innerHTML = `<main class="wrap auth"><a class="help help-float" href="guide/" aria-label="Mode d'emploi">?</a>
     <div class="auth-hero">${plantSVG(4, "#E8484F", "SoisFier")}<h1>SoisFier</h1><p>Les routines des enfants, une étoile à la fois.</p></div>
     <div class="seg wide" role="tablist">
       <button role="tab" aria-selected="${m === "login"}" class="${m === "login" ? "on" : ""}" data-act="authMode" data-v="login">Connexion</button>
@@ -811,7 +815,7 @@ function renderPair() {
     <p class="center"><button class="link" data-act="toAuth">Retour</button></p></main>`;
 }
 function renderOnboard() {
-  app.innerHTML = `<main class="wrap auth"><div class="auth-hero">${plantSVG(1)}<h1>Bienvenue</h1><p>Crée l'espace de ta famille, ou rejoins celui de l'autre parent.</p></div>
+  app.innerHTML = `<main class="wrap auth"><a class="help help-float" href="guide/" aria-label="Mode d'emploi">?</a><div class="auth-hero">${plantSVG(1)}<h1>Bienvenue</h1><p>Crée l'espace de ta famille, ou rejoins celui de l'autre parent.</p></div>
     <form class="card" novalidate><h2>Créer ma famille</h2><label class="f">Nom de la famille<input id="o-name" placeholder="Famille Martin" maxlength="40"></label><label class="f">Je suis<select id="o-rel">${RELATIONS.map(r => `<option>${r}</option>`).join("")}</select></label>
     <button class="btn wide" data-act="createFamily">Créer</button></form>
     <form class="card" novalidate><h2>Rejoindre une famille</h2><label class="f">Code d'invitation<input id="o-code" class="pin" maxlength="6" autocapitalize="characters" autocomplete="off"></label>
@@ -844,7 +848,7 @@ function renderParent() {
   let body;
   if (!S.children.length && S.tab !== "family") body = `<section class="card center">${plantSVG(0)}<h1>On commence ?</h1><p>Ajoute ton premier enfant. Tu pourras ensuite choisir ses routines parmi des modèles.</p><button class="btn" data-act="newChild">Ajouter un enfant</button></section>`;
   else body = { today: pToday, routines: pRoutines, rewards: pRewards, malus: pMalus, family: pFamily }[S.tab]();
-  app.innerHTML = `<header class="top"><div class="brand">${miniLogo()}<span>${esc(S.family?.name || "SoisFier")}</span></div>${S.offline ? `<span class="pill">Hors ligne</span>` : ""}</header>
+  app.innerHTML = `<header class="top"><div class="brand">${miniLogo()}<span>${esc(S.family?.name || "SoisFier")}</span></div><div class="top-r">${S.offline ? `<span class="pill">Hors ligne</span>` : ""}<a class="help" href="guide/" aria-label="Mode d'emploi">?</a></div></header>
     <main class="wrap">${body}</main>
     <nav class="tabbar" aria-label="Navigation">${tabs.map(([k, l, e]) => `<button data-act="tab" data-tab="${k}" class="${S.tab === k ? "on" : ""}" aria-current="${S.tab === k ? "page" : "false"}"><span aria-hidden="true">${e}</span>${l}</button>`).join("")}</nav>`;
 }
@@ -1011,7 +1015,7 @@ function cGifts(v, routines, cs) {
     ...(cs.penalties || []).map(z => ({ ...z, kind: "broken" }))
   ].sort((a, b) => a.created_at < b.created_at ? 1 : -1).slice(0, 12);
   const gn = gardenNow(v.garden);
-  const mini = gn ? `<section class="hero mini"><div class="hero-plant">${stageSVG(gn.waiting ? 0 : gn.stage, gn.species, v.child.color)}</div><div class="hero-txt"><h2>${gn.waiting ? "Ton pot attend sa graine" : STAGE_NAME[gn.stage]}</h2>${gn.waiting ? "" : dots14(v.garden)}<p class="small">${gn.waiting ? "" : `Ta fleur s'ouvre ${fmtLong(gn.end)}.`}</p></div></section>` : "";
+  const mini = miniHero(v);
   return mini + `<div class="balance"><span class="big">⭐ ${v.balance}</span><span>étoiles à dépenser</span>${v.pendingStars ? `<span class="muted">+${v.pendingStars} en attente</span>` : ""}</div>
     ${cs.rewards.length ? `<ul class="glist">${cs.rewards.map(w => `<li class="kgift"><span class="g-emo" aria-hidden="true">${esc(w.emoji)}</span><span class="grow"><b>${esc(w.title)}</b><span>${w.cost} ⭐</span></span>
       ${v.balance >= w.cost ? `<button class="btn" data-act="cRedeem" data-id="${w.id}">Je choisis</button>` : `<span class="muted">Encore ${w.cost - v.balance} ⭐</span>`}</li>`).join("")}</ul>`
@@ -1019,6 +1023,10 @@ function cGifts(v, routines, cs) {
     ${hist.length ? `<h3 class="grp">Mon histoire</h3><ul class="hist">${hist.map(z => z.kind === "gift"
       ? `<li><span>${esc(z.emoji)} ${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span></li>`
       : `<li>${brokenStar(20)}<span>Étoile cassée : ${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span><span>−${z.stars}</span></li>`).join("")}</ul>` : ""}`;
+}
+function miniHero(v) {
+  const gn = gardenNow(v.garden);
+  return gn ? `<section class="hero mini"><div class="hero-plant">${stageSVG(gn.waiting ? 0 : gn.stage, gn.species, v.child.color)}</div><div class="hero-txt"><h2>${gn.waiting ? "Ton pot attend sa graine" : STAGE_NAME[gn.stage]}</h2>${gn.waiting ? "" : dots14(v.garden)}<p class="small">${gn.waiting ? "" : `Ta fleur s'ouvre ${fmtLong(gn.end)}.`}</p></div></section>` : "";
 }
 function cGarden(v, routines) {
   const gd = v.garden, bs = badgeStats(v), pushOn = store.get("cpushOn", false), ct = store.get("cpushTimes", ["07:30", "18:00"]);
@@ -1030,7 +1038,7 @@ function cGarden(v, routines) {
     const past = [...new Set(fl.map(f => f.garden_year))].filter(y => y !== yr);
     if (past.length) scenes += `<h2 class="grp">Mes anciens jardins</h2><div class="yr">${past.map(y => `<button class="btn ghost sm" data-act="showYear" data-y="${y}">${y}</button>`).join("")}</div>`;
   }
-  return scenes + `<p class="streak">${v.current > 0 ? `🔥 ${v.current} bonne${v.current > 1 ? "s" : ""} journée${v.current > 1 ? "s" : ""} de suite` : "Fais une bonne journée pour lancer une série !"}</p>
+  return miniHero(v) + scenes + `<p class="streak">${v.current > 0 ? `🔥 ${v.current} bonne${v.current > 1 ? "s" : ""} journée${v.current > 1 ? "s" : ""} de suite` : "Fais une bonne journée pour lancer une série !"}</p>
     <p class="center"><button class="btn ghost" data-act="ctab" data-tab="badges">🏅 Voir mes badges</button></p>
     <section class="sec" style="margin-top:18px"><h2>Réglages</h2>
       <label class="check"><input type="checkbox" id="snd" data-act="sound" ${store.get("sound", true) ? "checked" : ""}> Son quand je coche une routine</label>
@@ -1380,7 +1388,7 @@ A.pToggle = async el => {
     const { error } = await sb.from("completions").delete().eq("routine_id", rid).eq("day", day); if (error) throw error;
     toast("Routine décochée.");
   } else {
-    return toast("Routine déjà validée. Pour retirer des étoiles, utilise une étoile cassée (onglet Récompenses).", true);
+    return toast("Routine déjà validée. Pour retirer des étoiles, utilise une étoile cassée (onglet Malus).", true);
   }
   await reloadParent();
 };
@@ -1477,19 +1485,35 @@ A.suggestOutings = () => {
     ${Object.keys(RADII_DEF).map(k => `<label class="f">${RADII_LBL[k]}<select id="rad-${k}">${RADII_OPT[k].map(v => `<option value="${v}" ${v === +r[k] ? "selected" : ""}>${v} km</option>`).join("")}</select></label>`).join("")}
     <div class="sheet-actions"><button class="btn" data-act="findOutings">Chercher autour de moi</button></div><div id="osm-res"></div>`);
 };
+const OVERPASS = ["https://overpass-api.de/api/interpreter", "https://overpass.private.coffee/api/interpreter", "https://overpass.kumi.systems/api/interpreter"];
+async function overpass(q) {
+  for (const url of OVERPASS) {
+    const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 35000);
+    try {
+      const r = await fetch(url, { method: "POST", body: "data=" + encodeURIComponent(q), headers: { "Content-Type": "application/x-www-form-urlencoded" }, signal: ctl.signal });
+      if (r.ok) return await r.json();
+    } catch (_) { /* serveur suivant */ } finally { clearTimeout(tm); }
+  }
+  throw new Error("overpass");
+}
 A.findOutings = async () => {
   const radii = {}; Object.keys(RADII_DEF).forEach(k => radii[k] = +$("#rad-" + k).value);
   if (JSON.stringify(radii) !== JSON.stringify({ ...RADII_DEF, ...(S.radii || {}) })) {
     S.radii = radii; sb.from("families").update({ outing_radii: radii }).eq("id", S.family.id).then(() => {}, () => {});
   }
   const box = $("#osm-res"); box.innerHTML = `<p class="muted">Recherche de ta position…</p>`;
-  const pos = await new Promise((res, rej) => navigator.geolocation ? navigator.geolocation.getCurrentPosition(res, () => rej(new Error("Position refusée. Autorise la localisation pour ce site dans Chrome.")), { timeout: 15000 }) : rej(new Error("Localisation indisponible sur cet appareil.")));
+  const fail = msg => { box.innerHTML = `<p class="empty">${esc(msg)}</p>`; };
+  let pos;
+  try {
+    pos = await new Promise((res, rej) => navigator.geolocation ? navigator.geolocation.getCurrentPosition(res, er => rej(new Error(er && er.code === 1 ? "Position refusée. Autorise la localisation pour ce site dans Chrome (cadenas à gauche de l'adresse, puis Autorisations)." : "Position introuvable. Active la localisation du téléphone puis réessaie.")), { timeout: 20000, maximumAge: 600000 }) : rej(new Error("Localisation indisponible sur cet appareil.")));
+  } catch (er) { return fail(er.message); }
   const { latitude: la, longitude: lo } = pos.coords;
   box.innerHTML = `<p class="muted">Recherche des lieux… Les grands rayons peuvent prendre quelques secondes.</p>`;
-  const q = `[out:json][timeout:40];(${OSM_KINDS.map(k => `nwr${k.q}(around:${radii[k.g] * 1000},${la},${lo});`).join("")});out center 600;`;
-  const resp = await fetch("https://overpass-api.de/api/interpreter", { method: "POST", body: "data=" + encodeURIComponent(q), headers: { "Content-Type": "application/x-www-form-urlencoded" } });
-  if (!resp.ok) throw new Error("Le service OpenStreetMap est saturé. Réessaie dans une minute ou réduis les rayons.");
-  const data = await resp.json();
+  const groupsQ = Object.keys(RADII_DEF).map(g => `[out:json][timeout:25];(${OSM_KINDS.filter(k => k.g === g).map(k => `nwr${k.q}(around:${radii[g] * 1000},${la},${lo});`).join("")});out center 300;`);
+  const results = await Promise.all(groupsQ.map(q => overpass(q).catch(() => null)));
+  if (results.every(r => !r)) return fail("Le service OpenStreetMap ne répond pas pour le moment. Réessaie dans quelques minutes, ou réduis les rayons.");
+  const missed = Object.keys(RADII_DEF).filter((g, i) => !results[i]);
+  const data = { elements: results.flatMap(r => (r && r.elements) || []) };
   const dist = p => { const t = Math.PI / 180, x = (p.lon - lo) * t * Math.cos((p.lat + la) / 2 * t), y = (p.lat - la) * t; return Math.round(Math.sqrt(x * x + y * y) * 6371e3); };
   const seen = new Set(), per = {};
   const items = data.elements.map(el => { const p = el.center || el, k = OSM_KINDS.find(o => o.m(el.tags)) || OSM_KINDS[0]; return { name: el.tags.name, k, m: dist(p) }; })
@@ -1498,6 +1522,8 @@ A.findOutings = async () => {
   S.osm = items;
   const groups = Object.keys(RADII_DEF).map(g => { const li = items.map((it, i) => ({ it, i })).filter(o => o.it.k.g === g); return li.length ? `<h3 class="tier-h">${RADII_LBL[g].split(" :")[0]}<small>jusqu'à ${radii[g]} km</small></h3><ul class="tpl osm">${li.map(({ it, i }) => `<li><label><input type="checkbox" value="${i}"><span>${it.k.e} ${esc(it.name)}<small>${it.k.l}, à ${it.m < 1000 ? it.m + " m" : (Math.round(it.m / 100) / 10) + " km"}</small></span></label></li>`).join("")}</ul>` : ""; }).join("");
   box.innerHTML = groups ? groups + `<div class="sheet-actions"><button class="btn" data-act="addOutings">Ajouter aux récompenses</button></div><p class="muted small">Données © contributeurs OpenStreetMap.</p>` : `<p class="empty">Aucun lieu trouvé. Essaie des rayons plus grands.</p>`;
+  box.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (missed.length) box.insertAdjacentHTML("beforeend", `<p class="muted small">Recherche incomplète (${missed.map(g => RADII_LBL[g].split(" :")[0].toLowerCase()).join(", ")}) : le service OpenStreetMap n'a pas répondu. Réessaie plus tard pour ces lieux.</p>`);
 };
 A.addOutings = async () => {
   const picks = $$(".osm input:checked", dlg).map(i => S.osm[+i.value]); if (!picks.length) return toast("Coche au moins un lieu.", true);
