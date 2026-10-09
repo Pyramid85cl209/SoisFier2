@@ -1,0 +1,929 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mode d'emploi SoisFier</title>
+<meta name="description" content="Le mode d'emploi complet de SoisFier : installation, routines, récompenses, malus, membres, quotidien, côté enfant et réglages.">
+<meta name="theme-color" content="#2E8B57">
+<link rel="icon" href="../icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sky:#E3F1FB; --paper:#FFFFFF; --leaf:#2E8B57; --leaf-d:#1F6B41; --leaf-l:#DDF2E5;
+  --sun:#FFC233; --sun-l:#FFF1C9; --earth:#4A2E1F; --muted:#6E5F55; --poppy:#E8484F;
+  --line:#CFE2EF; --shade:rgba(15,34,25,.45);
+  --display:"Fredoka", ui-rounded, "Segoe UI", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --nav:300px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --sky:#0F2219; --paper:#18322A; --leaf:#5CC48A; --leaf-d:#7FD6A5; --leaf-l:#1E4535;
+    --sun:#FFCB4D; --sun-l:#3A3318; --earth:#F1ECE4; --muted:#A9B8AF; --poppy:#FF6B70; --line:#24463A; --shade:rgba(0,0,0,.6); }
+}
+:root[data-theme="dark"]{ --sky:#0F2219; --paper:#18322A; --leaf:#5CC48A; --leaf-d:#7FD6A5; --leaf-l:#1E4535;
+  --sun:#FFCB4D; --sun-l:#3A3318; --earth:#F1ECE4; --muted:#A9B8AF; --poppy:#FF6B70; --line:#24463A; --shade:rgba(0,0,0,.6); }
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{margin:0;background:var(--sky);color:var(--earth);font:17px/1.6 var(--body);-webkit-tap-highlight-color:transparent}
+a{color:var(--leaf-d)}
+h2,h3,h4{font-family:var(--display);font-weight:600;line-height:1.2;color:var(--earth)}
+
+/* Barre du haut */
+.bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;padding:10px 16px;
+  padding-top:calc(10px + env(safe-area-inset-top,0px));background:var(--sky);border-bottom:2px solid var(--line)}
+.bar h1{font-family:var(--display);font-weight:600;font-size:1.15rem;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .logo{font-size:1.4rem}
+.btn{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:999px;background:var(--paper);color:var(--leaf-d);
+  font:700 .95rem var(--body);padding:8px 14px;box-shadow:inset 0 0 0 2px var(--leaf);text-decoration:none;cursor:pointer}
+.menu-btn{display:none}
+
+/* Mise en page */
+.layout{display:grid;grid-template-columns:var(--nav) minmax(0,1fr);max-width:1240px;margin:0 auto}
+nav.toc{position:sticky;top:62px;height:calc(100vh - 62px);overflow-y:auto;padding:18px 12px 40px 16px;border-right:2px solid var(--line)}
+.toc ol,.toc ul{list-style:none;margin:0;padding:0}
+.toc > ol > li{margin-bottom:6px}
+.toc a{display:block;text-decoration:none;color:var(--earth);border-radius:12px;padding:6px 10px;font-size:.93rem;line-height:1.3}
+.toc a:hover{background:var(--paper)}
+.toc a.p{font-family:var(--display);font-weight:600;font-size:1rem;display:flex;gap:8px;align-items:baseline}
+.toc ul a{padding-left:42px;color:var(--muted)}
+.toc a.on{background:var(--leaf-l);color:var(--leaf-d)}
+.num{display:inline-grid;place-items:center;min-width:30px;height:26px;padding:0 6px;border-radius:999px;background:var(--leaf);color:#fff;
+  font-family:var(--display);font-size:.85rem;font-weight:600;flex:none}
+main{padding:24px 28px 120px;max-width:860px;min-width:0}
+.lead{background:var(--paper);border-radius:20px;padding:18px 20px;margin:0 0 28px}
+.lead p{margin:.3em 0}
+.part{margin-bottom:48px}
+.part > h2{display:flex;align-items:center;gap:12px;font-size:1.7rem;margin:0 0 14px;padding-top:8px}
+.part > h2 .num{min-width:44px;height:36px;font-size:1.1rem}
+h3{font-size:1.3rem;margin:34px 0 10px}
+h4{font-size:1.1rem;margin:24px 0 8px}
+p,li{max-width:70ch}
+ol,ul{padding-left:1.4em}
+li{margin:.25em 0}
+strong{color:var(--earth)}
+figure{margin:18px 0 20px;background:var(--paper);border-radius:20px;padding:10px}
+figure img{display:block;width:auto;max-width:100%;height:auto;max-height:78vh;margin:0 auto;border-radius:12px;cursor:zoom-in}
+figcaption{font-size:.85rem;color:var(--muted);padding:8px 6px 2px}
+.tbl{overflow-x:auto;margin:14px 0;border-radius:16px;background:var(--paper)}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--display);font-weight:600;background:var(--leaf-l)}
+tr:last-child td{border-bottom:0}
+.top-link{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:15;width:46px;height:46px;border-radius:50%;
+  display:grid;place-items:center;background:var(--leaf);color:#fff;text-decoration:none;font-size:1.3rem;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+
+/* Visionneuse */
+.viewer{position:fixed;inset:0;z-index:40;background:var(--shade);display:none;overflow:auto;-webkit-overflow-scrolling:touch}
+.viewer.open{display:block}
+.viewer img{display:block;max-width:none;margin:64px auto 24px;border-radius:12px}
+.viewer button{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));right:12px;z-index:41}
+
+/* Téléphone */
+@media (max-width:900px){
+  .layout{display:block}
+  .menu-btn{display:inline-flex}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:min(86vw,340px);height:auto;z-index:30;background:var(--sky);
+    padding-top:calc(18px + env(safe-area-inset-top,0px));transform:translateX(-105%);transition:transform .2s ease;border-right:2px solid var(--line)}
+  nav.toc.open{transform:none}
+  .scrim{position:fixed;inset:0;z-index:25;background:var(--shade);display:none}
+  .scrim.open{display:block}
+  main{padding:16px 16px 110px}
+  .part > h2{font-size:1.45rem}
+  .bar .back-txt{display:none}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto} nav.toc{transition:none}}
+</style>
+</head>
+<body>
+<header class="bar">
+  <button class="btn menu-btn" id="menu" aria-expanded="false" aria-controls="toc">☰ Sommaire</button>
+  <span class="logo" aria-hidden="true">🌻</span>
+  <h1>Mode d'emploi SoisFier</h1>
+  <a class="btn" href="../" aria-label="Retour à l'application">←<span class="back-txt"> Retour à l'application</span></a>
+</header>
+<div class="scrim" id="scrim"></div>
+<div class="layout">
+  <nav class="toc" id="toc" aria-label="Sommaire"><ol><li><a href="#p1" class="p"><span class="num">1</span>Installation et compte</a><ul><li><a href="#p1-avant-de-commencer">Avant de commencer</a></li><li><a href="#p1-lecran-daccueil">L&#x27;écran d&#x27;accueil</a></li><li><a href="#p1-etape-1-installer-lapplication">Étape 1 : installer l&#x27;application</a></li><li><a href="#p1-etape-2-creer-son-compte">Étape 2 : créer son compte</a></li><li><a href="#p1-etape-3-creer-ou-rejoindre-sa-famille">Étape 3 : créer ou rejoindre sa famille</a></li><li><a href="#p1-etape-4-premiers-reglages">Étape 4 : premiers réglages</a></li><li><a href="#p1-en-cas-de-probleme">En cas de problème</a></li></ul></li><li><a href="#p2a" class="p"><span class="num">2a</span>La page Famille et le premier enfant</a><ul><li><a href="#p2a-la-page-famille">La page Famille</a></li><li><a href="#p2a-etape-1-ajouter-un-enfant">Étape 1 : ajouter un enfant</a></li><li><a href="#p2a-etape-2-choisir-ses-premieres-routines">Étape 2 : choisir ses premières routines</a></li><li><a href="#p2a-et-ensuite">Et ensuite</a></li></ul></li><li><a href="#p2b" class="p"><span class="num">2b</span>Les routines</a><ul><li><a href="#p2b-longlet-routines">L&#x27;onglet Routines</a></li><li><a href="#p2b-ajouter-dautres-modeles">Ajouter d&#x27;autres modèles</a></li><li><a href="#p2b-creer-une-routine">Créer une routine</a></li><li><a href="#p2b-modifier-ou-supprimer-une-routine">Modifier ou supprimer une routine</a></li><li><a href="#p2b-ajouter-une-routine-exceptionnelle">Ajouter une routine exceptionnelle</a></li><li><a href="#p2b-le-resultat-dans-longlet-aujourdhui">Le résultat dans l&#x27;onglet Aujourd&#x27;hui</a></li></ul></li><li><a href="#p2c" class="p"><span class="num">2c</span>Récompenses, sorties et malus</a><ul><li><a href="#p2c-longlet-recompenses">L&#x27;onglet Récompenses</a></li><li><a href="#p2c-choisir-dans-le-referentiel">Choisir dans le référentiel</a></li><li><a href="#p2c-creer-une-recompense-ou-un-evenement">Créer une récompense ou un événement</a></li><li><a href="#p2c-sorties-pres-de-chez-nous">Sorties près de chez nous</a></li><li><a href="#p2c-les-malus-etoiles-cassees">Les malus (étoiles cassées)</a></li></ul></li><li><a href="#p2d" class="p"><span class="num">2d</span>Membres et téléphone de l&#x27;enfant</a><ul><li><a href="#p2d-inviter-un-membre">Inviter un membre</a></li><li><a href="#p2d-cote-invite-rejoindre-la-famille">Côté invité : rejoindre la famille</a></li><li><a href="#p2d-modifier-ou-retirer-un-membre">Modifier ou retirer un membre</a></li><li><a href="#p2d-connecter-le-telephone-de-lenfant">Connecter le téléphone de l&#x27;enfant</a></li><li><a href="#p2d-mode-enfant-sur-ton-telephone">Mode enfant sur ton téléphone</a></li><li><a href="#p2d-modifier-un-enfant">Modifier un enfant</a></li></ul></li><li><a href="#p3" class="p"><span class="num">3</span>Le quotidien du parent</a><ul><li><a href="#p3-lecran-aujourdhui">L&#x27;écran Aujourd&#x27;hui</a></li><li><a href="#p3-cocher-et-valider-les-routines">Cocher et valider les routines</a></li><li><a href="#p3-echanger-une-recompense">Échanger une récompense</a></li><li><a href="#p3-pauses-vacances-ou-maladie">Pauses vacances ou maladie</a></li></ul></li><li><a href="#p4" class="p"><span class="num">4</span>Côté enfant</a><ul><li><a href="#p4-mes-routines">Mes routines</a></li><li><a href="#p4-le-defi-chrono">Le défi chrono</a></li><li><a href="#p4-les-recompenses-cote-enfant">Les récompenses côté enfant</a></li><li><a href="#p4-mon-jardin-et-les-reglages">Mon jardin et les réglages</a></li><li><a href="#p4-les-badges">Les badges</a></li></ul></li><li><a href="#p5" class="p"><span class="num">5</span>Les réglages</a><ul><li><a href="#p5-validation-automatique-a-minuit">Validation automatique à minuit</a></li><li><a href="#p5-rappels">Rappels</a></li><li><a href="#p5-planning-a-imprimer">Planning à imprimer</a></li><li><a href="#p5-code-parent-sauvegarde-et-compte">Code parent, sauvegarde et compte</a></li></ul></li></ol></nav>
+  <main id="haut">
+    <div class="lead">
+      <p><strong>SoisFier</strong> aide les enfants à suivre leurs routines : chaque routine faite rapporte des étoiles, validées par un adulte, qui font pousser une fleur et s'échangent contre des récompenses.</p>
+      <p>Pour démarrer, suis les parties <a href="#p1">1</a>, <a href="#p2a">2a</a> et <a href="#p2b">2b</a> dans l'ordre. Les autres se lisent au besoin. Touche une capture pour l'agrandir.</p>
+    </div>
+    <section class="part" id="p1"><h2><span class="num">1</span> Installation et compte</h2>
+<p>Cette partie installe SoisFier sur un téléphone Android et crée le compte d'un parent, en 10 minutes environ.</p>
+<h3 id="p1-avant-de-commencer">Avant de commencer</h3>
+<ul>
+<li>Un téléphone Android avec Chrome.</li>
+<li>Une adresse e-mail à laquelle tu as accès depuis ce téléphone.</li>
+<li>L'adresse de l'application : https://pyramid85cl209.github.io/SoisFier2/</li>
+<li>Pour rejoindre une famille existante : le code d'invitation à 6 caractères donné par un parent.</li>
+</ul>
+<h3 id="p1-lecran-daccueil">L'écran d'accueil</h3>
+<p>L'écran d'accueil regroupe tout ce qu'il faut pour démarrer : se connecter, créer un compte, connecter le téléphone d'un enfant ou installer l'application.</p>
+<figure><a href="img/m1.jpg" target="_blank" rel="noopener"><img src="img/m1.jpg" alt="Écran d'accueil de SoisFier, avec les zones numérotées" width="660" height="1674" loading="lazy" decoding="async"></a><figcaption>Écran d'accueil de SoisFier, avec les zones numérotées</figcaption></figure>
+<ol>
+<li><strong>Connexion / Créer un compte</strong> : bascule entre les deux formulaires.</li>
+<li><strong>E-mail et mot de passe</strong> : les identifiants du parent.</li>
+<li><strong>Me connecter</strong> : ouvre l'espace parent.</li>
+<li><strong>Mot de passe oublié</strong> : envoie un lien de réinitialisation à l'adresse saisie.</li>
+<li><strong>J'ai un code enfant</strong> : uniquement sur le téléphone de l'enfant (voir l'étape 4).</li>
+<li><strong>Installer l'application sur ce téléphone</strong> : ajoute SoisFier à l'écran d'accueil du téléphone.</li>
+</ol>
+<h3 id="p1-etape-1-installer-lapplication">Étape 1 : installer l'application</h3>
+<p>Une fois installée, SoisFier s'ouvre comme une application, sans barre d'adresse.</p>
+<ol>
+<li>Ouvre https://pyramid85cl209.github.io/SoisFier2/ dans <strong>Chrome</strong>.</li>
+<li>En bas de l'écran d'accueil, touche <strong>Installer l'application sur ce téléphone</strong> (6). Si le bouton n'apparaît pas : menu ⋮ de Chrome, puis <strong>Ajouter à l'écran d'accueil</strong>.</li>
+<li>Dans la fenêtre qui s'ouvre, touche <strong>Installer</strong>.</li>
+<li>L'icône SoisFier apparaît sur l'écran d'accueil du téléphone. Ouvre-la : c'est elle qu'il faut utiliser ensuite.</li>
+</ol>
+<figure><a href="img/m2.jpg" target="_blank" rel="noopener"><img src="img/m2.jpg" alt="Installation depuis Chrome, puis icône sur l'écran d'accueil" width="1270" height="1386" loading="lazy" decoding="async"></a><figcaption>Installation depuis Chrome, puis icône sur l'écran d'accueil</figcaption></figure>
+<h3 id="p1-etape-2-creer-son-compte">Étape 2 : créer son compte</h3>
+<p>Chaque adulte a son propre compte, avec son e-mail. Un compte se crée une seule fois.</p>
+<ol>
+<li>Touche l'onglet <strong>Créer un compte</strong> (1).</li>
+<li>Saisis ton <strong>prénom</strong> (2), ton <strong>e-mail</strong> (3) et un <strong>mot de passe</strong> d'au moins 6 caractères (4).</li>
+<li>Touche <strong>Créer mon compte</strong> (5). Le message « Vérifie ta boîte mail » s'affiche : touche <strong>Compris</strong>.</li>
+<li>Ouvre l'e-mail <strong>« Confirm your email address »</strong> envoyé par Supabase Auth (il est en anglais) et touche le lien <strong>Confirm email address</strong>.</li>
+<li>Reviens dans SoisFier, onglet <strong>Connexion</strong>, et connecte-toi avec ton e-mail et ton mot de passe.</li>
+</ol>
+<figure><a href="img/m3.jpg" target="_blank" rel="noopener"><img src="img/m3.jpg" alt="Formulaire de création de compte, message de confirmation et e-mail reçu" width="1400" height="1340" loading="lazy" decoding="async"></a><figcaption>Formulaire de création de compte, message de confirmation et e-mail reçu</figcaption></figure>
+<p>Le lien de confirmation peut ouvrir une page dans le navigateur au lieu de l'application. Ce n'est pas grave : le compte est confirmé, il suffit de revenir dans l'application pour se connecter.</p>
+<h3 id="p1-etape-3-creer-ou-rejoindre-sa-famille">Étape 3 : créer ou rejoindre sa famille</h3>
+<p>Après la première connexion, l'écran « Bienvenue » demande de créer une famille ou d'en rejoindre une. Un seul parent crée la famille ; les autres membres la rejoignent avec un code.</p>
+<p><strong>Premier parent : créer la famille</strong></p>
+<ol>
+<li>Saisis le <strong>nom de la famille</strong> (1), par exemple « El Hagin ». Le champ affiche « Nom » tant qu'il est vide.</li>
+<li>Dans <strong>Je suis</strong> (2), choisis ton lien avec les enfants : Papa, Maman, Papy, Mamie, Tonton, Tata, Parrain, Marraine ou Nounou.</li>
+<li>Touche <strong>Créer</strong> (3).</li>
+</ol>
+<p><strong>Autres membres : rejoindre la famille</strong></p>
+<ol>
+<li>Demande un code d'invitation à un parent. Il le génère dans <strong>Famille &gt; Inviter un membre</strong>, en choisissant ton lien et tes droits (parent ou proche). Le code est valable 48 heures.</li>
+<li>Saisis le <strong>code d'invitation</strong> à 6 caractères (4) et touche <strong>Rejoindre</strong> (5).</li>
+</ol>
+<figure><a href="img/m4.jpg" target="_blank" rel="noopener"><img src="img/m4.jpg" alt="Créer ou rejoindre une famille, choix du lien, premier écran" width="1400" height="1195" loading="lazy" decoding="async"></a><figcaption>Créer ou rejoindre une famille, choix du lien, premier écran</figcaption></figure>
+<h3 id="p1-etape-4-premiers-reglages">Étape 4 : premiers réglages</h3>
+<p>Le premier écran « On commence ? » invite à ajouter un enfant. Les cinq onglets du bas (Aujourd'hui, Routines, Récompenses, Malus, Famille) donnent accès à tout le reste.</p>
+<ul>
+<li>☐ <strong>Ajouter un enfant</strong> : prénom, avatar et couleur de son pot. Seul le prénom est enregistré.</li>
+<li>☐ <strong>Choisir ses routines</strong> dans les modèles (matin, midi, soir), puis ajuster les jours et les étoiles.</li>
+<li>☐ <strong>Ajouter des récompenses</strong> depuis le référentiel : les prix sont calculés selon le rythme de l'enfant.</li>
+<li>☐ <strong>Inviter l'autre parent</strong> et les proches : Famille &gt; Inviter un membre.</li>
+<li>☐ <strong>Activer les rappels</strong> : Famille &gt; Rappels, puis autoriser les notifications.</li>
+<li>☐ <strong>Créer un code parent</strong> à 4 chiffres : il protège la sortie du mode enfant.</li>
+</ul>
+<p><strong>Connecter le téléphone de l'enfant</strong></p>
+<ol>
+<li>Sur le téléphone d'un parent : <strong>Famille</strong>, puis <strong>Connecter son appareil</strong> à côté du prénom de l'enfant. Un code à 6 caractères s'affiche, valable 15 minutes.</li>
+<li>Sur le téléphone de l'enfant : installe l'application (étape 1), touche <strong>J'ai un code enfant</strong>, saisis le code puis <strong>Connecter ce téléphone</strong>. Aucun compte n'est nécessaire pour l'enfant.</li>
+</ol>
+<p>Si l'enfant utilise le téléphone d'un parent, utilise plutôt <strong>Mode enfant ici</strong> dans Famille : pas de code à saisir.</p>
+<figure><a href="img/m5.jpg" target="_blank" rel="noopener"><img src="img/m5.jpg" alt="Écran de saisie du code enfant" width="660" height="1386" loading="lazy" decoding="async"></a><figcaption>Écran de saisie du code enfant</figcaption></figure>
+<h3 id="p1-en-cas-de-probleme">En cas de problème</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Problème</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E-mail de confirmation introuvable</td>
+<td>Vérifier les spams, chercher « Supabase Auth ». Attendre quelques minutes avant de recréer le compte.</td>
+</tr>
+<tr>
+<td>« E-mail ou mot de passe incorrect »</td>
+<td>Vérifier l'adresse, sinon <strong>Mot de passe oublié</strong> sur l'écran de connexion.</td>
+</tr>
+<tr>
+<td>« Confirme d'abord ton adresse e-mail »</td>
+<td>Ouvrir le lien de l'e-mail Supabase Auth, puis se reconnecter.</td>
+</tr>
+<tr>
+<td>Code d'invitation ou code enfant refusé</td>
+<td>Le code a expiré (48 heures pour une invitation, 15 minutes pour un enfant) : en générer un nouveau.</td>
+</tr>
+<tr>
+<td>Le bouton d'installation n'apparaît pas</td>
+<td>Menu ⋮ de Chrome, puis <strong>Ajouter à l'écran d'accueil</strong>.</td>
+</tr>
+<tr>
+<td>L'ancienne version reste affichée après une mise à jour</td>
+<td>Fermer complètement l'application puis la rouvrir, deux fois.</td>
+</tr>
+<tr>
+<td>« Configuration manquante »</td>
+<td>Le site est en cours de déploiement ou mal publié : réessayer plus tard et prévenir l'administrateur.</td>
+</tr>
+</tbody>
+</table></div></section>
+<section class="part" id="p2a"><h2><span class="num">2a</span> La page Famille et le premier enfant</h2>
+<p>Cette partie présente la page Famille et ajoute le premier enfant avec ses routines, en 5 minutes environ.</p>
+<p>Elle fait suite à la <a href="#p1">partie 1</a> : l'application est installée, le compte est créé et la famille existe. Seul un parent peut ajouter un enfant ; un proche voit la page Famille sans ces boutons.</p>
+<h3 id="p2a-la-page-famille">La page Famille</h3>
+<p>L'onglet <strong>Famille</strong> (en bas à droite) regroupe les enfants, les membres et tous les réglages. La page est longue : fais-la défiler pour atteindre les blocs du bas.</p>
+<figure><a href="img/a1.jpg" target="_blank" rel="noopener"><img src="img/a1.jpg" alt="La page Famille en entier, avec les blocs numérotés" width="660" height="3632" loading="lazy" decoding="async"></a><figcaption>La page Famille en entier, avec les blocs numérotés</figcaption></figure>
+<ol>
+<li><strong>Enfants</strong> : la liste des enfants. <strong>Ajouter un enfant</strong> est la première chose à faire.</li>
+<li><strong>Membres de la famille</strong> : chaque adulte avec son lien (Papa, Maman…) et ses droits. <strong>Inviter un membre</strong> génère un code pour l'autre parent ou un proche.</li>
+<li><strong>Pauses vacances ou maladie</strong> : les jours en pause ne comptent ni pour ni contre la fleur.</li>
+<li><strong>Validation des routines</strong> : la case cochée valide automatiquement à minuit ce que personne n'a refusé. Laisse-la cochée au début.</li>
+<li><strong>Rappels</strong> : choisis une heure le matin et le soir, puis touche <strong>Activer les rappels</strong> et autorise les notifications.</li>
+<li><strong>Planning à imprimer</strong> : la semaine de chaque enfant sur une page A4, à cocher au crayon.</li>
+<li><strong>Code parent</strong> : 4 chiffres demandés pour quitter le mode enfant sur ce téléphone.</li>
+<li><strong>Sauvegarde</strong> : télécharge une copie de toutes les données de la famille.</li>
+<li><strong>Compte</strong> : renommer la famille ou se déconnecter.</li>
+</ol>
+<h3 id="p2a-etape-1-ajouter-un-enfant">Étape 1 : ajouter un enfant</h3>
+<p>Seul le prénom est enregistré : pas de nom de famille ni de date de naissance.</p>
+<ol>
+<li>Touche <strong>Ajouter un enfant</strong>, dans l'onglet Famille ou sur l'écran « On commence ? ».</li>
+<li>Saisis son <strong>prénom</strong> (1).</li>
+<li>Choisis un <strong>avatar</strong> (2) parmi les 15 proposés. Il s'affiche à côté de son prénom partout dans l'application.</li>
+<li>Choisis la <strong>couleur de son pot</strong> (3). Avec plusieurs enfants, une couleur différente pour chacun permet de distinguer leurs plantes.</li>
+<li>Touche <strong>Ajouter</strong> (4).</li>
+</ol>
+<figure><a href="img/a2.jpg" target="_blank" rel="noopener"><img src="img/a2.jpg" alt="Formulaire d'ajout d'un enfant" width="660" height="1386" loading="lazy" decoding="async"></a><figcaption>Formulaire d'ajout d'un enfant</figcaption></figure>
+<p>Le prénom, l'avatar et la couleur restent modifiables ensuite : Famille, puis <strong>Modifier</strong> à côté de l'enfant.</p>
+<h3 id="p2a-etape-2-choisir-ses-premieres-routines">Étape 2 : choisir ses premières routines</h3>
+<p>Juste après l'ajout, la liste des 22 modèles de routines s'ouvre, classés par moment : le matin, le midi, la journée et le soir.</p>
+<ol>
+<li>Fais défiler la liste et coche les routines qui correspondent à la journée de l'enfant.</li>
+<li>Touche <strong>Ajouter la sélection</strong>, tout en bas.</li>
+</ol>
+<figure><a href="img/a3.jpg" target="_blank" rel="noopener"><img src="img/a3.jpg" alt="Liste des modèles de routines, haut et bas de la liste" width="1270" height="1386" loading="lazy" decoding="async"></a><figcaption>Liste des modèles de routines, haut et bas de la liste</figcaption></figure>
+<p>Quelques repères pour bien choisir :</p>
+<ul>
+<li><strong>Commence petit</strong> : 3 ou 4 routines par moment suffisent pour un jeune enfant. Tu pourras en ajouter plus tard.</li>
+<li><strong>« En semaine »</strong> : la routine n'est prévue que du lundi au vendredi (cartable, devoirs).</li>
+<li><strong>« Bonus »</strong> : la routine rapporte des étoiles sans compter dans la bonne journée. Utile pour les petits défis.</li>
+<li>Chaque modèle arrive avec 1 ou 2 étoiles et un lieu. Tu pourras ajuster les jours, les étoiles et le minuteur routine par routine.</li>
+</ul>
+<h3 id="p2a-et-ensuite">Et ensuite</h3>
+<p>L'enfant apparaît dans l'onglet <strong>Aujourd'hui</strong> avec son pot et ses routines du jour. Sa première fleur commence le jour même et s'ouvre le premier dimanche situé au moins 7 jours plus tard.</p>
+<p>Pour un deuxième enfant, recommence ces deux étapes depuis Famille &gt; <strong>Ajouter un enfant</strong>.</p>
+<p>La suite, dans la <a href="#p2b">partie 2b</a> : modifier une routine, en créer une nouvelle, régler les jours, les étoiles et le minuteur, et ajouter une routine exceptionnelle.</p></section>
+<section class="part" id="p2b"><h2><span class="num">2b</span> Les routines</h2>
+<p>Cette partie montre comment ajouter, créer, modifier et supprimer les routines d'un enfant, ainsi que les routines exceptionnelles.</p>
+<p>Elle fait suite à la <a href="#p2a">partie 2a</a> : l'enfant existe et a déjà quelques routines. Les routines habituelles ne se gèrent que par un parent ; les routines exceptionnelles peuvent aussi être ajoutées par un proche.</p>
+<h3 id="p2b-longlet-routines">L'onglet Routines</h3>
+<p>L'onglet <strong>Routines</strong> liste les routines habituelles d'un enfant, classées par moment, puis ses routines exceptionnelles en bas de page.</p>
+<p>Tant que l'enfant n'a aucune routine, l'onglet affiche un message qui invite à en choisir trois ou quatre dans les modèles. Commence par <strong>Choisir des modèles</strong> (voir la section suivante).</p>
+<figure><a href="img/b0.jpg" target="_blank" rel="noopener"><img src="img/b0.jpg" alt="L'onglet Routines vide, avant la première routine" width="660" height="1386" loading="lazy" decoding="async"></a><figcaption>L'onglet Routines vide, avant la première routine</figcaption></figure>
+<p>Une fois les routines ajoutées, l'onglet se présente ainsi :</p>
+<figure><a href="img/b1.jpg" target="_blank" rel="noopener"><img src="img/b1.jpg" alt="L'onglet Routines, haut et bas de page, avec les zones numérotées" width="1270" height="1386" loading="lazy" decoding="async"></a><figcaption>L'onglet Routines, haut et bas de page, avec les zones numérotées</figcaption></figure>
+<ol>
+<li><strong>L'enfant sélectionné</strong> : avec plusieurs enfants, touche son nom pour passer de l'un à l'autre.</li>
+<li><strong>Choisir des modèles</strong> : ajoute des routines toutes prêtes.</li>
+<li><strong>Créer une routine</strong> : une routine sur mesure.</li>
+<li><strong>Une routine</strong> : touche-la pour la modifier ou la supprimer. Sous son nom : les jours, le lieu et le minuteur ; à droite : ses étoiles.</li>
+<li><strong>Exceptionnelles en cours ou à venir</strong> : avec leur date et leur type, et un lien <strong>Supprimer</strong>.</li>
+<li><strong>+ Routine exceptionnelle</strong> : une tâche ponctuelle.</li>
+<li><strong>Gérer les modèles</strong> : les routines exceptionnelles gardées comme modèles.</li>
+</ol>
+<h3 id="p2b-ajouter-dautres-modeles">Ajouter d'autres modèles</h3>
+<p>Les modèles restent disponibles après le premier choix, pour compléter la journée de l'enfant.</p>
+<ol>
+<li>Touche <strong>Choisir des modèles</strong> (2).</li>
+<li>Les routines déjà ajoutées apparaissent grisées, avec la mention « déjà ajoutée » : elles ne peuvent pas être ajoutées deux fois.</li>
+<li>Coche les nouvelles routines, puis touche <strong>Ajouter la sélection</strong> en bas de la liste.</li>
+</ol>
+<figure><a href="img/b2.jpg" target="_blank" rel="noopener"><img src="img/b2.jpg" alt="Modèles déjà ajoutés grisés, et nouvelle sélection" width="1270" height="1386" loading="lazy" decoding="async"></a><figcaption>Modèles déjà ajoutés grisés, et nouvelle sélection</figcaption></figure>
+<h3 id="p2b-creer-une-routine">Créer une routine</h3>
+<p>Touche <strong>Créer une routine</strong> (3) pour une routine qui n'existe pas dans les modèles, par exemple « Entraînement de foot ».</p>
+<figure><a href="img/b3.jpg" target="_blank" rel="noopener"><img src="img/b3.jpg" alt="Formulaire Nouvelle routine en entier, avec les champs numérotés" width="660" height="1925" loading="lazy" decoding="async"></a><figcaption>Formulaire Nouvelle routine en entier, avec les champs numérotés</figcaption></figure>
+<ol>
+<li><strong>Nom</strong> : court et concret, l'enfant le lira tous les jours.</li>
+<li><strong>Icône</strong> : choisis-la dans la liste classée par catégories (fais-la défiler), ou tape un emoji dans la case.</li>
+<li><strong>Moment</strong> : matin, midi, journée ou soir. Il décide dans quel groupe la routine apparaît.</li>
+<li><strong>Jours</strong> : en vert, les jours où la routine est prévue. Touche un jour pour le retirer, ou utilise les raccourcis <strong>Tous les jours</strong>, <strong>En semaine</strong> et <strong>Le week-end</strong>.</li>
+<li><strong>Étoiles</strong> : de 1 à 5. Plus la routine demande d'effort, plus elle rapporte.</li>
+<li><strong>Lieu</strong> : facultatif. Il s'affiche sous le nom pour aider l'enfant à se repérer.</li>
+<li><strong>Défi chrono</strong> : facultatif. Un minuteur de 2 à 30 minutes que l'enfant peut lancer pour transformer la routine en défi.</li>
+<li><strong>Routine bonus</strong> : cochée, la routine rapporte des étoiles mais ne compte pas dans la bonne journée.</li>
+<li><strong>Ajouter</strong> : la routine apparaît dans l'onglet Routines et dans la journée de l'enfant.</li>
+</ol>
+<p>Les listes Étoiles, Lieu et Défi chrono s'ouvrent ainsi :</p>
+<figure><a href="img/b4.jpg" target="_blank" rel="noopener"><img src="img/b4.jpg" alt="Choix des étoiles, du lieu et du minuteur" width="1400" height="1032" loading="lazy" decoding="async"></a><figcaption>Choix des étoiles, du lieu et du minuteur</figcaption></figure>
+<h3 id="p2b-modifier-ou-supprimer-une-routine">Modifier ou supprimer une routine</h3>
+<ol>
+<li>Dans l'onglet Routines, touche la routine (4). Le formulaire <strong>Modifier la routine</strong> s'ouvre, déjà rempli.</li>
+<li>Change ce qui doit l'être : nom, icône, moment, jours, étoiles, lieu, minuteur ou bonus.</li>
+<li>En bas du formulaire, touche <strong>Enregistrer</strong>, ou <strong>Supprimer</strong> pour retirer la routine, puis confirme.</li>
+</ol>
+<figure><a href="img/b5.jpg" target="_blank" rel="noopener"><img src="img/b5.jpg" alt="Formulaire Modifier la routine" width="660" height="1386" loading="lazy" decoding="async"></a><figcaption>Formulaire Modifier la routine</figcaption></figure>
+<p>Supprimer une routine la retire des journées à venir. Les étoiles déjà gagnées avec elle sont conservées, et la plante ne recule pas.</p>
+<h3 id="p2b-ajouter-une-routine-exceptionnelle">Ajouter une routine exceptionnelle</h3>
+<p>Une routine exceptionnelle est une tâche ponctuelle : un jour précis, ou à faire avant une date. Les parents et les proches peuvent en ajouter, depuis l'onglet Routines (6) ou depuis la carte de l'enfant dans l'onglet Aujourd'hui.</p>
+<ol>
+<li>Touche <strong>+ Routine exceptionnelle</strong>.</li>
+<li>Choisis un de tes modèles, une des 10 suggestions, ou touche <strong>Créer une nouvelle</strong> en bas de la liste.</li>
+<li>Complète le formulaire :<ol>
+<li><strong>Nom</strong> (1) et icône, déjà remplis si tu pars d'une suggestion.</li>
+<li><strong>Quand</strong> (2) : <strong>Le</strong> = ce jour-là uniquement ; <strong>Avant le</strong> = visible chaque jour jusqu'à ce qu'elle soit faite.</li>
+<li><strong>La date</strong> (3).</li>
+<li><strong>Type</strong> (4) : <strong>Bonus</strong> (par défaut) rapporte des étoiles sans pouvoir gâcher la journée ; <strong>Obligatoire</strong> compte dans la bonne journée.</li>
+<li><strong>Étoiles et moment</strong> (5).</li>
+<li><strong>Garder comme modèle</strong> (6) : coche-la pour une tâche qui reviendra. Elle apparaîtra en tête de liste la prochaine fois.</li>
+</ol>
+</li>
+<li>Touche <strong>Ajouter</strong> (7).</li>
+</ol>
+<figure><a href="img/b6.jpg" target="_blank" rel="noopener"><img src="img/b6.jpg" alt="Suggestions et formulaire de routine exceptionnelle" width="1270" height="1785" loading="lazy" decoding="async"></a><figcaption>Suggestions et formulaire de routine exceptionnelle</figcaption></figure>
+<p>La routine apparaît dans la section « Exceptionnelles en cours ou à venir » (5), puis disparaît une fois sa date passée. Pour retirer un modèle devenu inutile : <strong>Gérer les modèles</strong> (7).</p>
+<h3 id="p2b-le-resultat-dans-longlet-aujourdhui">Le résultat dans l'onglet Aujourd'hui</h3>
+<p>Les routines prévues ce jour-là apparaissent dans l'onglet <strong>Aujourd'hui</strong>, sur la carte de l'enfant. Le compteur à droite indique les routines faites sur le total (ici 0/11), et la ligne sous le prénom indique où en est la fleur.</p>
+<figure><a href="img/b7.jpg" target="_blank" rel="noopener"><img src="img/b7.jpg" alt="L'onglet Aujourd'hui avec les routines du jour" width="660" height="1386" loading="lazy" decoding="async"></a><figcaption>L'onglet Aujourd'hui avec les routines du jour</figcaption></figure>
+<p>La suite, dans la <a href="#p2c">partie 2c</a> : les récompenses, les sorties près de chez soi et les malus.</p></section>
+<section class="part" id="p2c"><h2><span class="num">2c</span> Récompenses, sorties et malus</h2>
+<p>L'onglet <strong>Récompenses</strong> sert à définir ce que l'enfant peut s'offrir avec ses étoiles. Les prix sont calculés automatiquement selon son rythme. Cette partie suit les <a href="#p2a">parties 2a</a> (enfant créé) et <a href="#p2b">2b</a> (routines créées) : sans routines, le rythme vaut 0 et aucun prix ne peut être calculé.</p>
+<p>Le principe du prix : <strong>durée d'effort × rythme</strong>. Le rythme, c'est le nombre d'étoiles que l'enfant gagne en moyenne par jour, soit 75 % des étoiles prévues dans la semaine, divisé par 7. Avec un rythme de 11,4 ⭐ par jour, une récompense d'environ 1 jour coûte 11 ⭐ et une d'environ 1 mois coûte 340 ⭐. Le prix est arrondi puis figé à la création ; il ne bouge pas si les routines changent ensuite.</p>
+<h3 id="p2c-longlet-recompenses">L'onglet Récompenses</h3>
+<p>Ouvre l'onglet <strong>Récompenses</strong> dans la barre du bas. Il affiche le solde d'étoiles à dépenser de l'enfant sélectionné et son rythme.</p>
+<figure><a href="img/c1.jpg" target="_blank" rel="noopener"><img src="img/c1.jpg" alt="Onglet Récompenses vide puis rempli" width="1270" height="1386" loading="lazy" decoding="async"></a><figcaption>Onglet Récompenses vide puis rempli</figcaption></figure>
+<ol>
+<li><strong>Rythme</strong> : étoiles gagnées par jour en moyenne (ici environ 11,4). C'est la base de tous les prix.</li>
+<li><strong>Choisir dans le référentiel</strong> : le plus rapide pour démarrer.</li>
+<li><strong>Créer une récompense</strong> : une récompense à toi.</li>
+<li><strong>Sorties près de chez nous</strong> : des idées de lieux autour de toi.</li>
+</ol>
+<p>Une fois remplie, la liste est rangée par niveau, du moins cher au plus cher. Chaque carte indique pour qui elle vaut, la durée d'effort approximative et le prix. Un événement affiche aussi sa date.</p>
+<h3 id="p2c-choisir-dans-le-referentiel">Choisir dans le référentiel</h3>
+<p>Le référentiel propose des récompenses toutes prêtes, classées en six niveaux. Les prix affichés sont déjà calculés pour chaque enfant.</p>
+<figure><a href="img/c2.jpg" target="_blank" rel="noopener"><img src="img/c2.jpg" alt="Référentiel de récompenses, du haut vers le bas" width="1400" height="1032" loading="lazy" decoding="async"></a><figcaption>Référentiel de récompenses, du haut vers le bas</figcaption></figure>
+<ol>
+<li><strong>Coche</strong> les récompenses qui te conviennent, dans tous les niveaux.</li>
+<li><strong>Créer un événement</strong> ouvre le formulaire événement, déjà prérempli.</li>
+<li><strong>Ajouter la sélection</strong> ajoute d'un coup tout ce qui est coché. Les récompenses ajoutées valent pour tous les enfants, chacun à son prix.</li>
+</ol>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Niveau</th>
+<th>Durée d'effort</th>
+<th>Exemple (rythme 11,4)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Coup de pouce</td>
+<td>environ 1 jour, pour les 3-5 ans</td>
+<td>Une histoire de plus : 11 ⭐</td>
+</tr>
+<tr>
+<td>Petits plaisirs</td>
+<td>2 à 4 jours</td>
+<td>Choisir le dessert : 25 ⭐</td>
+</tr>
+<tr>
+<td>Moments partagés</td>
+<td>1 à 2 semaines</td>
+<td>Soirée film en famille : 160 ⭐</td>
+</tr>
+<tr>
+<td>Sorties</td>
+<td>environ 1 mois</td>
+<td>Visite d'une ferme pédagogique : 340 ⭐</td>
+</tr>
+<tr>
+<td>Grands projets</td>
+<td>environ 3 mois</td>
+<td>Un jouet ou équipement choisi : 1000 ⭐</td>
+</tr>
+<tr>
+<td>Événements</td>
+<td>à une date précise</td>
+<td>Un spectacle, un atelier : à créer</td>
+</tr>
+</tbody>
+</table></div>
+<p>Tu peux revenir dans le référentiel à tout moment pour en ajouter d'autres.</p>
+<h3 id="p2c-creer-une-recompense-ou-un-evenement">Créer une récompense ou un événement</h3>
+<p>Le formulaire est le même pour une récompense et pour un événement. Seul le niveau change : un événement est une récompense du niveau « Événements », avec une date.</p>
+<figure><a href="img/c3.jpg" target="_blank" rel="noopener"><img src="img/c3.jpg" alt="Nouvelle récompense, choix du niveau et de l'enfant" width="1400" height="1032" loading="lazy" decoding="async"></a><figcaption>Nouvelle récompense, choix du niveau et de l'enfant</figcaption></figure>
+<figure><a href="img/c4.jpg" target="_blank" rel="noopener"><img src="img/c4.jpg" alt="Formulaire Nouvel événement et choix de la date" width="1270" height="1795" loading="lazy" decoding="async"></a><figcaption>Formulaire Nouvel événement et choix de la date</figcaption></figure>
+<ol>
+<li><strong>Nom</strong> : ce que l'enfant verra, par exemple « Spectacle de marionnettes ».</li>
+<li><strong>Icône</strong> : touche une icône dans la grille ou tape un emoji.</li>
+<li><strong>Niveau</strong> : de Coup de pouce à Événements. Il sert au rangement et propose une durée par défaut.</li>
+<li><strong>Pour</strong> : l'enfant concerné.</li>
+<li><strong>Prix fixe</strong> : coche cette case pour un prix identique pour tous, au lieu d'un prix calculé selon le rythme.</li>
+<li><strong>Durée d'effort (jours)</strong> si la case est décochée, ou <strong>Prix fixe (étoiles)</strong> si elle est cochée. Un seul des deux champs compte.</li>
+<li><strong>Prix calculé</strong> : l'aperçu du prix pour chaque enfant. Ici 30 jours × 11,4 ⭐, arrondi à 340 ⭐.</li>
+<li><strong>Date</strong> et <strong>Lieu</strong> : facultatifs. Pour un événement, mets la date ; elle s'affiche sur la carte.</li>
+<li><strong>Ajouter</strong> enregistre la récompense dans la liste.</li>
+</ol>
+<p>Conseil : pour un événement, choisis une durée qui laisse à l'enfant le temps d'économiser avant la date. Un spectacle dans 10 jours ≈ 10 jours d'effort.</p>
+<h3 id="p2c-sorties-pres-de-chez-nous">Sorties près de chez nous</h3>
+<p>Ce bouton cherche des lieux de sortie autour de toi, grâce à OpenStreetMap. Ta position sert uniquement à cette recherche et n'est pas enregistrée.</p>
+<figure><a href="img/c5.jpg" target="_blank" rel="noopener"><img src="img/c5.jpg" alt="Sorties près de chez nous : rayons et recherche" width="1400" height="626" loading="lazy" decoding="async"></a><figcaption>Sorties près de chez nous : rayons et recherche</figcaption></figure>
+<ol>
+<li>Touche <strong>Sorties près de chez nous</strong> dans l'onglet Récompenses.</li>
+<li>Règle les trois rayons de recherche si besoin. Ils sont partagés avec l'autre parent.</li>
+<li>Touche <strong>Chercher autour de moi</strong> et autorise la localisation. Les grands rayons peuvent prendre quelques secondes.</li>
+<li>Les lieux trouvés s'affichent par groupe, du plus proche au plus loin, avec 6 lieux au maximum par type. Coche ceux qui t'intéressent puis touche <strong>Ajouter aux récompenses</strong> : ils deviennent des Sorties, ou des Grands projets pour les parcs d'attractions.</li>
+</ol>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Groupe</th>
+<th>Types de lieux</th>
+<th>Choix possibles</th>
+<th>Par défaut</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Proche</td>
+<td>aires de jeux, parcs, médiathèques, piscines</td>
+<td>2, 5 ou 10 km</td>
+<td>5 km</td>
+</tr>
+<tr>
+<td>Moyen</td>
+<td>musées</td>
+<td>10, 15 ou 30 km</td>
+<td>15 km</td>
+</tr>
+<tr>
+<td>Loin</td>
+<td>zoos, fermes, aquariums, parcs aquatiques et d'attractions</td>
+<td>30, 60 ou 100 km</td>
+<td>60 km</td>
+</tr>
+</tbody>
+</table></div>
+<p>En ville, les rayons par défaut suffisent. À la campagne, monte à 10 / 30 / 100 km comme sur la dernière capture.</p>
+<p>Si rien ne s'affiche : vérifie que Chrome a le droit d'utiliser ta position. Si le message « service OpenStreetMap saturé » apparaît, réessaie une minute plus tard ou réduis les rayons.</p>
+<h3 id="p2c-les-malus-etoiles-cassees">Les malus (étoiles cassées)</h3>
+<p>Un malus retire 1 à 3 étoiles du solde à dépenser pour un écart immédiat. Le solde ne descend jamais sous zéro, et la plante et les badges ne bougent pas. Seuls les parents peuvent casser une étoile.</p>
+<h4>L'onglet Malus</h4>
+<figure><a href="img/d1.jpg" target="_blank" rel="noopener"><img src="img/d1.jpg" alt="Onglet Malus vide, et message quand le solde est à 0" width="1270" height="1386" loading="lazy" decoding="async"></a><figcaption>Onglet Malus vide, et message quand le solde est à 0</figcaption></figure>
+<ol>
+<li><strong>Tous / Enfant</strong> : filtre l'historique. Le malus s'applique à l'enfant sélectionné.</li>
+<li><strong>Compteur</strong> : étoiles cassées sur 7 jours, sur 30 jours et nombre total de malus.</li>
+<li><strong>Casser une étoile</strong> : applique un malus.</li>
+<li><strong>Malus prédéfinis</strong> : la liste commune aux deux parents.</li>
+</ol>
+<p>Si l'enfant n'a aucune étoile à dépenser, l'application l'indique : il n'y a rien à casser.</p>
+<h4>Préparer les malus prédéfinis</h4>
+<p>Les malus prédéfinis valent pour tous les enfants. Ils garantissent qu'un même écart coûte la même chose, quel que soit le parent. Fais-le une fois, avant le premier malus.</p>
+<figure><a href="img/d2.jpg" target="_blank" rel="noopener"><img src="img/d2.jpg" alt="Malus prédéfinis : suggestions, création, liste enregistrée" width="1400" height="838" loading="lazy" decoding="async"></a><figcaption>Malus prédéfinis : suggestions, création, liste enregistrée</figcaption></figure>
+<ol>
+<li><strong>Coche</strong> les suggestions qui te conviennent.</li>
+<li><strong>Motif</strong> : pour un malus à toi, écris-le ici.</li>
+<li><strong>Étoiles</strong> : choisis 1, 2 ou 3.</li>
+<li><strong>Retour</strong> revient à la fenêtre Casser une étoile sans enregistrer.</li>
+<li><strong>Enregistrer</strong> ajoute d'un coup les cases cochées et le motif saisi.</li>
+</ol>
+<p>Les malus enregistrés passent en haut de la liste avec un lien <strong>Supprimer</strong>. Un malus créé à la main prend l'icône cœur brisé.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Suggestion</th>
+<th>Étoiles</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Refus de ranger après plusieurs rappels</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Gros mot</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Dispute avec frère ou sœur</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Ne pas écouter</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Geste brusque</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Mensonge</td>
+<td>2</td>
+</tr>
+</tbody>
+</table></div>
+<h4>Casser une étoile</h4>
+<figure><a href="img/d3.jpg" target="_blank" rel="noopener"><img src="img/d3.jpg" alt="Fenêtre Casser une étoile, avec et sans malus prédéfinis" width="1270" height="1386" loading="lazy" decoding="async"></a><figcaption>Fenêtre Casser une étoile, avec et sans malus prédéfinis</figcaption></figure>
+<ol>
+<li><strong>Touche un malus prédéfini</strong> : il est appliqué tout de suite, sans autre confirmation.</li>
+<li><strong>Autre motif</strong> : pour un cas non prévu, écris le motif.</li>
+<li><strong>Étoiles</strong> : 1, 2 ou 3.</li>
+<li><strong>Gérer les malus prédéfinis</strong> ouvre la liste commune.</li>
+<li><strong>Casser</strong> applique l'autre motif.</li>
+</ol>
+<p>Le rappel en haut de la fenêtre indique le solde actuel de l'enfant.</p>
+<h4>Historique et annulation</h4>
+<figure><a href="img/d4.jpg" target="_blank" rel="noopener"><img src="img/d4.jpg" alt="Historique après un malus et annulation" width="1270" height="1386" loading="lazy" decoding="async"></a><figcaption>Historique après un malus et annulation</figcaption></figure>
+<ol>
+<li>Le <strong>compteur</strong> se met à jour.</li>
+<li>L'<strong>historique</strong> est classé par jour, du plus récent au plus ancien. Chaque ligne indique le motif, l'enfant, le parent qui a cassé l'étoile, l'heure et le nombre d'étoiles.</li>
+<li><strong>Annuler</strong> (flèche ronde) : après confirmation, les étoiles sont rendues à l'enfant. Pratique en cas d'erreur d'enfant ou de motif.</li>
+</ol></section>
+<section class="part" id="p2d"><h2><span class="num">2d</span> Membres et téléphone de l'enfant</h2>
+<p>L'onglet <strong>Famille</strong> sert à inviter les adultes qui suivent l'enfant et à connecter son téléphone. Cette partie suit la <a href="#p2a">partie 2a</a> (enfant créé).</p>
+<p>Deux niveaux de droits existent :</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Droits</th>
+<th>Ce qu'il peut faire</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Parent</td>
+<td>Tout : routines, récompenses, malus, membres, téléphones, réglages.</td>
+</tr>
+<tr>
+<td>Proche</td>
+<td>Cocher et valider les routines, échanger les récompenses. Il ne casse pas d'étoile et ne modifie pas la configuration.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Chaque validation garde le nom de l'adulte qui l'a faite, ce qui permet de savoir qui a validé quoi.</p>
+<figure><a href="img/e1.jpg" target="_blank" rel="noopener"><img src="img/e1.jpg" alt="La page Famille" width="1270" height="1386" loading="lazy" decoding="async"></a><figcaption>La page Famille</figcaption></figure>
+<ol>
+<li><strong>Modifier</strong> l'enfant.</li>
+<li><strong>Connecter son appareil</strong> : le téléphone de l'enfant.</li>
+<li><strong>Mode enfant ici</strong> : ton téléphone passe en mode enfant.</li>
+<li><strong>Modifier</strong> un membre.</li>
+<li><strong>Inviter un membre</strong>.</li>
+<li><strong>Déconnecter</strong> : apparaît sous l'enfant pour chaque téléphone connecté.</li>
+</ol>
+<h3 id="p2d-inviter-un-membre">Inviter un membre</h3>
+<p>L'invitation se fait par un code à 6 caractères, valable 48 heures. Seul un parent peut inviter.</p>
+<figure><a href="img/e2.jpg" target="_blank" rel="noopener"><img src="img/e2.jpg" alt="Inviter un membre : formulaire, lien, code" width="1400" height="1032" loading="lazy" decoding="async"></a><figcaption>Inviter un membre : formulaire, lien, code</figcaption></figure>
+<ol>
+<li><strong>Lien avec les enfants</strong> : Papa, Maman, Papy, Mamie, Tonton, Tata, Parrain, Marraine, Nounou ou Autre.</li>
+<li><strong>Libellé personnalisé</strong> (facultatif) : le nom affiché, par exemple « Mamie Josette ». Utile s'il y a deux mamies.</li>
+<li><strong>Droits</strong> : Parent ou Proche (voir le tableau plus haut).</li>
+<li><strong>Créer le code</strong> affiche le code d'invitation.</li>
+<li><strong>Partager</strong> envoie le code par SMS, WhatsApp ou mail. Sinon, dicte-le.</li>
+</ol>
+<p>Si le code expire avant d'être utilisé, crées-en simplement un nouveau.</p>
+<h3 id="p2d-cote-invite-rejoindre-la-famille">Côté invité : rejoindre la famille</h3>
+<p>La personne invitée fait ces étapes sur son propre téléphone.</p>
+<figure><a href="img/e3.jpg" target="_blank" rel="noopener"><img src="img/e3.jpg" alt="Bienvenue, Rejoindre une famille, premier écran" width="1400" height="1028" loading="lazy" decoding="async"></a><figcaption>Bienvenue, Rejoindre une famille, premier écran</figcaption></figure>
+<ol>
+<li>Elle installe SoisFier et crée son compte, comme dans la <a href="#p1">partie 1</a>.</li>
+<li>Sur l'écran <strong>Bienvenue</strong>, elle ignore « Créer ma famille » et descend jusqu'à <strong>Rejoindre une famille</strong>.</li>
+<li>Elle saisit le <strong>code d'invitation</strong> (1) puis touche <strong>Rejoindre</strong> (2).</li>
+<li>Elle arrive sur l'écran Aujourd'hui, avec les enfants et les routines déjà en place. Le lien et les droits choisis à l'invitation sont appliqués automatiquement.</li>
+</ol>
+<p>Attention : ne pas créer une deuxième famille par erreur. Les enfants et les routines ne seraient pas partagés.</p>
+<h3 id="p2d-modifier-ou-retirer-un-membre">Modifier ou retirer un membre</h3>
+<p>Touche <strong>Modifier</strong> à côté du membre. Chacun peut changer son propre lien et son libellé. Les droits et le retrait d'un autre membre sont réservés aux parents.</p>
+<figure><a href="img/e4.jpg" target="_blank" rel="noopener"><img src="img/e4.jpg" alt="Sa propre fiche, fiche d'un autre membre, confirmation du retrait" width="1400" height="1032" loading="lazy" decoding="async"></a><figcaption>Sa propre fiche, fiche d'un autre membre, confirmation du retrait</figcaption></figure>
+<ol>
+<li><strong>Droits</strong> : passe un membre de Parent à Proche, ou l'inverse.</li>
+<li><strong>Retirer de la famille</strong> : après confirmation, la personne n'a plus accès à la famille. L'historique de ses validations est conservé.</li>
+<li><strong>Enregistrer</strong> valide les changements.</li>
+</ol>
+<p>Sur ta propre fiche, il n'y a ni Droits ni Retirer : un parent ne peut pas se rétrograder ni se retirer lui-même par erreur.</p>
+<h3 id="p2d-connecter-le-telephone-de-lenfant">Connecter le téléphone de l'enfant</h3>
+<p>L'enfant n'a pas de compte ni d'adresse mail : son téléphone est relié par un code à usage unique, valable 15 minutes.</p>
+<figure><a href="img/e5.jpg" target="_blank" rel="noopener"><img src="img/e5.jpg" alt="Code sur le téléphone parent, saisie sur celui de l'enfant, écran de l'enfant" width="1400" height="1032" loading="lazy" decoding="async"></a><figcaption>Code sur le téléphone parent, saisie sur celui de l'enfant, écran de l'enfant</figcaption></figure>
+<ol>
+<li>Sur ton téléphone : <strong>Famille</strong>, puis <strong>Connecter son appareil</strong> sous l'enfant. Un code à 6 caractères s'affiche.</li>
+<li>Sur le téléphone de l'enfant : ouvre SoisFier et touche <strong>J'ai un code enfant</strong> sur l'écran de connexion (voir la <a href="#p1">partie 1</a>).</li>
+<li>Saisis le code puis touche <strong>Connecter ce téléphone</strong>.</li>
+<li>L'enfant arrive sur son écran : son prénom, ses étoiles, son pot et ses routines du jour. Le <strong>cadenas</strong> (1) en haut à droite permet à un parent de déconnecter ce téléphone.</li>
+<li>Sur ton téléphone, touche <strong>Terminé</strong>. Le téléphone apparaît sous l'enfant dans la page Famille.</li>
+</ol>
+<p>Pour retirer un téléphone (perdu, remplacé, ancien test) : <strong>Déconnecter</strong> sur sa ligne, puis confirme. Il faudra un nouveau code pour le reconnecter.</p>
+<figure><a href="img/e8.jpg" target="_blank" rel="noopener"><img src="img/e8.jpg" alt="Confirmation de la déconnexion d'un appareil" width="660" height="1386" loading="lazy" decoding="async"></a><figcaption>Confirmation de la déconnexion d'un appareil</figcaption></figure>
+<h3 id="p2d-mode-enfant-sur-ton-telephone">Mode enfant sur ton téléphone</h3>
+<p>Pour un enfant sans téléphone, ton propre téléphone peut passer en mode enfant le temps qu'il coche ses routines.</p>
+<figure><a href="img/e6.jpg" target="_blank" rel="noopener"><img src="img/e6.jpg" alt="Créer le code parent, mode enfant, quitter le mode enfant" width="1400" height="1032" loading="lazy" decoding="async"></a><figcaption>Créer le code parent, mode enfant, quitter le mode enfant</figcaption></figure>
+<ol>
+<li><strong>Famille</strong>, puis <strong>Mode enfant ici</strong> sous l'enfant.</li>
+<li>La première fois, crée un <strong>code parent à 4 chiffres</strong>. Il sera demandé pour quitter le mode enfant sur ce téléphone ; ne le donne pas à l'enfant.</li>
+<li>L'écran de l'enfant s'affiche, comme sur son propre téléphone.</li>
+<li>Pour revenir à l'espace parent, touche le <strong>cadenas</strong> (1) puis saisis le code parent.</li>
+</ol>
+<p>Le téléphone apparaît sous l'enfant comme « Téléphone de Papa (mode enfant) ». Repasser en mode enfant réutilise cette même ligne, sans en créer une nouvelle.</p>
+<h3 id="p2d-modifier-un-enfant">Modifier un enfant</h3>
+<p>Touche <strong>Modifier</strong> sous l'enfant pour changer son prénom, son avatar ou la couleur de son pot.</p>
+<figure><a href="img/e7.jpg" target="_blank" rel="noopener"><img src="img/e7.jpg" alt="Fiche Modifier d'un enfant" width="660" height="1386" loading="lazy" decoding="async"></a><figcaption>Fiche Modifier d'un enfant</figcaption></figure>
+<p>Seul le prénom est enregistré : pas de nom de famille ni de date de naissance. <strong>Supprimer</strong> efface l'enfant ainsi que ses routines, ses étoiles et son jardin. À réserver au cas d'un enfant créé par erreur.</p></section>
+<section class="part" id="p3"><h2><span class="num">3</span> Le quotidien du parent</h2>
+<p>Au quotidien, le parent fait trois gestes : cocher ou valider les routines, échanger les récompenses et, si besoin, mettre une pause. Tout se fait depuis les onglets <strong>Aujourd'hui</strong> et <strong>Récompenses</strong> ; les malus sont dans la <a href="#p2c">partie 2c</a>.</p>
+<p>La règle à retenir : une étoile ne compte qu'une fois <strong>validée</strong> par un adulte. Ce qui n'est pas refusé est validé automatiquement à minuit.</p>
+<h3 id="p3-lecran-aujourdhui">L'écran Aujourd'hui</h3>
+<p>C'est l'écran d'ouverture. Il montre, pour chaque enfant, les routines prévues ce jour-là.</p>
+<figure><a href="img/f1.jpg" target="_blank" rel="noopener"><img src="img/f1.jpg" alt="Écran Aujourd'hui, haut et bas" width="1270" height="1386" loading="lazy" decoding="async"></a><figcaption>Écran Aujourd'hui, haut et bas</figcaption></figure>
+<ol>
+<li><strong>Flèches</strong> : revenir jusqu'à 6 jours en arrière pour cocher un oubli. Impossible d'aller dans le futur.</li>
+<li><strong>À dépenser</strong> : le solde d'étoiles de l'enfant.</li>
+<li><strong>Jour 1/10, 0 bonne journée</strong> : où en est la fleur en cours et combien de bonnes journées elle compte déjà.</li>
+<li><strong>Compteur</strong> : routines faites sur le total du jour.</li>
+<li><strong>Case à cocher</strong> de chaque routine.</li>
+<li><strong>+ Routine exceptionnelle</strong> : ajoute une routine ponctuelle (<a href="#p2b">partie 2b</a>).</li>
+</ol>
+<p>Le bandeau ampoule donne un conseil différent selon la situation. Il n'apparaît que sur le jour en cours.</p>
+<h3 id="p3-cocher-et-valider-les-routines">Cocher et valider les routines</h3>
+<p>Tout dépend de qui coche :</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Qui coche</th>
+<th>Ce qui se passe</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Un adulte, depuis Aujourd'hui</td>
+<td>La routine est validée tout de suite : elle passe en vert avec « ✓ Papa ».</td>
+</tr>
+<tr>
+<td>L'enfant, depuis son téléphone ou le mode enfant</td>
+<td>La routine part dans le bloc <strong>À valider</strong> en haut de l'écran Aujourd'hui.</td>
+</tr>
+</tbody>
+</table></div>
+<figure><a href="img/f2.jpg" target="_blank" rel="noopener"><img src="img/f2.jpg" alt="Bloc À valider, puis routines validées" width="1270" height="1386" loading="lazy" decoding="async"></a><figcaption>Bloc À valider, puis routines validées</figcaption></figure>
+<ol>
+<li><strong>Tout valider</strong> valide d'un coup toutes les routines en attente.</li>
+<li><strong>Refuser</strong> (croix) : la routine est à refaire, sans pénalité. Les étoiles ne sont pas données.</li>
+<li><strong>Valider</strong> (coche) : les étoiles s'ajoutent au solde et comptent pour la fleur.</li>
+</ol>
+<p>Chaque ligne indique l'enfant, le jour, les étoiles et qui a coché. Sans action de ta part, tout ce qui reste est validé automatiquement à minuit.</p>
+<p>Tu as coché par erreur ? Retouche la case dans les 5 minutes pour décocher. Au-delà, la routine est définitivement validée ; pour retirer des étoiles, il faut passer par un malus.</p>
+<h3 id="p3-echanger-une-recompense">Échanger une récompense</h3>
+<p>Quand l'enfant a assez d'étoiles, l'échange se fait depuis l'onglet <strong>Récompenses</strong>, en choisissant l'enfant en haut s'il y en a plusieurs.</p>
+<figure><a href="img/f3.jpg" target="_blank" rel="noopener"><img src="img/f3.jpg" alt="Prix accessibles, confirmation, solde mis à jour" width="1400" height="1032" loading="lazy" decoding="async"></a><figcaption>Prix accessibles, confirmation, solde mis à jour</figcaption></figure>
+<ol>
+<li><strong>Prix en vert plein</strong> : l'enfant a assez d'étoiles. Touche le prix pour échanger.</li>
+<li><strong>Prix en contour clair</strong> : pas encore assez d'étoiles, le bouton ne fait rien.</li>
+</ol>
+<p>Confirme avec <strong>Échanger</strong> : le prix est retiré du solde (ici 18 − 11 = 7 ⭐) et le message « Récompense échangée » s'affiche. La récompense reste dans la liste et peut être échangée à nouveau plus tard.</p>
+<p>L'enfant peut aussi échanger lui-même depuis son téléphone (<a href="#p4">partie 4</a>).</p>
+<p>Chaque échange est noté dans l'<strong>Historique</strong>, tout en bas de l'onglet Récompenses, avec la date, le prix et qui l'a fait. Un parent peut l'<strong>Annuler</strong> (1) depuis cette liste : après confirmation, les étoiles sont rendues à l'enfant.</p>
+<figure><a href="img/h2.jpg" target="_blank" rel="noopener"><img src="img/h2.jpg" alt="Historique des échanges" width="660" height="1386" loading="lazy" decoding="async"></a><figcaption>Historique des échanges</figcaption></figure>
+<p>Toucher la carte d'une récompense (hors prix) ouvre sa fiche pour la modifier ou la supprimer.</p>
+<p>Si le rythme de l'enfant change de plus de 20 % (routines ajoutées ou retirées), un bandeau propose de recalculer les prix.</p>
+<h3 id="p3-pauses-vacances-ou-maladie">Pauses vacances ou maladie</h3>
+<p>Une pause neutralise des jours : ils ne comptent ni pour ni contre la fleur. Rien à perdre pendant les vacances, une maladie ou un week-end chez les grands-parents.</p>
+<figure><a href="img/h1.jpg" target="_blank" rel="noopener"><img src="img/h1.jpg" alt="Programmer une pause et choisir le motif" width="1270" height="1386" loading="lazy" decoding="async"></a><figcaption>Programmer une pause et choisir le motif</figcaption></figure>
+<ol>
+<li><strong>Famille</strong>, section <strong>Pauses vacances ou maladie</strong>, puis <strong>Programmer une pause</strong>.</li>
+<li><strong>Enfants</strong> : coche le ou les enfants concernés.</li>
+<li><strong>Du</strong> et <strong>Au</strong> : premier et dernier jour inclus. La fin doit être après le début.</li>
+<li><strong>Motif</strong> : Vacances, Maladie ou Autre.</li>
+<li><strong>Enregistrer</strong>.</li>
+</ol>
+<p>La pause apparaît ensuite dans la liste de la section, avec l'enfant, le motif et les dates. <strong>Supprimer</strong> l'annule : les jours concernés comptent à nouveau normalement. Une pause peut être programmée à l'avance ou posée après coup, par exemple au retour d'une maladie.</p></section>
+<section class="part" id="p4"><h2><span class="num">4</span> Côté enfant</h2>
+<p>Cette partie montre ce que voit l'enfant, sur son téléphone ou en mode enfant (<a href="#p2d">partie 2d</a>). À lire avec lui la première fois.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Onglet</th>
+<th>Ce qu'il y fait</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mes routines</td>
+<td>Coche ce qu'il a fait et lance un défi chrono.</td>
+</tr>
+<tr>
+<td>Récompenses</td>
+<td>Voit ce qu'il peut s'offrir et combien il lui manque.</td>
+</tr>
+<tr>
+<td>Mon jardin</td>
+<td>Suit sa fleur, son parterre de la saison et son jardin de l'année.</td>
+</tr>
+<tr>
+<td>Badges</td>
+<td>Voit ses badges gagnés et les prochains à décrocher.</td>
+</tr>
+</tbody>
+</table></div>
+<p>L'enfant ne peut rien modifier : ni routines, ni prix, ni malus. Le cadenas en haut à droite est réservé aux parents.</p>
+<h3 id="p4-mes-routines">Mes routines</h3>
+<p>L'écran d'ouverture liste les routines du jour, rangées par moment : exceptionnelles, matin, journée, soir.</p>
+<figure><a href="img/g1.jpg" target="_blank" rel="noopener"><img src="img/g1.jpg" alt="Mes routines, avant et après avoir coché" width="1270" height="1386" loading="lazy" decoding="async"></a><figcaption>Mes routines, avant et après avoir coché</figcaption></figure>
+<ol>
+<li><strong>Étoiles</strong> à dépenser.</li>
+<li><strong>Cadenas</strong> : réservé aux parents (code parent ou petit calcul).</li>
+<li><strong>La fleur en cours</strong> : son nom, un rond par jour et la date à laquelle elle s'ouvre.</li>
+<li><strong>Case à cocher</strong> : l'enfant la touche quand c'est fait.</li>
+<li>La routine passe en jaune avec un <strong>sablier</strong> : « Tes parents vont valider ».</li>
+<li>Les étoiles <strong>en attente de validation</strong> s'affichent sous la fleur ; elles rejoignent le solde quand un parent valide.</li>
+</ol>
+<p>L'enfant peut décocher tant qu'un parent n'a pas validé. Sans internet, les coches sont gardées sur le téléphone et envoyées dès que la connexion revient.</p>
+<h3 id="p4-le-defi-chrono">Le défi chrono</h3>
+<p>Une routine peut avoir un minuteur (réglé par le parent dans la routine, <a href="#p2b">partie 2b</a>). Un bouton jaune <strong>Défi X min</strong> apparaît alors sous la routine.</p>
+<figure><a href="img/g2.jpg" target="_blank" rel="noopener"><img src="img/g2.jpg" alt="Bouton Défi, minuteur, défi terminé" width="1400" height="1032" loading="lazy" decoding="async"></a><figcaption>Bouton Défi, minuteur, défi terminé</figcaption></figure>
+<ol>
+<li>L'enfant touche <strong>Défi 10 min</strong> : le minuteur démarre.</li>
+<li>Quand c'est fait, il touche <strong>J'ai fini !</strong>. Avant la fin du temps, le message « Défi réussi » s'affiche.</li>
+<li>La routine est cochée et part en validation comme d'habitude.</li>
+</ol>
+<p><strong>Arrêter</strong> coupe le minuteur sans cocher. Un défi réussi ne donne pas d'étoile en plus, mais il compte pour les badges « Défis », et le parent le voit dans le bloc À valider (« défi chrono réussi »).</p>
+<h3 id="p4-les-recompenses-cote-enfant">Les récompenses côté enfant</h3>
+<figure><a href="img/g3.jpg" target="_blank" rel="noopener"><img src="img/g3.jpg" alt="Onglet Récompenses de l'enfant" width="660" height="1386" loading="lazy" decoding="async"></a><figcaption>Onglet Récompenses de l'enfant</figcaption></figure>
+<ol>
+<li><strong>Étoiles à dépenser</strong>, en haut.</li>
+<li><strong>Encore X ⭐</strong> : ce qu'il manque pour chaque récompense. Quand l'enfant a assez, le texte devient un bouton <strong>Je choisis</strong>.</li>
+</ol>
+<p>Quand l'enfant a assez d'étoiles :</p>
+<figure><a href="img/g6.jpg" target="_blank" rel="noopener"><img src="img/g6.jpg" alt="Je choisis, confirmation, écran à montrer, Mon histoire" width="1400" height="779" loading="lazy" decoding="async"></a><figcaption>Je choisis, confirmation, écran à montrer, Mon histoire</figcaption></figure>
+<ol>
+<li>Il touche <strong>Je choisis</strong>, puis confirme avec <strong>Oui, je choisis !</strong>. Les étoiles sont retirées tout de suite (ici 12 − 5 = 7).</li>
+<li>L'écran <strong>Bravo !</strong> lui demande de montrer l'écran à ses parents.</li>
+<li>La récompense s'ajoute à <strong>Mon histoire</strong>, en bas de l'onglet.</li>
+</ol>
+<p>Il faut internet pour cette étape. Le parent voit l'échange dans l'historique de son onglet Récompenses et peut l'annuler si besoin (<a href="#p3">partie 3</a>).</p>
+<h3 id="p4-mon-jardin-et-les-reglages">Mon jardin et les réglages</h3>
+<p>Le jardin montre le chemin parcouru, au-delà de la fleur en cours.</p>
+<figure><a href="img/g4.jpg" target="_blank" rel="noopener"><img src="img/g4.jpg" alt="Mon jardin, haut et bas de l'onglet" width="1270" height="1386" loading="lazy" decoding="async"></a><figcaption>Mon jardin, haut et bas de l'onglet</figcaption></figure>
+<ol>
+<li><strong>Parterre de la saison</strong> : les fleurs de la saison, une toutes les deux semaines.</li>
+<li><strong>Compteur</strong> : fleurs terminées et celle qui pousse.</li>
+<li><strong>Jardin de l'année</strong> : quatre parterres, de l'automne à l'été. L'année change au 23 septembre.</li>
+<li><strong>Série</strong> : le nombre de bonnes journées d'affilée.</li>
+<li><strong>Son</strong> quand l'enfant coche une routine : à couper si besoin.</li>
+<li><strong>Rappels</strong> matin et soir : choisir les heures puis <strong>Activer les rappels</strong>, et accepter les notifications.</li>
+</ol>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Fleur</th>
+<th>Part de bonnes journées sur la quinzaine</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Une grande fleur</td>
+<td>90 % ou plus</td>
+</tr>
+<tr>
+<td>Une belle fleur</td>
+<td>65 % ou plus</td>
+</tr>
+<tr>
+<td>Une petite fleur</td>
+<td>35 % ou plus</td>
+</tr>
+<tr>
+<td>Un joli bouton</td>
+<td>moins de 35 %</td>
+</tr>
+</tbody>
+</table></div>
+<p>Une bonne journée = au moins 75 % des étoiles prévues du jour validées. Les jours sans routine ou en pause ne comptent ni pour ni contre.</p>
+<h3 id="p4-les-badges">Les badges</h3>
+<figure><a href="img/g5.jpg" target="_blank" rel="noopener"><img src="img/g5.jpg" alt="Onglet Badges" width="660" height="1386" loading="lazy" decoding="async"></a><figcaption>Onglet Badges</figcaption></figure>
+<ol>
+<li><strong>Total</strong> : badges gagnés sur les 92 existants.</li>
+<li><strong>Catégories</strong> : chacune affiche son avancement (ici Routines, 1 sur 11).</li>
+</ol>
+<p>Un badge gagné est en couleur avec sa date. Les autres sont grisés avec une barre de progression (0 / 10, 0 / 50…). Les paliers vont loin, jusqu'à 15 000 routines, pour durer plusieurs années. Les malus n'enlèvent jamais un badge.</p></section>
+<section class="part" id="p5"><h2><span class="num">5</span> Les réglages</h2>
+<p>Les réglages sont en bas de l'onglet <strong>Famille</strong>, sous les pauses. Ils sont réservés aux parents. Certains valent pour toute la famille, d'autres seulement pour le téléphone sur lequel tu les règles :</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Réglage</th>
+<th>Portée</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Validation automatique</td>
+<td>Toute la famille</td>
+</tr>
+<tr>
+<td>Rappels</td>
+<td>Ce téléphone (chaque parent active les siens)</td>
+</tr>
+<tr>
+<td>Planning à imprimer</td>
+<td>Toute la famille</td>
+</tr>
+<tr>
+<td>Code parent</td>
+<td>Ce téléphone</td>
+</tr>
+<tr>
+<td>Sauvegarde</td>
+<td>Toute la famille</td>
+</tr>
+<tr>
+<td>Nom de la famille</td>
+<td>Toute la famille</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="p5-validation-automatique-a-minuit">Validation automatique à minuit</h3>
+<p>Quand l'enfant coche une routine, ses étoiles attendent ta validation. Ce réglage décide de ce qui se passe si personne ne valide dans la journée.</p>
+<figure><a href="img/i1.jpg" target="_blank" rel="noopener"><img src="img/i1.jpg" alt="Validation automatique activée puis désactivée" width="1270" height="1386" loading="lazy" decoding="async"></a><figcaption>Validation automatique activée puis désactivée</figcaption></figure>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Case (1)</th>
+<th>À minuit, ce qui reste à valider…</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cochée (par défaut)</td>
+<td>est validé automatiquement. L'enfant n'est pas pénalisé par un oubli des parents.</td>
+</tr>
+<tr>
+<td>Décochée</td>
+<td>reste en attente jusqu'à ta décision. Message : « Validation manuelle uniquement ».</td>
+</tr>
+</tbody>
+</table></div>
+<p>Dans les deux cas, ce que tu coches toi-même est validé tout de suite. Conseil : garde la case cochée, sauf si tu veux contrôler chaque routine.</p>
+<h3 id="p5-rappels">Rappels</h3>
+<p>Aux heures choisies, une notification résume les routines qui restent à faire. Chaque parent les active sur son propre téléphone ; l'enfant a les siens dans Mon jardin (<a href="#p4">partie 4</a>).</p>
+<figure><a href="img/i2.jpg" target="_blank" rel="noopener"><img src="img/i2.jpg" alt="Choisir les heures, autoriser, rappels actifs, notifications bloquées" width="1400" height="779" loading="lazy" decoding="async"></a><figcaption>Choisir les heures, autoriser, rappels actifs, notifications bloquées</figcaption></figure>
+<ol>
+<li><strong>Matin</strong> : l'heure du premier rappel.</li>
+<li><strong>Soir</strong> : l'heure du second.</li>
+<li><strong>Activer les rappels</strong>, puis <strong>Autoriser</strong> quand Chrome demande la permission d'envoyer des notifications.</li>
+<li><strong>Mettre à jour les rappels</strong> : après avoir changé une heure.</li>
+<li><strong>Désactiver</strong> : coupe les rappels sur ce téléphone.</li>
+</ol>
+<p>Si tu as répondu « Ne pas autoriser », l'application affiche « Les notifications sont bloquées ». Pour corriger : dans Chrome, touche le cadenas à gauche de l'adresse, puis <strong>Autorisations</strong>, puis <strong>Notifications</strong> sur <strong>Autoriser</strong>. Reviens ensuite sur Activer les rappels.</p>
+<h3 id="p5-planning-a-imprimer">Planning à imprimer</h3>
+<p>Pour le frigo ou un enfant sans téléphone : la semaine en cours sur une page A4, à cocher au crayon.</p>
+<figure><a href="img/i3.jpg" target="_blank" rel="noopener"><img src="img/i3.jpg" alt="Bouton et aperçu du planning" width="1270" height="1386" loading="lazy" decoding="async"></a><figcaption>Bouton et aperçu du planning</figcaption></figure>
+<ol>
+<li>Touche <strong>Imprimer le planning</strong>. Avec plusieurs enfants, choisis ceux à imprimer.</li>
+<li>Android ouvre l'aperçu d'impression : choisis ton imprimante, ou <strong>Enregistrer au format PDF</strong> pour l'envoyer.</li>
+</ol>
+<p>La page reprend les routines par moment, un rond par jour prévu (les cases vides sont les jours sans cette routine), et liste les récompenses avec leur prix en bas. Les coches sur papier ne remontent pas dans l'application : il faut les reporter depuis l'écran Aujourd'hui (jusqu'à 6 jours en arrière).</p>
+<h3 id="p5-code-parent-sauvegarde-et-compte">Code parent, sauvegarde et compte</h3>
+<figure><a href="img/i4.jpg" target="_blank" rel="noopener"><img src="img/i4.jpg" alt="Code parent, sauvegarde, compte, renommer la famille" width="1400" height="1032" loading="lazy" decoding="async"></a><figcaption>Code parent, sauvegarde, compte, renommer la famille</figcaption></figure>
+<ol>
+<li><strong>Code parent</strong> : <strong>Changer le code</strong>, puis 4 chiffres. Il protège la sortie du mode enfant sur ce téléphone (<a href="#p2d">partie 2d</a>). Sans code, l'application pose un petit calcul à la place.</li>
+<li><strong>Télécharger une copie (JSON)</strong> : un fichier avec toutes les données de la famille (enfants, routines, étoiles, récompenses, malus, badges, fleurs, pauses), enregistré dans Téléchargements. Utile une fois par trimestre, par précaution.</li>
+<li><strong>Renommer la famille</strong> : change le nom affiché en haut de l'application, pour tous les membres.</li>
+<li><strong>Se déconnecter</strong> : ferme ton compte sur ce téléphone. Les données restent en ligne ; il suffit de se reconnecter avec son e-mail et son mot de passe.</li>
+</ol>
+<p>L'adresse e-mail du compte est rappelée au-dessus des boutons.</p></section>
+  </main>
+</div>
+<a class="top-link" href="#haut" aria-label="Revenir en haut">↑</a>
+<div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-label="Capture agrandie"><button class="btn" id="vclose">✕ Fermer</button><img alt=""></div>
+<script>
+(() => {
+  const toc = document.getElementById("toc"), menu = document.getElementById("menu"), scrim = document.getElementById("scrim");
+  const setOpen = o => { toc.classList.toggle("open", o); scrim.classList.toggle("open", o); menu.setAttribute("aria-expanded", o); };
+  menu.addEventListener("click", () => setOpen(!toc.classList.contains("open")));
+  scrim.addEventListener("click", () => setOpen(false));
+  toc.addEventListener("click", e => { if (e.target.closest("a")) setOpen(false); });
+
+  // Sommaire actif
+  const links = [...toc.querySelectorAll("a")], byId = new Map(links.map(a => [a.hash.slice(1), a]));
+  const targets = [...document.querySelectorAll("section.part, main h3[id]")];
+  let current = null;
+  const mark = id => {
+    if (id === current) return; current = id;
+    links.forEach(a => a.classList.remove("on"));
+    const a = byId.get(id); if (!a) return; a.classList.add("on");
+    const part = a.closest("ol > li"); if (part) part.querySelector("a.p").classList.add("on");
+    if (!toc.classList.contains("open")) a.scrollIntoView({ block: "nearest" });
+  };
+  const io = new IntersectionObserver(es => {
+    const vis = targets.filter(t => t.getBoundingClientRect().top < window.innerHeight * 0.35);
+    if (vis.length) mark(vis[vis.length - 1].id);
+  }, { rootMargin: "0px 0px -60% 0px", threshold: [0, 1] });
+  targets.forEach(t => io.observe(t));
+  addEventListener("scroll", () => { const vis = targets.filter(t => t.getBoundingClientRect().top < 120); if (vis.length) mark(vis[vis.length - 1].id); }, { passive: true });
+
+  // Visionneuse
+  const v = document.getElementById("viewer"), vi = v.querySelector("img");
+  document.querySelectorAll("figure a").forEach(a => a.addEventListener("click", e => {
+    e.preventDefault(); const t = a.querySelector("img"), r = t.naturalWidth / t.naturalHeight || 1;
+    const w = Math.min(t.naturalWidth || 1400, Math.max(innerWidth - 24, (innerHeight - 90) * r));
+    vi.style.width = w + "px"; vi.src = a.href; vi.alt = t.alt; v.classList.add("open"); v.scrollTo(0, 0);
+  }));
+  const close = () => v.classList.remove("open");
+  document.getElementById("vclose").addEventListener("click", close);
+  v.addEventListener("click", e => { if (e.target === v) close(); });
+  addEventListener("keydown", e => { if (e.key === "Escape") { close(); setOpen(false); } });
+})();
+</script>
+</body>
+</html>
