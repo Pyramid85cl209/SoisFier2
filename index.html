@@ -337,61 +337,131 @@ const store = {
 };
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const pad = n => String(n).padStart(2, "0");
+/* ================= Langues ================= */
+// Textes dans i18n/<langue>.json ; « ?lang=qps » active une pseudo-langue de contrôle (textes déformés : tout texte resté en clair est un oubli).
+const LANGS = ["fr"];
+const I18N = { lang: "fr", d: {}, fr: {} };
+I18N.ready = new Promise(r => { I18N.done = r; });
+const lget = (o, k) => k.split(".").reduce((a, p) => (a == null ? a : a[p]), o);
+const loc = () => (I18N.lang === "qps" ? "fr" : I18N.lang) + "-u-ca-gregory-nu-latn";   // calendrier grégorien et chiffres 0123 imposés
+const fmtNum = n => Number(n).toLocaleString(loc());
+function t(k, p = {}) {
+  let v = lget(I18N.d, k); if (v == null) v = lget(I18N.fr, k); if (v == null) return k;
+  if (v && typeof v === "object" && !Array.isArray(v) && "other" in v) v = v[new Intl.PluralRules(loc()).select(+p.n || 0)] ?? v.other;
+  return typeof v === "string" ? v.replace(/\{(\w+)\}/g, (m, x) => p[x] == null ? m : typeof p[x] === "number" ? fmtNum(p[x]) : p[x]) : v;
+}
+const PSEUDO = { a: "å", e: "é", i: "î", o: "ô", u: "û", c: "ç", n: "ñ", y: "ý", A: "Å", E: "É", I: "Î", O: "Ô", U: "Û", C: "Ç", N: "Ñ" };
+function pseudo(o) {
+  if (typeof o === "string") return "[" + o.replace(/\{\w+\}|<[^>]*>|./gs, m => m.length > 1 ? m : (PSEUDO[m] || m)) + "]";
+  if (Array.isArray(o)) return o.map(pseudo);
+  if (o && typeof o === "object") return Object.fromEntries(Object.entries(o).map(([k, v]) => [k, pseudo(v)]));
+  return o;
+}
+async function loadI18n() {
+  const want = new URLSearchParams(location.search).get("lang"); if (want) store.set("lang", want);
+  const lang = store.get("lang", "fr");
+  const get = async l => { const r = await fetch(`i18n/${l}.json`); if (!r.ok) throw new Error(l); return r.json(); };
+  try { I18N.fr = await get("fr"); } catch { I18N.fr = {}; }
+  I18N.lang = lang === "qps" ? "qps" : LANGS.includes(lang) ? lang : "fr";
+  I18N.d = I18N.lang === "qps" ? pseudo(I18N.fr) : I18N.lang === "fr" ? I18N.fr : await get(I18N.lang).catch(() => I18N.fr);
+  document.documentElement.lang = I18N.lang === "qps" ? "fr" : I18N.lang;
+  document.documentElement.dir = I18N.lang === "ar" ? "rtl" : "ltr";
+  document.querySelector('meta[name="description"]').setAttribute("content", t("meta.description"));
+  $("#sheet").setAttribute("aria-label", t("dialog"));
+  BADGES = buildBadges();
+  I18N.done();
+}
+
+/* ================= Dates, semaine et fuseau de la famille ================= */
+const WEEK = { start: 1, weekend: [6, 7], tz: "Europe/Paris" };   // remplacé par les réglages de la famille au chargement
+function setWeek(f) { if (!f) return; WEEK.start = f.week_start || 1; WEEK.weekend = f.weekend_days || []; WEEK.tz = f.timezone || "Europe/Paris"; }
 const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-const todayISO = () => iso(new Date());
+// Jour (AAAA-MM-JJ) d'un instant, dans le fuseau de la famille
+function isoInTz(d) { try { return new Intl.DateTimeFormat("en-CA", { timeZone: WEEK.tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(d); } catch { return iso(d); } }
+const todayISO = () => isoInTz(new Date());
 const parseISO = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
 const addDays = (s, n) => { const d = parseISO(s); d.setDate(d.getDate() + n); return iso(d); };
 const dowOf = s => { const g = parseISO(s).getDay(); return g === 0 ? 7 : g; };
-const DAYS = ["L", "M", "M", "J", "V", "S", "D"];
-const DAYS_LONG = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
-const MOMENTS = [["matin", "Le matin", "Matin", "🌅"], ["midi", "Le midi", "Midi", "🌞"], ["journee", "Dans la journée", "Journée", "🌤️"], ["soir", "Le soir", "Soir", "🌙"]];
-const momentLabel = k => (MOMENTS.find(m => m[0] === k) || MOMENTS[0])[2];
-const PLACES = ["Chambre", "Salle de bain", "Cuisine", "Salon", "Entrée", "Dehors", "École"];
+const DAYS = () => t("days.short");           // 1 = lundi … 7 = dimanche
+const DAYS_LONG = () => t("days.long");
+const weekOrder = () => Array.from({ length: 7 }, (_, i) => ((WEEK.start - 1 + i) % 7) + 1);
+const workDays = () => weekOrder().filter(d => !WEEK.weekend.includes(d));
+const weekendDays = () => weekOrder().filter(d => WEEK.weekend.includes(d));
+const dayName = d => DAYS_LONG()[d - 1];
+// Réglages proposés à la création : déduits de la région du téléphone
+function detectWeek() {
+  const out = { start: 1, weekend: [6, 7], tz: "Europe/Paris" };
+  try { const l = new Intl.Locale(navigator.language || "fr-FR"); const w = (l.getWeekInfo && l.getWeekInfo()) || l.weekInfo;
+    if (w && w.firstDay) { out.start = w.firstDay; out.weekend = [...(w.weekend || [])].sort((a, b) => a - b); } } catch {}
+  try { out.tz = Intl.DateTimeFormat().resolvedOptions().timeZone || out.tz; } catch {}
+  return out;
+}
+const tzList = () => { try { return Intl.supportedValuesOf("timeZone"); } catch { return ["Europe/Paris"]; } };
+const tzLabel = z => z.replace(/_/g, " ");
+const listFmt = a => { try { return new Intl.ListFormat(loc(), { type: "conjunction" }).format(a); } catch { return a.join(", "); } };
+const lower = s => s.toLocaleLowerCase(loc());
+function weekSummary(w) {
+  const first = w.weekend.find(d => !w.weekend.includes(((d + 5) % 7) + 1)) || w.weekend[0];   // début du bloc de week-end
+  const we = w.weekend.length ? listFmt(w.weekend.slice().sort((a, b) => ((a - first + 7) % 7) - ((b - first + 7) % 7)).map(d => lower(dayName(d)))) : t("week.noWeekend");
+  return t("week.summary", { first: lower(dayName(w.start)), weekend: we, tz: tzLabel(w.tz) });
+}
+
+const MOMENTS_K = [["matin", "🌅"], ["midi", "🌞"], ["journee", "🌤️"], ["soir", "🌙"]];
+// [clé, libellé de groupe, libellé court, emoji]
+const MOMENTS = () => MOMENTS_K.map(([k, e]) => [k, t(`moment.${k}.group`), t(`moment.${k}.short`), e]);
+const momentLabel = k => t(`moment.${(MOMENTS_K.find(m => m[0] === k) || MOMENTS_K[0])[0]}.short`);
+const PLACES = () => t("places");
 const COLORS = ["#2E8B57", "#E8484F", "#3D7BD9", "#F29E1F", "#8E5BD0", "#1FA5A0"];
 const EMO_R = [
-  ["Hygiène", ["🪥", "🧼", "🛁", "🚿", "🧴", "💇", "🚽", "🧻", "🤧", "✂️", "💅", "🦷"]],
-  ["Habillage", ["👕", "👖", "🧦", "👟", "🧥", "🧢", "🧤", "🩳", "👗", "🩴", "🥾", "🎽"]],
-  ["Repas", ["🥣", "🍽️", "🥛", "💧", "🍎", "🍌", "🥕", "🥦", "🥪", "🍳", "🥄", "🧃"]],
-  ["Rangement", ["🛏️", "🧸", "🧺", "🧹", "🧽", "🗑️", "📦", "🪣", "🧦", "👞", "🪑", "🚪"]],
-  ["École", ["🎒", "✏️", "📚", "📖", "🖍️", "📝", "🧮", "🔤", "🔢", "📏", "🎹", "🎻"]],
-  ["Maison et animaux", ["🪴", "🌱", "🐟", "🐶", "🐱", "🐹", "🐰", "🐦", "🔑", "📬", "🧑‍🍳", "🛒"]],
-  ["Activités", ["⚽", "🚲", "🏃", "🤸", "🧘", "🏊", "🎨", "🧩", "🎵", "🥁", "🏀", "🛴"]],
-  ["Soir et sommeil", ["🌙", "😴", "🛌", "⏰", "🦉", "⭐", "📖", "🧸", "💤", "🕯️", "🌜", "🛋️"]],
-  ["Gentillesse", ["😊", "🤗", "💛", "🙋", "🤝", "👋", "💬", "🙌", "🫶", "👂", "🎁", "🌈"]]
+  ["hygiene", ["🪥", "🧼", "🛁", "🚿", "🧴", "💇", "🚽", "🧻", "🤧", "✂️", "💅", "🦷"]],
+  ["dressing", ["👕", "👖", "🧦", "👟", "🧥", "🧢", "🧤", "🩳", "👗", "🩴", "🥾", "🎽"]],
+  ["meals", ["🥣", "🍽️", "🥛", "💧", "🍎", "🍌", "🥕", "🥦", "🥪", "🍳", "🥄", "🧃"]],
+  ["tidying", ["🛏️", "🧸", "🧺", "🧹", "🧽", "🗑️", "📦", "🪣", "🧦", "👞", "🪑", "🚪"]],
+  ["school", ["🎒", "✏️", "📚", "📖", "🖍️", "📝", "🧮", "🔤", "🔢", "📏", "🎹", "🎻"]],
+  ["home", ["🪴", "🌱", "🐟", "🐶", "🐱", "🐹", "🐰", "🐦", "🔑", "📬", "🧑‍🍳", "🛒"]],
+  ["activities", ["⚽", "🚲", "🏃", "🤸", "🧘", "🏊", "🎨", "🧩", "🎵", "🥁", "🏀", "🛴"]],
+  ["night", ["🌙", "😴", "🛌", "⏰", "🦉", "⭐", "📖", "🧸", "💤", "🕯️", "🌜", "🛋️"]],
+  ["kindness", ["😊", "🤗", "💛", "🙋", "🤝", "👋", "💬", "🙌", "🫶", "👂", "🎁", "🌈"]]
 ];
 const EMO_W = [
-  ["Gourmandises", ["🍦", "🍫", "🍭", "🍬", "🧁", "🍰", "🍪", "🍩", "🍿", "🥞", "🍕", "🍔"]],
-  ["Moments partagés", ["🎲", "🧩", "🎨", "🖍️", "📖", "🎬", "📺", "🎮", "🎤", "🎵", "🏕️", "🛁"]],
-  ["Dehors", ["🌳", "🧺", "🛝", "🏞️", "🏖️", "🚲", "🛴", "⚽", "🏀", "🪁", "🦆", "🌻"]],
-  ["Sorties", ["🏊", "🎢", "🎡", "🎠", "🐐", "🐠", "🦁", "🦒", "🏛️", "📚", "🎪", "🎟️"]],
-  ["Grands projets", ["🎁", "🧸", "🚲", "👑", "🎉", "🎈", "🚂", "✈️", "🚗", "🏰", "🎂", "🌟"]],
-  ["Petits privilèges", ["⏰", "🌙", "🍽️", "🎧", "🎵", "📱", "🛋️", "👕", "🥤", "⭐", "🏆", "💌"]]
+  ["treats", ["🍦", "🍫", "🍭", "🍬", "🧁", "🍰", "🍪", "🍩", "🍿", "🥞", "🍕", "🍔"]],
+  ["shared", ["🎲", "🧩", "🎨", "🖍️", "📖", "🎬", "📺", "🎮", "🎤", "🎵", "🏕️", "🛁"]],
+  ["outside", ["🌳", "🧺", "🛝", "🏞️", "🏖️", "🚲", "🛴", "⚽", "🏀", "🪁", "🦆", "🌻"]],
+  ["outings", ["🏊", "🎢", "🎡", "🎠", "🐐", "🐠", "🦁", "🦒", "🏛️", "📚", "🎪", "🎟️"]],
+  ["big", ["🎁", "🧸", "🚲", "👑", "🎉", "🎈", "🚂", "✈️", "🚗", "🏰", "🎂", "🌟"]],
+  ["perks", ["⏰", "🌙", "🍽️", "🎧", "🎵", "📱", "🛋️", "👕", "🥤", "⭐", "🏆", "💌"]]
 ];
 function emoPicker(target, groups) {
-  return `<div class="emo-box">${groups.map(([lbl, list]) => `<div class="emo-grp"><small>${lbl}</small><div class="emo-row">${[...new Set(list)].map(e => `<button type="button" class="emo" data-act="pickEmoji" data-target="${target}" data-e="${e}" aria-label="${e}">${e}</button>`).join("")}</div></div>`).join("")}</div>`;
+  return `<div class="emo-box">${groups.map(([lbl, list]) => `<div class="emo-grp"><small>${t("emoGroup." + lbl)}</small><div class="emo-row">${[...new Set(list)].map(e => `<button type="button" class="emo" data-act="pickEmoji" data-target="${target}" data-e="${e}" aria-label="${e}">${e}</button>`).join("")}</div></div>`).join("")}</div>`;
 }
 const EMO_K = ["🧒", "👧", "👦", "👶", "🐻", "🦊", "🐰", "🦁", "🐼", "🦄", "🐸", "🐯", "🐱", "🐶"];
-function fmtDay(s) { const t = todayISO(); if (s === t) return "Aujourd'hui"; if (s === addDays(t, -1)) return "Hier"; return DAYS_LONG[dowOf(s) - 1] + " " + parseISO(s).getDate(); }
-function fmtDate(ts) { const d = new Date(ts); return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" }); }
+function fmtDay(s) { const td = todayISO(); if (s === td) return t("day.today"); if (s === addDays(td, -1)) return t("day.yesterday"); return t("day.nameNum", { day: dayName(dowOf(s)), num: parseISO(s).getDate() }); }
+// Une date seule (AAAA-MM-JJ) reste ce jour-là ; un instant est affiché dans le fuseau de la famille
+function fmtDate(ts) {
+  const s = String(ts);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return parseISO(s).toLocaleDateString(loc(), { day: "numeric", month: "short" });
+  try { return new Date(ts).toLocaleDateString(loc(), { day: "numeric", month: "short", timeZone: WEEK.tz }); } catch { return new Date(ts).toLocaleDateString(loc(), { day: "numeric", month: "short" }); }
+}
+const fmtTime = ts => { try { return new Date(ts).toLocaleTimeString(loc(), { hour: "2-digit", minute: "2-digit", timeZone: WEEK.tz }); } catch { return new Date(ts).toLocaleTimeString(loc(), { hour: "2-digit", minute: "2-digit" }); } };
 function daysLabel(days) {
-  const s = [...(days || [])].sort((a, b) => a - b).join(",");
-  if (s === "1,2,3,4,5,6,7") return "Tous les jours";
-  if (s === "1,2,3,4,5") return "En semaine";
-  if (s === "6,7") return "Le week-end";
-  return (days || []).slice().sort((a, b) => a - b).map(d => DAYS_LONG[d - 1].slice(0, 3)).join(" ");
+  const set = [...new Set(days || [])], same = (a, b) => a.length === b.length && a.every(x => b.includes(x));
+  if (set.length === 7) return t("days.all");
+  if (WEEK.weekend.length && same(set, workDays())) return t("days.week");
+  if (WEEK.weekend.length && same(set, weekendDays())) return t("days.weekend");
+  return weekOrder().filter(d => set.includes(d)).map(d => t("days.abbr")[d - 1]).join(" ");
 }
 function toast(msg, err = false) {
-  const t = $("#toast"); t.textContent = msg; t.className = "show" + (err ? " err" : "");
-  clearTimeout(toast._t); toast._t = setTimeout(() => t.className = "", 2800);
+  const el = $("#toast"); el.textContent = msg; el.className = "show" + (err ? " err" : "");
+  clearTimeout(toast._t); toast._t = setTimeout(() => el.className = "", 2800);
 }
 function errMsg(e) {
   const m = (e && (e.message || e.error_description || e.msg)) || String(e);
-  if (/Failed to fetch|NetworkError|Load failed|fetch/i.test(m)) return "Pas de connexion internet. Réessaie dans un instant.";
-  if (/Invalid login credentials/i.test(m)) return "E-mail ou mot de passe incorrect.";
-  if (/Email not confirmed/i.test(m)) return "Confirme d'abord ton adresse e-mail avec le lien reçu, puis reconnecte-toi.";
-  if (/already registered/i.test(m)) return "Un compte existe déjà avec cet e-mail. Connecte-toi.";
-  if (/Password should be at least/i.test(m)) return "Le mot de passe doit contenir au moins 6 caractères.";
-  if (/rate limit/i.test(m)) return "Trop de tentatives. Patiente quelques minutes.";
+  if (/Failed to fetch|NetworkError|Load failed|fetch/i.test(m)) return t("err.network");
+  if (/Invalid login credentials/i.test(m)) return t("err.badLogin");
+  if (/Email not confirmed/i.test(m)) return t("err.notConfirmed");
+  if (/already registered/i.test(m)) return t("err.alreadyRegistered");
+  if (/Password should be at least/i.test(m)) return t("err.passwordShort");
+  if (/rate limit/i.test(m)) return t("err.rateLimit");
   return m;
 }
 const isNetErr = e => /Failed to fetch|NetworkError|Load failed|fetch/i.test((e && e.message) || String(e)) || !navigator.onLine;
@@ -408,22 +478,23 @@ const S = {
 /* ================= Jardin : dessins ================= */
 const GC = { leaf: "#66B84C", leafD: "#3F8C35", stem: "#4F9B3B", soil: "#6B4430", soilD: "#523222", yel: "#FFCB2E", yelD: "#F0A30F", ctr: "#7A4A22", ctrD: "#5A3416", cheek: "#F59A9A", ink: "#3B2418" };
 const SP = {
-  "tournesol": { n: "Tournesol", k: "sun", pe: "#FFCB2E", pd: "#F0A30F", ct: "#7A4A22" },
-  "marguerite": { n: "Marguerite", k: "sun", pe: "#FFFFFF", pd: "#EEF0F5", ct: "#FFCB2E", np: 14 },
-  "cosmos-rose": { n: "Cosmos rose", k: "cosmos", pe: "#FF8FB1", pd: "#F06A97" },
-  "cosmos-orange": { n: "Cosmos orange", k: "cosmos", pe: "#F28C28", pd: "#D86F10" },
-  "cosmos-rouge": { n: "Cosmos rouge", k: "cosmos", pe: "#E0474C", pd: "#BE3036" },
-  "tulipe-rose": { n: "Tulipe rose", k: "tulip", pe: "#F0607A", pd: "#C93E5A" },
-  "tulipe-jaune": { n: "Tulipe jaune", k: "tulip", pe: "#FFCB2E", pd: "#E0A400" },
-  "tulipe-violette": { n: "Tulipe violette", k: "tulip", pe: "#B07CE0", pd: "#8A55C0" },
-  "tulipe-rouge": { n: "Tulipe rouge", k: "tulip", pe: "#E0474C", pd: "#BE3036" },
-  "hellebore": { n: "Rose de Noël", k: "hell", pe: "#FFFFFF", pd: "#F3E6EE" }
+  "tournesol": { k: "sun", pe: "#FFCB2E", pd: "#F0A30F", ct: "#7A4A22" },
+  "marguerite": { k: "sun", pe: "#FFFFFF", pd: "#EEF0F5", ct: "#FFCB2E", np: 14 },
+  "cosmos-rose": { k: "cosmos", pe: "#FF8FB1", pd: "#F06A97" },
+  "cosmos-orange": { k: "cosmos", pe: "#F28C28", pd: "#D86F10" },
+  "cosmos-rouge": { k: "cosmos", pe: "#E0474C", pd: "#BE3036" },
+  "tulipe-rose": { k: "tulip", pe: "#F0607A", pd: "#C93E5A" },
+  "tulipe-jaune": { k: "tulip", pe: "#FFCB2E", pd: "#E0A400" },
+  "tulipe-violette": { k: "tulip", pe: "#B07CE0", pd: "#8A55C0" },
+  "tulipe-rouge": { k: "tulip", pe: "#E0474C", pd: "#BE3036" },
+  "hellebore": { k: "hell", pe: "#FFFFFF", pd: "#F3E6EE" }
 };
 const SEASON_SP = { printemps: ["tulipe-rose", "marguerite", "tulipe-jaune", "tulipe-violette"], ete: ["tournesol", "cosmos-rose", "marguerite", "tournesol"],
   automne: ["cosmos-orange", "tournesol", "cosmos-rouge", "marguerite"], hiver: ["hellebore", "tulipe-rouge", "hellebore", "marguerite"] };
-const SEASON_NAME = { printemps: "du printemps", ete: "de l'été", automne: "de l'automne", hiver: "de l'hiver" };
-const GRADE_NAME = ["Un joli bouton", "Une petite fleur", "Une belle fleur", "Une grande fleur"];
-const STAGE_NAME = ["Pot vide", "Graine", "Germe", "Pousse", "2 feuilles", "4 feuilles", "6 feuilles", "Premier bouton", "Deuxième bouton", "Les boutons grossissent", "Éclosion", "Mi-ouverte", "Grande ouverture", "Fleur complète"];
+const spName = k => t("garden.species." + k);
+const SEASON_NAME = new Proxy({}, { get: (_, k) => t("garden.seasonOf." + String(k)) });   // « du printemps », « de l'été »…
+const GRADE_NAME = new Proxy([], { get: (_, i) => /^\d+$/.test(String(i)) ? t("garden.grade")[+i] : undefined });
+const STAGE_NAME = new Proxy([], { get: (_, i) => /^\d+$/.test(String(i)) ? t("garden.stage")[+i] : undefined });
 function shade(hex, f) { const n = parseInt(hex.slice(1), 16); const c = [n >> 16, (n >> 8) & 255, n & 255].map(v => Math.max(0, Math.min(255, Math.round(f < 0 ? v * (1 + f) : v + (255 - v) * f)))); return "#" + c.map(v => v.toString(16).padStart(2, "0")).join(""); }
 const leafG = (x, y, a, s = 1) => `<g transform="translate(${x} ${y}) rotate(${a}) scale(${s})"><path d="M0 0 C 8 -12, 27 -13, 36 0 C 27 11, 8 12, 0 0 Z" fill="${GC.leaf}" stroke="${GC.leafD}" stroke-width="1.6" stroke-linejoin="round"/><path d="M3 0 Q 18 -1.5 31 0" stroke="${GC.leafD}" stroke-width="1.3" fill="none" stroke-linecap="round"/></g>`;
 const stemG = (h, w = 5, x = 100, y = 140) => `<path d="M${x} ${y} C ${x - 4} ${y - h * .4}, ${x + 4} ${y - h * .72}, ${x} ${y - h}" stroke="${GC.stem}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`;
@@ -491,7 +562,7 @@ function stageArt(st, key = "tournesol", color = "#E58358", final = null) {
 }
 function stageSVG(st, key, color, label, final) { return `<svg viewBox="0 -48 200 268" role="img" aria-label="${esc(label || STAGE_NAME[Math.max(0, Math.min(13, st | 0))])}"><g class="sway">${stageArt(st, key, color, final)}</g></svg>`; }
 /* Compatibilité : petites illustrations des écrans d'accueil */
-function plantSVG(level, color = "#E58358", label) { return stageSVG([0, 2, 5, 7, 12, 13][Math.max(0, Math.min(5, level | 0))], "tournesol", color, label || "Plante"); }
+function plantSVG(level, color = "#E58358", label) { return stageSVG([0, 2, 5, 7, 12, 13][Math.max(0, Math.min(5, level | 0))], "tournesol", color, label || t("garden.plant")); }
 const miniLogo = () => `<svg viewBox="0 -48 200 268" aria-hidden="true">${stageArt(13, "tournesol", "#E8484F")}</svg>`;
 
 /* Fleur plantée dans un parterre */
@@ -523,16 +594,16 @@ function parterreArt(season, flowers, growing) {
   for (let k = 0; k < 16; k++) { const x = 56 + k * 32.5; g += `<ellipse cx="${x}" cy="${k % 2 ? 300 : 298}" rx="15" ry="8" fill="${s.border}"/>`; if (s.snow) g += `<ellipse cx="${x}" cy="${k % 2 ? 294 : 292}" rx="12" ry="4.5" fill="#FFFFFF"/>`; }
   return g;
 }
-const parterreSVG = (season, flowers, growing, label) => `<svg viewBox="0 0 600 330" role="img" aria-label="${esc(label || "Parterre")}">${parterreArt(season, flowers, growing)}</svg>`;
+const parterreSVG = (season, flowers, growing, label) => `<svg viewBox="0 0 600 330" role="img" aria-label="${esc(label || t("garden.bed"))}">${parterreArt(season, flowers, growing)}</svg>`;
 const YEAR_ORDER = ["automne", "hiver", "printemps", "ete"];
 function gardenSVG(name, year, flowers, cur) {
   let g = `<rect width="1300" height="900" fill="#BFE3A3"/><rect width="1300" height="120" fill="#DDEFFF"/>`;
   for (let k = 0; k < 27; k++) { const x = 10 + k * 48; g += `<path d="M${x} 150 L${x} 108 L${x + 12} 96 L${x + 24} 108 L${x + 24} 150 Z" fill="#E9C99A" stroke="#B88A55" stroke-width="2"/>`; }
   g += `<rect y="118" width="1300" height="10" fill="#C9A26E"/><rect y="138" width="1300" height="10" fill="#C9A26E"/><rect x="610" y="150" width="80" height="750" fill="#E8D3AE"/><rect y="505" width="1300" height="60" fill="#E8D3AE"/>`;
   YEAR_ORDER.forEach((se, i) => { const x = i % 2 ? 710 : 20, y = i < 2 ? 165 : 580, fl = flowers.filter(f => f.season === se);
-    g += `<g transform="translate(${x},${y}) scale(.95)"><clipPath id="gy${year}${i}"><rect width="600" height="330" rx="28"/></clipPath><g clip-path="url(#gy${year}${i})">${fl.length || (cur && cur.season === se) ? parterreArt(se, fl, cur && cur.season === se) : `<rect width="600" height="330" fill="#E9F1E3"/><text x="300" y="175" text-anchor="middle" font-family="sans-serif" font-size="30" fill="#8FA585">Parterre ${SEASON_NAME[se]}</text>`}</g></g>`; });
-  g += `<g transform="translate(650 42)"><rect x="-290" y="-30" width="580" height="64" rx="14" fill="#8A5A34"/><rect x="-282" y="-23" width="564" height="50" rx="10" fill="#B07A4C"/><text x="0" y="12" text-anchor="middle" font-family="sans-serif" font-size="28" font-weight="bold" fill="#FFF6E6">${esc("Le jardin de " + name + " " + year)}</text></g>`;
-  return `<svg viewBox="0 0 1300 900" role="img" aria-label="${esc("Jardin " + year)}">${g}</svg>`;
+    g += `<g transform="translate(${x},${y}) scale(.95)"><clipPath id="gy${year}${i}"><rect width="600" height="330" rx="28"/></clipPath><g clip-path="url(#gy${year}${i})">${fl.length || (cur && cur.season === se) ? parterreArt(se, fl, cur && cur.season === se) : `<rect width="600" height="330" fill="#E9F1E3"/><text x="300" y="175" text-anchor="middle" font-family="sans-serif" font-size="30" fill="#8FA585">${esc(t("garden.bedOf", { season: SEASON_NAME[se] }))}</text>`}</g></g>`; });
+  g += `<g transform="translate(650 42)"><rect x="-290" y="-30" width="580" height="64" rx="14" fill="#8A5A34"/><rect x="-282" y="-23" width="564" height="50" rx="10" fill="#B07A4C"/><text x="0" y="12" text-anchor="middle" font-family="sans-serif" font-size="28" font-weight="bold" fill="#FFF6E6">${esc(t("garden.gardenOfYear", { name, year }))}</text></g>`;
+  return `<svg viewBox="0 0 1300 900" role="img" aria-label="${esc(t("garden.gardenYear", { year }))}">${g}</svg>`;
 }
 /* Quinzaine en cours */
 function gardenNow(gd) {
@@ -553,9 +624,9 @@ function dots14(gd) {
   for (let i = 0; i < (gd.period_len || 14); i++) { const day = addDays(gd.period_start, i), d = map[day];
     const cls = day > gd.today ? "future" : !d ? "future" : (d.paused || d.due === 0) ? "neutral" : d.good ? "good" : day === gd.today ? "today" : "miss";
     h += `<span class="d14 ${cls} ${day === gd.today ? "today" : ""}" title="${fmtDay(day)}"></span>`; }
-  return `<div class="days14" aria-label="Jours de la quinzaine">${h}</div>`;
+  return `<div class="days14" aria-label="${t("garden.fortnightDays")}">${h}</div>`;
 }
-const fmtLong = s => parseISO(s).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+const fmtLong = s => parseISO(s).toLocaleDateString(loc(), { weekday: "long", day: "numeric", month: "long" });
 
 /* ================= Calculs ================= */
 function dueOn(routines, childId, day, comps) {
@@ -570,45 +641,50 @@ function dueOn(routines, childId, day, comps) {
   });
 }
 const isOneoff = r => r.kind === "oneoff";
-const oneoffNote = r => r.start_day === r.end_day ? "Exceptionnelle" : `Exceptionnelle, avant ${fmtLong(r.end_day)}`;
+const oneoffNote = r => r.start_day === r.end_day ? t("oneoff.note") : t("oneoff.noteBefore", { date: fmtLong(r.end_day) });
+// Modèles : le titre est lu dans la langue courante (propriété « t »)
+const L = (key, o) => Object.defineProperty(o, "t", { get: () => t(key), enumerable: true });
 const TPL_X = [
-  { t: "Préparer sa valise", e: "🧳", s: 2, m: "journee" }, { t: "Ranger sa chambre à fond", e: "🧹", s: 3, m: "journee" },
-  { t: "Préparer son sac de piscine", e: "🏊", s: 1, m: "matin" }, { t: "Mettre la table pour les invités", e: "🍽️", s: 2, m: "soir" },
-  { t: "Aider à porter les courses", e: "🛒", s: 1, m: "journee" }, { t: "Aider à cuisiner", e: "🧑‍🍳", s: 2, m: "soir" },
-  { t: "Trier ses jouets à donner", e: "🧸", s: 3, m: "journee" }, { t: "Faire une carte d'anniversaire", e: "🎂", s: 2, m: "journee" },
-  { t: "Arroser le jardin", e: "🪴", s: 1, m: "soir" }, { t: "Ranger le coffre de la voiture", e: "🚗", s: 1, m: "journee" }
+  L("tpl.x.suitcase", { e: "🧳", s: 2, m: "journee" }), L("tpl.x.deepClean", { e: "🧹", s: 3, m: "journee" }),
+  L("tpl.x.poolBag", { e: "🏊", s: 1, m: "matin" }), L("tpl.x.tableGuests", { e: "🍽️", s: 2, m: "soir" }),
+  L("tpl.x.groceries", { e: "🛒", s: 1, m: "journee" }), L("tpl.x.cook", { e: "🧑‍🍳", s: 2, m: "soir" }),
+  L("tpl.x.sortToys", { e: "🧸", s: 3, m: "journee" }), L("tpl.x.birthdayCard", { e: "🎂", s: 2, m: "journee" }),
+  L("tpl.x.waterGarden", { e: "🪴", s: 1, m: "soir" }), L("tpl.x.carBoot", { e: "🚗", s: 1, m: "journee" })
 ];
 const B = (k, e, n, c, field, target) => ({ k, e, n, c, ok: s => (typeof target === "number" ? (s[field] || 0) >= target : !!s[field]), p: typeof target === "number" ? s => [Math.min(s[field] || 0, target), target] : null });
 const SERIES = (c, field, key, name, list) => list.map(([n, e], i) => B(i === 0 && key.first ? key.first : key.p + n, e, name(n), c, field, n));
-const BADGES = [
-  ...SERIES("Routines", "done", { p: "r", first: "first" }, n => n === 1 ? "Première routine" : `${n.toLocaleString("fr-FR")} routines`,
+// Badges : 1 ou n (le premier palier a souvent un nom à part)
+const bn = (k, n) => n === 1 && lget(I18N.fr, `badge.${k}.first`) != null ? t(`badge.${k}.first`) : t(`badge.${k}.n`, { n });
+let BADGES = [];
+const buildBadges = () => [
+  ...SERIES("routines", "done", { p: "r", first: "first" }, n => bn("routines", n),
     [[1, "🌱"], [10, "🌿"], [50, "🪴"], [100, "🌳"], [250, "🌲"], [500, "🏔️"], [1000, "🚀"], [2500, "🛰️"], [5000, "🌍"], [10000, "🌌"], [15000, "👑"]]),
-  ...SERIES("Étoiles", "earned", { p: "s" }, n => `${n.toLocaleString("fr-FR")} étoiles`,
+  ...SERIES("stars", "earned", { p: "s" }, n => bn("stars", n),
     [[25, "⭐"], [100, "🌟"], [250, "✨"], [500, "💫"], [1000, "🌠"], [2500, "☄️"], [5000, "🌙"], [10000, "🪐"], [15000, "🏅"]]),
-  ...SERIES("Régularité", "best", { p: "st" }, n => `${n} bonnes journées de suite`,
+  ...SERIES("regularity", "best", { p: "st" }, n => bn("streak", n),
     [[3, "🔥"], [7, "☀️"], [14, "🌈"], [30, "🏆"], [60, "🥇"], [100, "💯"], [200, "🎖️"], [365, "📅"], [500, "🏛️"]]),
-  ...SERIES("Jardin", "flowers", { p: "f" }, n => n === 1 ? "Première fleur" : `${n} fleurs`, [[1, "🌼"], [5, "💐"], [10, "🌺"], [25, "🌸"], [50, "🏵️"], [75, "🌷"]]),
-  ...SERIES("Jardin", "bigCount", { p: "big", first: "big" }, n => n === 1 ? "Une grande fleur" : `${n} grandes fleurs`, [[1, "🌻"], [5, "🌻"], [10, "🌻"], [25, "🌻"], [50, "🌻"]]),
-  ...SERIES("Jardin", "parterres", { p: "parterre", first: "parterre" }, n => n === 1 ? "Premier parterre" : `${n} parterres`, [[1, "🏡"], [5, "🏘️"], [10, "🌳"], [15, "🏞️"]]),
-  B("p_printemps", "🦋", "Parterre du printemps", "Jardin", "p_printemps"), B("p_ete", "🐝", "Parterre de l'été", "Jardin", "p_ete"),
-  B("p_automne", "🍂", "Parterre de l'automne", "Jardin", "p_automne"), B("p_hiver", "❄️", "Parterre de l'hiver", "Jardin", "p_hiver"),
-  ...SERIES("Jardin", "jardins", { p: "jardin", first: "jardin" }, n => n === 1 ? "Premier jardin" : `${n} jardins`, [[1, "🏞️"], [2, "🗺️"], [5, "🏰"]]),
-  B("parfait", "💎", "Parterre parfait (6 grandes fleurs)", "Jardin", "parfait", 1), B("jcomplet", "🌍", "Jardin complet (4 saisons)", "Jardin", "jcomplet", 1),
-  ...SERIES("Défis", "timers", { p: "timer", first: "timer" }, n => n === 1 ? "Défi chrono réussi" : `${n} défis chrono`, [[1, "⚡"], [10, "⏱️"], [50, "🏎️"]]),
-  ...SERIES("Défis", "bonus", { p: "bonus", first: "bonus" }, n => n === 1 ? "Routine bonus" : `${n} routines bonus`, [[1, "💪"], [10, "🦾"], [50, "🦸"]]),
-  ...SERIES("Défis", "oneoff", { p: "oneoff" }, n => n === 1 ? "Routine exceptionnelle" : `${n} routines exceptionnelles`, [[1, "🎯"], [10, "🏹"], [25, "🧭"]]),
-  ...SERIES("Défis", "matin", { p: "matin", first: "matin" }, n => n === 1 ? "Matin parfait" : `${n} matins parfaits`, [[1, "🌅"], [10, "🐓"], [50, "🌄"]]),
-  ...SERIES("Défis", "soir", { p: "soir", first: "soir" }, n => n === 1 ? "Soir parfait" : `${n} soirs parfaits`, [[1, "🌙"], [10, "🦉"], [50, "🌜"]]),
-  ...SERIES("Défis", "full", { p: "full" }, n => n === 1 ? "Journée à 100 %, bonus compris" : `${n} journées à 100 %`, [[1, "✅"], [10, "🎆"]]),
-  ...SERIES("Défis", "weekends", { p: "we" }, n => n === 1 ? "Week-end parfait" : `${n} week-ends parfaits`, [[1, "🎈"], [10, "🎉"]]),
-  B("week1", "🗓️", "Semaine parfaite", "Défis", "weeks", 1),
-  ...SERIES("Épargne", "balance", { p: "save" }, n => `${n.toLocaleString("fr-FR")} étoiles de côté`, [[50, "🐷"], [100, "🪙"], [250, "💰"], [500, "🏦"], [1000, "🗝️"]]),
-  ...SERIES("Épargne", "sortie", { p: "sortie" }, n => n === 1 ? "Première sortie gagnée" : `${n} sorties gagnées`, [[1, "🎟️"], [5, "🎪"]]),
-  ...SERIES("Épargne", "grand", { p: "grand" }, n => n === 1 ? "Premier grand projet" : `${n} grands projets`, [[1, "🎁"], [3, "🏰"]]),
-  ...SERIES("Épargne", "patience", { p: "patience" }, n => `${n} jours d'économies`, [[30, "⏳"], [90, "🐢"]]),
-  ...SERIES("Sérénité", "calm", { p: "calme" }, n => `${n} jours sans étoile cassée`, [[7, "🕊️"], [14, "🍃"], [30, "🧘"], [60, "🌊"], [100, "⛰️"], [200, "🌤️"], [365, "🌞"], [500, "🏝️"]])
+  ...SERIES("garden", "flowers", { p: "f" }, n => bn("flowers", n), [[1, "🌼"], [5, "💐"], [10, "🌺"], [25, "🌸"], [50, "🏵️"], [75, "🌷"]]),
+  ...SERIES("garden", "bigCount", { p: "big", first: "big" }, n => bn("bigFlowers", n), [[1, "🌻"], [5, "🌻"], [10, "🌻"], [25, "🌻"], [50, "🌻"]]),
+  ...SERIES("garden", "parterres", { p: "parterre", first: "parterre" }, n => bn("beds", n), [[1, "🏡"], [5, "🏘️"], [10, "🌳"], [15, "🏞️"]]),
+  B("p_printemps", "🦋", t("badge.bedSeason", { season: SEASON_NAME.printemps }), "garden", "p_printemps"), B("p_ete", "🐝", t("badge.bedSeason", { season: SEASON_NAME.ete }), "garden", "p_ete"),
+  B("p_automne", "🍂", t("badge.bedSeason", { season: SEASON_NAME.automne }), "garden", "p_automne"), B("p_hiver", "❄️", t("badge.bedSeason", { season: SEASON_NAME.hiver }), "garden", "p_hiver"),
+  ...SERIES("garden", "jardins", { p: "jardin", first: "jardin" }, n => bn("gardens", n), [[1, "🏞️"], [2, "🗺️"], [5, "🏰"]]),
+  B("parfait", "💎", t("badge.perfectBed"), "garden", "parfait", 1), B("jcomplet", "🌍", t("badge.fullGarden"), "garden", "jcomplet", 1),
+  ...SERIES("challenges", "timers", { p: "timer", first: "timer" }, n => bn("timers", n), [[1, "⚡"], [10, "⏱️"], [50, "🏎️"]]),
+  ...SERIES("challenges", "bonus", { p: "bonus", first: "bonus" }, n => bn("bonus", n), [[1, "💪"], [10, "🦾"], [50, "🦸"]]),
+  ...SERIES("challenges", "oneoff", { p: "oneoff" }, n => bn("oneoff", n), [[1, "🎯"], [10, "🏹"], [25, "🧭"]]),
+  ...SERIES("challenges", "matin", { p: "matin", first: "matin" }, n => bn("mornings", n), [[1, "🌅"], [10, "🐓"], [50, "🌄"]]),
+  ...SERIES("challenges", "soir", { p: "soir", first: "soir" }, n => bn("evenings", n), [[1, "🌙"], [10, "🦉"], [50, "🌜"]]),
+  ...SERIES("challenges", "full", { p: "full" }, n => bn("fullDays", n), [[1, "✅"], [10, "🎆"]]),
+  ...SERIES("challenges", "weekends", { p: "we" }, n => bn("weekends", n), [[1, "🎈"], [10, "🎉"]]),
+  B("week1", "🗓️", t("badge.perfectWeek"), "challenges", "weeks", 1),
+  ...SERIES("savings", "balance", { p: "save" }, n => bn("saved", n), [[50, "🐷"], [100, "🪙"], [250, "💰"], [500, "🏦"], [1000, "🗝️"]]),
+  ...SERIES("savings", "sortie", { p: "sortie" }, n => bn("outings", n), [[1, "🎟️"], [5, "🎪"]]),
+  ...SERIES("savings", "grand", { p: "grand" }, n => bn("bigProjects", n), [[1, "🎁"], [3, "🏰"]]),
+  ...SERIES("savings", "patience", { p: "patience" }, n => bn("patience", n), [[30, "⏳"], [90, "🐢"]]),
+  ...SERIES("serenity", "calm", { p: "calme" }, n => bn("calm", n), [[7, "🕊️"], [14, "🍃"], [30, "🧘"], [60, "🌊"], [100, "⛰️"], [200, "🌤️"], [365, "🌞"], [500, "🏝️"]])
 ];
-const BADGE_CATS = ["Routines", "Étoiles", "Régularité", "Jardin", "Défis", "Épargne", "Sérénité"];
+const BADGE_CATS = ["routines", "stars", "regularity", "garden", "challenges", "savings", "serenity"];
 function computeView({ child, routines, completions, stats, badges, garden, penalties, oneoffDone }) {
   const t = todayISO();
   const mine = routines.filter(r => r.child_id === child.id);
@@ -666,41 +742,43 @@ function brokenStar(s = 20) {
 
 /* ================= Modèles ================= */
 const TPL_R = [
-  { t: "Faire son lit", e: "🛏️", m: "matin", p: "Chambre" },
-  { t: "S'habiller", e: "👕", m: "matin", p: "Chambre" },
-  { t: "Prendre son petit-déjeuner", e: "🥣", m: "matin", p: "Cuisine" },
-  { t: "Se brosser les dents (matin)", e: "🪥", m: "matin", p: "Salle de bain", tm: 2 },
-  { t: "Se laver le visage", e: "🧼", m: "matin", p: "Salle de bain" },
-  { t: "Se coiffer", e: "💇", m: "matin", p: "Salle de bain" },
-  { t: "Mettre ses chaussures", e: "👟", m: "matin", p: "Entrée", tm: 3 },
-  { t: "Préparer son cartable", e: "🎒", m: "matin", p: "Entrée", d: [1, 2, 3, 4, 5] },
-  { t: "Se laver les mains", e: "🧼", m: "midi", p: "Salle de bain" },
-  { t: "Mettre le couvert", e: "🍽️", m: "midi", p: "Cuisine", s: 2 },
-  { t: "Débarrasser son assiette", e: "🍽️", m: "midi", p: "Cuisine" },
-  { t: "Ranger ses jouets", e: "🧸", m: "journee", p: "Chambre", s: 2, tm: 10 },
-  { t: "Faire ses devoirs", e: "✏️", m: "journee", p: "Chambre", d: [1, 2, 4, 5], s: 2 },
-  { t: "Lire un livre", e: "📚", m: "journee", p: "Salon", b: true },
-  { t: "Arroser les plantes", e: "🪴", m: "journee", p: "Salon", b: true },
-  { t: "Nourrir l'animal", e: "🐟", m: "journee", p: "Cuisine" },
-  { t: "Prendre son bain", e: "🛁", m: "soir", p: "Salle de bain" },
-  { t: "Mettre son pyjama", e: "🌙", m: "soir", p: "Chambre", tm: 5 },
-  { t: "Se brosser les dents (soir)", e: "🪥", m: "soir", p: "Salle de bain", tm: 2 },
-  { t: "Mettre le linge sale au panier", e: "🧺", m: "soir", p: "Salle de bain" },
-  { t: "Préparer ses habits pour demain", e: "👕", m: "soir", p: "Chambre" },
-  { t: "Aller aux toilettes avant le dodo", e: "🚽", m: "soir", p: "Salle de bain" }
+  L("tpl.r.bed", { e: "🛏️", m: "matin", p: 0 }),
+  L("tpl.r.dress", { e: "👕", m: "matin", p: 0 }),
+  L("tpl.r.breakfast", { e: "🥣", m: "matin", p: 2 }),
+  L("tpl.r.teethMorning", { e: "🪥", m: "matin", p: 1, tm: 2 }),
+  L("tpl.r.face", { e: "🧼", m: "matin", p: 1 }),
+  L("tpl.r.hair", { e: "💇", m: "matin", p: 1 }),
+  L("tpl.r.shoes", { e: "👟", m: "matin", p: 4, tm: 3 }),
+  L("tpl.r.schoolbag", { e: "🎒", m: "matin", p: 4, d: "work" }),
+  L("tpl.r.hands", { e: "🧼", m: "midi", p: 1 }),
+  L("tpl.r.setTable", { e: "🍽️", m: "midi", p: 2, s: 2 }),
+  L("tpl.r.clearPlate", { e: "🍽️", m: "midi", p: 2 }),
+  L("tpl.r.toys", { e: "🧸", m: "journee", p: 0, s: 2, tm: 10 }),
+  L("tpl.r.homework", { e: "✏️", m: "journee", p: 0, d: "homework", s: 2 }),
+  L("tpl.r.read", { e: "📚", m: "journee", p: 3, b: true }),
+  L("tpl.r.plants", { e: "🪴", m: "journee", p: 3, b: true }),
+  L("tpl.r.pet", { e: "🐟", m: "journee", p: 2 }),
+  L("tpl.r.bath", { e: "🛁", m: "soir", p: 1 }),
+  L("tpl.r.pyjamas", { e: "🌙", m: "soir", p: 0, tm: 5 }),
+  L("tpl.r.teethEvening", { e: "🪥", m: "soir", p: 1, tm: 2 }),
+  L("tpl.r.laundry", { e: "🧺", m: "soir", p: 1 }),
+  L("tpl.r.clothesTomorrow", { e: "👕", m: "soir", p: 0 }),
+  L("tpl.r.toilet", { e: "🚽", m: "soir", p: 1 })
 ];
-const TIERS = [["coup", "Coup de pouce", "pour les 3-5 ans, environ 1 jour"], ["petit", "Petits plaisirs", "2 à 4 jours"], ["moment", "Moments partagés", "1 à 2 semaines"],
-  ["sortie", "Sorties", "environ 1 mois"], ["grand", "Grands projets", "environ 3 mois"], ["event", "Événements", "à une date précise"]];
+// Jours d'un modèle : « work » = jours d'école de la famille ; « homework » = idem sans le jour d'école court (mercredi en France)
+const tplDays = d => !d ? [1, 2, 3, 4, 5, 6, 7] : d === "work" ? workDays() : workDays().filter(x => !(WEEK.start === 1 && WEEK.weekend.join() === "6,7" && x === 3));
+const TIER_K = ["coup", "petit", "moment", "sortie", "grand", "event"];
+const TIERS = () => TIER_K.map(k => [k, t(`tier.${k}.name`), t(`tier.${k}.hint`)]);
 const TIER_DAYS = { coup: 1, petit: 3, moment: 10, sortie: 30, grand: 90, event: 30 };
 const TPL_W = [
-  { t: "Une histoire de plus", e: "📖", tier: "coup", d: 1 }, { t: "Choisir la musique en voiture", e: "🎵", tier: "coup", d: 1 }, { t: "Un autocollant", e: "⭐", tier: "coup", d: 1 },
-  { t: "Une partie de jeu avec papa ou maman", e: "🎲", tier: "petit", d: 2 }, { t: "Choisir le dessert", e: "🍽️", tier: "petit", d: 2 },
-  { t: "Bain moussant avec jouets", e: "🛁", tier: "petit", d: 3 }, { t: "15 minutes de coucher plus tard", e: "⏰", tier: "petit", d: 3 }, { t: "Un dessin animé en plus", e: "📺", tier: "petit", d: 4 },
-  { t: "Atelier dessin ou peinture ensemble", e: "🎨", tier: "moment", d: 7 }, { t: "Faire un gâteau ensemble", e: "🧁", tier: "moment", d: 7 },
-  { t: "Choisir le repas du soir", e: "🍕", tier: "moment", d: 10 }, { t: "Cabane dans le salon", e: "🏕️", tier: "moment", d: 10 }, { t: "Soirée film en famille", e: "🎬", tier: "moment", d: 14 },
-  { t: "Pique-nique au parc", e: "🧺", tier: "sortie", d: 21 }, { t: "Sortie à la médiathèque avec goûter", e: "📚", tier: "sortie", d: 21 },
-  { t: "Après-midi à la piscine", e: "🏊", tier: "sortie", d: 30 }, { t: "Visite d'une ferme pédagogique", e: "🐐", tier: "sortie", d: 30 },
-  { t: "Un jouet ou équipement choisi", e: "🚲", tier: "grand", d: 90 }, { t: "Journée parc d'attractions", e: "🎢", tier: "grand", d: 90 }, { t: "Une journée « c'est moi qui décide »", e: "👑", tier: "grand", d: 90 }
+  L("tpl.w.story", { e: "📖", tier: "coup", d: 1 }), L("tpl.w.music", { e: "🎵", tier: "coup", d: 1 }), L("tpl.w.sticker", { e: "⭐", tier: "coup", d: 1 }),
+  L("tpl.w.game", { e: "🎲", tier: "petit", d: 2 }), L("tpl.w.dessert", { e: "🍽️", tier: "petit", d: 2 }),
+  L("tpl.w.bubbleBath", { e: "🛁", tier: "petit", d: 3 }), L("tpl.w.lateBed", { e: "⏰", tier: "petit", d: 3 }), L("tpl.w.cartoon", { e: "📺", tier: "petit", d: 4 }),
+  L("tpl.w.art", { e: "🎨", tier: "moment", d: 7 }), L("tpl.w.cake", { e: "🧁", tier: "moment", d: 7 }),
+  L("tpl.w.dinner", { e: "🍕", tier: "moment", d: 10 }), L("tpl.w.hut", { e: "🏕️", tier: "moment", d: 10 }), L("tpl.w.movie", { e: "🎬", tier: "moment", d: 14 }),
+  L("tpl.w.picnic", { e: "🧺", tier: "sortie", d: 21 }), L("tpl.w.library", { e: "📚", tier: "sortie", d: 21 }),
+  L("tpl.w.pool", { e: "🏊", tier: "sortie", d: 30 }), L("tpl.w.farm", { e: "🐐", tier: "sortie", d: 30 }),
+  L("tpl.w.toy", { e: "🚲", tier: "grand", d: 90 }), L("tpl.w.themePark", { e: "🎢", tier: "grand", d: 90 }), L("tpl.w.myDay", { e: "👑", tier: "grand", d: 90 })
 ];
 const TIER_RANK = { coup: 0, petit: 1, moment: 2, sortie: 3, grand: 4, event: 3 };
 function rhythmOf(childId) {
@@ -711,16 +789,16 @@ function rhythmOf(childId) {
 function roundPrice(x) { if (x < 20) return Math.max(1, Math.round(x)); if (x < 100) return Math.round(x / 5) * 5; if (x < 500) return Math.round(x / 10) * 10; return Math.round(x / 50) * 50; }
 const stepOf = p => p < 20 ? 1 : p < 100 ? 5 : p < 500 ? 10 : 50;
 const costFor = (w, childId) => (w.costs && w.costs[childId] != null) ? +w.costs[childId] : w.cost;
-const daysLabelFor = (cost, childId) => { const d = Math.max(1, Math.round(cost / rhythmOf(childId))); return d < 14 ? `≈ ${d} jour${d > 1 ? "s" : ""}` : d < 60 ? `≈ ${Math.round(d / 7)} semaines` : `≈ ${Math.round(d / 30)} mois`; };
+const daysLabelFor = (cost, childId) => { const d = Math.max(1, Math.round(cost / rhythmOf(childId))); return d < 14 ? t("effort.days", { n: d }) : d < 60 ? t("effort.weeks", { n: Math.round(d / 7) }) : t("effort.months", { n: Math.round(d / 30) }); };
 function pricesFor(days, childIds) { const o = {}; childIds.forEach(id => o[id] = roundPrice(days * rhythmOf(id))); return o; }
 
 const TPL_P = [
-  { t: "Refus de ranger après plusieurs rappels", e: "😤", s: 1 },
-  { t: "Gros mot", e: "🗯️", s: 1 },
-  { t: "Dispute avec frère ou sœur", e: "😠", s: 1 },
-  { t: "Ne pas écouter", e: "🙉", s: 1 },
-  { t: "Geste brusque", e: "✋", s: 2 },
-  { t: "Mensonge", e: "🤥", s: 2 }
+  L("tpl.p.tidyRefusal", { e: "😤", s: 1 }),
+  L("tpl.p.swear", { e: "🗯️", s: 1 }),
+  L("tpl.p.sibling", { e: "😠", s: 1 }),
+  L("tpl.p.notListening", { e: "🙉", s: 1 }),
+  L("tpl.p.rough", { e: "✋", s: 2 }),
+  L("tpl.p.lie", { e: "🤥", s: 2 })
 ];
 
 /* ================= Feuille / dialogues ================= */
@@ -730,7 +808,7 @@ function closeSheet() { if (dlg.open) dlg.close(); }
 dlg.addEventListener("click", e => { if (e.target === dlg) closeSheet(); });
 function confirmSheet(title, text, okLabel, danger = false) {
   return new Promise(res => {
-    openSheet(`<h2>${esc(title)}</h2><p>${esc(text)}</p><div class="sheet-actions"><button class="btn ghost" id="c-no">Annuler</button><button class="btn ${danger ? "danger" : ""}" id="c-yes">${esc(okLabel)}</button></div>`);
+    openSheet(`<h2>${esc(title)}</h2><p>${esc(text)}</p><div class="sheet-actions"><button class="btn ghost" id="c-no">${t("btn.cancel")}</button><button class="btn ${danger ? "danger" : ""}" id="c-yes">${esc(okLabel)}</button></div>`);
     $("#c-no").onclick = () => { closeSheet(); res(false); };
     $("#c-yes").onclick = () => { closeSheet(); res(true); };
     dlg.addEventListener("close", () => res(false), { once: true });
@@ -780,56 +858,58 @@ function render() {
   else if (s === "onboard") renderOnboard();
   else if (s === "parent") renderParent();
   else if (s === "child") renderChild();
-  else if (s === "error") app.innerHTML = `<main class="wrap"><div class="card center"><h2>Impossible de charger</h2><p>${esc(S.err)}</p><button class="btn" data-act="reload">Réessayer</button></div></main>`;
+  else if (s === "error") app.innerHTML = `<main class="wrap"><div class="card center"><h2>${t("error.title")}</h2><p>${esc(S.err)}</p><button class="btn" data-act="reload">${t("btn.retry")}</button></div></main>`;
 }
 
 /* ---------- Connexion ---------- */
 let installEvt = null;
 window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; if (S.screen === "auth" || (S.screen === "parent" && S.tab === "family")) render(); });
-const installBtn = () => installEvt ? `<button class="btn ghost wide" data-act="install">Installer l'application sur ce téléphone</button>` : "";
+const installBtn = () => installEvt ? `<button class="btn ghost wide" data-act="install">${t("auth.install")}</button>` : "";
 function renderAuth() {
   const m = S.authMode;
-  app.innerHTML = `<main class="wrap auth"><a class="help help-float" href="guide/" aria-label="Mode d'emploi">?</a>
-    <div class="auth-hero">${plantSVG(4, "#E8484F", "SoisFier")}<h1>SoisFier</h1><p>Les routines des enfants, une étoile à la fois.</p></div>
+  app.innerHTML = `<main class="wrap auth"><a class="help help-float" href="guide/" aria-label="${t("help")}">?</a>
+    <div class="auth-hero">${plantSVG(4, "#E8484F", "SoisFier")}<h1>SoisFier</h1><p>${t("auth.tagline")}</p></div>
     <div class="seg wide" role="tablist">
-      <button role="tab" aria-selected="${m === "login"}" class="${m === "login" ? "on" : ""}" data-act="authMode" data-v="login">Connexion</button>
-      <button role="tab" aria-selected="${m === "signup"}" class="${m === "signup" ? "on" : ""}" data-act="authMode" data-v="signup">Créer un compte</button>
+      <button role="tab" aria-selected="${m === "login"}" class="${m === "login" ? "on" : ""}" data-act="authMode" data-v="login">${t("auth.login")}</button>
+      <button role="tab" aria-selected="${m === "signup"}" class="${m === "signup" ? "on" : ""}" data-act="authMode" data-v="signup">${t("auth.signup")}</button>
     </div>
     <form class="card" novalidate>
-      ${m === "signup" ? `<label class="f">Ton prénom<input id="a-name" autocomplete="given-name" maxlength="40"></label>` : ""}
-      <label class="f">E-mail<input id="a-email" type="email" autocomplete="email" inputmode="email" required></label>
-      <label class="f">Mot de passe<input id="a-pass" type="password" minlength="6" autocomplete="${m === "signup" ? "new-password" : "current-password"}" required></label>
-      <button class="btn wide" data-act="${m === "signup" ? "signup" : "login"}">${m === "signup" ? "Créer mon compte" : "Me connecter"}</button>
-      ${m === "login" ? `<p class="center"><button class="link" data-act="forgot">Mot de passe oublié</button></p>` : ""}
+      ${m === "signup" ? `<label class="f">${t("auth.firstName")}<input id="a-name" autocomplete="given-name" maxlength="40"></label>` : ""}
+      <label class="f">${t("auth.email")}<input id="a-email" type="email" autocomplete="email" inputmode="email" required></label>
+      <label class="f">${t("auth.password")}<input id="a-pass" type="password" minlength="6" autocomplete="${m === "signup" ? "new-password" : "current-password"}" required></label>
+      <button class="btn wide" data-act="${m === "signup" ? "signup" : "login"}">${m === "signup" ? t("auth.createAccount") : t("auth.connect")}</button>
+      ${m === "login" ? `<p class="center"><button class="link" data-act="forgot">${t("auth.forgot")}</button></p>` : ""}
     </form>
-    <div class="card alt"><p>Ce téléphone est celui de ton enfant ?</p><button class="btn ghost wide" data-act="goPair">J'ai un code enfant</button></div>
+    <div class="card alt"><p>${t("auth.childPhone")}</p><button class="btn ghost wide" data-act="goPair">${t("auth.haveCode")}</button></div>
     ${installBtn()}
   </main>`;
 }
 function renderPair() {
-  app.innerHTML = `<main class="wrap auth"><div class="auth-hero">${plantSVG(0)}<h1>Code enfant</h1><p>Sur le téléphone d'un parent : Famille, puis « Connecter son appareil ».</p></div>
-    <form class="card" novalidate><label class="f">Code à 6 caractères<input id="p-code" class="pin" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false"></label>
-    <button class="btn wide" data-act="pair">Connecter ce téléphone</button></form>
-    <p class="center"><button class="link" data-act="toAuth">Retour</button></p></main>`;
+  app.innerHTML = `<main class="wrap auth"><div class="auth-hero">${plantSVG(0)}<h1>${t("pair.title")}</h1><p>${t("pair.where")}</p></div>
+    <form class="card" novalidate><label class="f">${t("pair.code")}<input id="p-code" class="pin" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false"></label>
+    <button class="btn wide" data-act="pair">${t("pair.connect")}</button></form>
+    <p class="center"><button class="link" data-act="toAuth">${t("btn.back")}</button></p></main>`;
 }
 function renderOnboard() {
-  app.innerHTML = `<main class="wrap auth"><a class="help help-float" href="guide/" aria-label="Mode d'emploi">?</a><div class="auth-hero">${plantSVG(1)}<h1>Bienvenue</h1><p>Crée l'espace de ta famille, ou rejoins celui de l'autre parent.</p></div>
-    <form class="card" novalidate><h2>Créer ma famille</h2><label class="f">Nom de la famille<input id="o-name" placeholder="Famille Martin" maxlength="40"></label><label class="f">Je suis<select id="o-rel">${RELATIONS.map(r => `<option>${r}</option>`).join("")}</select></label>
-    <button class="btn wide" data-act="createFamily">Créer</button></form>
-    <form class="card" novalidate><h2>Rejoindre une famille</h2><label class="f">Code d'invitation<input id="o-code" class="pin" maxlength="6" autocapitalize="characters" autocomplete="off"></label>
-    <button class="btn ghost wide" data-act="joinFamily">Rejoindre</button></form>
-    <p class="center"><button class="link" data-act="logout">Se déconnecter</button></p></main>`;
+  if (!S.wk) S.wk = detectWeek();
+  app.innerHTML = `<main class="wrap auth"><a class="help help-float" href="guide/" aria-label="${t("help")}">?</a><div class="auth-hero">${plantSVG(1)}<h1>${t("onboard.welcome")}</h1><p>${t("onboard.intro")}</p></div>
+    <form class="card" novalidate><h2>${t("onboard.create")}</h2><label class="f">${t("onboard.familyName")}<input id="o-name" placeholder="${t("onboard.familyPlaceholder")}" maxlength="40"></label><label class="f">${t("onboard.iAm")}<select id="o-rel">${RELATIONS().map(r => `<option>${r}</option>`).join("")}</select></label>
+    <p class="muted small"><span id="o-week">${esc(weekSummary(S.wk))}</span> <button type="button" class="link" data-act="editWeek" data-mode="onboard">${t("btn.edit")}</button></p>
+    <button class="btn wide" data-act="createFamily">${t("btn.create")}</button></form>
+    <form class="card" novalidate><h2>${t("onboard.join")}</h2><label class="f">${t("onboard.inviteCode")}<input id="o-code" class="pin" maxlength="6" autocapitalize="characters" autocomplete="off"></label>
+    <button class="btn ghost wide" data-act="joinFamily">${t("onboard.joinBtn")}</button></form>
+    <p class="center"><button class="link" data-act="logout">${t("btn.logout")}</button></p></main>`;
 }
 
 /* ---------- Membres ---------- */
-const RELATIONS = ["Papa", "Maman", "Papy", "Mamie", "Tonton", "Tata", "Parrain", "Marraine", "Nounou"];
+const RELATIONS = () => t("relations");
 const isParent = () => !S.me || S.me.role !== "helper";
-function memberLabel(uid) { const m = S.members.find(x => x.user_id === uid); return m ? (m.relation || m.display_name || "Un parent") : "Un membre"; }
-function whoValidated(x) { if (!x.validated_at) return ""; return x.validated_by ? memberLabel(x.validated_by) : "validée automatiquement"; }
+function memberLabel(uid) { const m = S.members.find(x => x.user_id === uid); return m ? (m.relation || m.display_name || t("member.aParent")) : t("member.aMember"); }
+function whoValidated(x) { if (!x.validated_at) return ""; return x.validated_by ? memberLabel(x.validated_by) : t("member.autoValidated"); }
 function relationField(cur, idp = "rel") {
-  const known = RELATIONS.includes(cur);
-  return `<label class="f">Lien avec les enfants<select id="${idp}-sel">${RELATIONS.map(r => `<option ${r === cur ? "selected" : ""}>${r}</option>`).join("")}<option value="__autre" ${cur && !known ? "selected" : ""}>Autre…</option></select></label>
-    <label class="f">Libellé personnalisé (facultatif)<input id="${idp}-txt" maxlength="40" placeholder="Mamie Josette, Tonton Karim…" value="${cur && !known ? esc(cur) : ""}"></label>`;
+  const known = RELATIONS().includes(cur);
+  return `<label class="f">${t("member.relation")}<select id="${idp}-sel">${RELATIONS().map(r => `<option ${r === cur ? "selected" : ""}>${r}</option>`).join("")}<option value="__autre" ${cur && !known ? "selected" : ""}>${t("member.otherRel")}</option></select></label>
+    <label class="f">${t("member.customLabel")}<input id="${idp}-txt" maxlength="40" placeholder="${t("member.customPlaceholder")}" value="${cur && !known ? esc(cur) : ""}"></label>`;
 }
 const readRelation = (idp = "rel") => ($("#" + idp + "-txt").value.trim() || ($("#" + idp + "-sel").value === "__autre" ? "" : $("#" + idp + "-sel").value)) || null;
 
@@ -842,133 +922,149 @@ function chips() {
   return `<div class="chips" role="tablist">${S.children.map(c => `<button role="tab" aria-selected="${c.id === S.currentChild}" class="chip ${c.id === S.currentChild ? "on" : ""}" style="--c:${esc(c.color)}" data-act="pickChild" data-id="${c.id}">${esc(c.emoji)} ${esc(c.name)}</button>`).join("")}</div>`;
 }
 function renderParent() {
-  const tabs = [["today", "Aujourd'hui", "☀️"], ["routines", "Routines", "📋"], ["rewards", "Récompenses", "🎁"], ["malus", "Malus", "💔"], ["family", "Famille", "🏡"]].filter(t => isParent() || t[0] !== "routines");
+  const tabs = [["today", t("tab.today"), "☀️"], ["routines", t("tab.routines"), "📋"], ["rewards", t("tab.rewards"), "🎁"], ["malus", t("tab.malus"), "💔"], ["family", t("tab.family"), "🏡"]].filter(x => isParent() || x[0] !== "routines");
   let body;
-  if (!S.children.length && S.tab !== "family") body = `<section class="card center">${plantSVG(0)}<h1>On commence ?</h1><p>Ajoute ton premier enfant. Tu pourras ensuite choisir ses routines parmi des modèles.</p><button class="btn" data-act="newChild">Ajouter un enfant</button></section>`;
+  if (!S.children.length && S.tab !== "family") body = `<section class="card center">${plantSVG(0)}<h1>${t("parent.startTitle")}</h1><p>${t("parent.startText")}</p><button class="btn" data-act="newChild">${t("child.add")}</button></section>`;
   else body = { today: pToday, routines: pRoutines, rewards: pRewards, malus: pMalus, family: pFamily }[S.tab]();
-  app.innerHTML = `<header class="top"><div class="brand">${miniLogo()}<span>${esc(S.family?.name || "SoisFier")}</span></div><div class="top-r">${S.offline ? `<span class="pill">Hors ligne</span>` : ""}<a class="help" href="guide/" aria-label="Mode d'emploi">?</a></div></header>
+  app.innerHTML = `<header class="top"><div class="brand">${miniLogo()}<span>${esc(S.family?.name || "SoisFier")}</span></div><div class="top-r">${S.offline ? `<span class="pill">${t("offline")}</span>` : ""}<a class="help" href="guide/" aria-label="${t("help")}">?</a></div></header>
     <main class="wrap">${body}</main>
-    <nav class="tabbar" aria-label="Navigation">${tabs.map(([k, l, e]) => `<button data-act="tab" data-tab="${k}" class="${S.tab === k ? "on" : ""}" aria-current="${S.tab === k ? "page" : "false"}"><span aria-hidden="true">${e}</span>${l}</button>`).join("")}</nav>`;
+    <nav class="tabbar" aria-label="${t("nav")}">${tabs.map(([k, l, e]) => `<button data-act="tab" data-tab="${k}" class="${S.tab === k ? "on" : ""}" aria-current="${S.tab === k ? "page" : "false"}"><span aria-hidden="true">${e}</span>${l}</button>`).join("")}</nav>`;
 }
 function rowP(c, r, day, v) {
   const k = r.id + "|" + day, d = v.done.has(k), val = v.valid.has(k);
+  const parts = [];
+  if (isOneoff(r)) parts.push("⭐ " + oneoffNote(r));
+  parts.push(momentLabel(r.moment));
+  if (r.is_bonus) parts.push(t("routine.bonus"));
+  if (d && !val) parts.push(t("routine.pending"));
+  if (val) { const x = S.completions.find(y => y.routine_id === r.id && y.day === day); if (x) parts.push("✓ " + esc(whoValidated(x))); }
   return `<li><button class="rt ${val ? "done" : d ? "pending" : ""}" data-act="pToggle" data-child="${c.id}" data-id="${r.id}" aria-pressed="${d}">
     <span class="rt-emo" aria-hidden="true">${esc(r.emoji)}</span>
-    <span class="rt-txt"><b>${esc(r.title)}</b><small>${isOneoff(r) ? "⭐ " + oneoffNote(r) + ", " : ""}${momentLabel(r.moment)}${r.is_bonus ? ", bonus" : ""}${d && !val ? ", en attente de validation" : ""}${val ? (() => { const x = S.completions.find(y => y.routine_id === r.id && y.day === day); return x ? ", ✓ " + esc(whoValidated(x)) : ""; })() : ""}</small></span>
-    <span class="rt-stars">+${r.stars} ⭐</span><span class="pot" aria-hidden="true">${val ? "🌱" : d ? "⏳" : ""}</span></button></li>`;
+    <span class="rt-txt"><b>${esc(r.title)}</b><small>${parts.join(t("sep"))}</small></span>
+    <span class="rt-stars">+${fmtNum(r.stars)} ⭐</span><span class="pot" aria-hidden="true">${val ? "🌱" : d ? "⏳" : ""}</span></button></li>`;
 }
 function pendingBlock() {
   const pend = S.completions.filter(x => !x.validated_at).sort((a, b) => a.day < b.day ? -1 : 1);
   if (!pend.length) return "";
-  return `<section class="validate"><div class="v-head"><h2>À valider</h2><button class="btn sm" data-act="validateAll">Tout valider (${pend.length})</button></div>
+  return `<section class="validate"><div class="v-head"><h2>${t("validate.title")}</h2><button class="btn sm" data-act="validateAll">${t("validate.all", { n: pend.length })}</button></div>
     <ul class="vlist">${pend.map(x => {
-      const r = S.routines.find(y => y.id === x.routine_id) || { title: "Routine supprimée", emoji: "⭐", stars: x.stars };
+      const r = S.routines.find(y => y.id === x.routine_id) || { title: t("routine.deleted"), emoji: "⭐", stars: x.stars };
       const c = S.children.find(y => y.id === x.child_id) || { name: "" };
-      return `<li><span class="rt-emo" aria-hidden="true">${esc(r.emoji)}</span><span class="grow"><b>${esc(r.title)}</b><small>${esc(c.name)}, ${fmtDay(x.day).toLowerCase()}, +${x.stars} ⭐${x.source === "timer" ? ", défi chrono réussi" : ""}, cochée par ${x.created_by ? esc(memberLabel(x.created_by)) : esc(c.name)}</small></span>
-        <button class="vbtn no" data-act="refuseOne" data-id="${x.routine_id}" data-day="${x.day}" aria-label="Refuser">✕</button>
-        <button class="vbtn yes" data-act="validateOne" data-id="${x.routine_id}" data-day="${x.day}" aria-label="Valider">✓</button></li>`;
+      const parts = [esc(c.name), lower(fmtDay(x.day)), `+${fmtNum(x.stars)} ⭐`];
+      if (x.source === "timer") parts.push(t("validate.timer"));
+      parts.push(t("validate.checkedBy", { who: x.created_by ? esc(memberLabel(x.created_by)) : esc(c.name) }));
+      return `<li><span class="rt-emo" aria-hidden="true">${esc(r.emoji)}</span><span class="grow"><b>${esc(r.title)}</b><small>${parts.join(t("sep"))}</small></span>
+        <button class="vbtn no" data-act="refuseOne" data-id="${x.routine_id}" data-day="${x.day}" aria-label="${t("validate.refuse")}">✕</button>
+        <button class="vbtn yes" data-act="validateOne" data-id="${x.routine_id}" data-day="${x.day}" aria-label="${t("btn.validate")}">✓</button></li>`;
     }).join("")}</ul>
-    <p class="muted small">${S.autoValidate ? "Sans action de ta part, elles seront validées automatiquement à minuit." : "Validation automatique désactivée : elles attendent ta décision."}</p></section>`;
+    <p class="muted small">${S.autoValidate ? t("validate.autoOn") : t("validate.autoOff")}</p></section>`;
 }
 function pToday() {
-  const day = S.day, t = todayISO();
-  const nav = `<div class="daynav"><button data-act="dayPrev" aria-label="Jour précédent" ${day <= addDays(t, -6) ? "disabled" : ""}>‹</button><h1>${fmtDay(day)}</h1><button data-act="dayNext" aria-label="Jour suivant" ${day >= t ? "disabled" : ""}>›</button></div>`;
-  const tip = S.tip && day === t ? `<aside class="tip"><span aria-hidden="true">💡</span><p>${esc(S.tip)}</p></aside>` : "";
+  const day = S.day, td = todayISO();
+  const nav = `<div class="daynav"><button data-act="dayPrev" aria-label="${t("day.prev")}" ${day <= addDays(td, -6) ? "disabled" : ""}>‹</button><h1>${fmtDay(day)}</h1><button data-act="dayNext" aria-label="${t("day.next")}" ${day >= td ? "disabled" : ""}>›</button></div>`;
+  const tip = S.tip && day === td ? `<aside class="tip"><span aria-hidden="true">💡</span><p>${esc(S.tip)}</p></aside>` : "";
   const blocks = S.children.map(c => {
     const v = viewFor(c), due = dueOn(S.routines, c.id, day, S.completions);
     const main = due.filter(r => !r.is_bonus), bonus = due.filter(r => r.is_bonus);
     const nd = main.filter(r => v.done.has(r.id + "|" + day)).length;
+    const n = gardenNow(S.gardens[c.id]);
     return `<section class="kid" style="--c:${esc(c.color)}">
-      <div class="kid-head"><button class="kid-plant" data-act="showGarden" data-id="${c.id}" aria-label="Voir le jardin de ${esc(c.name)}" style="border:0;background:none;padding:0">${(() => { const n = gardenNow(S.gardens[c.id]); return n ? stageSVG(n.stage, n.species, c.color) : plantSVG(0, c.color); })()}</button>
-        <div><h2>${esc(c.emoji)} ${esc(c.name)}</h2><p class="meta"><span>⭐ ${v.balance} à dépenser</span>${(() => { const n = gardenNow(S.gardens[c.id]); return !n ? "" : n.waiting ? `<span>🌱 Première fleur à partir de ${fmtLong(n.start)}</span>` : `<span>🌱 Jour ${n.dayIdx}/${n.len}, ${n.good} bonne${n.good > 1 ? "s" : ""} journée${n.good > 1 ? "s" : ""}</span>`; })()}${v.current > 1 ? `<span>🔥 ${v.current} de suite</span>` : ""}</p></div>
-        <div class="ring" style="--p:${main.length ? Math.round(nd / main.length * 100) : 0}" aria-label="${nd} routines faites sur ${main.length}"><span>${nd}/${main.length}</span></div></div>
+      <div class="kid-head"><button class="kid-plant" data-act="showGarden" data-id="${c.id}" aria-label="${t("garden.see", { name: esc(c.name) })}" style="border:0;background:none;padding:0">${n ? stageSVG(n.stage, n.species, c.color) : plantSVG(0, c.color)}</button>
+        <div><h2>${esc(c.emoji)} ${esc(c.name)}</h2><p class="meta"><span>⭐ ${t("parent.toSpend", { n: v.balance })}</span>${!n ? "" : n.waiting ? `<span>🌱 ${t("garden.firstFrom", { date: fmtLong(n.start) })}</span>` : `<span>🌱 ${t("garden.dayOf", { d: n.dayIdx, len: n.len })}${t("sep")}${t("garden.goodDays", { n: n.good })}</span>`}${v.current > 1 ? `<span>🔥 ${t("parent.inARow", { n: v.current })}</span>` : ""}</p></div>
+        <div class="ring" style="--p:${main.length ? Math.round(nd / main.length * 100) : 0}" aria-label="${t("parent.doneOf", { n: nd, total: main.length })}"><span>${fmtNum(nd)}/${fmtNum(main.length)}</span></div></div>
       ${due.length ? `<ul class="rlist">${[...due.filter(isOneoff), ...main.filter(r => !isOneoff(r)), ...bonus.filter(r => !isOneoff(r))].map(r => rowP(c, r, day, v)).join("")}</ul>`
-        : `<p class="empty">Rien de prévu ce jour-là.${isParent() ? ` <button class="link" data-act="tab" data-tab="routines" data-child="${c.id}">Ajouter des routines</button>` : ""}</p>`}
-      ${day === t ? `<div class="actions" style="margin:10px 0 0"><button class="btn sm ghost" data-act="newOneoff" data-child="${c.id}">+ Routine exceptionnelle</button></div>` : ""}
+        : `<p class="empty">${t("parent.nothing")}${isParent() ? ` <button class="link" data-act="tab" data-tab="routines" data-child="${c.id}">${t("parent.addRoutines")}</button>` : ""}</p>`}
+      ${day === td ? `<div class="actions" style="margin:10px 0 0"><button class="btn sm ghost" data-act="newOneoff" data-child="${c.id}">+ ${t("oneoff.btn")}</button></div>` : ""}
     </section>`;
   }).join("");
-  return nav + (day === t ? pendingBlock() : "") + tip + blocks;
+  return nav + (day === td ? pendingBlock() : "") + tip + blocks;
 }
 function pRoutines() {
   const c = curChild(), t0 = todayISO(); const list = S.routines.filter(r => r.child_id === c.id && !isOneoff(r));
   const oneoffs = S.routines.filter(r => r.child_id === c.id && isOneoff(r) && r.end_day >= t0).sort((a, b) => a.start_day < b.start_day ? -1 : 1);
-  const extra = `<h3 class="grp">⭐ Exceptionnelles en cours ou à venir</h3>${oneoffs.length ? `<ul class="hist">${oneoffs.map(r => `<li><span>${esc(r.emoji)} ${esc(r.title)}</span><span class="muted">${r.start_day === r.end_day ? fmtDate(r.start_day) : "avant le " + fmtDate(r.end_day)}${r.is_bonus ? ", bonus" : ", obligatoire"}</span><button class="link" data-act="delOneoff" data-id="${r.id}">Supprimer</button></li>`).join("")}</ul>` : `<p class="muted">Aucune.</p>`}
-    <div class="actions"><button class="btn ghost" data-act="newOneoff" data-child="${c.id}">+ Routine exceptionnelle</button><button class="btn ghost" data-act="manageOneoffTpl">Gérer les modèles</button></div>`;
-  const groups = MOMENTS.map(([k, l, , e]) => {
+  const extra = `<h3 class="grp">⭐ ${t("oneoff.current")}</h3>${oneoffs.length ? `<ul class="hist">${oneoffs.map(r => `<li><span>${esc(r.emoji)} ${esc(r.title)}</span><span class="muted">${r.start_day === r.end_day ? fmtDate(r.start_day) : t("oneoff.beforeShort", { date: fmtDate(r.end_day) })}${t("sep")}${r.is_bonus ? t("routine.bonus") : t("routine.mandatory")}</span><button class="link" data-act="delOneoff" data-id="${r.id}">${t("btn.delete")}</button></li>`).join("")}</ul>` : `<p class="muted">${t("common.none")}</p>`}
+    <div class="actions"><button class="btn ghost" data-act="newOneoff" data-child="${c.id}">+ ${t("oneoff.btn")}</button><button class="btn ghost" data-act="manageOneoffTpl">${t("oneoff.manageTpl")}</button></div>`;
+  const groups = MOMENTS().map(([k, l, , e]) => {
     const rs = list.filter(r => r.moment === k); if (!rs.length) return "";
-    return `<h3 class="grp">${e} ${l}</h3><ul class="rlist">${rs.map(r => `<li><button class="rt" data-act="editRoutine" data-id="${r.id}">
+    return `<h3 class="grp">${e} ${l}</h3><ul class="rlist">${rs.map(r => {
+      const parts = [daysLabel(r.days)];
+      if (r.place) parts.push(esc(r.place));
+      if (r.timer_minutes) parts.push("⏱ " + t("routine.minutes", { n: r.timer_minutes }));
+      if (r.is_bonus) parts.push(t("routine.bonus"));
+      return `<li><button class="rt" data-act="editRoutine" data-id="${r.id}">
       <span class="rt-emo" aria-hidden="true">${esc(r.emoji)}</span>
-      <span class="rt-txt"><b>${esc(r.title)}</b><small>${daysLabel(r.days)}${r.place ? ", " + esc(r.place) : ""}${r.timer_minutes ? `, ⏱ ${r.timer_minutes} min` : ""}${r.is_bonus ? ", bonus" : ""}</small></span>
-      <span class="rt-stars">${r.stars} ⭐</span></button></li>`).join("")}</ul>`;
+      <span class="rt-txt"><b>${esc(r.title)}</b><small>${parts.join(t("sep"))}</small></span>
+      <span class="rt-stars">${fmtNum(r.stars)} ⭐</span></button></li>`; }).join("")}</ul>`;
   }).join("");
-  return chips() + `<div class="actions"><button class="btn" data-act="routineTemplates">Choisir des modèles</button><button class="btn ghost" data-act="newRoutine">Créer une routine</button></div>`
-    + (groups || `<p class="empty">${esc(c.name)} n'a pas encore de routine. Les modèles couvrent le matin, le midi et le soir : coches-en trois ou quatre pour commencer.</p>`) + extra;
+  return chips() + `<div class="actions"><button class="btn" data-act="routineTemplates">${t("routine.chooseTpl")}</button><button class="btn ghost" data-act="newRoutine">${t("routine.create")}</button></div>`
+    + (groups || `<p class="empty">${t("routine.none", { name: esc(c.name) })}</p>`) + extra;
 }
 function pRewards() {
-  const c = curChild(), v = viewFor(c), r = rhythmOf(c.id), t = todayISO();
-  const list = S.rewards.filter(w => (!w.child_id || w.child_id === c.id) && (!w.event_date || w.event_date >= t));
+  const c = curChild(), v = viewFor(c), r = rhythmOf(c.id), td = todayISO();
+  const list = S.rewards.filter(w => (!w.child_id || w.child_id === c.id) && (!w.event_date || w.event_date >= td));
   const hist = [
     ...S.redemptions.filter(z => z.child_id === c.id).map(z => ({ ...z, kind: "gift" })),
 
   ].sort((a, b) => a.created_at < b.created_at ? 1 : -1).slice(0, 20);
   const drift = c.price_rhythm && Math.abs(r - c.price_rhythm) / c.price_rhythm > .2;
-  const P = isParent();
-  const row = w => { const cost = costFor(w, c.id); return `<li class="gift"><button class="gift-main" ${P ? `data-act="editReward" data-id="${w.id}"` : "disabled"}><span class="g-emo" aria-hidden="true">${esc(w.emoji)}</span><span><b>${esc(w.title)}</b><small>${w.child_id ? "Pour " + esc(c.name) : "Pour tous les enfants"}, ${daysLabelFor(cost, c.id)}</small>${w.event_date || w.place ? `<small class="when">${w.event_date ? "📅 " + fmtLong(w.event_date) : ""}${w.event_date && w.place ? ", " : ""}${w.place ? "📍 " + esc(w.place) : ""}</small>` : ""}</span></button>
-      <button class="btn sm ${v.balance >= cost ? "" : "ghost"}" data-act="pRedeem" data-id="${w.id}" ${v.balance >= cost ? "" : "disabled"} aria-label="Échanger ${cost} étoiles">${cost} ⭐</button></li>`; };
-  const groups = TIERS.map(([k, l, d]) => { const ws = list.filter(w => (w.tier || "moment") === k).sort((a, b) => costFor(a, c.id) - costFor(b, c.id)); return ws.length ? `<h3 class="tier-h">${l}<small>${d}</small></h3><ul class="glist">${ws.map(row).join("")}</ul>` : ""; }).join("");
-  return chips() + `<div class="balance"><span class="big">⭐ ${v.balance}</span><span>étoiles à dépenser pour ${esc(c.name)}</span>${v.pendingStars ? `<span class="muted">+${v.pendingStars} en attente de validation</span>` : ""}<span class="muted">Rythme : environ ${Math.round(r * 10) / 10} ⭐ par jour</span></div>
-    ${drift && P ? `<div class="banner"><p>Le rythme de ${esc(c.name)} a changé depuis le calcul des prix (${Math.round(c.price_rhythm * 10) / 10} ⭐ par jour, contre ${Math.round(r * 10) / 10} aujourd'hui).</p><button class="btn sm" data-act="repriceChild">Recalculer ses prix</button></div>` : ""}
-    ${P ? `<div class="actions"><button class="btn" data-act="rewardTemplates">Choisir dans le référentiel</button><button class="btn ghost" data-act="newReward">Créer une récompense</button></div>` : ""}
-    ${groups || `<p class="empty">Aucune récompense pour l'instant. Commence par le référentiel : les prix s'adaptent au rythme de ${esc(c.name)}.</p>`}
-    ${hist.length ? `<h3 class="grp">Historique</h3><ul class="hist">${hist.map(z => z.kind === "gift"
-      ? `<li><span>${esc(z.emoji)} ${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span><span>−${z.cost} ⭐</span><span class="muted">par ${z.created_by ? esc(memberLabel(z.created_by)) : esc(c.name)}</span>${P ? `<button class="link" data-act="cancelRedeem" data-id="${z.id}">Annuler</button>` : ""}</li>`
-      : `<li>${brokenStar(20)}<span>${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span><span>−${z.stars} ⭐</span><span class="muted">par ${esc(memberLabel(z.created_by))}</span>${P ? `<button class="link" data-act="cancelPenalty" data-id="${z.id}">Annuler</button>` : ""}</li>`).join("")}</ul>` : ""}`;
+  const P = isParent(), rnd = x => fmtNum(Math.round(x * 10) / 10);
+  const row = w => { const cost = costFor(w, c.id); return `<li class="gift"><button class="gift-main" ${P ? `data-act="editReward" data-id="${w.id}"` : "disabled"}><span class="g-emo" aria-hidden="true">${esc(w.emoji)}</span><span><b>${esc(w.title)}</b><small>${w.child_id ? t("reward.for", { name: esc(c.name) }) : t("reward.forAll")}${t("sep")}${daysLabelFor(cost, c.id)}</small>${w.event_date || w.place ? `<small class="when">${w.event_date ? "📅 " + fmtLong(w.event_date) : ""}${w.event_date && w.place ? t("sep") : ""}${w.place ? "📍 " + esc(w.place) : ""}</small>` : ""}</span></button>
+      <button class="btn sm ${v.balance >= cost ? "" : "ghost"}" data-act="pRedeem" data-id="${w.id}" ${v.balance >= cost ? "" : "disabled"} aria-label="${t("reward.exchangeN", { n: cost })}">${fmtNum(cost)} ⭐</button></li>`; };
+  const groups = TIERS().map(([k, l, d]) => { const ws = list.filter(w => (w.tier || "moment") === k).sort((a, b) => costFor(a, c.id) - costFor(b, c.id)); return ws.length ? `<h3 class="tier-h">${l}<small>${d}</small></h3><ul class="glist">${ws.map(row).join("")}</ul>` : ""; }).join("");
+  return chips() + `<div class="balance"><span class="big">⭐ ${fmtNum(v.balance)}</span><span>${t("reward.balanceFor", { n: v.balance, name: esc(c.name) })}</span>${v.pendingStars ? `<span class="muted">${t("reward.pending", { n: v.pendingStars })}</span>` : ""}<span class="muted">${t("reward.rhythm", { n: rnd(r) })}</span></div>
+    ${drift && P ? `<div class="banner"><p>${t("reward.drift", { name: esc(c.name), old: rnd(c.price_rhythm), now: rnd(r) })}</p><button class="btn sm" data-act="repriceChild">${t("reward.reprice")}</button></div>` : ""}
+    ${P ? `<div class="actions"><button class="btn" data-act="rewardTemplates">${t("reward.chooseTpl")}</button><button class="btn ghost" data-act="newReward">${t("reward.create")}</button></div>` : ""}
+    ${groups || `<p class="empty">${t("reward.none", { name: esc(c.name) })}</p>`}
+    ${hist.length ? `<h3 class="grp">${t("reward.history")}</h3><ul class="hist">${hist.map(z => z.kind === "gift"
+      ? `<li><span>${esc(z.emoji)} ${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span><span>−${fmtNum(z.cost)} ⭐</span><span class="muted">${t("common.by", { who: z.created_by ? esc(memberLabel(z.created_by)) : esc(c.name) })}</span>${P ? `<button class="link" data-act="cancelRedeem" data-id="${z.id}">${t("btn.cancel")}</button>` : ""}</li>`
+      : `<li>${brokenStar(20)}<span>${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span><span>−${fmtNum(z.stars)} ⭐</span><span class="muted">${t("common.by", { who: esc(memberLabel(z.created_by)) })}</span>${P ? `<button class="link" data-act="cancelPenalty" data-id="${z.id}">${t("btn.cancel")}</button>` : ""}</li>`).join("")}</ul>` : ""}`;
 }
 function pFamily() {
   const kids = S.children.map(c => {
-    const v = viewFor(c); const devs = S.devices.filter(d => d.child_id === c.id);
+    const devs = S.devices.filter(d => d.child_id === c.id);
     const gn = gardenNow(S.gardens[c.id]);
     return `<div class="krow">${gn ? stageSVG(gn.stage, gn.species, c.color) : plantSVG(0, c.color)}<div class="grow"><b>${esc(c.emoji)} ${esc(c.name)}</b>
-      ${devs.map(d => `<div class="dev">📱 ${esc(d.label || "Son téléphone")}, depuis le ${fmtDate(d.created_at)} ${isParent() ? `<button class="link" data-act="revokeDevice" data-id="${d.id}">Déconnecter</button>` : ""}</div>`).join("")}</div>
-      ${isParent() ? `<div class="btns"><button class="btn sm ghost" data-act="editChild" data-id="${c.id}">Modifier</button><button class="btn sm ghost" data-act="deviceCode" data-id="${c.id}">Connecter son appareil</button><button class="btn sm ghost" data-act="childHere" data-id="${c.id}">Mode enfant ici</button></div>` : ""}</div>`;
+      ${devs.map(d => `<div class="dev">📱 ${esc(d.label || t("family.hisPhone"))}${t("sep")}${t("family.since", { date: fmtDate(d.created_at) })} ${isParent() ? `<button class="link" data-act="revokeDevice" data-id="${d.id}">${t("family.disconnect")}</button>` : ""}</div>`).join("")}</div>
+      ${isParent() ? `<div class="btns"><button class="btn sm ghost" data-act="editChild" data-id="${c.id}">${t("btn.edit")}</button><button class="btn sm ghost" data-act="deviceCode" data-id="${c.id}">${t("family.connectDevice")}</button><button class="btn sm ghost" data-act="childHere" data-id="${c.id}">${t("family.childHere")}</button></div>` : ""}</div>`;
   }).join("");
   const pushOn = store.get("pushOn", false), times = store.get("pushTimes", ["07:30", "18:30"]);
   const P = isParent(), me = S.session?.user.id;
-  const members = S.members.map(m => `<div class="krow"><div class="grow"><b>${esc(m.relation || m.display_name || "Parent")}</b>${m.user_id === me ? " (toi)" : ""}
-      <div class="dev">${m.relation && m.display_name ? esc(m.display_name) + ", " : ""}${m.role === "helper" ? "Proche" : "Parent"}</div></div>
-      ${P || m.user_id === me ? `<div class="btns"><button class="btn sm ghost" data-act="editMember" data-id="${m.user_id}">Modifier</button></div>` : ""}</div>`).join("");
-  return `<section class="sec"><h2>Enfants</h2>${kids || `<p class="muted">Aucun enfant pour l'instant.</p>`}${P ? `<div class="actions"><button class="btn" data-act="newChild">Ajouter un enfant</button></div>` : ""}</section>
-    <section class="sec"><h2>Membres de la famille</h2>${members}
-      ${P ? `<p class="muted small">Un parent gère tout. Un proche coche et valide les routines et échange les récompenses, mais ne casse pas d'étoile et ne modifie pas la configuration.</p><div class="actions"><button class="btn ghost" data-act="invite">Inviter un membre</button></div>` : ""}</section>
-    ${P ? `<section class="sec"><h2>Pauses vacances ou maladie</h2><p class="muted">Les jours en pause ne comptent ni pour ni contre la fleur.</p>
-      ${S.pauses.length ? `<ul class="hist">${S.pauses.map(p => { const k = S.children.find(c => c.id === p.child_id); return `<li><span>${esc(k ? k.emoji + " " + k.name : "")}, ${esc(p.reason || "Pause")}</span><span class="muted">${fmtDate(p.start_day)} au ${fmtDate(p.end_day)}</span><button class="link" data-act="delPause" data-id="${p.id}">Supprimer</button></li>`; }).join("")}</ul>` : ""}
-      <div class="actions"><button class="btn ghost" data-act="newPause">Programmer une pause</button></div></section>
-    <section class="sec"><h2>Validation des routines</h2><p class="muted">Quand ton enfant coche une routine, ses étoiles attendent ta validation. Celles que tu coches toi-même sont validées directement.</p>
-      <label class="check"><input type="checkbox" data-act="toggleAuto" ${S.autoValidate ? "checked" : ""}> Valider automatiquement à minuit ce qui n'a pas été refusé</label></section>` : ""}
-    <section class="sec"><h2>Rappels</h2><p class="muted">Un résumé des routines restantes arrive sur ce téléphone aux heures choisies.</p>
-      <div class="f two"><label>Matin<input type="time" id="t1" value="${esc(times[0] || "")}"></label><label>Soir<input type="time" id="t2" value="${esc(times[1] || "")}"></label></div>
-      <div class="actions"><button class="btn" data-act="pushParent">${pushOn ? "Mettre à jour les rappels" : "Activer les rappels"}</button>${pushOn ? `<button class="btn ghost" data-act="pushOff">Désactiver</button>` : ""}</div></section>
-    <section class="sec"><h2>Planning à imprimer</h2><p class="muted">La semaine de chaque enfant sur une page A4, à cocher au crayon.</p><div class="actions"><button class="btn ghost" data-act="printPlan">Imprimer le planning</button></div></section>
-    <section class="sec"><h2>Code parent</h2><p class="muted">Il protège la sortie du mode enfant sur ce téléphone.</p><div class="actions"><button class="btn ghost" data-act="setPin">${store.get("pin") ? "Changer le code" : "Créer un code"}</button></div></section>
-    <section class="sec"><h2>Sauvegarde</h2><p class="muted">Tes données sont dans ton espace Supabase. Tu peux aussi en garder une copie.</p><div class="actions"><button class="btn ghost" data-act="exportData">Télécharger une copie (JSON)</button></div></section>
-    <section class="sec"><h2>Compte</h2><p class="muted">${esc(S.session?.user.email || "")}</p><div class="actions">${installBtn()}${P ? `<button class="btn ghost" data-act="renameFamily">Renommer la famille</button>` : ""}<button class="btn danger ghost" data-act="logout">Se déconnecter</button></div></section>`;
+  const members = S.members.map(m => `<div class="krow"><div class="grow"><b>${esc(m.relation || m.display_name || t("role.parent"))}</b>${m.user_id === me ? " " + t("family.you") : ""}
+      <div class="dev">${m.relation && m.display_name ? esc(m.display_name) + t("sep") : ""}${m.role === "helper" ? t("role.helper") : t("role.parent")}</div></div>
+      ${P || m.user_id === me ? `<div class="btns"><button class="btn sm ghost" data-act="editMember" data-id="${m.user_id}">${t("btn.edit")}</button></div>` : ""}</div>`).join("");
+  return `<section class="sec"><h2>${t("family.children")}</h2>${kids || `<p class="muted">${t("family.noChild")}</p>`}${P ? `<div class="actions"><button class="btn" data-act="newChild">${t("child.add")}</button></div>` : ""}</section>
+    <section class="sec"><h2>${t("family.members")}</h2>${members}
+      ${P ? `<p class="muted small">${t("family.rolesHelp")}</p><div class="actions"><button class="btn ghost" data-act="invite">${t("family.invite")}</button></div>` : ""}</section>
+    <section class="sec"><h2>${t("week.title")}</h2><p class="muted">${esc(weekSummary(WEEK))}</p><p class="muted small">${t("week.help")}</p>${P ? `<div class="actions"><button class="btn ghost" data-act="editWeek" data-mode="family">${t("btn.edit")}</button></div>` : ""}</section>
+    ${P ? `<section class="sec"><h2>${t("pause.title")}</h2><p class="muted">${t("pause.help")}</p>
+      ${S.pauses.length ? `<ul class="hist">${S.pauses.map(p => { const k = S.children.find(c => c.id === p.child_id); return `<li><span>${esc(k ? k.emoji + " " + k.name : "")}${t("sep")}${esc(p.reason || t("pause.default"))}</span><span class="muted">${t("pause.range", { from: fmtDate(p.start_day), to: fmtDate(p.end_day) })}</span><button class="link" data-act="delPause" data-id="${p.id}">${t("btn.delete")}</button></li>`; }).join("")}</ul>` : ""}
+      <div class="actions"><button class="btn ghost" data-act="newPause">${t("pause.new")}</button></div></section>
+    <section class="sec"><h2>${t("validate.section")}</h2><p class="muted">${t("validate.sectionHelp")}</p>
+      <label class="check"><input type="checkbox" data-act="toggleAuto" ${S.autoValidate ? "checked" : ""}> ${t("validate.autoLabel")}</label></section>` : ""}
+    <section class="sec"><h2>${t("push.title")}</h2><p class="muted">${t("push.parentHelp")}</p>
+      <div class="f two"><label>${t("push.morning")}<input type="time" id="t1" value="${esc(times[0] || "")}"></label><label>${t("push.evening")}<input type="time" id="t2" value="${esc(times[1] || "")}"></label></div>
+      <div class="actions"><button class="btn" data-act="pushParent">${pushOn ? t("push.update") : t("push.enable")}</button>${pushOn ? `<button class="btn ghost" data-act="pushOff">${t("btn.disable")}</button>` : ""}</div></section>
+    <section class="sec"><h2>${t("print.title")}</h2><p class="muted">${t("print.help")}</p><div class="actions"><button class="btn ghost" data-act="printPlan">${t("print.btn")}</button></div></section>
+    <section class="sec"><h2>${t("pin.title")}</h2><p class="muted">${t("pin.help")}</p><div class="actions"><button class="btn ghost" data-act="setPin">${store.get("pin") ? t("pin.change") : t("pin.create")}</button></div></section>
+    <section class="sec"><h2>${t("backup.title")}</h2><p class="muted">${t("backup.help")}</p><div class="actions"><button class="btn ghost" data-act="exportData">${t("backup.btn")}</button></div></section>
+    <section class="sec"><h2>${t("account.title")}</h2><p class="muted">${esc(S.session?.user.email || "")}</p><div class="actions">${installBtn()}${P ? `<button class="btn ghost" data-act="renameFamily">${t("account.rename")}</button>` : ""}<button class="btn danger ghost" data-act="logout">${t("btn.logout")}</button></div></section>`;
 }
 
 function pMalus() {
   const P = isParent(), f = S.mfilter || "all", now = Date.now();
-  const chipsM = `<div class="chips" role="tablist">${[["all", "Tous", "#7A6A5F"], ...S.children.map(c => [c.id, c.emoji + " " + c.name, c.color])].map(([k, l, col]) =>
+  const chipsM = `<div class="chips" role="tablist">${[["all", t("malus.all"), "#7A6A5F"], ...S.children.map(c => [c.id, c.emoji + " " + c.name, c.color])].map(([k, l, col]) =>
     `<button role="tab" aria-selected="${f === k}" class="chip ${f === k ? "on" : ""}" style="--c:${esc(col)}" data-act="mFilter" data-id="${k}">${esc(l)}</button>`).join("")}</div>`;
   const list = S.pevents.filter(e => f === "all" || e.child_id === f).sort((a, b) => a.created_at < b.created_at ? 1 : -1);
   const sum = d => list.filter(e => now - new Date(e.created_at) < d * 864e5).reduce((a, e) => a + e.stars, 0);
-  const dayLbl = k => { const t = todayISO(); return k === t ? "Aujourd'hui" : k === addDays(t, -1) ? "Hier" : parseISO(k).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }); };
-  const byDay = []; list.forEach(e => { const k = iso(new Date(e.created_at)); const g = byDay.find(x => x.k === k); g ? g.items.push(e) : byDay.push({ k, items: [e] }); });
+  const dayLbl = k => { const td = todayISO(); return k === td ? t("day.today") : k === addDays(td, -1) ? t("day.yesterday") : fmtLong(k); };
+  const byDay = []; list.forEach(e => { const k = isoInTz(new Date(e.created_at)); const g = byDay.find(x => x.k === k); g ? g.items.push(e) : byDay.push({ k, items: [e] }); });
   const item = e => { const k = S.children.find(c => c.id === e.child_id) || { name: "", emoji: "" };
-    return `<li>${brokenStar(24)}<span class="grow"><b>${esc(e.emoji)} ${esc(e.title)}</b><small>${f === "all" ? esc(k.emoji + " " + k.name) + ", " : ""}par ${esc(memberLabel(e.created_by))}, à ${new Date(e.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</small></span>
-      <span>−${e.stars} ⭐</span>${P ? `<button class="vbtn no" data-act="cancelPenalty" data-id="${e.id}" aria-label="Annuler ce malus">↺</button>` : ""}</li>`; };
-  return chipsM + `<div class="balance"><span class="big">${brokenStar(28)} ${sum(7)}</span><span>étoile${sum(7) > 1 ? "s cassées" : " cassée"} ces 7 derniers jours</span><span class="muted">${sum(30)} sur 30 jours, ${list.length} malus au total</span></div>
-    ${P ? `<div class="actions"><button class="btn danger" data-act="breakStar">${brokenStar(18)} Casser une étoile</button><button class="btn ghost" data-act="penaltyCatalog">Malus prédéfinis</button></div>` : ""}
+    return `<li>${brokenStar(24)}<span class="grow"><b>${esc(e.emoji)} ${esc(e.title)}</b><small>${f === "all" ? esc(k.emoji + " " + k.name) + t("sep") : ""}${t("malus.byAt", { who: esc(memberLabel(e.created_by)), time: fmtTime(e.created_at) })}</small></span>
+      <span>−${fmtNum(e.stars)} ⭐</span>${P ? `<button class="vbtn no" data-act="cancelPenalty" data-id="${e.id}" aria-label="${t("malus.cancelAria")}">↺</button>` : ""}</li>`; };
+  return chipsM + `<div class="balance"><span class="big">${brokenStar(28)} ${fmtNum(sum(7))}</span><span>${t("malus.week", { n: sum(7) })}</span><span class="muted">${t("malus.month", { n: sum(30), total: list.length })}</span></div>
+    ${P ? `<div class="actions"><button class="btn danger" data-act="breakStar">${brokenStar(18)} ${t("malus.break")}</button><button class="btn ghost" data-act="penaltyCatalog">${t("malus.catalog")}</button></div>` : ""}
     ${byDay.length ? byDay.map(g => `<h3 class="grp">${dayLbl(g.k)}</h3><ul class="vlist">${g.items.map(item).join("")}</ul>`).join("")
-      : `<p class="empty">Aucun malus${f === "all" ? "" : " pour cet enfant"}. Tant mieux !</p>`}`;
+      : `<p class="empty">${f === "all" ? t("malus.none") : t("malus.noneChild")}</p>`}`;
 }
 
 /* ---------- Enfant ---------- */
@@ -977,80 +1073,80 @@ function renderChild() {
   if (!cs) { app.innerHTML = `<div class="loading">${plantSVG(1)}</div>`; return; }
   const c = cs.child; const routines = cs.routines.map(r => ({ ...r, child_id: c.id }));
   const v = computeView({ child: c, routines, completions: cs.completions, stats: cs.stats, badges: cs.badges, garden: cs.garden, penalties: cs.penalties, oneoffDone: cs.oneoff_done });
-  const tabs = [["today", "Mes routines", "☀️"], ["gifts", "Récompenses", "🎁"], ["garden", "Mon jardin", "🌼"], ["badges", "Badges", "🏅"]];
+  const tabs = [["today", t("ctab.today"), "☀️"], ["gifts", t("ctab.gifts"), "🎁"], ["garden", t("ctab.garden"), "🌼"], ["badges", t("ctab.badges"), "🏅"]];
   const body = { today: cToday, gifts: cGifts, garden: cGarden, badges: cBadges }[S.ctab](v, routines, cs);
-  app.innerHTML = `<header class="top kid-top"><span class="hello">Salut ${esc(c.name)} ${esc(c.emoji)}</span><span class="star-count" aria-label="${v.balance} étoiles">⭐ ${v.balance}</span><button class="lock" data-act="exitChild" aria-label="Espace parent">🔒</button></header>
-    ${S.offline ? `<p class="center"><span class="pill">Hors ligne : tes routines seront envoyées plus tard</span></p>` : ""}
+  app.innerHTML = `<header class="top kid-top"><span class="hello">${t("kid.hello", { name: esc(c.name) })} ${esc(c.emoji)}</span><span class="star-count" aria-label="${t("kid.starsAria", { n: v.balance })}">⭐ ${fmtNum(v.balance)}</span><button class="lock" data-act="exitChild" aria-label="${t("kid.parentSpace")}">🔒</button></header>
+    ${S.offline ? `<p class="center"><span class="pill">${t("kid.offline")}</span></p>` : ""}
     <main class="wrap">${body}</main>
-    <nav class="tabbar" aria-label="Navigation">${tabs.map(([k, l, e]) => `<button data-act="ctab" data-tab="${k}" class="${S.ctab === k ? "on" : ""}" aria-current="${S.ctab === k ? "page" : "false"}"><span aria-hidden="true">${e}</span>${l}</button>`).join("")}</nav>`;
+    <nav class="tabbar" aria-label="${t("nav")}">${tabs.map(([k, l, e]) => `<button data-act="ctab" data-tab="${k}" class="${S.ctab === k ? "on" : ""}" aria-current="${S.ctab === k ? "page" : "false"}"><span aria-hidden="true">${e}</span>${l}</button>`).join("")}</nav>`;
 }
 function cToday(v, routines) {
-  const t = todayISO(), due = dueOn(routines, v.child.id, t, S.cs.completions);
+  const td = todayISO(), due = dueOn(routines, v.child.id, td, S.cs.completions);
   const main = due.filter(r => !r.is_bonus), bonus = due.filter(r => r.is_bonus);
-  const nd = main.filter(r => v.done.has(r.id + "|" + t)).length;
+  const nd = main.filter(r => v.done.has(r.id + "|" + td)).length;
   const card = r => {
-    const d = v.done.has(r.id + "|" + t), val = v.valid.has(r.id + "|" + t);
+    const d = v.done.has(r.id + "|" + td), val = v.valid.has(r.id + "|" + td);
     return `<li><button class="kcard ${val ? "done" : d ? "pending" : ""}" data-act="cToggle" data-id="${r.id}" aria-pressed="${d}">
       <span class="k-emo" aria-hidden="true">${esc(r.emoji)}</span>
-      <span class="k-txt">${isOneoff(r) ? `<small>⭐ ${oneoffNote(r)}</small>` : ""}<b>${esc(r.title)}</b>${d && !val ? `<small>⏳ Tes parents vont valider</small>` : val ? (() => { const x = (S.cs.completions || []).find(y => y.routine_id === r.id && y.day === t); return x && x.validated_label && x.validated_label !== "auto" ? `<small>✓ Validée par ${esc(x.validated_label)}</small>` : `<small>✓ Validée</small>`; })() : r.place ? `<small>📍 ${esc(r.place)}</small>` : ""}</span>
-      <span class="k-stars ${d && !val ? "wait" : ""}" aria-label="${r.stars} étoiles">${"⭐".repeat(Math.min(r.stars, 5))}</span><span class="k-pot" aria-hidden="true">${val ? "✓" : d ? "⏳" : ""}</span></button>
-      ${r.timer_minutes && !d ? `<button class="k-timer" data-act="cTimer" data-id="${r.id}">⏱ Défi ${r.timer_minutes} min</button>` : ""}</li>`;
+      <span class="k-txt">${isOneoff(r) ? `<small>⭐ ${oneoffNote(r)}</small>` : ""}<b>${esc(r.title)}</b>${d && !val ? `<small>⏳ ${t("kid.parentsWillValidate")}</small>` : val ? (() => { const x = (S.cs.completions || []).find(y => y.routine_id === r.id && y.day === td); return x && x.validated_label && x.validated_label !== "auto" ? `<small>✓ ${t("kid.validatedBy", { who: esc(x.validated_label) })}</small>` : `<small>✓ ${t("kid.validated")}</small>`; })() : r.place ? `<small>📍 ${esc(r.place)}</small>` : ""}</span>
+      <span class="k-stars ${d && !val ? "wait" : ""}" aria-label="${t("kid.starsAria", { n: r.stars })}">${"⭐".repeat(Math.min(r.stars, 5))}</span><span class="k-pot" aria-hidden="true">${val ? "✓" : d ? "⏳" : ""}</span></button>
+      ${r.timer_minutes && !d ? `<button class="k-timer" data-act="cTimer" data-id="${r.id}">⏱ ${t("kid.challenge", { n: r.timer_minutes })}</button>` : ""}</li>`;
   };
   const ones = due.filter(isOneoff);
-  const groups = (ones.length ? `<h3 class="grp">⭐ Exceptionnelles</h3><ul class="kcards">${ones.map(card).join("")}</ul>` : "")
-    + MOMENTS.map(([k, l, , e]) => { const rs = main.filter(r => r.moment === k && !isOneoff(r)); return rs.length ? `<h3 class="grp">${e} ${l}</h3><ul class="kcards">${rs.map(card).join("")}</ul>` : ""; }).join("");
+  const groups = (ones.length ? `<h3 class="grp">⭐ ${t("kid.oneoffs")}</h3><ul class="kcards">${ones.map(card).join("")}</ul>` : "")
+    + MOMENTS().map(([k, l, , e]) => { const rs = main.filter(r => r.moment === k && !isOneoff(r)); return rs.length ? `<h3 class="grp">${e} ${l}</h3><ul class="kcards">${rs.map(card).join("")}</ul>` : ""; }).join("");
   const gn = gardenNow(v.garden);
   return `<section class="hero"><div class="hero-plant ${S.bump ? "bump" : ""}" style="width:120px">${gn ? stageSVG(gn.stage, gn.species, v.child.color) : plantSVG(0, v.child.color)}</div>
-      <div class="hero-txt">${gn && gn.waiting ? `<h1>Ton pot attend sa graine</h1><p>Ta première fleur commence ${fmtLong(gn.start)}. Tes étoiles comptent déjà pour tes récompenses !</p>` : gn ? `<h1>${STAGE_NAME[gn.stage]}</h1>${dots14(v.garden)}
-      <p>${gn.pausedToday ? "En pause : profite bien !" : `Jour ${gn.dayIdx} sur ${gn.len}. Ta fleur s'ouvre ${fmtLong(gn.end)}.`}</p>` : `<h1>Ton pot t'attend</h1>`}
-      ${v.pendingStars ? `<p class="wait-note">⏳ ${v.pendingStars} ⭐ en attente de validation</p>` : ""}</div></section>
-    <p class="today-count">${main.length ? (nd === main.length ? "Tout est fait aujourd'hui ! 🎉" : `${nd} sur ${main.length} routines faites`) : "Pas de routine aujourd'hui. Profite !"}</p>
-    ${groups}${bonus.filter(r => !isOneoff(r)).length ? `<h3 class="grp">💪 Défis bonus</h3><ul class="kcards">${bonus.filter(r => !isOneoff(r)).map(card).join("")}</ul>` : ""}`;
+      <div class="hero-txt">${gn && gn.waiting ? `<h1>${t("kid.potWaitsSeed")}</h1><p>${t("kid.firstFlowerStarts", { date: fmtLong(gn.start) })}</p>` : gn ? `<h1>${STAGE_NAME[gn.stage]}</h1>${dots14(v.garden)}
+      <p>${gn.pausedToday ? t("kid.paused") : t("kid.dayOfOpens", { d: gn.dayIdx, len: gn.len, date: fmtLong(gn.end) })}</p>` : `<h1>${t("kid.potWaits")}</h1>`}
+      ${v.pendingStars ? `<p class="wait-note">⏳ ${t("kid.pendingStars", { n: v.pendingStars })}</p>` : ""}</div></section>
+    <p class="today-count">${main.length ? (nd === main.length ? t("kid.allDone") : t("kid.doneOf", { n: nd, total: main.length })) : t("kid.noRoutine")}</p>
+    ${groups}${bonus.filter(r => !isOneoff(r)).length ? `<h3 class="grp">💪 ${t("kid.bonus")}</h3><ul class="kcards">${bonus.filter(r => !isOneoff(r)).map(card).join("")}</ul>` : ""}`;
 }
 function cGifts(v, routines, cs) {
   const hist = [
     ...cs.redemptions.map(z => ({ ...z, kind: "gift" })),
     ...(cs.penalties || []).map(z => ({ ...z, kind: "broken" }))
   ].sort((a, b) => a.created_at < b.created_at ? 1 : -1).slice(0, 12);
-  const gn = gardenNow(v.garden);
   const mini = miniHero(v);
-  return mini + `<div class="balance"><span class="big">⭐ ${v.balance}</span><span>étoiles à dépenser</span>${v.pendingStars ? `<span class="muted">+${v.pendingStars} en attente</span>` : ""}</div>
-    ${cs.rewards.length ? `<ul class="glist">${cs.rewards.map(w => `<li class="kgift"><span class="g-emo" aria-hidden="true">${esc(w.emoji)}</span><span class="grow"><b>${esc(w.title)}</b><span>${w.cost} ⭐</span></span>
-      ${v.balance >= w.cost ? `<button class="btn" data-act="cRedeem" data-id="${w.id}">Je choisis</button>` : `<span class="muted">Encore ${w.cost - v.balance} ⭐</span>`}</li>`).join("")}</ul>`
-      : `<p class="empty">Demande à tes parents d'ajouter des récompenses.</p>`}
-    ${hist.length ? `<h3 class="grp">Mon histoire</h3><ul class="hist">${hist.map(z => z.kind === "gift"
+  return mini + `<div class="balance"><span class="big">⭐ ${fmtNum(v.balance)}</span><span>${t("kid.toSpend", { n: v.balance })}</span>${v.pendingStars ? `<span class="muted">${t("kid.pendingShort", { n: v.pendingStars })}</span>` : ""}</div>
+    ${cs.rewards.length ? `<ul class="glist">${cs.rewards.map(w => `<li class="kgift"><span class="g-emo" aria-hidden="true">${esc(w.emoji)}</span><span class="grow"><b>${esc(w.title)}</b><span>${fmtNum(w.cost)} ⭐</span></span>
+      ${v.balance >= w.cost ? `<button class="btn" data-act="cRedeem" data-id="${w.id}">${t("kid.choose")}</button>` : `<span class="muted">${t("kid.stillNeed", { n: w.cost - v.balance })}</span>`}</li>`).join("")}</ul>`
+      : `<p class="empty">${t("kid.askRewards")}</p>`}
+    ${hist.length ? `<h3 class="grp">${t("kid.history")}</h3><ul class="hist">${hist.map(z => z.kind === "gift"
       ? `<li><span>${esc(z.emoji)} ${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span></li>`
-      : `<li>${brokenStar(20)}<span>Étoile cassée : ${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span><span>−${z.stars}</span></li>`).join("")}</ul>` : ""}`;
+      : `<li>${brokenStar(20)}<span>${t("kid.broken", { title: esc(z.title) })}</span><span class="muted">${fmtDate(z.created_at)}</span><span>−${fmtNum(z.stars)}</span></li>`).join("")}</ul>` : ""}`;
 }
 function miniHero(v) {
   const gn = gardenNow(v.garden);
-  return gn ? `<section class="hero mini"><div class="hero-plant">${stageSVG(gn.waiting ? 0 : gn.stage, gn.species, v.child.color)}</div><div class="hero-txt"><h2>${gn.waiting ? "Ton pot attend sa graine" : STAGE_NAME[gn.stage]}</h2>${gn.waiting ? "" : dots14(v.garden)}<p class="small">${gn.waiting ? "" : `Ta fleur s'ouvre ${fmtLong(gn.end)}.`}</p></div></section>` : "";
+  return gn ? `<section class="hero mini"><div class="hero-plant">${stageSVG(gn.waiting ? 0 : gn.stage, gn.species, v.child.color)}</div><div class="hero-txt"><h2>${gn.waiting ? t("kid.potWaitsSeed") : STAGE_NAME[gn.stage]}</h2>${gn.waiting ? "" : dots14(v.garden)}<p class="small">${gn.waiting ? "" : t("kid.opens", { date: fmtLong(gn.end) })}</p></div></section>` : "";
 }
 function cGarden(v, routines) {
-  const gd = v.garden, bs = badgeStats(v), pushOn = store.get("cpushOn", false), ct = store.get("cpushTimes", ["07:30", "18:00"]);
+  const gd = v.garden, pushOn = store.get("cpushOn", false), ct = store.get("cpushTimes", ["07:30", "18:00"]);
   let scenes = "";
   if (gd) {
     const se = seasonOfISO(gd.today), yr = gardenYearOfISO(gd.today), fl = gd.flowers || [];
-    scenes = `<h2 class="grp">Mon parterre ${SEASON_NAME[se]}</h2><div class="scene">${parterreSVG(se, fl.filter(f => f.season === se && f.garden_year === yr), true)}<p>${fl.filter(f => f.season === se && f.garden_year === yr).length} fleur(s), et une qui pousse</p></div>
-      <h2 class="grp">Mon jardin ${yr}</h2><div class="scene">${gardenSVG(v.child.name, yr, fl.filter(f => f.garden_year === yr), { season: se })}</div>`;
+    const cur = fl.filter(f => f.season === se && f.garden_year === yr);
+    scenes = `<h2 class="grp">${t("kid.myBed", { season: SEASON_NAME[se] })}</h2><div class="scene">${parterreSVG(se, cur, true)}<p>${t("kid.bedCount", { n: cur.length })}</p></div>
+      <h2 class="grp">${t("kid.myGarden", { year: yr })}</h2><div class="scene">${gardenSVG(v.child.name, yr, fl.filter(f => f.garden_year === yr), { season: se })}</div>`;
     const past = [...new Set(fl.map(f => f.garden_year))].filter(y => y !== yr);
-    if (past.length) scenes += `<h2 class="grp">Mes anciens jardins</h2><div class="yr">${past.map(y => `<button class="btn ghost sm" data-act="showYear" data-y="${y}">${y}</button>`).join("")}</div>`;
+    if (past.length) scenes += `<h2 class="grp">${t("kid.oldGardens")}</h2><div class="yr">${past.map(y => `<button class="btn ghost sm" data-act="showYear" data-y="${y}">${y}</button>`).join("")}</div>`;
   }
-  return miniHero(v) + scenes + `<p class="streak">${v.current > 0 ? `🔥 ${v.current} bonne${v.current > 1 ? "s" : ""} journée${v.current > 1 ? "s" : ""} de suite` : "Fais une bonne journée pour lancer une série !"}</p>
-    <p class="center"><button class="btn ghost" data-act="ctab" data-tab="badges">🏅 Voir mes badges</button></p>
-    <section class="sec" style="margin-top:18px"><h2>Réglages</h2>
-      <label class="check"><input type="checkbox" id="snd" data-act="sound" ${store.get("sound", true) ? "checked" : ""}> Son quand je coche une routine</label>
-      <div class="f two"><label>Rappel matin<input type="time" id="t1" value="${esc(ct[0] || "")}"></label><label>Rappel soir<input type="time" id="t2" value="${esc(ct[1] || "")}"></label></div>
-      <div class="actions"><button class="btn ghost" data-act="pushChild">${pushOn ? "Mettre à jour les rappels" : "Activer les rappels"}</button>${pushOn ? `<button class="btn ghost" data-act="pushOff">Désactiver</button>` : ""}</div></section>`;
+  return miniHero(v) + scenes + `<p class="streak">${v.current > 0 ? `🔥 ${t("kid.streak", { n: v.current })}` : t("kid.startStreak")}</p>
+    <p class="center"><button class="btn ghost" data-act="ctab" data-tab="badges">🏅 ${t("kid.seeBadges")}</button></p>
+    <section class="sec" style="margin-top:18px"><h2>${t("kid.settings")}</h2>
+      <label class="check"><input type="checkbox" id="snd" data-act="sound" ${store.get("sound", true) ? "checked" : ""}> ${t("kid.sound")}</label>
+      <div class="f two"><label>${t("kid.remindMorning")}<input type="time" id="t1" value="${esc(ct[0] || "")}"></label><label>${t("kid.remindEvening")}<input type="time" id="t2" value="${esc(ct[1] || "")}"></label></div>
+      <div class="actions"><button class="btn ghost" data-act="pushChild">${pushOn ? t("push.update") : t("push.enable")}</button>${pushOn ? `<button class="btn ghost" data-act="pushOff">${t("btn.disable")}</button>` : ""}</div></section>`;
 }
 
 function cBadges(v, routines, cs) {
   const bs = badgeStats(v), dates = cs.badge_dates || {}, got = BADGES.filter(b => hasBadge(v, b)).length;
   const card = b => { const on = hasBadge(v, b), pr = !on && b.p ? b.p(bs) : null;
-    return `<div class="badge ${on ? "" : "off"}"><span class="be" aria-hidden="true">${b.e}</span>${b.n}${on && dates[b.k] ? `<small class="bdate">${fmtDate(dates[b.k])}</small>` : ""}${pr ? `<span class="bprog"><i style="width:${Math.round(pr[0] / pr[1] * 100)}%"></i></span><small class="bdate">${pr[0]} / ${pr[1]}</small>` : ""}</div>`; };
-  return `<div class="balance"><span class="big">🏅 ${got}</span><span>badge${got > 1 ? "s" : ""} sur ${BADGES.length}</span></div>
+    return `<div class="badge ${on ? "" : "off"}"><span class="be" aria-hidden="true">${b.e}</span>${b.n}${on && dates[b.k] ? `<small class="bdate">${fmtDate(dates[b.k])}</small>` : ""}${pr ? `<span class="bprog"><i style="width:${Math.round(pr[0] / pr[1] * 100)}%"></i></span><small class="bdate">${fmtNum(pr[0])} / ${fmtNum(pr[1])}</small>` : ""}</div>`; };
+  return `<div class="balance"><span class="big">🏅 ${fmtNum(got)}</span><span>${t("kid.badgesOf", { n: got, total: BADGES.length })}</span></div>
     ${BADGE_CATS.map(c => { const list = BADGES.filter(b => b.c === c); const n = list.filter(b => hasBadge(v, b)).length;
-      return `<h2 class="tier-h">${c}<small>${n} sur ${list.length}</small></h2><div class="badges">${list.map(card).join("")}</div>`; }).join("")}`;
+      return `<h2 class="tier-h">${t("badge.cat." + c)}<small>${t("kid.nOf", { n, total: list.length })}</small></h2><div class="badges">${list.map(card).join("")}</div>`; }).join("")}`;
 }
 
 /* ================= Données parent ================= */
@@ -1059,7 +1155,7 @@ async function loadParent() {
   const { data: mem, error } = await sb.from("family_members").select("family_id,display_name,role,created_at,families(name)").eq("user_id", uid).order("created_at").limit(1);
   if (error) throw error;
   if (!mem.length) { S.screen = "onboard"; return; }
-  S.family = { id: mem[0].family_id, name: mem[0].families?.name || "Ma famille" }; S.me = mem[0];
+  S.family = { id: mem[0].family_id, name: mem[0].families?.name || t("onboard.defaultName") }; S.me = mem[0];
   await refreshParent();
 }
 async function refreshParent() {
@@ -1073,7 +1169,7 @@ async function refreshParent() {
     sb.from("child_stats").select("*").eq("family_id", fid),
     sb.from("family_members").select("user_id,display_name,relation,role").eq("family_id", fid),
     sb.from("child_devices").select("id,child_id,created_at,last_seen,label").eq("family_id", fid).order("created_at"),
-    sb.from("families").select("name,auto_validate").eq("id", fid),
+    sb.from("families").select("name,auto_validate,week_start,weekend_days,timezone").eq("id", fid),
     sb.from("penalties").select("*").eq("family_id", fid).eq("active", true).order("stars").order("created_at"),
     sb.from("penalty_events").select("*").eq("family_id", fid).order("created_at", { ascending: false }).limit(500),
     sb.from("child_badges").select("child_id,badge_key").eq("family_id", fid),
@@ -1086,7 +1182,7 @@ async function refreshParent() {
   const badges = {}; b.forEach(o => (badges[o.child_id] = badges[o.child_id] || []).push(o.badge_key));
   Object.assign(S, { children: c, routines: r, rewards: w, completions: x, redemptions: z, stats: Object.fromEntries(s.map(o => [o.child_id, o])),
     members: m, devices: d, autoValidate: f[0] ? f[0].auto_validate : true, penalties: pe, pevents: pv, badges, pauses: pz, gardens: gdn || {}, oneoffTpl: ot || [], offline: false });
-  if (f[0]) S.family.name = f[0].name;
+  if (f[0]) { S.family.name = f[0].name; setWeek(f[0]); S.family.week = { ...WEEK }; }
   const meRow = m.find(x => x.user_id === S.session?.user.id); if (meRow) S.me = { ...S.me, ...meRow };
   if (!isParent() && S.tab === "routines") S.tab = "today";
   if (!S.children.find(k => k.id === S.currentChild)) S.currentChild = S.children[0]?.id || null;
@@ -1095,7 +1191,7 @@ async function refreshParent() {
   S.children.forEach(k => newBadges(viewFor(k)).forEach(key => { rows.push({ child_id: k.id, family_id: fid, badge_key: key }); (S.badges[k.id] = S.badges[k.id] || []).push(key); }));
   if (rows.length) sb.from("child_badges").upsert(rows, { onConflict: "child_id,badge_key", ignoreDuplicates: true }).then(() => {}, () => {});
   store.set("parentCache", { family: S.family, me: S.me, children: c, routines: r, rewards: w, completions: x, redemptions: z, stats: S.stats, members: m, devices: d,
-    autoValidate: S.autoValidate, penalties: pe, pevents: pv, badges: S.badges, pauses: pz, gardens: S.gardens });
+    autoValidate: S.autoValidate, penalties: pe, pevents: pv, badges: S.badges, pauses: pz, gardens: S.gardens, week: { ...WEEK } });
 }
 async function loadTip() {
   try {
@@ -1108,7 +1204,7 @@ async function enterParent() {
   try { await loadParent(); if (S.screen !== "onboard") { S.screen = "parent"; loadTip(); } }
   catch (e) {
     const cache = store.get("parentCache");
-    if (cache && isNetErr(e)) { Object.assign(S, cache); S.offline = true; S.screen = "parent"; }
+    if (cache && isNetErr(e)) { Object.assign(S, cache); if (cache.week) Object.assign(WEEK, cache.week); S.offline = true; S.screen = "parent"; }
     else { S.screen = "error"; S.err = errMsg(e); }
   }
   render();
@@ -1121,7 +1217,7 @@ async function loadChild() {
   try {
     const { data, error } = await sb.rpc("child_state", { p_token: tok });
     if (error) throw error;
-    S.cs = data; S.offline = false;
+    S.cs = data; S.offline = false; setWeek(data.family);
     S.cs.badges = S.cs.badges || []; S.cs.penalties = S.cs.penalties || [];
     applyQueueToState();
     const last = store.get("lastEarned"), e = S.cs.stats.earned || 0;
@@ -1139,15 +1235,15 @@ async function loadChild() {
     if (gain || nb.length) setTimeout(() => {
       celebrate(true);
       const names = nb.map(k => BADGES.find(b => b.k === k)).map(b => b.e + " " + b.n).join(", ");
-      toast(gain ? `+${gain.diff} ⭐ validées par tes parents !` : `Nouveau badge : ${names}`);
-      if (gain && nb.length) setTimeout(() => toast(`Nouveau badge : ${names}`), 3000);
+      toast(gain ? t("kid.gain", { n: gain.diff }) : t("kid.newBadge", { names }));
+      if (gain && nb.length) setTimeout(() => toast(t("kid.newBadge", { names })), 3000);
     }, 400);
   } catch (e) {
     if (/Appareil non reconnu/.test(e.message || "")) {
       store.del("childToken"); store.del("childCache"); store.del("queue");
-      S.screen = "auth"; render(); toast("Ce téléphone a été déconnecté par un parent.", true); return;
+      S.screen = "auth"; render(); toast(t("kid.disconnected"), true); return;
     }
-    S.cs = store.get("childCache"); S.offline = true;
+    S.cs = store.get("childCache"); S.offline = true; if (S.cs) setWeek(S.cs.family);
     if (!S.cs) { S.screen = "error"; S.err = errMsg(e); }
   }
   render();
@@ -1182,7 +1278,7 @@ function childToggle(rid, makeDone, source = "child") {
   const i = cs.completions.findIndex(c => c.routine_id === rid && c.day === day);
   if (makeDone && i < 0) { cs.completions.push({ routine_id: rid, day, stars: r.stars, source, validated: false }); st.pending_stars = (st.pending_stars || 0) + r.stars; st.pending_count = (st.pending_count || 0) + 1; }
   else if (!makeDone && i >= 0) {
-    if (cs.completions[i].validated) return toast("Tes parents ont déjà validé cette routine ✓");
+    if (cs.completions[i].validated) return toast(t("kid.alreadyValidated"));
     st.pending_stars -= cs.completions[i].stars; st.pending_count--; cs.completions.splice(i, 1);
   }
   else return;
@@ -1194,7 +1290,7 @@ function childToggle(rid, makeDone, source = "child") {
     const main = dueOn(routines, cs.child.id, day, cs.completions).filter(x => !x.is_bonus);
     const all = main.length && main.every(x => cs.completions.some(c => c.routine_id === x.id && c.day === day));
     celebrate(all);
-    toast(all ? "Tout est fait ! Tes parents vont valider tes étoiles 🎉" : "Bravo ! Tes parents vont valider ton étoile.");
+    toast(all ? t("kid.allDoneToast") : t("kid.bravoToast"));
   } else render();
   flushQueue();
 }
@@ -1205,9 +1301,9 @@ function urlB64(base64) {
   const raw = atob(b); return Uint8Array.from([...raw].map(ch => ch.charCodeAt(0)));
 }
 async function getPushSub() {
-  if (!("serviceWorker" in navigator) || !("PushManager" in window)) throw new Error("Ce navigateur ne gère pas les notifications. Installe l'application depuis Chrome.");
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) throw new Error(t("push.unsupported"));
   const perm = await Notification.requestPermission();
-  if (perm !== "granted") throw new Error("Les notifications sont bloquées. Autorise-les dans les réglages de Chrome pour ce site.");
+  if (perm !== "granted") throw new Error(t("push.blocked"));
   const reg = await navigator.serviceWorker.ready;
   let sub = await reg.pushManager.getSubscription();
   if (!sub) {
@@ -1220,55 +1316,56 @@ const readTimes = () => [$("#t1")?.value, $("#t2")?.value].filter(v => /^\d{2}:\
 
 /* ================= Impression ================= */
 function printPlanning(ids) {
-  const t = todayISO(), monday = addDays(t, -(dowOf(t) - 1));
+  const td = todayISO(), first = addDays(td, -((dowOf(td) - WEEK.start + 7) % 7)), order = weekOrder();
   const pages = S.children.filter(c => ids.includes(c.id)).map(c => {
     const rs = S.routines.filter(r => r.child_id === c.id && !isOneoff(r));
-    const rows = MOMENTS.map(([k, l, , e]) => {
+    const rows = MOMENTS().map(([k, l, , e]) => {
       const list = rs.filter(r => r.moment === k); if (!list.length) return "";
-      return `<tr class="grp-row"><td colspan="8">${e} ${l}</td></tr>` + list.map(r => `<tr><td class="n">${esc(r.emoji)} ${esc(r.title)} (${r.stars} ⭐)${r.is_bonus ? ", bonus" : ""}</td>${DAYS.map((_, i) => (r.days || []).includes(i + 1) ? `<td><span class="circ"></span></td>` : `<td class="off"></td>`).join("")}</tr>`).join("");
+      return `<tr class="grp-row"><td colspan="8">${e} ${l}</td></tr>` + list.map(r => `<tr><td class="n">${esc(r.emoji)} ${esc(r.title)} (${fmtNum(r.stars)} ⭐)${r.is_bonus ? t("sep") + t("routine.bonus") : ""}</td>${order.map(d => (r.days || []).includes(d) ? `<td><span class="circ"></span></td>` : `<td class="off"></td>`).join("")}</tr>`).join("");
     }).join("");
     const gifts = S.rewards.filter(w => !w.child_id || w.child_id === c.id);
-    return `<section class="pp"><h1>${esc(c.emoji)} La semaine de ${esc(c.name)}</h1><p>Semaine du ${parseISO(monday).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}</p>
-      <table><thead><tr><th class="n">Routine</th>${DAYS_LONG.map(d => `<th>${d.slice(0, 3)}</th>`).join("")}</tr></thead><tbody>${rows || `<tr><td colspan="8">Aucune routine.</td></tr>`}</tbody></table>
-      ${gifts.length ? `<div class="gifts"><b>Mes récompenses :</b> ${gifts.map(w => `${esc(w.emoji)} ${esc(w.title)} (${w.cost} ⭐)`).join(", ")}</div>` : ""}</section>`;
+    return `<section class="pp"><h1>${esc(c.emoji)} ${t("print.weekOf", { name: esc(c.name) })}</h1><p>${t("print.weekStart", { date: parseISO(first).toLocaleDateString(loc(), { day: "numeric", month: "long" }) })}</p>
+      <table><thead><tr><th class="n">${t("print.routine")}</th>${order.map(d => `<th>${t("days.abbr")[d - 1]}</th>`).join("")}</tr></thead><tbody>${rows || `<tr><td colspan="8">${t("print.none")}</td></tr>`}</tbody></table>
+      ${gifts.length ? `<div class="gifts"><b>${t("print.myRewards")}</b> ${gifts.map(w => `${esc(w.emoji)} ${esc(w.title)} (${fmtNum(w.cost)} ⭐)`).join(t("sep"))}</div>` : ""}</section>`;
   }).join("");
   $("#print").innerHTML = pages; setTimeout(() => window.print(), 50);
 }
 
 /* ================= Formulaires ================= */
+const iconField = (id, value, groups) => `<div class="f"><span>${t("form.icon")}</span><div class="emo-row"><input id="${id}" class="emo-in" value="${esc(value)}" maxlength="8" aria-label="${t("form.iconChosen")}"><small class="muted">${t("form.iconHint")}</small></div>${emoPicker(id, groups)}</div>`;
 function routineForm(r) {
   const isNew = !r;
   r = r || { title: "", emoji: "⭐", place: "", moment: "matin", stars: 1, days: [1, 2, 3, 4, 5, 6, 7], is_bonus: false, timer_minutes: null };
   S.form = { moment: r.moment, days: [...r.days] };
-  openSheet(`<h2>${isNew ? "Nouvelle routine" : "Modifier la routine"}</h2>
-    <label class="f">Nom<input id="f-title" maxlength="60" value="${esc(r.title)}" placeholder="Se brosser les dents"></label>
-    <div class="f"><span>Icône</span><div class="emo-row"><input id="f-emoji" class="emo-in" value="${esc(r.emoji)}" maxlength="8" aria-label="Icône choisie"><small class="muted">Choisis ci-dessous ou tape un emoji</small></div>${emoPicker("f-emoji", EMO_R)}</div>
-    <div class="f"><span>Moment</span><div class="seg" role="radiogroup">${MOMENTS.map(([k, , s, e]) => `<button type="button" role="radio" aria-checked="${r.moment === k}" class="${r.moment === k ? "on" : ""}" data-act="seg" data-group="moment" data-v="${k}">${e} ${s}</button>`).join("")}</div></div>
-    <div class="f"><span>Jours</span><div class="days">${DAYS.map((d, i) => `<button type="button" class="day ${r.days.includes(i + 1) ? "on" : ""}" data-act="toggleDay" data-v="${i + 1}" aria-pressed="${r.days.includes(i + 1)}" aria-label="${DAYS_LONG[i]}">${d}</button>`).join("")}</div>
-      <div class="presets"><button type="button" class="link" data-act="daysPreset" data-v="all">Tous les jours</button><button type="button" class="link" data-act="daysPreset" data-v="week">En semaine</button><button type="button" class="link" data-act="daysPreset" data-v="we">Le week-end</button></div></div>
-    <div class="f two"><label>Étoiles<select id="f-stars">${[1, 2, 3, 4, 5].map(n => `<option ${n === r.stars ? "selected" : ""}>${n}</option>`).join("")}</select></label>
-      <label>Lieu<select id="f-place"><option value="">Aucun</option>${PLACES.map(p => `<option ${p === r.place ? "selected" : ""}>${p}</option>`).join("")}</select></label></div>
-    <label class="f">Défi chrono<select id="f-timer"><option value="">Sans minuteur</option>${[2, 3, 5, 10, 15, 20, 30].map(n => `<option value="${n}" ${n === r.timer_minutes ? "selected" : ""}>${n} minutes</option>`).join("")}</select></label>
-    <label class="check"><input type="checkbox" id="f-bonus" ${r.is_bonus ? "checked" : ""}> Routine bonus : facultative, elle rapporte des étoiles sans compter dans la journée</label>
-    <div class="sheet-actions">${isNew ? "" : `<button class="btn danger ghost" data-act="delRoutine" data-id="${r.id}">Supprimer</button>`}<button class="btn" data-act="saveRoutine" data-id="${r.id || ""}">${isNew ? "Ajouter" : "Enregistrer"}</button></div>`);
+  openSheet(`<h2>${isNew ? t("routine.new") : t("routine.edit")}</h2>
+    <label class="f">${t("form.name")}<input id="f-title" maxlength="60" value="${esc(r.title)}" placeholder="${t("routine.placeholder")}"></label>
+    ${iconField("f-emoji", r.emoji, EMO_R)}
+    <div class="f"><span>${t("form.moment")}</span><div class="seg" role="radiogroup">${MOMENTS().map(([k, , sh, e]) => `<button type="button" role="radio" aria-checked="${r.moment === k}" class="${r.moment === k ? "on" : ""}" data-act="seg" data-group="moment" data-v="${k}">${e} ${sh}</button>`).join("")}</div></div>
+    <div class="f"><span>${t("form.days")}</span><div class="days">${weekOrder().map(d => `<button type="button" class="day ${r.days.includes(d) ? "on" : ""}" data-act="toggleDay" data-v="${d}" aria-pressed="${r.days.includes(d)}" aria-label="${dayName(d)}">${DAYS()[d - 1]}</button>`).join("")}</div>
+      <div class="presets"><button type="button" class="link" data-act="daysPreset" data-v="all">${t("days.all")}</button>${WEEK.weekend.length ? `<button type="button" class="link" data-act="daysPreset" data-v="week">${t("days.week")}</button><button type="button" class="link" data-act="daysPreset" data-v="we">${t("days.weekend")}</button>` : ""}</div></div>
+    <div class="f two"><label>${t("form.stars")}<select id="f-stars">${[1, 2, 3, 4, 5].map(n => `<option value="${n}" ${n === r.stars ? "selected" : ""}>${fmtNum(n)}</option>`).join("")}</select></label>
+      <label>${t("form.place")}<select id="f-place"><option value="">${t("form.noPlace")}</option>${[...new Set([...PLACES(), ...(r.place && !PLACES().includes(r.place) ? [r.place] : [])])].map(p => `<option ${p === r.place ? "selected" : ""}>${esc(p)}</option>`).join("")}</select></label></div>
+    <label class="f">${t("form.timer")}<select id="f-timer"><option value="">${t("form.noTimer")}</option>${[2, 3, 5, 10, 15, 20, 30].map(n => `<option value="${n}" ${n === r.timer_minutes ? "selected" : ""}>${t("form.minutes", { n })}</option>`).join("")}</select></label>
+    <label class="check"><input type="checkbox" id="f-bonus" ${r.is_bonus ? "checked" : ""}> ${t("routine.bonusHelp")}</label>
+    <div class="sheet-actions">${isNew ? "" : `<button class="btn danger ghost" data-act="delRoutine" data-id="${r.id}">${t("btn.delete")}</button>`}<button class="btn" data-act="saveRoutine" data-id="${r.id || ""}">${isNew ? t("btn.add") : t("btn.save")}</button></div>`);
 }
 function rewardForm(w, preset) {
   const isNew = !w;
   w = w || { title: "", emoji: "🎁", tier: "moment", duration_days: 10, child_id: null, costs: {}, cost: 10, event_date: null, place: "", ...(preset || {}) };
   const fixed = !w.duration_days;
-  openSheet(`<h2>${isNew ? (w.tier === "event" ? "Nouvel événement" : "Nouvelle récompense") : "Modifier la récompense"}</h2>
-    <label class="f">Nom<input id="w-title" maxlength="60" value="${esc(w.title)}" placeholder="${w.tier === "event" ? "Spectacle de marionnettes" : "Pique-nique au parc"}"></label>
-    <div class="f"><span>Icône</span><div class="emo-row"><input id="w-emoji" class="emo-in" value="${esc(w.emoji)}" maxlength="8" aria-label="Icône choisie"><small class="muted">Choisis ci-dessous ou tape un emoji</small></div>${emoPicker("w-emoji", EMO_W)}</div>
-    <div class="f two"><label>Niveau<select id="w-tier" data-act="tierChange">${TIERS.map(([k, l]) => `<option value="${k}" ${w.tier === k ? "selected" : ""}>${l}</option>`).join("")}</select></label>
-      <label>Pour<select id="w-for">${S.children.length > 1 ? `<option value="">Tous les enfants</option>` : ""}${S.children.map(k => `<option value="${k.id}" ${w.child_id === k.id ? "selected" : ""}>${esc(k.name)}</option>`).join("")}</select></label></div>
-    <label class="check"><input type="checkbox" id="w-fixed" ${fixed ? "checked" : ""} data-act="pricePreview"> Prix fixe, identique pour tous, au lieu d'un prix calculé selon le rythme</label>
-    <div class="f two"><label>Durée d'effort (jours)<input id="w-days" type="number" inputmode="numeric" min="1" max="365" value="${w.duration_days || TIER_DAYS[w.tier] || 10}"></label>
-      <label>Prix fixe (étoiles)<input id="w-cost" type="number" inputmode="numeric" min="1" max="5000" value="${w.cost}"></label></div>
+  openSheet(`<h2>${isNew ? (w.tier === "event" ? t("reward.newEvent") : t("reward.new")) : t("reward.edit")}</h2>
+    <label class="f">${t("form.name")}<input id="w-title" maxlength="60" value="${esc(w.title)}" placeholder="${w.tier === "event" ? t("reward.eventPlaceholder") : t("reward.placeholder")}"></label>
+    ${iconField("w-emoji", w.emoji, EMO_W)}
+    <div class="f two"><label>${t("reward.level")}<select id="w-tier" data-act="tierChange">${TIERS().map(([k, l]) => `<option value="${k}" ${w.tier === k ? "selected" : ""}>${l}</option>`).join("")}</select></label>
+      <label>${t("reward.forLabel")}<select id="w-for">${S.children.length > 1 ? `<option value="">${t("reward.allChildren")}</option>` : ""}${S.children.map(k => `<option value="${k.id}" ${w.child_id === k.id ? "selected" : ""}>${esc(k.name)}</option>`).join("")}</select></label></div>
+    <label class="check"><input type="checkbox" id="w-fixed" ${fixed ? "checked" : ""} data-act="pricePreview"> ${t("reward.fixedHelp")}</label>
+    <div class="f two"><label>${t("reward.effortDays")}<input id="w-days" type="number" inputmode="numeric" min="1" max="365" value="${w.duration_days || TIER_DAYS[w.tier] || 10}"></label>
+      <label>${t("reward.fixedPrice")}<input id="w-cost" type="number" inputmode="numeric" min="1" max="5000" value="${w.cost}"></label></div>
     <p class="muted" id="w-preview"></p>
-    <div class="f two"><label>Date (facultatif)<input id="w-date" type="date" value="${esc(w.event_date || "")}"></label><label>Lieu (facultatif)<input id="w-place" maxlength="80" value="${esc(w.place || "")}"></label></div>
-    <div class="sheet-actions">${isNew ? "" : `<button class="btn danger ghost" data-act="delReward" data-id="${w.id}">Supprimer</button>`}<button class="btn" data-act="saveReward" data-id="${w.id || ""}">${isNew ? "Ajouter" : "Enregistrer"}</button></div>`);
+    <div class="f two"><label>${t("reward.date")}<input id="w-date" type="date" value="${esc(w.event_date || "")}"></label><label>${t("reward.place")}<input id="w-place" maxlength="80" value="${esc(w.place || "")}"></label></div>
+    <div class="sheet-actions">${isNew ? "" : `<button class="btn danger ghost" data-act="delReward" data-id="${w.id}">${t("btn.delete")}</button>`}<button class="btn" data-act="saveReward" data-id="${w.id || ""}">${isNew ? t("btn.add") : t("btn.save")}</button></div>`);
   const upd = () => { const d = +$("#w-days").value || 0, fx = $("#w-fixed").checked, who = $("#w-for").value;
-    $("#w-preview").textContent = fx ? "Même prix pour tous les enfants." : "Prix calculé : " + (who ? [S.children.find(k => k.id === who)] : S.children).map(k => `${k.name} ${roundPrice(d * rhythmOf(k.id))} ⭐`).join(", ") + "."; };
+    $("#w-preview").textContent = fx ? t("reward.samePrice") : t("reward.computed", { list: (who ? [S.children.find(k => k.id === who)] : S.children).map(k => `${k.name} ${fmtNum(roundPrice(d * rhythmOf(k.id)))} ⭐`).join(t("sep")) }); };
   ["#w-days", "#w-for"].forEach(q => $(q).addEventListener("input", upd)); $("#w-fixed").addEventListener("change", upd); upd();
   $("#w-tier").addEventListener("change", e => { $("#w-days").value = TIER_DAYS[e.target.value]; upd(); });
   if (isNew && preset && preset.child_id === undefined && S.children.length > 1) $("#w-for").value = "";
@@ -1277,17 +1374,29 @@ function childForm(c) {
   const isNew = !c;
   c = c || { name: "", emoji: "🧒", color: COLORS[S.children.length % COLORS.length] };
   S.form = { color: c.color };
-  openSheet(`<h2>${isNew ? "Ajouter un enfant" : "Modifier"}</h2>
-    <label class="f">Prénom<input id="k-name" maxlength="40" value="${esc(c.name)}" autocomplete="off"></label>
-    <div class="f"><span>Avatar</span><div class="emo-row"><input id="k-emoji" class="emo-in" value="${esc(c.emoji)}" maxlength="8" aria-label="Avatar choisi">${EMO_K.map(e => `<button type="button" class="emo" data-act="pickEmoji" data-target="k-emoji" data-e="${e}" aria-label="${e}">${e}</button>`).join("")}</div></div>
-    <div class="f"><span>Couleur de son pot</span><div class="swatches">${COLORS.map(col => `<button type="button" class="sw ${col === c.color ? "on" : ""}" style="background:${col}" data-act="pickColor" data-v="${col}" aria-label="Couleur ${col}"></button>`).join("")}</div></div>
-    <p class="muted">Seul le prénom est enregistré. Pas de nom de famille ni de date de naissance.</p>
-    <div class="sheet-actions">${isNew ? "" : `<button class="btn danger ghost" data-act="delChild" data-id="${c.id}">Supprimer</button>`}<button class="btn" data-act="saveChild" data-id="${c.id || ""}">${isNew ? "Ajouter" : "Enregistrer"}</button></div>`);
+  openSheet(`<h2>${isNew ? t("child.add") : t("btn.edit")}</h2>
+    <label class="f">${t("child.firstName")}<input id="k-name" maxlength="40" value="${esc(c.name)}" autocomplete="off"></label>
+    <div class="f"><span>${t("child.avatar")}</span><div class="emo-row"><input id="k-emoji" class="emo-in" value="${esc(c.emoji)}" maxlength="8" aria-label="${t("child.avatarChosen")}">${EMO_K.map(e => `<button type="button" class="emo" data-act="pickEmoji" data-target="k-emoji" data-e="${e}" aria-label="${e}">${e}</button>`).join("")}</div></div>
+    <div class="f"><span>${t("child.potColor")}</span><div class="swatches">${COLORS.map(col => `<button type="button" class="sw ${col === c.color ? "on" : ""}" style="background:${col}" data-act="pickColor" data-v="${col}" aria-label="${t("child.color", { c: col })}"></button>`).join("")}</div></div>
+    <p class="muted">${t("child.privacy")}</p>
+    <div class="sheet-actions">${isNew ? "" : `<button class="btn danger ghost" data-act="delChild" data-id="${c.id}">${t("btn.delete")}</button>`}<button class="btn" data-act="saveChild" data-id="${c.id || ""}">${isNew ? t("btn.add") : t("btn.save")}</button></div>`);
+}
+// Semaine et fuseau : à l'inscription (mode « onboard ») ou dans les réglages de la famille
+function weekForm(mode) {
+  const w = mode === "onboard" ? (S.wk || detectWeek()) : { ...WEEK };
+  S.form = { wkMode: mode };
+  const zones = tzList(); if (!zones.includes(w.tz)) zones.unshift(w.tz);
+  openSheet(`<h2>${t("week.title")}</h2><p class="muted">${t("week.help")}</p>
+    <label class="f">${t("week.firstDay")}<select id="wk-start">${[1, 2, 3, 4, 5, 6, 7].map(d => `<option value="${d}" ${d === w.start ? "selected" : ""}>${dayName(d)}</option>`).join("")}</select></label>
+    <div class="f"><span>${t("week.weekendDays")}</span><ul class="tpl">${[1, 2, 3, 4, 5, 6, 7].map(d => `<li><label><input type="checkbox" class="wk-we" value="${d}" ${w.weekend.includes(d) ? "checked" : ""}> ${dayName(d)}</label></li>`).join("")}</ul></div>
+    <label class="f">${t("week.timezone")}<select id="wk-tz">${zones.map(z => `<option value="${esc(z)}" ${z === w.tz ? "selected" : ""}>${esc(tzLabel(z))}</option>`).join("")}</select></label>
+    ${mode === "family" ? `<p class="muted small">${t("week.changeNote")}</p>` : ""}
+    <div class="sheet-actions"><button class="btn" data-act="saveWeek">${t("btn.save")}</button></div>`);
 }
 function pinSheet(title, text) {
   return new Promise(res => {
-    openSheet(`<h2>${esc(title)}</h2><p>${esc(text)}</p><label class="f">Code à 4 chiffres<input id="pin-in" class="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off"></label>
-      <div class="sheet-actions"><button class="btn ghost" id="pin-no">Annuler</button><button class="btn" id="pin-ok">Valider</button></div>`);
+    openSheet(`<h2>${esc(title)}</h2><p>${esc(text)}</p><label class="f">${t("pin.code4")}<input id="pin-in" class="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off"></label>
+      <div class="sheet-actions"><button class="btn ghost" id="pin-no">${t("btn.cancel")}</button><button class="btn" id="pin-ok">${t("btn.validate")}</button></div>`);
     const inp = $("#pin-in"); setTimeout(() => inp.focus(), 50);
     $("#pin-no").onclick = () => { closeSheet(); res(null); };
     $("#pin-ok").onclick = () => { const v = inp.value.trim(); closeSheet(); res(v); };
@@ -1296,10 +1405,10 @@ function pinSheet(title, text) {
 }
 async function ensurePin() {
   if (store.get("pin")) return true;
-  const p = await pinSheet("Crée un code parent", "Il sera demandé pour quitter le mode enfant sur ce téléphone.");
+  const p = await pinSheet(t("pin.createTitle"), t("pin.createText"));
   if (!p) return false;
-  if (!/^\d{4}$/.test(p)) { toast("Le code doit contenir 4 chiffres.", true); return false; }
-  store.set("pin", p); toast("Code parent enregistré."); return true;
+  if (!/^\d{4}$/.test(p)) { toast(t("pin.need4"), true); return false; }
+  store.set("pin", p); toast(t("pin.saved")); return true;
 }
 
 /* ================= Actions ================= */
@@ -1329,43 +1438,45 @@ A.goPair = () => { S.screen = "pair"; render(); };
 A.toAuth = () => { S.screen = "auth"; render(); };
 A.login = async () => {
   const email = $("#a-email").value.trim(), password = $("#a-pass").value;
-  if (!email || !password) return toast("Saisis ton e-mail et ton mot de passe.", true);
+  if (!email || !password) return toast(t("auth.needBoth"), true);
   const { data, error } = await sb.auth.signInWithPassword({ email, password }); if (error) throw error;
   S.session = data.session; await enterParent();
 };
 A.signup = async () => {
   const email = $("#a-email").value.trim(), password = $("#a-pass").value, name = ($("#a-name")?.value || "").trim();
-  if (!email || password.length < 6) return toast("Saisis un e-mail et un mot de passe de 6 caractères minimum.", true);
+  if (!email || password.length < 6) return toast(t("auth.needSignup"), true);
   const { data, error } = await sb.auth.signUp({ email, password, options: { data: { display_name: name }, emailRedirectTo: location.origin + location.pathname } });
   if (error) throw error;
   if (data.session) { S.session = data.session; await enterParent(); }
-  else { S.authMode = "login"; render(); openSheet(`<h2>Vérifie ta boîte mail</h2><p>Un lien de confirmation a été envoyé à <b>${esc(email)}</b>. Ouvre-le, puis reviens ici pour te connecter.</p><div class="sheet-actions"><button class="btn" data-act="closeSheet">Compris</button></div>`); }
+  else { S.authMode = "login"; render(); openSheet(`<h2>${t("auth.checkMail")}</h2><p>${t("auth.checkMailText", { email: `<b>${esc(email)}</b>` })}</p><div class="sheet-actions"><button class="btn" data-act="closeSheet">${t("btn.gotIt")}</button></div>`); }
 };
 A.forgot = async () => {
-  const email = $("#a-email").value.trim(); if (!email) return toast("Saisis d'abord ton e-mail.", true);
+  const email = $("#a-email").value.trim(); if (!email) return toast(t("auth.emailFirst"), true);
   const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname }); if (error) throw error;
-  toast("E-mail de réinitialisation envoyé.");
+  toast(t("auth.resetSent"));
 };
 A.closeSheet = () => closeSheet();
 A.logout = async () => {
   if (sb) await sb.auth.signOut().catch(() => {});
   ["parentCache", "pushOn"].forEach(k => store.del(k));
-  Object.assign(S, { session: null, family: null, children: [], routines: [], screen: "auth", tab: "today" }); render();
+  Object.assign(S, { session: null, family: null, children: [], routines: [], screen: "auth", tab: "today", wk: null }); render();
 };
 A.createFamily = async () => {
   const name = $("#o-name").value.trim();
   const rel = $("#o-rel").value;
-  const { data: fid, error } = await sb.rpc("create_family", { p_name: name, p_display_name: S.session.user.user_metadata?.display_name || "" }); if (error) throw error;
+  const w = S.wk || detectWeek();
+  const { data: fid, error } = await sb.rpc("create_family", { p_name: name, p_display_name: S.session.user.user_metadata?.display_name || "",
+    p_week_start: w.start, p_weekend: w.weekend, p_timezone: w.tz }); if (error) throw error;
   await sb.from("family_members").update({ relation: rel }).eq("family_id", fid).eq("user_id", S.session.user.id);
   await enterParent();
 };
 A.joinFamily = async () => {
-  const code = $("#o-code").value.trim(); if (code.length < 6) return toast("Le code contient 6 caractères.", true);
+  const code = $("#o-code").value.trim(); if (code.length < 6) return toast(t("pair.need6"), true);
   const { error } = await sb.rpc("join_family", { p_code: code, p_display_name: S.session.user.user_metadata?.display_name || "" }); if (error) throw error;
-  await enterParent(); toast("Tu as rejoint la famille.");
+  await enterParent(); toast(t("onboard.joined"));
 };
 A.pair = async () => {
-  const code = $("#p-code").value.trim(); if (code.length < 6) return toast("Le code contient 6 caractères.", true);
+  const code = $("#p-code").value.trim(); if (code.length < 6) return toast(t("pair.need6"), true);
   const { data, error } = await sb.rpc("child_pair", { p_code: code, p_label: null }); if (error) throw error;
   store.set("childToken", data.token); store.del("queue"); store.del("pin"); store.del("lastEarned"); store.del("seenFlowers");
   S.screen = "child"; S.ctab = "today"; S.cs = null; render(); await loadChild(); celebrate(true);
@@ -1384,80 +1495,81 @@ A.pToggle = async el => {
   } else if (Date.now() - new Date(cur.validated_at).getTime() < 5 * 60 * 1000) {
     S.completions = S.completions.filter(c => c !== cur); render();
     const { error } = await sb.from("completions").delete().eq("routine_id", rid).eq("day", day); if (error) throw error;
-    toast("Routine décochée.");
+    toast(t("routine.unchecked"));
   } else {
-    return toast("Routine déjà validée. Pour retirer des étoiles, utilise une étoile cassée (onglet Malus).", true);
+    return toast(t("routine.alreadyValidated"), true);
   }
   await reloadParent();
 };
 A.validateOne = async el => {
   const { id, day } = el.dataset;
   const { error } = await sb.from("completions").update({ validated_at: new Date().toISOString() }).eq("routine_id", id).eq("day", day).is("validated_at", null);
-  if (error) throw error; celebrate(false); await reloadParent("Routine validée.");
+  if (error) throw error; celebrate(false); await reloadParent(t("validate.done"));
 };
 A.refuseOne = async el => {
   const { id, day } = el.dataset;
   const { error } = await sb.from("completions").delete().eq("routine_id", id).eq("day", day).is("validated_at", null);
-  if (error) throw error; await reloadParent("Refusée : la routine est à refaire, sans pénalité.");
+  if (error) throw error; await reloadParent(t("validate.refused"));
 };
 A.validateAll = async () => {
   const { error } = await sb.from("completions").update({ validated_at: new Date().toISOString() }).eq("family_id", S.family.id).is("validated_at", null);
-  if (error) throw error; celebrate(true); await reloadParent("Tout est validé.");
+  if (error) throw error; celebrate(true); await reloadParent(t("validate.allDone"));
 };
 A.toggleAuto = async el => {
   const v = el.checked;
   const { error } = await sb.from("families").update({ auto_validate: v }).eq("id", S.family.id);
   if (error) { el.checked = !v; throw error; }
-  S.autoValidate = v; toast(v ? "Validation automatique à minuit activée." : "Validation manuelle uniquement.");
+  S.autoValidate = v; toast(v ? t("validate.autoEnabled") : t("validate.manualOnly"));
 };
 
 // Jardin
 function bloomCeremony(f) {
   const c = S.cs ? S.cs.child : null;
-  openSheet(`<div class="center"><h2>Ta fleur s'est ouverte !</h2><div style="max-width:220px;margin:0 auto">${stageSVG(13, f.species, c ? c.color : "#E58358", (SP[f.species] || {}).n, f.grade)}</div>
-    <p class="grade">${GRADE_NAME[f.grade]}</p><p>${esc((SP[f.species] || {}).n || "Ta fleur")} rejoint ton parterre ${SEASON_NAME[f.season]}. Un nouveau pot t'attend !</p>
-    <div class="sheet-actions" style="justify-content:center"><button class="btn" data-act="closeSheet">Voir mon jardin</button></div></div>`);
+  const nm = SP[f.species] ? spName(f.species) : t("bloom.yourFlower");
+  openSheet(`<div class="center"><h2>${t("bloom.title")}</h2><div style="max-width:220px;margin:0 auto">${stageSVG(13, f.species, c ? c.color : "#E58358", nm, f.grade)}</div>
+    <p class="grade">${GRADE_NAME[f.grade]}</p><p>${t("bloom.text", { name: esc(nm), season: SEASON_NAME[f.season] })}</p>
+    <div class="sheet-actions" style="justify-content:center"><button class="btn" data-act="closeSheet">${t("bloom.see")}</button></div></div>`);
   celebrate(f.grade >= 2); S.ctab = "garden"; render();
 }
 A.showGarden = el => {
   const c = S.children.find(k => k.id === el.dataset.id), gd = S.gardens[c.id]; if (!gd) return;
   const n = gardenNow(gd), se = seasonOfISO(gd.today), yr = gardenYearOfISO(gd.today), fl = gd.flowers || [];
-  openSheet(`<h2>Le jardin de ${esc(c.name)}</h2>
-    <div class="scene" style="max-width:240px;margin:0 auto">${stageSVG(n.stage, n.species, c.color)}<p>${n.waiting ? `Première fleur à partir de ${fmtLong(n.start)}.` : `${STAGE_NAME[n.stage]} : jour ${n.dayIdx}/${n.len}, ${n.good} bonne(s) journée(s). Floraison ${fmtLong(n.end)}.`}</p></div>
+  openSheet(`<h2>${t("garden.gardenOf", { name: esc(c.name) })}</h2>
+    <div class="scene" style="max-width:240px;margin:0 auto">${stageSVG(n.stage, n.species, c.color)}<p>${n.waiting ? t("garden.firstFromDot", { date: fmtLong(n.start) }) : t("garden.status", { stage: STAGE_NAME[n.stage], d: n.dayIdx, len: n.len, n: n.good, date: fmtLong(n.end) })}</p></div>
     ${dots14(gd)}
-    <h3 class="grp">Parterre ${SEASON_NAME[se]}</h3><div class="scene">${parterreSVG(se, fl.filter(f => f.season === se && f.garden_year === yr), true)}</div>
-    <h3 class="grp">Jardin ${yr}</h3><div class="scene">${gardenSVG(c.name, yr, fl.filter(f => f.garden_year === yr), { season: se })}</div>
-    <div class="sheet-actions"><button class="btn" data-act="closeSheet">Fermer</button></div>`);
+    <h3 class="grp">${t("garden.bedOf", { season: SEASON_NAME[se] })}</h3><div class="scene">${parterreSVG(se, fl.filter(f => f.season === se && f.garden_year === yr), true)}</div>
+    <h3 class="grp">${t("garden.gardenYear", { year: yr })}</h3><div class="scene">${gardenSVG(c.name, yr, fl.filter(f => f.garden_year === yr), { season: se })}</div>
+    <div class="sheet-actions"><button class="btn" data-act="closeSheet">${t("btn.close")}</button></div>`);
 };
 A.showYear = el => {
   const y = el.dataset.y, fl = (S.cs.garden.flowers || []).filter(f => f.garden_year === y);
-  openSheet(`<h2>Mon jardin ${esc(y)}</h2><div class="scene">${gardenSVG(S.cs.child.name, y, fl, null)}</div><p>${fl.length} fleurs, dont ${fl.filter(f => f.grade === 3).length} grandes.</p><div class="sheet-actions"><button class="btn" data-act="closeSheet">Fermer</button></div>`);
+  openSheet(`<h2>${t("kid.myGarden", { year: esc(y) })}</h2><div class="scene">${gardenSVG(S.cs.child.name, y, fl, null)}</div><p>${t("garden.yearCount", { n: fl.length, big: fl.filter(f => f.grade === 3).length })}</p><div class="sheet-actions"><button class="btn" data-act="closeSheet">${t("btn.close")}</button></div>`);
 };
 A.newPause = () => {
-  const t = todayISO();
-  openSheet(`<h2>Programmer une pause</h2><p class="muted">Pendant la pause, les jours ne comptent ni pour ni contre la fleur.</p>
-    <div class="f"><span>Enfants</span><ul class="tpl">${S.children.map(c => `<li><label><input type="checkbox" value="${c.id}" checked> ${esc(c.emoji)} ${esc(c.name)}</label></li>`).join("")}</ul></div>
-    <div class="f two"><label>Du<input type="date" id="pz-from" value="${t}"></label><label>Au<input type="date" id="pz-to" value="${addDays(t, 6)}"></label></div>
-    <label class="f">Motif<select id="pz-why"><option>Vacances</option><option>Maladie</option><option>Autre</option></select></label>
-    <div class="sheet-actions"><button class="btn" data-act="savePause">Enregistrer</button></div>`);
+  const td = todayISO();
+  openSheet(`<h2>${t("pause.new")}</h2><p class="muted">${t("pause.during")}</p>
+    <div class="f"><span>${t("family.children")}</span><ul class="tpl">${S.children.map(c => `<li><label><input type="checkbox" value="${c.id}" checked> ${esc(c.emoji)} ${esc(c.name)}</label></li>`).join("")}</ul></div>
+    <div class="f two"><label>${t("pause.from")}<input type="date" id="pz-from" value="${td}"></label><label>${t("pause.to")}<input type="date" id="pz-to" value="${addDays(td, 6)}"></label></div>
+    <label class="f">${t("pause.reason")}<select id="pz-why">${t("pause.reasons").map(r => `<option>${r}</option>`).join("")}</select></label>
+    <div class="sheet-actions"><button class="btn" data-act="savePause">${t("btn.save")}</button></div>`);
 };
 A.savePause = async () => {
   const ids = $$(".tpl input:checked", dlg).map(i => i.value), a = $("#pz-from").value, b = $("#pz-to").value;
-  if (!ids.length) return toast("Choisis au moins un enfant.", true);
-  if (!a || !b || b < a) return toast("Vérifie les dates : la fin doit être après le début.", true);
+  if (!ids.length) return toast(t("pause.needChild"), true);
+  if (!a || !b || b < a) return toast(t("pause.badDates"), true);
   const { error } = await sb.from("pauses").insert(ids.map(id => ({ family_id: S.family.id, child_id: id, start_day: a, end_day: b, reason: $("#pz-why").value })));
-  if (error) throw error; closeSheet(); await reloadParent("Pause enregistrée.");
+  if (error) throw error; closeSheet(); await reloadParent(t("pause.saved"));
 };
 A.delPause = async el => {
-  if (!await confirmSheet("Supprimer cette pause ?", "Les jours concernés compteront à nouveau normalement.", "Supprimer", true)) return;
+  if (!await confirmSheet(t("pause.delTitle"), t("pause.delText"), t("btn.delete"), true)) return;
   const { error } = await sb.from("pauses").delete().eq("id", el.dataset.id); if (error) throw error;
-  await reloadParent("Pause supprimée.");
+  await reloadParent(t("pause.deleted"));
 };
 A.repriceChild = async () => {
   const c = curChild(), r = rhythmOf(c.id), ws = S.rewards.filter(w => w.duration_days && (!w.child_id || w.child_id === c.id) && w.costs && w.costs[c.id] != null);
   for (const w of ws) { const costs = { ...w.costs, [c.id]: roundPrice(w.duration_days * r) }; const { error } = await sb.from("rewards").update({ costs, ...(w.child_id ? { cost: costs[c.id] } : {}) }).eq("id", w.id); if (error) throw error; }
   const { error } = await sb.from("children").update({ price_rhythm: r }).eq("id", c.id); if (error) throw error;
-  await reloadParent(`Prix de ${c.name} recalculés.`);
+  await reloadParent(t("reward.repriced", { name: c.name }));
 };
 async function markPriced(ids) { for (const id of ids) { const c = S.children.find(k => k.id === id); if (c && !c.price_rhythm) await sb.from("children").update({ price_rhythm: rhythmOf(id) }).eq("id", id); } }
 
@@ -1465,47 +1577,47 @@ async function markPriced(ids) { for (const id of ids) { const c = S.children.fi
 A.newOneoff = el => {
   const c = S.children.find(k => k.id === el.dataset.child) || curChild(); S.oneoffChild = c.id;
   const saved = S.oneoffTpl, have = new Set(saved.map(x => x.title.toLowerCase()));
-  const base = TPL_X.map((t, i) => ({ ...t, i })).filter(t => !have.has(t.t.toLowerCase()));
-  openSheet(`<h2>Routine exceptionnelle pour ${esc(c.name)}</h2>
-    ${saved.length ? `<h3 class="grp">Mes modèles</h3><ul class="tpl">${saved.map(x => `<li><button class="pen" data-act="oneoffFrom" data-tpl="${x.id}"><span>${esc(x.emoji)} ${esc(x.title)}</span><span>${x.stars} ⭐</span></button></li>`).join("")}</ul>` : ""}
-    ${base.length ? `<h3 class="grp">Suggestions</h3><ul class="tpl">${base.map(t => `<li><button class="pen" data-act="oneoffFrom" data-base="${t.i}"><span>${t.e} ${esc(t.t)}</span><span>${t.s} ⭐</span></button></li>`).join("")}</ul>` : ""}
-    <div class="sheet-actions"><button class="btn" data-act="oneoffFrom">Créer une nouvelle</button></div>`);
+  const base = TPL_X.map((x, i) => ({ ...x, i })).filter(x => !have.has(x.t.toLowerCase()));
+  openSheet(`<h2>${t("oneoff.for", { name: esc(c.name) })}</h2>
+    ${saved.length ? `<h3 class="grp">${t("oneoff.myTpl")}</h3><ul class="tpl">${saved.map(x => `<li><button class="pen" data-act="oneoffFrom" data-tpl="${x.id}"><span>${esc(x.emoji)} ${esc(x.title)}</span><span>${fmtNum(x.stars)} ⭐</span></button></li>`).join("")}</ul>` : ""}
+    ${base.length ? `<h3 class="grp">${t("common.suggestions")}</h3><ul class="tpl">${base.map(x => `<li><button class="pen" data-act="oneoffFrom" data-base="${x.i}"><span>${x.e} ${esc(x.t)}</span><span>${fmtNum(x.s)} ⭐</span></button></li>`).join("")}</ul>` : ""}
+    <div class="sheet-actions"><button class="btn" data-act="oneoffFrom">${t("oneoff.createNew")}</button></div>`);
 };
 A.oneoffFrom = el => {
   const tp = el.dataset.tpl ? S.oneoffTpl.find(x => x.id === el.dataset.tpl) : null, b = el.dataset.base != null ? TPL_X[+el.dataset.base] : null;
   const r = tp ? { title: tp.title, emoji: tp.emoji, stars: tp.stars, moment: tp.moment, is_bonus: tp.is_bonus } : b ? { title: b.t, emoji: b.e, stars: b.s, moment: b.m, is_bonus: true } : { title: "", emoji: "⭐", stars: 1, moment: "journee", is_bonus: true };
-  const t = todayISO(), c = S.children.find(k => k.id === S.oneoffChild);
+  const td = todayISO(), c = S.children.find(k => k.id === S.oneoffChild);
   S.form = { moment: r.moment, when: "le", type: r.is_bonus ? "bonus" : "oblig", tpl: tp ? tp.id : null };
   const seg = (group, opts, cur) => `<div class="seg" role="radiogroup">${opts.map(([k, l]) => `<button type="button" role="radio" aria-checked="${cur === k}" class="${cur === k ? "on" : ""}" data-act="seg" data-group="${group}" data-v="${k}">${l}</button>`).join("")}</div>`;
-  openSheet(`<h2>Routine exceptionnelle pour ${esc(c.name)}</h2>
-    <label class="f">Nom<input id="x-title" maxlength="60" value="${esc(r.title)}" placeholder="Préparer sa valise"></label>
-    <div class="f"><span>Icône</span><div class="emo-row"><input id="x-emoji" class="emo-in" value="${esc(r.emoji)}" maxlength="8" aria-label="Icône choisie"><small class="muted">Choisis ci-dessous ou tape un emoji</small></div>${emoPicker("x-emoji", EMO_R)}</div>
-    <div class="f"><span>Quand</span>${seg("when", [["le", "Le"], ["avant", "Avant le"]], "le")}<input id="x-date" type="date" min="${t}" value="${t}" style="margin-top:6px"></div>
-    <div class="f"><span>Type</span>${seg("type", [["bonus", "Bonus"], ["oblig", "Obligatoire"]], S.form.type)}<small class="muted" style="font-weight:400">Bonus : elle rapporte des étoiles sans pouvoir gâcher la journée. Obligatoire : elle compte dans la bonne journée.</small></div>
-    <div class="f two"><label>Étoiles<select id="x-stars">${[1, 2, 3, 4, 5].map(n => `<option ${n === r.stars ? "selected" : ""}>${n}</option>`).join("")}</select></label>
-      <label>Moment<select id="x-moment">${MOMENTS.map(([k, , l]) => `<option value="${k}" ${k === r.moment ? "selected" : ""}>${l}</option>`).join("")}</select></label></div>
-    ${tp ? "" : `<label class="check"><input type="checkbox" id="x-keep"> Garder comme modèle</label>`}
-    <div class="sheet-actions"><button class="btn" data-act="saveOneoff">Ajouter</button></div>`);
+  openSheet(`<h2>${t("oneoff.for", { name: esc(c.name) })}</h2>
+    <label class="f">${t("form.name")}<input id="x-title" maxlength="60" value="${esc(r.title)}" placeholder="${t("tpl.x.suitcase")}"></label>
+    ${iconField("x-emoji", r.emoji, EMO_R)}
+    <div class="f"><span>${t("oneoff.when")}</span>${seg("when", [["le", t("oneoff.on")], ["avant", t("oneoff.before")]], "le")}<input id="x-date" type="date" min="${td}" value="${td}" style="margin-top:6px"></div>
+    <div class="f"><span>${t("oneoff.type")}</span>${seg("type", [["bonus", t("oneoff.bonus")], ["oblig", t("oneoff.mandatory")]], S.form.type)}<small class="muted" style="font-weight:400">${t("oneoff.typeHelp")}</small></div>
+    <div class="f two"><label>${t("form.stars")}<select id="x-stars">${[1, 2, 3, 4, 5].map(n => `<option value="${n}" ${n === r.stars ? "selected" : ""}>${fmtNum(n)}</option>`).join("")}</select></label>
+      <label>${t("form.moment")}<select id="x-moment">${MOMENTS().map(([k, , l]) => `<option value="${k}" ${k === r.moment ? "selected" : ""}>${l}</option>`).join("")}</select></label></div>
+    ${tp ? "" : `<label class="check"><input type="checkbox" id="x-keep"> ${t("oneoff.keepTpl")}</label>`}
+    <div class="sheet-actions"><button class="btn" data-act="saveOneoff">${t("btn.add")}</button></div>`);
 };
 A.saveOneoff = async () => {
-  const title = $("#x-title").value.trim(), date = $("#x-date").value, t = todayISO(); if (!title) return toast("Donne un nom à la routine.", true);
-  if (!date || date < t) return toast("Choisis une date à partir d'aujourd'hui.", true);
+  const title = $("#x-title").value.trim(), date = $("#x-date").value, td = todayISO(); if (!title) return toast(t("routine.needName"), true);
+  if (!date || date < td) return toast(t("oneoff.needDate"), true);
   const row = { family_id: S.family.id, child_id: S.oneoffChild, kind: "oneoff", title, emoji: $("#x-emoji").value.trim() || "⭐", stars: +$("#x-stars").value,
-    moment: $("#x-moment").value, is_bonus: S.form.type !== "oblig", start_day: S.form.when === "avant" ? t : date, end_day: date, days: [], position: 0 };
+    moment: $("#x-moment").value, is_bonus: S.form.type !== "oblig", start_day: S.form.when === "avant" ? td : date, end_day: date, days: [], position: 0 };
   const { error } = await sb.from("routines").insert(row); if (error) throw error;
   if (S.form.tpl) { const tp = S.oneoffTpl.find(x => x.id === S.form.tpl); await sb.from("oneoff_templates").update({ use_count: (tp.use_count || 0) + 1, last_used: new Date().toISOString() }).eq("id", tp.id); }
   else if ($("#x-keep") && $("#x-keep").checked) await sb.from("oneoff_templates").upsert({ family_id: S.family.id, title, emoji: row.emoji, stars: row.stars, moment: row.moment, is_bonus: row.is_bonus }, { onConflict: "family_id,title" });
-  closeSheet(); await reloadParent("Routine exceptionnelle ajoutée.");
+  closeSheet(); await reloadParent(t("oneoff.added"));
 };
 A.delOneoff = async el => {
-  if (!await confirmSheet("Supprimer cette routine exceptionnelle ?", "Les étoiles déjà gagnées sont conservées.", "Supprimer", true)) return;
+  if (!await confirmSheet(t("oneoff.delTitle"), t("oneoff.delText"), t("btn.delete"), true)) return;
   const { error } = await sb.from("routines").update({ active: false }).eq("id", el.dataset.id); if (error) throw error;
-  await reloadParent("Supprimée.");
+  await reloadParent(t("common.deletedF"));
 };
-A.manageOneoffTpl = () => openSheet(`<h2>Modèles exceptionnels</h2><p class="muted">Partagés par toute la famille. Classés du plus utilisé au moins utilisé.</p>
-  ${S.oneoffTpl.length ? `<ul class="hist">${S.oneoffTpl.map(x => `<li><span>${esc(x.emoji)} ${esc(x.title)}</span><span class="muted">${x.use_count} fois</span><button class="link" data-act="delOneoffTpl" data-id="${x.id}">Supprimer</button></li>`).join("")}</ul>` : `<p class="empty">Aucun modèle. Coche « Garder comme modèle » en créant une routine exceptionnelle.</p>`}
-  <div class="sheet-actions"><button class="btn" data-act="closeSheet">Fermer</button></div>`);
-A.delOneoffTpl = async el => { const { error } = await sb.from("oneoff_templates").delete().eq("id", el.dataset.id); if (error) throw error; await reloadParent("Modèle supprimé."); A.manageOneoffTpl(); };
+A.manageOneoffTpl = () => openSheet(`<h2>${t("oneoff.tplTitle")}</h2><p class="muted">${t("oneoff.tplHelp")}</p>
+  ${S.oneoffTpl.length ? `<ul class="hist">${S.oneoffTpl.map(x => `<li><span>${esc(x.emoji)} ${esc(x.title)}</span><span class="muted">${t("oneoff.times", { n: x.use_count })}</span><button class="link" data-act="delOneoffTpl" data-id="${x.id}">${t("btn.delete")}</button></li>`).join("")}</ul>` : `<p class="empty">${t("oneoff.noTpl")}</p>`}
+  <div class="sheet-actions"><button class="btn" data-act="closeSheet">${t("btn.close")}</button></div>`);
+A.delOneoffTpl = async el => { const { error } = await sb.from("oneoff_templates").delete().eq("id", el.dataset.id); if (error) throw error; await reloadParent(t("oneoff.tplDeleted")); A.manageOneoffTpl(); };
 
 // Étoiles cassées
 A.mFilter = el => { S.mfilter = el.dataset.id; if (el.dataset.id !== "all") S.currentChild = el.dataset.id; render(); };
@@ -1513,50 +1625,51 @@ A.pickPenChild = el => { S.currentChild = el.value; A.breakStar(); };
 A.breakStar = () => {
   if (S.tab === "malus" && S.mfilter && S.mfilter !== "all") S.currentChild = S.mfilter;
   const c = curChild(), v = viewFor(c);
-  const pick = S.children.length > 1 ? `<label class="f">Enfant<select id="pen-child" onchange="A.pickPenChild(this)">${S.children.map(k => `<option value="${k.id}" ${k.id === c.id ? "selected" : ""}>${esc(k.emoji + " " + k.name)}</option>`).join("")}</select></label>` : "";
-  if (v.balance <= 0 && !pick) return toast(`${c.name} n'a aucune étoile à dépenser : rien à casser.`, true);
-  openSheet(`<h2>${brokenStar(26)} Casser une étoile</h2>${pick}
-    <p class="muted">Pour un écart immédiat de ${esc(c.name)} (solde : ${v.balance} ⭐). 3 étoiles au maximum, jamais en dessous de zéro. La plante et les badges ne bougent pas.</p>
-    ${S.penalties.length ? `<ul class="tpl">${S.penalties.map(p => `<li><button class="pen" data-act="applyPenalty" data-id="${p.id}"><span>${esc(p.emoji)} ${esc(p.title)}</span><span aria-label="${p.stars} étoiles">${brokenStar(18).repeat(p.stars)}</span></button></li>`).join("")}</ul>`
-      : `<p class="empty">Aucun malus prédéfini. Crée-les pour rester cohérent d'un parent à l'autre.</p>`}
-    <h3 class="grp">Autre motif</h3>
-    <div class="f two"><label>Motif<input id="pen-title" maxlength="60" placeholder="A jeté son assiette"></label><label>Étoiles<select id="pen-stars"><option>1</option><option>2</option><option>3</option></select></label></div>
-    <div class="sheet-actions"><button class="btn ghost" data-act="penaltyCatalog">Gérer les malus prédéfinis</button><button class="btn danger" data-act="applyPenalty">Casser</button></div>`);
+  const pick = S.children.length > 1 ? `<label class="f">${t("malus.child")}<select id="pen-child" onchange="A.pickPenChild(this)">${S.children.map(k => `<option value="${k.id}" ${k.id === c.id ? "selected" : ""}>${esc(k.emoji + " " + k.name)}</option>`).join("")}</select></label>` : "";
+  if (v.balance <= 0 && !pick) return toast(t("malus.nothingToBreak", { name: c.name }), true);
+  const n13 = `${[1, 2, 3].map(n => `<option value="${n}">${fmtNum(n)}</option>`).join("")}`;
+  openSheet(`<h2>${brokenStar(26)} ${t("malus.break")}</h2>${pick}
+    <p class="muted">${t("malus.breakHelp", { name: esc(c.name), n: v.balance })}</p>
+    ${S.penalties.length ? `<ul class="tpl">${S.penalties.map(p => `<li><button class="pen" data-act="applyPenalty" data-id="${p.id}"><span>${esc(p.emoji)} ${esc(p.title)}</span><span aria-label="${t("kid.starsAria", { n: p.stars })}">${brokenStar(18).repeat(p.stars)}</span></button></li>`).join("")}</ul>`
+      : `<p class="empty">${t("malus.noPreset")}</p>`}
+    <h3 class="grp">${t("malus.otherReason")}</h3>
+    <div class="f two"><label>${t("malus.reason")}<input id="pen-title" maxlength="60" placeholder="${t("malus.reasonPlaceholder")}"></label><label>${t("form.stars")}<select id="pen-stars">${n13}</select></label></div>
+    <div class="sheet-actions"><button class="btn ghost" data-act="penaltyCatalog">${t("malus.manage")}</button><button class="btn danger" data-act="applyPenalty">${t("malus.breakBtn")}</button></div>`);
 };
 A.applyPenalty = async el => {
   const c = curChild(), pid = el.dataset.id || null;
   let title = null, stars = null;
-  if (!pid) { title = $("#pen-title").value.trim(); stars = +$("#pen-stars").value; if (!title) return toast("Indique un motif.", true); }
+  if (!pid) { title = $("#pen-title").value.trim(); stars = +$("#pen-stars").value; if (!title) return toast(t("malus.needReason"), true); }
   const { data, error } = await sb.rpc("apply_penalty", { p_child: c.id, p_penalty: pid, p_title: title, p_emoji: null, p_stars: stars });
   if (error) throw error;
-  closeSheet(); await reloadParent(`${data} étoile${data > 1 ? "s cassées" : " cassée"} pour ${c.name}.`);
+  closeSheet(); await reloadParent(t("malus.broken", { n: data, name: c.name }));
 };
 A.cancelPenalty = async el => {
-  if (!await confirmSheet("Annuler cette étoile cassée ?", "Les étoiles sont rendues à l'enfant.", "Annuler le malus")) return;
+  if (!await confirmSheet(t("malus.cancelTitle"), t("common.starsReturned"), t("malus.cancelBtn"))) return;
   const { error } = await sb.from("penalty_events").delete().eq("id", el.dataset.id); if (error) throw error;
-  await reloadParent("Malus annulé, étoiles rendues.");
+  await reloadParent(t("malus.cancelled"));
 };
 A.penaltyCatalog = () => {
   const have = new Set(S.penalties.map(p => p.title.toLowerCase()));
-  const sugg = TPL_P.map((t, i) => ({ ...t, i })).filter(t => !have.has(t.t.toLowerCase()));
-  openSheet(`<h2>Malus prédéfinis</h2><p class="muted">Communs à tous les enfants, de 1 à 3 étoiles.</p>
-    ${S.penalties.length ? `<ul class="hist">${S.penalties.map(p => `<li><span>${esc(p.emoji)} ${esc(p.title)}</span><span>${p.stars} ⭐</span><button class="link" data-act="delPenalty" data-id="${p.id}">Supprimer</button></li>`).join("")}</ul>` : ""}
-    ${sugg.length ? `<h3 class="grp">Suggestions</h3><ul class="tpl">${sugg.map(t => `<li><label><input type="checkbox" value="${t.i}"><span>${t.e} ${esc(t.t)} (${t.s} ⭐)</span></label></li>`).join("")}</ul>` : ""}
-    <h3 class="grp">Créer un malus</h3>
-    <div class="f two"><label>Motif<input id="np-title" maxlength="60"></label><label>Étoiles<select id="np-stars"><option>1</option><option>2</option><option>3</option></select></label></div>
-    <div class="sheet-actions"><button class="btn ghost" data-act="breakStar">Retour</button><button class="btn" data-act="savePenalties">Enregistrer</button></div>`);
+  const sugg = TPL_P.map((x, i) => ({ ...x, i })).filter(x => !have.has(x.t.toLowerCase()));
+  openSheet(`<h2>${t("malus.catalog")}</h2><p class="muted">${t("malus.catalogHelp")}</p>
+    ${S.penalties.length ? `<ul class="hist">${S.penalties.map(p => `<li><span>${esc(p.emoji)} ${esc(p.title)}</span><span>${fmtNum(p.stars)} ⭐</span><button class="link" data-act="delPenalty" data-id="${p.id}">${t("btn.delete")}</button></li>`).join("")}</ul>` : ""}
+    ${sugg.length ? `<h3 class="grp">${t("common.suggestions")}</h3><ul class="tpl">${sugg.map(x => `<li><label><input type="checkbox" value="${x.i}"><span>${x.e} ${esc(x.t)} (${fmtNum(x.s)} ⭐)</span></label></li>`).join("")}</ul>` : ""}
+    <h3 class="grp">${t("malus.createTitle")}</h3>
+    <div class="f two"><label>${t("malus.reason")}<input id="np-title" maxlength="60"></label><label>${t("form.stars")}<select id="np-stars">${[1, 2, 3].map(n => `<option value="${n}">${fmtNum(n)}</option>`).join("")}</select></label></div>
+    <div class="sheet-actions"><button class="btn ghost" data-act="breakStar">${t("btn.back")}</button><button class="btn" data-act="savePenalties">${t("btn.save")}</button></div>`);
 };
 A.savePenalties = async () => {
-  const rows = $$(".tpl input:checked", dlg).map(i => TPL_P[+i.value]).map(t => ({ family_id: S.family.id, title: t.t, emoji: t.e, stars: t.s }));
-  const t = $("#np-title").value.trim();
-  if (t) rows.push({ family_id: S.family.id, title: t, emoji: "💔", stars: +$("#np-stars").value });
-  if (!rows.length) return toast("Coche une suggestion ou saisis un motif.", true);
+  const rows = $$(".tpl input:checked", dlg).map(i => TPL_P[+i.value]).map(x => ({ family_id: S.family.id, title: x.t, emoji: x.e, stars: x.s }));
+  const title = $("#np-title").value.trim();
+  if (title) rows.push({ family_id: S.family.id, title, emoji: "💔", stars: +$("#np-stars").value });
+  if (!rows.length) return toast(t("malus.needOne"), true);
   const { error } = await sb.from("penalties").insert(rows); if (error) throw error;
-  await reloadParent(`${rows.length} malus ajouté${rows.length > 1 ? "s" : ""}.`); A.penaltyCatalog();
+  await reloadParent(t("malus.added", { n: rows.length })); A.penaltyCatalog();
 };
 A.delPenalty = async el => {
   const { error } = await sb.from("penalties").update({ active: false }).eq("id", el.dataset.id); if (error) throw error;
-  await reloadParent("Malus supprimé."); A.penaltyCatalog();
+  await reloadParent(t("malus.deleted")); A.penaltyCatalog();
 };
 
 // Routines
@@ -1566,39 +1679,39 @@ A.pickEmoji = el => { const t = $("#" + (el.dataset.target || "f-emoji")); if (t
 A.seg = el => { S.form[el.dataset.group] = el.dataset.v; $$("button", el.parentElement).forEach(b => { const on = b === el; b.classList.toggle("on", on); b.setAttribute("aria-checked", on); }); };
 const syncDays = () => $$(".day", dlg).forEach(b => { const on = S.form.days.includes(+b.dataset.v); b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); });
 A.toggleDay = el => { const v = +el.dataset.v; S.form.days = S.form.days.includes(v) ? S.form.days.filter(d => d !== v) : [...S.form.days, v]; syncDays(); };
-A.daysPreset = el => { S.form.days = { all: [1, 2, 3, 4, 5, 6, 7], week: [1, 2, 3, 4, 5], we: [6, 7] }[el.dataset.v]; syncDays(); };
+A.daysPreset = el => { S.form.days = { all: [1, 2, 3, 4, 5, 6, 7], week: workDays(), we: weekendDays() }[el.dataset.v]; syncDays(); };
 A.saveRoutine = async el => {
   const title = $("#f-title").value.trim();
-  if (!title) return toast("Donne un nom à la routine.", true);
-  if (!S.form.days.length) return toast("Choisis au moins un jour.", true);
+  if (!title) return toast(t("routine.needName"), true);
+  if (!S.form.days.length) return toast(t("routine.needDay"), true);
   const row = { title, emoji: $("#f-emoji").value.trim() || "⭐", moment: S.form.moment, days: [...S.form.days].sort((a, b) => a - b),
     stars: +$("#f-stars").value, place: $("#f-place").value || null, timer_minutes: $("#f-timer").value ? +$("#f-timer").value : null, is_bonus: $("#f-bonus").checked };
   const id = el.dataset.id;
   const { error } = id ? await sb.from("routines").update(row).eq("id", id)
     : await sb.from("routines").insert({ ...row, family_id: S.family.id, child_id: S.currentChild, position: S.routines.filter(r => r.child_id === S.currentChild).length });
   if (error) throw error;
-  closeSheet(); await reloadParent(id ? "Routine enregistrée." : "Routine ajoutée.");
+  closeSheet(); await reloadParent(id ? t("routine.saved") : t("routine.added"));
 };
 A.delRoutine = async el => {
-  if (!await confirmSheet("Supprimer cette routine ?", "Elle disparaît des journées à venir. Les étoiles déjà gagnées sont conservées.", "Supprimer", true)) return;
+  if (!await confirmSheet(t("routine.delTitle"), t("routine.delText"), t("btn.delete"), true)) return;
   const { error } = await sb.from("routines").update({ active: false }).eq("id", el.dataset.id); if (error) throw error;
-  await reloadParent("Routine supprimée.");
+  await reloadParent(t("routine.deletedToast"));
 };
 A.routineTemplates = () => {
   const c = curChild(); const have = new Set(S.routines.filter(r => r.child_id === c.id).map(r => r.title.toLowerCase()));
-  openSheet(`<h2>Modèles de routines pour ${esc(c.name)}</h2>${MOMENTS.map(([k, l, , e]) => {
-    const list = TPL_R.map((t, i) => ({ ...t, i })).filter(t => t.m === k); if (!list.length) return "";
-    return `<h3 class="grp">${e} ${l}</h3><ul class="tpl">${list.map(t => { const had = have.has(t.t.toLowerCase()); return `<li><label class="${had ? "had" : ""}"><input type="checkbox" value="${t.i}" ${had ? "disabled" : ""}><span>${t.e} ${esc(t.t)}${t.b ? " (bonus)" : ""}${t.d ? ", en semaine" : ""}${had ? ", déjà ajoutée" : ""}</span></label></li>`; }).join("")}</ul>`;
-  }).join("")}<div class="sheet-actions"><button class="btn" data-act="addRoutineTpl">Ajouter la sélection</button></div>`);
+  openSheet(`<h2>${t("routine.tplFor", { name: esc(c.name) })}</h2>${MOMENTS().map(([k, l, , e]) => {
+    const list = TPL_R.map((x, i) => ({ ...x, i })).filter(x => x.m === k); if (!list.length) return "";
+    return `<h3 class="grp">${e} ${l}</h3><ul class="tpl">${list.map(x => { const had = have.has(x.t.toLowerCase()); return `<li><label class="${had ? "had" : ""}"><input type="checkbox" value="${x.i}" ${had ? "disabled" : ""}><span>${x.e} ${esc(x.t)}${x.b ? " " + t("routine.bonusTag") : ""}${x.d ? t("sep") + lower(t("days.week")) : ""}${had ? t("sep") + t("common.alreadyAdded") : ""}</span></label></li>`; }).join("")}</ul>`;
+  }).join("")}<div class="sheet-actions"><button class="btn" data-act="addRoutineTpl">${t("common.addSelection")}</button></div>`);
 };
 A.addRoutineTpl = async () => {
   const picks = $$(".tpl input:checked", dlg).map(i => TPL_R[+i.value]);
-  if (!picks.length) return toast("Coche au moins une routine.", true);
+  if (!picks.length) return toast(t("routine.needOne"), true);
   const base = S.routines.filter(r => r.child_id === S.currentChild).length;
-  const rows = picks.map((t, i) => ({ family_id: S.family.id, child_id: S.currentChild, title: t.t, emoji: t.e, moment: t.m, place: t.p || null,
-    stars: t.s || 1, days: t.d || [1, 2, 3, 4, 5, 6, 7], is_bonus: !!t.b, timer_minutes: t.tm || null, position: base + i }));
+  const rows = picks.map((x, i) => ({ family_id: S.family.id, child_id: S.currentChild, title: x.t, emoji: x.e, moment: x.m, place: x.p != null ? PLACES()[x.p] : null,
+    stars: x.s || 1, days: tplDays(x.d), is_bonus: !!x.b, timer_minutes: x.tm || null, position: base + i }));
   const { error } = await sb.from("routines").insert(rows); if (error) throw error;
-  closeSheet(); await reloadParent(`${rows.length} routine${rows.length > 1 ? "s ajoutées" : " ajoutée"}.`);
+  closeSheet(); await reloadParent(t("routine.addedN", { n: rows.length }));
 };
 
 // Récompenses
@@ -1606,9 +1719,9 @@ A.newReward = () => rewardForm(null);
 A.editReward = el => rewardForm(S.rewards.find(w => w.id === el.dataset.id));
 A.saveReward = async el => {
   const title = $("#w-title").value.trim(), fixed = $("#w-fixed").checked, days = parseInt($("#w-days").value, 10), cost = parseInt($("#w-cost").value, 10);
-  if (!title) return toast("Donne un nom à la récompense.", true);
-  if (fixed && !(cost >= 1 && cost <= 5000)) return toast("Le prix doit être entre 1 et 5000 étoiles.", true);
-  if (!fixed && !(days >= 1 && days <= 365)) return toast("La durée doit être entre 1 et 365 jours.", true);
+  if (!title) return toast(t("reward.needName"), true);
+  if (fixed && !(cost >= 1 && cost <= 5000)) return toast(t("reward.badPrice"), true);
+  if (!fixed && !(days >= 1 && days <= 365)) return toast(t("reward.badDays"), true);
   const who = $("#w-for").value || null, ids = who ? [who] : S.children.map(k => k.id);
   const costs = fixed ? {} : pricesFor(days, ids);
   const row = { title, emoji: $("#w-emoji").value.trim() || "🎁", tier: $("#w-tier").value, child_id: who, duration_days: fixed ? null : days, costs,
@@ -1617,45 +1730,45 @@ A.saveReward = async el => {
   const id = el.dataset.id;
   const { error } = id ? await sb.from("rewards").update(row).eq("id", id) : await sb.from("rewards").insert({ ...row, family_id: S.family.id });
   if (error) throw error;
-  closeSheet(); await reloadParent(id ? "Récompense enregistrée." : "Récompense ajoutée.");
+  closeSheet(); await reloadParent(id ? t("reward.saved") : t("reward.added"));
 };
 A.delReward = async el => {
-  if (!await confirmSheet("Supprimer cette récompense ?", "L'historique des échanges est conservé.", "Supprimer", true)) return;
+  if (!await confirmSheet(t("reward.delTitle"), t("reward.delText"), t("btn.delete"), true)) return;
   const { error } = await sb.from("rewards").update({ active: false }).eq("id", el.dataset.id); if (error) throw error;
-  await reloadParent("Récompense supprimée.");
+  await reloadParent(t("reward.deleted"));
 };
 A.rewardTemplates = () => {
   const have = new Set(S.rewards.map(w => w.title.toLowerCase())), c = curChild();
-  openSheet(`<h2>Référentiel de récompenses</h2><p class="muted">Proposées à tous les enfants. Le prix est calculé selon le rythme de chacun (pour ${esc(c.name)} : environ ${Math.round(rhythmOf(c.id) * 10) / 10} ⭐ par jour).</p>
-    ${TIERS.filter(([k]) => k !== "event").map(([k, l, d]) => `<h3 class="tier-h">${l}<small>${d}</small></h3><ul class="tpl">${TPL_W.map((t, i) => ({ ...t, i })).filter(t => t.tier === k).map(t => { const had = have.has(t.t.toLowerCase()); return `<li><label class="${had ? "had" : ""}"><input type="checkbox" value="${t.i}" ${had ? "disabled" : ""}><span>${t.e} ${esc(t.t)} (${roundPrice(t.d * rhythmOf(c.id))} ⭐ pour ${esc(c.name)})${had ? ", déjà ajoutée" : ""}</span></label></li>`; }).join("")}</ul>`).join("")}
-    <h3 class="tier-h">Événements<small>à une date précise</small></h3><p class="muted">Un spectacle, un atelier, une fête de quartier : crée-le à partir du modèle et adapte-le.</p>
-    <div class="sheet-actions"><button class="btn ghost" data-act="newEvent">Créer un événement</button><button class="btn" data-act="addRewardTpl">Ajouter la sélection</button></div>`);
+  openSheet(`<h2>${t("reward.tplTitle")}</h2><p class="muted">${t("reward.tplHelp", { name: esc(c.name), n: fmtNum(Math.round(rhythmOf(c.id) * 10) / 10) })}</p>
+    ${TIERS().filter(([k]) => k !== "event").map(([k, l, d]) => `<h3 class="tier-h">${l}<small>${d}</small></h3><ul class="tpl">${TPL_W.map((x, i) => ({ ...x, i })).filter(x => x.tier === k).map(x => { const had = have.has(x.t.toLowerCase()); return `<li><label class="${had ? "had" : ""}"><input type="checkbox" value="${x.i}" ${had ? "disabled" : ""}><span>${x.e} ${esc(x.t)} ${t("reward.tplPrice", { n: roundPrice(x.d * rhythmOf(c.id)), name: esc(c.name) })}${had ? t("sep") + t("common.alreadyAdded") : ""}</span></label></li>`; }).join("")}</ul>`).join("")}
+    <h3 class="tier-h">${t("tier.event.name")}<small>${t("tier.event.hint")}</small></h3><p class="muted">${t("reward.eventHelp")}</p>
+    <div class="sheet-actions"><button class="btn ghost" data-act="newEvent">${t("reward.createEvent")}</button><button class="btn" data-act="addRewardTpl">${t("common.addSelection")}</button></div>`);
 };
-A.newEvent = () => rewardForm(null, { tier: "event", emoji: "🎪", title: "Spectacle", duration_days: 30 });
+A.newEvent = () => rewardForm(null, { tier: "event", emoji: "🎪", title: t("reward.eventDefault"), duration_days: 30 });
 A.addRewardTpl = async () => {
   const picks = $$(".tpl input:checked", dlg).map(i => TPL_W[+i.value]).sort((a, b) => TIER_RANK[a.tier] - TIER_RANK[b.tier] || a.d - b.d);
-  if (!picks.length) return toast("Coche au moins une récompense.", true);
+  if (!picks.length) return toast(t("reward.needOne"), true);
   const ids = S.children.map(k => k.id);
   // Les niveaux restent dans l'ordre : un niveau supérieur ne peut pas coûter autant qu'un niveau inférieur
   const maxBelow = {}; ids.forEach(id => maxBelow[id] = {});
   S.rewards.filter(w => w.duration_days).forEach(w => ids.forEach(id => { const r = TIER_RANK[w.tier || "moment"], v = costFor(w, id); maxBelow[id][r] = Math.max(maxBelow[id][r] || 0, v); }));
-  const rows = picks.map(t => { const costs = pricesFor(t.d, ids);
-    ids.forEach(id => { const r = TIER_RANK[t.tier]; const lower = Math.max(0, ...Object.entries(maxBelow[id]).filter(([k]) => +k < r).map(([, v]) => v));
+  const rows = picks.map(x => { const costs = pricesFor(x.d, ids);
+    ids.forEach(id => { const r = TIER_RANK[x.tier]; const lower = Math.max(0, ...Object.entries(maxBelow[id]).filter(([k]) => +k < r).map(([, v]) => v));
       while (costs[id] <= lower) costs[id] += stepOf(costs[id]); maxBelow[id][r] = Math.max(maxBelow[id][r] || 0, costs[id]); });
-    return { family_id: S.family.id, title: t.t, emoji: t.e, tier: t.tier, duration_days: t.d, costs, cost: roundPrice(t.d * 5) }; });
+    return { family_id: S.family.id, title: x.t, emoji: x.e, tier: x.tier, duration_days: x.d, costs, cost: roundPrice(x.d * 5) }; });
   const { error } = await sb.from("rewards").insert(rows); if (error) throw error;
-  await markPriced(ids); closeSheet(); await reloadParent(`${rows.length} récompense${rows.length > 1 ? "s ajoutées" : " ajoutée"}.`);
+  await markPriced(ids); closeSheet(); await reloadParent(t("reward.addedN", { n: rows.length }));
 };
 A.pRedeem = async el => {
   const w = S.rewards.find(x => x.id === el.dataset.id), c = curChild(), cost = costFor(w, c.id);
-  if (!await confirmSheet("Échanger des étoiles ?", `${cost} étoiles de ${c.name} contre « ${w.title} ».`, "Échanger")) return;
+  if (!await confirmSheet(t("reward.exchangeTitle"), t("reward.exchangeText", { n: cost, name: c.name, title: w.title }), t("reward.exchange"))) return;
   const { error } = await sb.from("redemptions").insert({ family_id: S.family.id, child_id: c.id, reward_id: w.id, title: w.title, emoji: w.emoji, cost }); if (error) throw error;
-  celebrate(true); await reloadParent("Récompense échangée.");
+  celebrate(true); await reloadParent(t("reward.exchanged"));
 };
 A.cancelRedeem = async el => {
-  if (!await confirmSheet("Annuler cet échange ?", "Les étoiles sont rendues à l'enfant.", "Annuler l'échange", true)) return;
+  if (!await confirmSheet(t("reward.cancelTitle"), t("common.starsReturned"), t("reward.cancelBtn"), true)) return;
   const { error } = await sb.from("redemptions").delete().eq("id", el.dataset.id); if (error) throw error;
-  await reloadParent("Échange annulé, étoiles rendues.");
+  await reloadParent(t("reward.cancelled"));
 };
 
 // Enfants
@@ -1663,34 +1776,34 @@ A.newChild = () => childForm(null);
 A.editChild = el => childForm(S.children.find(c => c.id === el.dataset.id));
 A.pickColor = el => { S.form.color = el.dataset.v; $$(".sw", dlg).forEach(b => b.classList.toggle("on", b === el)); };
 A.saveChild = async el => {
-  const name = $("#k-name").value.trim(); if (!name) return toast("Saisis un prénom.", true);
+  const name = $("#k-name").value.trim(); if (!name) return toast(t("child.needName"), true);
   const row = { name, emoji: $("#k-emoji").value.trim() || "🧒", color: S.form.color };
   const id = el.dataset.id;
   const res = id ? await sb.from("children").update(row).eq("id", id).select().single()
     : await sb.from("children").insert({ ...row, family_id: S.family.id, position: S.children.length }).select().single();
   if (res.error) throw res.error;
   S.currentChild = res.data.id; closeSheet();
-  await reloadParent(id ? "Enregistré." : `${name} a rejoint la famille.`);
+  await reloadParent(id ? t("common.savedM") : t("child.joined", { name }));
   if (!id) { S.tab = "routines"; render(); A.routineTemplates(); }
 };
 A.delChild = async el => {
   const c = S.children.find(k => k.id === el.dataset.id);
-  if (!await confirmSheet(`Supprimer ${c.name} ?`, "Ses routines, ses étoiles et son historique seront effacés définitivement.", "Supprimer", true)) return;
+  if (!await confirmSheet(t("child.delTitle", { name: c.name }), t("child.delText"), t("btn.delete"), true)) return;
   const { error } = await sb.from("children").delete().eq("id", c.id); if (error) throw error;
-  await reloadParent("Supprimé.");
+  await reloadParent(t("common.deletedM"));
 };
 A.deviceCode = async el => {
   const c = S.children.find(k => k.id === el.dataset.id);
   const { data, error } = await sb.rpc("create_child_code", { p_child: c.id }); if (error) throw error;
-  openSheet(`<h2>Téléphone de ${esc(c.name)}</h2><div class="code" aria-label="Code ${data.split("").join(" ")}">${esc(data)}</div>
-    <p>Sur son téléphone, ouvre SoisFier, touche « J'ai un code enfant » et saisis ce code. Il expire dans 15 minutes.</p>
-    <div class="sheet-actions"><button class="btn" data-act="closeSheetReload">Terminé</button></div>`);
+  openSheet(`<h2>${t("device.phoneOf", { name: esc(c.name) })}</h2><div class="code" aria-label="${t("device.codeAria", { code: data.split("").join(" ") })}">${esc(data)}</div>
+    <p>${t("device.help")}</p>
+    <div class="sheet-actions"><button class="btn" data-act="closeSheetReload">${t("btn.done")}</button></div>`);
 };
 A.closeSheetReload = async () => { closeSheet(); await reloadParent(); };
 A.revokeDevice = async el => {
-  if (!await confirmSheet("Déconnecter cet appareil ?", "Il faudra un nouveau code pour le reconnecter.", "Déconnecter", true)) return;
+  if (!await confirmSheet(t("device.revokeTitle"), t("device.revokeText"), t("family.disconnect"), true)) return;
   const { error } = await sb.from("child_devices").delete().eq("id", el.dataset.id); if (error) throw error;
-  await reloadParent("Appareil déconnecté.");
+  await reloadParent(t("device.revoked"));
 };
 A.childHere = async el => {
   if (!await ensurePin()) return;
@@ -1702,7 +1815,7 @@ A.childHere = async el => {
   }
   if (!tok) {
     const { data: code, error } = await sb.rpc("create_child_code", { p_child: cid }); if (error) throw error;
-    const r = await sb.rpc("child_pair", { p_code: code, p_label: `Téléphone de ${memberLabel(S.session.user.id)} (mode enfant)` }); if (r.error) throw r.error;
+    const r = await sb.rpc("child_pair", { p_code: code, p_label: t("device.sameLabel", { who: memberLabel(S.session.user.id) }) }); if (r.error) throw r.error;
     tok = r.data.token; map[cid] = tok; store.set("sameDevice", map);
   }
   store.set("childToken", tok); store.set("childFromParent", true); store.del("queue"); store.del("lastEarned"); store.del("seenFlowers");
@@ -1711,18 +1824,18 @@ A.childHere = async el => {
 A.exitChild = async () => {
   const pin = store.get("pin");
   if (pin) {
-    const v = await pinSheet("Espace parent", "Saisis le code parent pour quitter le mode enfant.");
-    if (v === null) return; if (v !== pin) return toast("Code incorrect.", true);
+    const v = await pinSheet(t("kid.parentSpace"), t("pin.enter"));
+    if (v === null) return; if (v !== pin) return toast(t("pin.wrong"), true);
   } else {
     const a = 6 + Math.floor(Math.random() * 4), b = 6 + Math.floor(Math.random() * 4);
     const v = await new Promise(res => {
-      openSheet(`<h2>Espace parent</h2><p>Pour déconnecter ce téléphone, combien font ${a} × ${b} ?</p><label class="f">Réponse<input id="m-in" class="pin" inputmode="numeric" maxlength="3"></label>
-        <div class="sheet-actions"><button class="btn ghost" id="m-no">Annuler</button><button class="btn" id="m-ok">Valider</button></div>`);
+      openSheet(`<h2>${t("kid.parentSpace")}</h2><p>${t("pin.math", { a, b })}</p><label class="f">${t("pin.answer")}<input id="m-in" class="pin" inputmode="numeric" maxlength="3"></label>
+        <div class="sheet-actions"><button class="btn ghost" id="m-no">${t("btn.cancel")}</button><button class="btn" id="m-ok">${t("btn.validate")}</button></div>`);
       $("#m-no").onclick = () => { closeSheet(); res(null); };
       $("#m-ok").onclick = () => { const x = $("#m-in").value; closeSheet(); res(x); };
       dlg.addEventListener("close", () => res(null), { once: true });
     });
-    if (v === null) return; if (+v !== a * b) return toast("Ce n'est pas la bonne réponse.", true);
+    if (v === null) return; if (+v !== a * b) return toast(t("pin.wrongAnswer"), true);
   }
   await flushQueue();
   if (store.get("cpushOn")) {
@@ -1740,100 +1853,108 @@ A.exitChild = async () => {
 A.cToggle = el => { const rid = el.dataset.id, day = todayISO(); const done = S.cs.completions.some(c => c.routine_id === rid && c.day === day); childToggle(rid, !done); };
 A.cRedeem = async el => {
   const w = S.cs.rewards.find(x => x.id === el.dataset.id);
-  if (!await confirmSheet(`${w.emoji} ${w.title}`, `Tu échanges ${w.cost} étoiles. Tu es sûr ?`, "Oui, je choisis !")) return;
+  if (!await confirmSheet(`${w.emoji} ${w.title}`, t("kid.exchangeConfirm", { n: w.cost }), t("kid.yesChoose"))) return;
   await flushQueue();
   const { error } = await sb.rpc("child_redeem", { p_token: store.get("childToken"), p_reward: w.id });
-  if (error) { if (isNetErr(error)) return toast("Il faut internet pour choisir une récompense.", true); throw error; }
+  if (error) { if (isNetErr(error)) return toast(t("kid.needInternet"), true); throw error; }
   celebrate(true); await loadChild();
-  openSheet(`<h2>Bravo ! ${esc(w.emoji)}</h2><p>Montre cet écran à tes parents : tu as gagné « ${esc(w.title)} ».</p><div class="sheet-actions"><button class="btn" data-act="closeSheet">Super !</button></div>`);
+  openSheet(`<h2>${t("kid.bravo")} ${esc(w.emoji)}</h2><p>${t("kid.showParents", { title: esc(w.title) })}</p><div class="sheet-actions"><button class="btn" data-act="closeSheet">${t("kid.super")}</button></div>`);
 };
 A.cTimer = el => {
   const r = S.cs.routines.find(x => x.id === el.dataset.id); const total = r.timer_minutes * 60; let left = total; let iv;
   const C = 2 * Math.PI * 92;
-  openSheet(`<div class="timer"><h2>${esc(r.emoji)} ${esc(r.title)}</h2><p>Fais-le avant la fin du temps !</p>
+  openSheet(`<div class="timer"><h2>${esc(r.emoji)} ${esc(r.title)}</h2><p>${t("timer.go")}</p>
     <svg viewBox="0 0 220 220" aria-hidden="true"><circle cx="110" cy="110" r="92" fill="none" stroke="var(--line)" stroke-width="18"/>
     <circle id="tc" cx="110" cy="110" r="92" fill="none" stroke="var(--sun)" stroke-width="18" stroke-linecap="round" transform="rotate(-90 110 110)" stroke-dasharray="${C}" stroke-dashoffset="0"/></svg>
     <div class="tleft" id="tl" role="timer">${Math.floor(left / 60)}:${pad(left % 60)}</div>
-    <div class="sheet-actions" style="justify-content:center"><button class="btn ghost" id="t-stop">Arrêter</button><button class="btn" id="t-done">J'ai fini !</button></div></div>`);
+    <div class="sheet-actions" style="justify-content:center"><button class="btn ghost" id="t-stop">${t("timer.stop")}</button><button class="btn" id="t-done">${t("timer.done")}</button></div></div>`);
   const stop = () => clearInterval(iv);
   iv = setInterval(() => {
     left--; const tl = $("#tl"), tc = $("#tc"); if (!tl) return stop();
     tl.textContent = `${Math.floor(Math.max(left, 0) / 60)}:${pad(Math.max(left, 0) % 60)}`;
     tc.setAttribute("stroke-dashoffset", (C * (1 - Math.max(left, 0) / total)).toFixed(1));
-    if (left <= 0) { stop(); tl.textContent = "Temps écoulé !"; $("#t-done").textContent = "C'est fait quand même"; if (navigator.vibrate) navigator.vibrate([200, 100, 200]); }
+    if (left <= 0) { stop(); tl.textContent = t("timer.over"); $("#t-done").textContent = t("timer.doneAnyway"); if (navigator.vibrate) navigator.vibrate([200, 100, 200]); }
   }, 1000);
   $("#t-stop").onclick = () => { stop(); closeSheet(); };
-  $("#t-done").onclick = () => { stop(); closeSheet(); childToggle(r.id, true, left > 0 ? "timer" : "child"); if (left > 0) toast("Défi réussi ! ⚡"); };
+  $("#t-done").onclick = () => { stop(); closeSheet(); childToggle(r.id, true, left > 0 ? "timer" : "child"); if (left > 0) toast(t("timer.success")); };
   dlg.addEventListener("close", stop, { once: true });
 };
 A.sound = el => store.set("sound", el.checked);
 
 // Rappels
 A.pushParent = async () => {
-  const times = readTimes(); if (!times.length) return toast("Choisis au moins une heure.", true);
+  const times = readTimes(); if (!times.length) return toast(t("push.needTime"), true);
   const j = await getPushSub();
   const { error } = await sb.rpc("parent_push_subscribe", { p_family: S.family.id, p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_times: times }); if (error) throw error;
-  store.set("pushOn", true); store.set("pushTimes", times); render(); toast("Rappels activés.");
+  store.set("pushOn", true); store.set("pushTimes", times); render(); toast(t("push.enabled"));
 };
 A.pushChild = async () => {
-  const times = readTimes(); if (!times.length) return toast("Choisis au moins une heure.", true);
+  const times = readTimes(); if (!times.length) return toast(t("push.needTime"), true);
   const j = await getPushSub();
   const { error } = await sb.rpc("child_push_subscribe", { p_token: store.get("childToken"), p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_times: times }); if (error) throw error;
-  store.set("cpushOn", true); store.set("cpushTimes", times); render(); toast("Rappels activés.");
+  store.set("cpushOn", true); store.set("cpushTimes", times); render(); toast(t("push.enabled"));
 };
 A.pushOff = async () => {
   const reg = await navigator.serviceWorker.ready; const sub = await reg.pushManager.getSubscription();
   if (sub) { await sb.rpc("push_unsubscribe", { p_endpoint: sub.endpoint }); await sub.unsubscribe(); }
-  store.set(S.screen === "child" ? "cpushOn" : "pushOn", false); render(); toast("Rappels désactivés.");
+  store.set(S.screen === "child" ? "cpushOn" : "pushOn", false); render(); toast(t("push.disabled"));
 };
 
 // Famille et réglages
-A.invite = () => openSheet(`<h2>Inviter un membre</h2>${relationField("Maman", "inv")}
-    <div class="f"><span>Droits</span><div class="seg" role="radiogroup"><button type="button" role="radio" aria-checked="true" class="on" data-act="seg" data-group="role" data-v="parent">Parent</button><button type="button" role="radio" aria-checked="false" data-act="seg" data-group="role" data-v="helper">Proche</button></div></div>
-    <div class="sheet-actions"><button class="btn" data-act="makeInvite">Créer le code</button></div>`, S.form = { role: "parent" });
+A.invite = () => openSheet(`<h2>${t("family.invite")}</h2>${relationField(RELATIONS()[1], "inv")}
+    <div class="f"><span>${t("member.rights")}</span><div class="seg" role="radiogroup"><button type="button" role="radio" aria-checked="true" class="on" data-act="seg" data-group="role" data-v="parent">${t("role.parent")}</button><button type="button" role="radio" aria-checked="false" data-act="seg" data-group="role" data-v="helper">${t("role.helper")}</button></div></div>
+    <div class="sheet-actions"><button class="btn" data-act="makeInvite">${t("member.makeCode")}</button></div>`, S.form = { role: "parent" });
 A.makeInvite = async () => {
   const rel = readRelation("inv"), role = S.form.role || "parent";
   const { data, error } = await sb.rpc("create_invite", { p_family: S.family.id, p_relation: rel, p_role: role }); if (error) throw error;
-  openSheet(`<h2>Inviter ${esc(rel || "un membre")}</h2><div class="code">${esc(data)}</div><p>${esc(rel || "La personne")} crée son compte SoisFier, puis choisit « Rejoindre une famille » et saisit ce code. Il est valable 48 heures. Droits : ${role === "helper" ? "proche" : "parent"}.</p>
-    <div class="sheet-actions">${navigator.share ? `<button class="btn ghost" data-act="shareInvite" data-code="${esc(data)}">Partager</button>` : ""}<button class="btn" data-act="closeSheet">Terminé</button></div>`);
+  openSheet(`<h2>${t("member.inviteWho", { who: esc(rel || t("member.aMemberLower")) })}</h2><div class="code">${esc(data)}</div><p>${t("member.inviteHelp", { who: esc(rel || t("member.thePerson")), role: lower(role === "helper" ? t("role.helper") : t("role.parent")) })}</p>
+    <div class="sheet-actions">${navigator.share ? `<button class="btn ghost" data-act="shareInvite" data-code="${esc(data)}">${t("btn.share")}</button>` : ""}<button class="btn" data-act="closeSheet">${t("btn.done")}</button></div>`);
 };
 A.editMember = el => {
   const m = S.members.find(x => x.user_id === el.dataset.id), self = m.user_id === S.session?.user.id;
   S.form = { role: m.role };
-  openSheet(`<h2>${esc(m.relation || m.display_name || "Membre")}</h2>${relationField(m.relation, "mem")}
-    ${isParent() && !self ? `<div class="f"><span>Droits</span><div class="seg" role="radiogroup">${[["parent", "Parent"], ["helper", "Proche"]].map(([k, l]) => `<button type="button" role="radio" aria-checked="${m.role === k}" class="${m.role === k ? "on" : ""}" data-act="seg" data-group="role" data-v="${k}">${l}</button>`).join("")}</div></div>` : ""}
-    <div class="sheet-actions">${isParent() && !self ? `<button class="btn danger ghost" data-act="removeMember" data-id="${m.user_id}">Retirer de la famille</button>` : ""}<button class="btn" data-act="saveMember" data-id="${m.user_id}">Enregistrer</button></div>`);
+  openSheet(`<h2>${esc(m.relation || m.display_name || t("member.member"))}</h2>${relationField(m.relation, "mem")}
+    ${isParent() && !self ? `<div class="f"><span>${t("member.rights")}</span><div class="seg" role="radiogroup">${[["parent", t("role.parent")], ["helper", t("role.helper")]].map(([k, l]) => `<button type="button" role="radio" aria-checked="${m.role === k}" class="${m.role === k ? "on" : ""}" data-act="seg" data-group="role" data-v="${k}">${l}</button>`).join("")}</div></div>` : ""}
+    <div class="sheet-actions">${isParent() && !self ? `<button class="btn danger ghost" data-act="removeMember" data-id="${m.user_id}">${t("member.remove")}</button>` : ""}<button class="btn" data-act="saveMember" data-id="${m.user_id}">${t("btn.save")}</button></div>`);
 };
 A.saveMember = async el => {
   const id = el.dataset.id, self = id === S.session?.user.id, row = { relation: readRelation("mem") };
   if (isParent() && !self) row.role = S.form.role;
   const { error } = await sb.from("family_members").update(row).eq("family_id", S.family.id).eq("user_id", id); if (error) throw error;
-  closeSheet(); await reloadParent("Membre enregistré.");
+  closeSheet(); await reloadParent(t("member.saved"));
 };
 A.removeMember = async el => {
   const m = S.members.find(x => x.user_id === el.dataset.id);
-  if (!await confirmSheet(`Retirer ${m.relation || m.display_name || "ce membre"} ?`, "Cette personne n'aura plus accès à la famille. L'historique de ses validations est conservé.", "Retirer", true)) return;
+  if (!await confirmSheet(t("member.removeTitle", { who: m.relation || m.display_name || t("member.thisMember") }), t("member.removeText"), t("member.removeBtn"), true)) return;
   const { error } = await sb.from("family_members").delete().eq("family_id", S.family.id).eq("user_id", m.user_id); if (error) throw error;
-  await reloadParent("Membre retiré.");
+  await reloadParent(t("member.removed"));
 };
-A.shareInvite = async el => { try { await navigator.share({ title: "SoisFier", text: `Rejoins notre famille sur SoisFier avec le code ${el.dataset.code} : ${location.origin + location.pathname}` }); } catch {} };
+A.shareInvite = async el => { try { await navigator.share({ title: "SoisFier", text: t("member.shareText", { code: el.dataset.code, url: location.origin + location.pathname }) }); } catch {} };
 A.setPin = async () => {
-  const p = await pinSheet("Code parent", "Choisis 4 chiffres. Ils protègent la sortie du mode enfant sur ce téléphone.");
-  if (p === null) return; if (!/^\d{4}$/.test(p)) return toast("Le code doit contenir 4 chiffres.", true);
-  store.set("pin", p); render(); toast("Code parent enregistré.");
+  const p = await pinSheet(t("pin.title"), t("pin.chooseText"));
+  if (p === null) return; if (!/^\d{4}$/.test(p)) return toast(t("pin.need4"), true);
+  store.set("pin", p); render(); toast(t("pin.saved"));
 };
 A.renameFamily = async () => {
-  openSheet(`<h2>Renommer la famille</h2><label class="f">Nom<input id="fam-name" maxlength="40" value="${esc(S.family.name)}"></label><div class="sheet-actions"><button class="btn" data-act="saveFamilyName">Enregistrer</button></div>`);
+  openSheet(`<h2>${t("account.rename")}</h2><label class="f">${t("form.name")}<input id="fam-name" maxlength="40" value="${esc(S.family.name)}"></label><div class="sheet-actions"><button class="btn" data-act="saveFamilyName">${t("btn.save")}</button></div>`);
 };
 A.saveFamilyName = async () => {
-  const name = $("#fam-name").value.trim(); if (!name) return toast("Saisis un nom.", true);
+  const name = $("#fam-name").value.trim(); if (!name) return toast(t("account.needName"), true);
   const { error } = await sb.from("families").update({ name }).eq("id", S.family.id); if (error) throw error;
-  S.family.name = name; closeSheet(); render(); toast("Nom enregistré.");
+  S.family.name = name; closeSheet(); render(); toast(t("account.nameSaved"));
+};
+A.editWeek = el => weekForm(el.dataset.mode || "family");
+A.saveWeek = async () => {
+  const w = { start: +$("#wk-start").value, weekend: $$(".wk-we:checked", dlg).map(i => +i.value).sort((a, b) => a - b), tz: $("#wk-tz").value };
+  if (w.weekend.length > 3) return toast(t("week.max3"), true);
+  if (S.form.wkMode === "onboard") { S.wk = w; closeSheet(); const o = $("#o-week"); if (o) o.textContent = weekSummary(w); return; }
+  const { error } = await sb.from("families").update({ week_start: w.start, weekend_days: w.weekend, timezone: w.tz }).eq("id", S.family.id); if (error) throw error;
+  closeSheet(); await reloadParent(t("week.saved"));
 };
 A.printPlan = () => {
   if (S.children.length === 1) return printPlanning([S.children[0].id]);
-  openSheet(`<h2>Planning à imprimer</h2><ul class="tpl">${S.children.map(c => `<li><label><input type="checkbox" value="${c.id}" checked> ${esc(c.emoji)} ${esc(c.name)}</label></li>`).join("")}</ul>
-    <div class="sheet-actions"><button class="btn" data-act="doPrint">Imprimer</button></div>`);
+  openSheet(`<h2>${t("print.title")}</h2><ul class="tpl">${S.children.map(c => `<li><label><input type="checkbox" value="${c.id}" checked> ${esc(c.emoji)} ${esc(c.name)}</label></li>`).join("")}</ul>
+    <div class="sheet-actions"><button class="btn" data-act="doPrint">${t("btn.print")}</button></div>`);
 };
 A.doPrint = () => { const ids = $$(".tpl input:checked", dlg).map(i => i.value); closeSheet(); if (ids.length) printPlanning(ids); };
 A.exportData = async () => {
@@ -1844,7 +1965,7 @@ A.exportData = async () => {
   const out = { exported_at: new Date().toISOString(), family: S.family }; names.forEach((n, i) => out[n] = res[i].data);
   const blob = new Blob([JSON.stringify(out, null, 2)], { type: "application/json" });
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `soisfier-${todayISO()}.json`; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 5000); toast("Copie téléchargée.");
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000); toast(t("backup.done"));
 };
 
 /* ================= Démarrage ================= */
@@ -1857,20 +1978,22 @@ document.addEventListener("visibilitychange", () => {
 if (sb) sb.auth.onAuthStateChange((event, session) => {
   if (event === "PASSWORD_RECOVERY") {
     S.session = session;
-    setTimeout(() => {
-      openSheet(`<h2>Nouveau mot de passe</h2><label class="f">Mot de passe (6 caractères minimum)<input id="np" type="password" minlength="6" autocomplete="new-password"></label><div class="sheet-actions"><button class="btn" data-act="savePass">Enregistrer</button></div>`);
+    setTimeout(async () => {
+      await I18N.ready;
+      openSheet(`<h2>${t("auth.newPassword")}</h2><label class="f">${t("auth.passwordMin")}<input id="np" type="password" minlength="6" autocomplete="new-password"></label><div class="sheet-actions"><button class="btn" data-act="savePass">${t("btn.save")}</button></div>`);
     }, 300);
   }
 });
 A.savePass = async () => {
-  const p = $("#np").value; if (p.length < 6) return toast("6 caractères minimum.", true);
+  const p = $("#np").value; if (p.length < 6) return toast(t("auth.min6"), true);
   const { error } = await sb.auth.updateUser({ password: p }); if (error) throw error;
-  closeSheet(); toast("Mot de passe modifié."); await enterParent();
+  closeSheet(); toast(t("auth.passwordChanged")); await enterParent();
 };
 
 async function boot() {
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
-  if (!sb) { S.screen = "error"; S.err = CFG_OK ? "La connexion au service n'a pas pu démarrer. Vérifie ta connexion internet puis réessaie." : "Configuration manquante : l'app doit être publiée par la GitHub Action, qui injecte SUPABASE_URL et SUPABASE_KEY."; return render(); }
+  await loadI18n();
+  if (!sb) { S.screen = "error"; S.err = CFG_OK ? t("error.noService") : t("error.noConfig"); return render(); }
   if (store.get("childToken")) {
     S.screen = "child"; S.cs = store.get("childCache"); render();
     await flushQueue(); await loadChild(); return;
