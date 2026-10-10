@@ -871,7 +871,7 @@ function render() {
 }
 
 /* ---------- Langue et aide ---------- */
-const guideHref = () => "guide/";
+const guideHref = () => curLang() === "ar" ? "guide/ar/" : "guide/";
 const langBtn = () => `<button class="lang-btn" data-act="pickLang" aria-label="${t("lang.title")}">🌐</button>`;
 const topButtons = (help = true) => `<div class="help-float">${langBtn()}${help ? `<a class="help" href="${guideHref()}" aria-label="${t("help")}">?</a>` : ""}</div>`;
 
