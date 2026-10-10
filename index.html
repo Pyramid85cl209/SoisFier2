@@ -46,7 +46,9 @@ button{cursor:pointer}
 .top-r{display:flex;align-items:center;gap:8px}
 .help{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--paper);color:var(--leaf-d);
   font-family:var(--display);font-weight:600;font-size:1.15rem;text-decoration:none;box-shadow:inset 0 0 0 2px var(--leaf)}
-.help-float{position:fixed;z-index:5;top:calc(12px + env(safe-area-inset-top,0px));right:12px}
+.help-float{position:fixed;z-index:5;top:calc(12px + env(safe-area-inset-top,0px));inset-inline-end:12px;display:flex;gap:8px}
+.help-float .help{position:static}
+.lang-btn{flex:none;width:34px;height:34px;border-radius:50%;border:0;display:grid;place-items:center;background:var(--paper);font-size:1.05rem;box-shadow:inset 0 0 0 2px var(--line)}
 
 /* Navigation basse */
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:center;gap:4px;
@@ -76,6 +78,10 @@ button{cursor:pointer}
 .daynav{display:flex;align-items:center;justify-content:space-between;margin:4px 0 12px}
 .daynav button{width:44px;height:44px;border-radius:50%;border:0;background:var(--paper);font-size:1.5rem;box-shadow:var(--lift)}
 .daynav button:disabled{opacity:.3}
+[dir=rtl] .daynav button{transform:scaleX(-1)}
+.rt-stars,.k-stars,.star-count,.ring span{unicode-bidi:isolate;direction:ltr}
+.hist li>span,.vlist li>span:not(.grow),.meta span,.dev,.badge small{unicode-bidi:plaintext}
+.num,.balance .big,.gift .btn,.kgift .grow>span{unicode-bidi:isolate!important;direction:ltr}
 
 .tip{display:flex;gap:10px;align-items:flex-start;background:var(--sun-l);border-radius:18px;padding:12px 14px;margin-bottom:14px}
 .tip p{margin:0;font-size:.95rem}
@@ -92,7 +98,7 @@ button{cursor:pointer}
 
 /* Lignes de routines */
 .rlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
-.rt{width:100%;display:flex;align-items:center;gap:12px;text-align:left;border:0;border-radius:16px;padding:10px 12px;
+.rt{width:100%;display:flex;align-items:center;gap:12px;text-align:start;border:0;border-radius:16px;padding:10px 12px;
   background:var(--sky)}
 .rt-emo{font-size:1.6rem;width:42px;height:42px;display:grid;place-items:center;background:var(--paper);border-radius:12px;flex:none}
 .rt-txt{flex:1;display:flex;flex-direction:column;min-width:0}
@@ -110,7 +116,7 @@ button{cursor:pointer}
 .balance .big{font-family:var(--display);font-size:2rem;font-weight:600}
 .glist{list-style:none;margin:0;padding:0;display:grid;gap:10px}
 .gift{display:flex;align-items:center;gap:10px;background:var(--paper);border-radius:18px;padding:10px 12px;box-shadow:var(--lift)}
-.gift-main{flex:1;display:flex;align-items:center;gap:12px;border:0;background:none;text-align:left;padding:0}
+.gift-main{flex:1;display:flex;align-items:center;gap:12px;border:0;background:none;text-align:start;padding:0}
 .gift-main span:last-child{display:flex;flex-direction:column}
 .gift-main small{color:var(--muted)}
 .g-emo{font-size:1.8rem}
@@ -167,8 +173,8 @@ dialog#sheet::backdrop{background:rgba(20,30,25,.45)}
 .tpl label{display:flex;gap:10px;align-items:center;background:var(--sky);border-radius:14px;padding:10px 12px;font-weight:400}
 .tpl input{width:22px;height:22px;accent-color:var(--leaf)}
 .tpl .had{opacity:.5}
-.code{font-family:var(--display);font-size:2.6rem;letter-spacing:.18em;text-align:center;background:var(--sun-l);border-radius:20px;padding:16px;margin:10px 0;user-select:all}
-.pin{font-size:2rem!important;letter-spacing:.4em;text-align:center}
+.code{direction:ltr;font-family:var(--display);font-size:2.6rem;letter-spacing:.18em;text-align:center;background:var(--sun-l);border-radius:20px;padding:16px;margin:10px 0;user-select:all}
+.pin{direction:ltr;font-size:2rem!important;letter-spacing:.4em;text-align:center}
 
 /* Toast */
 #toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:50;
@@ -192,7 +198,7 @@ dialog#sheet::backdrop{background:rgba(20,30,25,.45)}
 
 /* ===== Mode enfant ===== */
 .kid-top .hello{font-family:var(--display);font-weight:600;font-size:1.2rem}
-.star-count{margin-left:auto;font-family:var(--display);font-weight:600;font-size:1.25rem;background:var(--sun-l);padding:4px 14px;border-radius:999px}
+.star-count{margin-inline-start:auto;font-family:var(--display);font-weight:600;font-size:1.25rem;background:var(--sun-l);padding:4px 14px;border-radius:999px}
 .lock{width:40px;height:40px;border-radius:50%;border:0;background:var(--paper);opacity:.7}
 .hero{display:flex;align-items:center;gap:14px;background:var(--paper);border-radius:28px;padding:12px 16px;margin-bottom:12px;box-shadow:var(--lift)}
 .hero-plant svg{width:120px;height:auto;display:block}
@@ -203,7 +209,7 @@ dialog#sheet::backdrop{background:rgba(20,30,25,.45)}
 .bar i{display:block;height:100%;background:var(--sun);border-radius:999px}
 .today-count{font-family:var(--display);font-weight:600;font-size:1.15rem;margin:6px 4px 4px}
 .kcards{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
-.kcard{width:100%;display:flex;align-items:center;gap:14px;border:0;border-radius:22px;padding:12px 14px;background:var(--paper);text-align:left;
+.kcard{width:100%;display:flex;align-items:center;gap:14px;border:0;border-radius:22px;padding:12px 14px;background:var(--paper);text-align:start;
   box-shadow:var(--lift);min-height:78px}
 .k-emo{font-size:2.3rem;width:58px;height:58px;display:grid;place-items:center;background:var(--sky);border-radius:18px;flex:none}
 .k-txt{flex:1;display:flex;flex-direction:column}
@@ -214,7 +220,7 @@ dialog#sheet::backdrop{background:rgba(20,30,25,.45)}
 .kcard.done{background:var(--leaf-l)}
 .kcard.done .k-pot{background:var(--leaf);border-color:var(--leaf)}
 .kcard.done .k-emo{background:var(--paper)}
-.k-timer{margin:-4px 0 4px 72px;align-self:flex-start;border:0;border-radius:999px;background:var(--sun);color:#3B2A00;font-weight:700;padding:8px 14px}
+.k-timer{margin-block:-4px 4px;margin-inline-start:72px;align-self:flex-start;border:0;border-radius:999px;background:var(--sun);color:#3B2A00;font-weight:700;padding:8px 14px}
 .kgift{display:flex;align-items:center;gap:14px;background:var(--paper);border-radius:22px;padding:12px 14px;box-shadow:var(--lift)}
 .kgift .g-emo{font-size:2.4rem}
 .kgift .grow{flex:1}
@@ -252,7 +258,7 @@ dialog#sheet::backdrop{background:rgba(20,30,25,.45)}
 .vbtn{width:44px;height:44px;flex:none;border-radius:50%;border:0;font-size:1.15rem;font-weight:700}
 .vbtn.yes{background:var(--leaf);color:#fff}
 .vbtn.no{background:var(--paper);color:var(--poppy);box-shadow:inset 0 0 0 2px var(--poppy)}
-.pen{width:100%;display:flex;justify-content:space-between;gap:10px;border:0;border-radius:14px;padding:12px;background:var(--sky);text-align:left}
+.pen{width:100%;display:flex;justify-content:space-between;gap:10px;border:0;border-radius:14px;padding:12px;background:var(--sky);text-align:start}
 .bstar{vertical-align:-4px;flex:none}
 .small{font-size:.88rem}
 .wait-note{margin:4px 0 0;font-size:.92rem;color:var(--muted)}
@@ -300,8 +306,8 @@ dialog#sheet::backdrop{background:rgba(20,30,25,.45)}
   .pp h1{font-family:var(--display);font-size:22pt;margin-bottom:4mm}
   .pp table{width:100%;border-collapse:collapse;font-size:12pt}
   .pp th,.pp td{border:1.5px solid #444;padding:5px;text-align:center}
-  .pp td.n{text-align:left}
-  .pp .grp-row td{background:#eef6ee;font-weight:700;text-align:left}
+  .pp td.n{text-align:start}
+  .pp .grp-row td{background:#eef6ee;font-weight:700;text-align:start}
   .pp .circ{display:inline-block;width:20px;height:20px;border:2px solid #333;border-radius:50%}
   .pp .off{background:#e6e6e6}
   .pp .gifts{margin-top:6mm;font-size:12pt}
@@ -339,7 +345,7 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": 
 const pad = n => String(n).padStart(2, "0");
 /* ================= Langues ================= */
 // Textes dans i18n/<langue>.json ; « ?lang=qps » active une pseudo-langue de contrôle (textes déformés : tout texte resté en clair est un oubli).
-const LANGS = ["fr"];
+const LANGS = ["fr", "ar"];
 const I18N = { lang: "fr", d: {}, fr: {} };
 I18N.ready = new Promise(r => { I18N.done = r; });
 const lget = (o, k) => k.split(".").reduce((a, p) => (a == null ? a : a[p]), o);
@@ -359,7 +365,8 @@ function pseudo(o) {
 }
 async function loadI18n() {
   const want = new URLSearchParams(location.search).get("lang"); if (want) store.set("lang", want);
-  const lang = store.get("lang", "fr");
+  const nav = (navigator.language || "fr").slice(0, 2).toLowerCase();
+  const lang = store.get("lang", LANGS.includes(nav) ? nav : "fr");
   const get = async l => { const r = await fetch(`i18n/${l}.json`); if (!r.ok) throw new Error(l); return r.json(); };
   try { I18N.fr = await get("fr"); } catch { I18N.fr = {}; }
   I18N.lang = lang === "qps" ? "qps" : LANGS.includes(lang) ? lang : "fr";
@@ -454,8 +461,10 @@ function toast(msg, err = false) {
   const el = $("#toast"); el.textContent = msg; el.className = "show" + (err ? " err" : "");
   clearTimeout(toast._t); toast._t = setTimeout(() => el.className = "", 2800);
 }
+const curLang = () => (I18N.lang === "qps" ? "fr" : I18N.lang);
 function errMsg(e) {
   const m = (e && (e.message || e.error_description || e.msg)) || String(e);
+  const code = /SF:(\w+)/.exec(m); if (code) return lget(I18N.fr, "srv." + code[1]) != null ? t("srv." + code[1]) : t("srv.unknown");
   if (/Failed to fetch|NetworkError|Load failed|fetch/i.test(m)) return t("err.network");
   if (/Invalid login credentials/i.test(m)) return t("err.badLogin");
   if (/Email not confirmed/i.test(m)) return t("err.notConfirmed");
@@ -861,13 +870,18 @@ function render() {
   else if (s === "error") app.innerHTML = `<main class="wrap"><div class="card center"><h2>${t("error.title")}</h2><p>${esc(S.err)}</p><button class="btn" data-act="reload">${t("btn.retry")}</button></div></main>`;
 }
 
+/* ---------- Langue et aide ---------- */
+const guideHref = () => "guide/";
+const langBtn = () => `<button class="lang-btn" data-act="pickLang" aria-label="${t("lang.title")}">🌐</button>`;
+const topButtons = (help = true) => `<div class="help-float">${langBtn()}${help ? `<a class="help" href="${guideHref()}" aria-label="${t("help")}">?</a>` : ""}</div>`;
+
 /* ---------- Connexion ---------- */
 let installEvt = null;
 window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; if (S.screen === "auth" || (S.screen === "parent" && S.tab === "family")) render(); });
 const installBtn = () => installEvt ? `<button class="btn ghost wide" data-act="install">${t("auth.install")}</button>` : "";
 function renderAuth() {
   const m = S.authMode;
-  app.innerHTML = `<main class="wrap auth"><a class="help help-float" href="guide/" aria-label="${t("help")}">?</a>
+  app.innerHTML = `<main class="wrap auth">${topButtons()}
     <div class="auth-hero">${plantSVG(4, "#E8484F", "SoisFier")}<h1>SoisFier</h1><p>${t("auth.tagline")}</p></div>
     <div class="seg wide" role="tablist">
       <button role="tab" aria-selected="${m === "login"}" class="${m === "login" ? "on" : ""}" data-act="authMode" data-v="login">${t("auth.login")}</button>
@@ -885,14 +899,14 @@ function renderAuth() {
   </main>`;
 }
 function renderPair() {
-  app.innerHTML = `<main class="wrap auth"><div class="auth-hero">${plantSVG(0)}<h1>${t("pair.title")}</h1><p>${t("pair.where")}</p></div>
+  app.innerHTML = `<main class="wrap auth">${topButtons(false)}<div class="auth-hero">${plantSVG(0)}<h1>${t("pair.title")}</h1><p>${t("pair.where")}</p></div>
     <form class="card" novalidate><label class="f">${t("pair.code")}<input id="p-code" class="pin" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false"></label>
     <button class="btn wide" data-act="pair">${t("pair.connect")}</button></form>
     <p class="center"><button class="link" data-act="toAuth">${t("btn.back")}</button></p></main>`;
 }
 function renderOnboard() {
   if (!S.wk) S.wk = detectWeek();
-  app.innerHTML = `<main class="wrap auth"><a class="help help-float" href="guide/" aria-label="${t("help")}">?</a><div class="auth-hero">${plantSVG(1)}<h1>${t("onboard.welcome")}</h1><p>${t("onboard.intro")}</p></div>
+  app.innerHTML = `<main class="wrap auth">${topButtons()}<div class="auth-hero">${plantSVG(1)}<h1>${t("onboard.welcome")}</h1><p>${t("onboard.intro")}</p></div>
     <form class="card" novalidate><h2>${t("onboard.create")}</h2><label class="f">${t("onboard.familyName")}<input id="o-name" placeholder="${t("onboard.familyPlaceholder")}" maxlength="40"></label><label class="f">${t("onboard.iAm")}<select id="o-rel">${RELATIONS().map(r => `<option>${r}</option>`).join("")}</select></label>
     <p class="muted small"><span id="o-week">${esc(weekSummary(S.wk))}</span> <button type="button" class="link" data-act="editWeek" data-mode="onboard">${t("btn.edit")}</button></p>
     <button class="btn wide" data-act="createFamily">${t("btn.create")}</button></form>
@@ -926,7 +940,7 @@ function renderParent() {
   let body;
   if (!S.children.length && S.tab !== "family") body = `<section class="card center">${plantSVG(0)}<h1>${t("parent.startTitle")}</h1><p>${t("parent.startText")}</p><button class="btn" data-act="newChild">${t("child.add")}</button></section>`;
   else body = { today: pToday, routines: pRoutines, rewards: pRewards, malus: pMalus, family: pFamily }[S.tab]();
-  app.innerHTML = `<header class="top"><div class="brand">${miniLogo()}<span>${esc(S.family?.name || "SoisFier")}</span></div><div class="top-r">${S.offline ? `<span class="pill">${t("offline")}</span>` : ""}<a class="help" href="guide/" aria-label="${t("help")}">?</a></div></header>
+  app.innerHTML = `<header class="top"><div class="brand">${miniLogo()}<span>${esc(S.family?.name || "SoisFier")}</span></div><div class="top-r">${S.offline ? `<span class="pill">${t("offline")}</span>` : ""}${langBtn()}<a class="help" href="${guideHref()}" aria-label="${t("help")}">?</a></div></header>
     <main class="wrap">${body}</main>
     <nav class="tabbar" aria-label="${t("nav")}">${tabs.map(([k, l, e]) => `<button data-act="tab" data-tab="${k}" class="${S.tab === k ? "on" : ""}" aria-current="${S.tab === k ? "page" : "false"}"><span aria-hidden="true">${e}</span>${l}</button>`).join("")}</nav>`;
 }
@@ -1016,8 +1030,8 @@ function pRewards() {
     ${P ? `<div class="actions"><button class="btn" data-act="rewardTemplates">${t("reward.chooseTpl")}</button><button class="btn ghost" data-act="newReward">${t("reward.create")}</button></div>` : ""}
     ${groups || `<p class="empty">${t("reward.none", { name: esc(c.name) })}</p>`}
     ${hist.length ? `<h3 class="grp">${t("reward.history")}</h3><ul class="hist">${hist.map(z => z.kind === "gift"
-      ? `<li><span>${esc(z.emoji)} ${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span><span>−${fmtNum(z.cost)} ⭐</span><span class="muted">${t("common.by", { who: z.created_by ? esc(memberLabel(z.created_by)) : esc(c.name) })}</span>${P ? `<button class="link" data-act="cancelRedeem" data-id="${z.id}">${t("btn.cancel")}</button>` : ""}</li>`
-      : `<li>${brokenStar(20)}<span>${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span><span>−${fmtNum(z.stars)} ⭐</span><span class="muted">${t("common.by", { who: esc(memberLabel(z.created_by)) })}</span>${P ? `<button class="link" data-act="cancelPenalty" data-id="${z.id}">${t("btn.cancel")}</button>` : ""}</li>`).join("")}</ul>` : ""}`;
+      ? `<li><span>${esc(z.emoji)} ${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span><span class="num">−${fmtNum(z.cost)} ⭐</span><span class="muted">${t("common.by", { who: z.created_by ? esc(memberLabel(z.created_by)) : esc(c.name) })}</span>${P ? `<button class="link" data-act="cancelRedeem" data-id="${z.id}">${t("btn.cancel")}</button>` : ""}</li>`
+      : `<li>${brokenStar(20)}<span>${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span><span class="num">−${fmtNum(z.stars)} ⭐</span><span class="muted">${t("common.by", { who: esc(memberLabel(z.created_by)) })}</span>${P ? `<button class="link" data-act="cancelPenalty" data-id="${z.id}">${t("btn.cancel")}</button>` : ""}</li>`).join("")}</ul>` : ""}`;
 }
 function pFamily() {
   const kids = S.children.map(c => {
@@ -1060,7 +1074,7 @@ function pMalus() {
   const byDay = []; list.forEach(e => { const k = isoInTz(new Date(e.created_at)); const g = byDay.find(x => x.k === k); g ? g.items.push(e) : byDay.push({ k, items: [e] }); });
   const item = e => { const k = S.children.find(c => c.id === e.child_id) || { name: "", emoji: "" };
     return `<li>${brokenStar(24)}<span class="grow"><b>${esc(e.emoji)} ${esc(e.title)}</b><small>${f === "all" ? esc(k.emoji + " " + k.name) + t("sep") : ""}${t("malus.byAt", { who: esc(memberLabel(e.created_by)), time: fmtTime(e.created_at) })}</small></span>
-      <span>−${fmtNum(e.stars)} ⭐</span>${P ? `<button class="vbtn no" data-act="cancelPenalty" data-id="${e.id}" aria-label="${t("malus.cancelAria")}">↺</button>` : ""}</li>`; };
+      <span class="num">−${fmtNum(e.stars)} ⭐</span>${P ? `<button class="vbtn no" data-act="cancelPenalty" data-id="${e.id}" aria-label="${t("malus.cancelAria")}">↺</button>` : ""}</li>`; };
   return chipsM + `<div class="balance"><span class="big">${brokenStar(28)} ${fmtNum(sum(7))}</span><span>${t("malus.week", { n: sum(7) })}</span><span class="muted">${t("malus.month", { n: sum(30), total: list.length })}</span></div>
     ${P ? `<div class="actions"><button class="btn danger" data-act="breakStar">${brokenStar(18)} ${t("malus.break")}</button><button class="btn ghost" data-act="penaltyCatalog">${t("malus.catalog")}</button></div>` : ""}
     ${byDay.length ? byDay.map(g => `<h3 class="grp">${dayLbl(g.k)}</h3><ul class="vlist">${g.items.map(item).join("")}</ul>`).join("")
@@ -1075,7 +1089,7 @@ function renderChild() {
   const v = computeView({ child: c, routines, completions: cs.completions, stats: cs.stats, badges: cs.badges, garden: cs.garden, penalties: cs.penalties, oneoffDone: cs.oneoff_done });
   const tabs = [["today", t("ctab.today"), "☀️"], ["gifts", t("ctab.gifts"), "🎁"], ["garden", t("ctab.garden"), "🌼"], ["badges", t("ctab.badges"), "🏅"]];
   const body = { today: cToday, gifts: cGifts, garden: cGarden, badges: cBadges }[S.ctab](v, routines, cs);
-  app.innerHTML = `<header class="top kid-top"><span class="hello">${t("kid.hello", { name: esc(c.name) })} ${esc(c.emoji)}</span><span class="star-count" aria-label="${t("kid.starsAria", { n: v.balance })}">⭐ ${fmtNum(v.balance)}</span><button class="lock" data-act="exitChild" aria-label="${t("kid.parentSpace")}">🔒</button></header>
+  app.innerHTML = `<header class="top kid-top"><span class="hello">${t("kid.hello", { name: esc(c.name) })} ${esc(c.emoji)}</span><span class="star-count" aria-label="${t("kid.starsAria", { n: v.balance })}">⭐ ${fmtNum(v.balance)}</span>${langBtn()}<button class="lock" data-act="exitChild" aria-label="${t("kid.parentSpace")}">🔒</button></header>
     ${S.offline ? `<p class="center"><span class="pill">${t("kid.offline")}</span></p>` : ""}
     <main class="wrap">${body}</main>
     <nav class="tabbar" aria-label="${t("nav")}">${tabs.map(([k, l, e]) => `<button data-act="ctab" data-tab="${k}" class="${S.ctab === k ? "on" : ""}" aria-current="${S.ctab === k ? "page" : "false"}"><span aria-hidden="true">${e}</span>${l}</button>`).join("")}</nav>`;
@@ -1115,7 +1129,7 @@ function cGifts(v, routines, cs) {
       : `<p class="empty">${t("kid.askRewards")}</p>`}
     ${hist.length ? `<h3 class="grp">${t("kid.history")}</h3><ul class="hist">${hist.map(z => z.kind === "gift"
       ? `<li><span>${esc(z.emoji)} ${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span></li>`
-      : `<li>${brokenStar(20)}<span>${t("kid.broken", { title: esc(z.title) })}</span><span class="muted">${fmtDate(z.created_at)}</span><span>−${fmtNum(z.stars)}</span></li>`).join("")}</ul>` : ""}`;
+      : `<li>${brokenStar(20)}<span>${t("kid.broken", { title: esc(z.title) })}</span><span class="muted">${fmtDate(z.created_at)}</span><span class="num">−${fmtNum(z.stars)}</span></li>`).join("")}</ul>` : ""}`;
 }
 function miniHero(v) {
   const gn = gardenNow(v.garden);
@@ -1195,7 +1209,8 @@ async function refreshParent() {
 }
 async function loadTip() {
   try {
-    const { data } = await sb.from("tips").select("text").order("id");
+    let { data } = await sb.from("tips").select("text").eq("locale", curLang()).order("id");
+    if (!data || !data.length) ({ data } = await sb.from("tips").select("text").eq("locale", "fr").order("id"));
     if (data && data.length) { const n = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 864e5); S.tip = data[n % data.length].text; if (S.screen === "parent") render(); }
   } catch {}
 }
@@ -1234,12 +1249,12 @@ async function loadChild() {
     store.set("childCache", S.cs);
     if (gain || nb.length) setTimeout(() => {
       celebrate(true);
-      const names = nb.map(k => BADGES.find(b => b.k === k)).map(b => b.e + " " + b.n).join(", ");
+      const names = nb.map(k => BADGES.find(b => b.k === k)).map(b => b.e + " " + b.n).join(t("sep"));
       toast(gain ? t("kid.gain", { n: gain.diff }) : t("kid.newBadge", { names }));
       if (gain && nb.length) setTimeout(() => toast(t("kid.newBadge", { names })), 3000);
     }, 400);
   } catch (e) {
-    if (/Appareil non reconnu/.test(e.message || "")) {
+    if (/Appareil non reconnu|SF:device_unknown/.test(e.message || "")) {
       store.del("childToken"); store.del("childCache"); store.del("queue");
       S.screen = "auth"; render(); toast(t("kid.disconnected"), true); return;
     }
@@ -1445,7 +1460,7 @@ A.login = async () => {
 A.signup = async () => {
   const email = $("#a-email").value.trim(), password = $("#a-pass").value, name = ($("#a-name")?.value || "").trim();
   if (!email || password.length < 6) return toast(t("auth.needSignup"), true);
-  const { data, error } = await sb.auth.signUp({ email, password, options: { data: { display_name: name }, emailRedirectTo: location.origin + location.pathname } });
+  const { data, error } = await sb.auth.signUp({ email, password, options: { data: { display_name: name, locale: curLang() }, emailRedirectTo: location.origin + location.pathname } });
   if (error) throw error;
   if (data.session) { S.session = data.session; await enterParent(); }
   else { S.authMode = "login"; render(); openSheet(`<h2>${t("auth.checkMail")}</h2><p>${t("auth.checkMailText", { email: `<b>${esc(email)}</b>` })}</p><div class="sheet-actions"><button class="btn" data-act="closeSheet">${t("btn.gotIt")}</button></div>`); }
@@ -1456,6 +1471,19 @@ A.forgot = async () => {
   toast(t("auth.resetSent"));
 };
 A.closeSheet = () => closeSheet();
+// Langue : choisie sur l'appareil ; enregistrée aussi pour le membre connecté et pour les rappels de cet appareil
+A.pickLang = () => openSheet(`<h2>${t("lang.title")}</h2><ul class="tpl">${LANGS.map(l => `<li><button class="pen" data-act="setLang" data-v="${l}" lang="${l}"><span>${t("lang." + l)}${l === "ar" ? ` <small class="muted">(${t("lang.toReview")})</small>` : ""}</span><span>${l === curLang() ? "✓" : ""}</span></button></li>`).join("")}</ul>
+  <div class="sheet-actions"><button class="btn ghost" data-act="closeSheet">${t("btn.close")}</button></div>`);
+A.setLang = async el => {
+  const l = el.dataset.v; if (!LANGS.includes(l)) return;
+  store.set("lang", l);
+  if (new URLSearchParams(location.search).has("lang")) history.replaceState(null, "", location.pathname);
+  await loadI18n(); closeSheet(); render();
+  try {
+    if (S.screen === "parent" && S.family && S.session) await sb.from("family_members").update({ locale: l }).eq("family_id", S.family.id).eq("user_id", S.session.user.id);
+    if ("serviceWorker" in navigator) { const reg = await navigator.serviceWorker.ready; const sub = await reg.pushManager.getSubscription(); if (sub) await sb.rpc("push_set_locale", { p_endpoint: sub.endpoint, p_locale: l }); }
+  } catch {}
+};
 A.logout = async () => {
   if (sb) await sb.auth.signOut().catch(() => {});
   ["parentCache", "pushOn"].forEach(k => store.del(k));
@@ -1465,7 +1493,7 @@ A.createFamily = async () => {
   const name = $("#o-name").value.trim();
   const rel = $("#o-rel").value;
   const w = S.wk || detectWeek();
-  const { data: fid, error } = await sb.rpc("create_family", { p_name: name, p_display_name: S.session.user.user_metadata?.display_name || "",
+  const { data: fid, error } = await sb.rpc("create_family", { p_name: name || t("onboard.defaultName"), p_display_name: S.session.user.user_metadata?.display_name || "",
     p_week_start: w.start, p_weekend: w.weekend, p_timezone: w.tz }); if (error) throw error;
   await sb.from("family_members").update({ relation: rel }).eq("family_id", fid).eq("user_id", S.session.user.id);
   await enterParent();
@@ -1811,7 +1839,7 @@ A.childHere = async el => {
   let tok = map[cid];
   if (tok) {   // déjà connecté sur ce téléphone : on réutilise le même appareil
     const chk = await sb.rpc("child_state", { p_token: tok });
-    if (chk.error) { if (/Appareil non reconnu/.test(chk.error.message || "")) tok = null; else throw chk.error; }
+    if (chk.error) { if (/Appareil non reconnu|SF:device_unknown/.test(chk.error.message || "")) tok = null; else throw chk.error; }
   }
   if (!tok) {
     const { data: code, error } = await sb.rpc("create_child_code", { p_child: cid }); if (error) throw error;
@@ -1885,13 +1913,13 @@ A.sound = el => store.set("sound", el.checked);
 A.pushParent = async () => {
   const times = readTimes(); if (!times.length) return toast(t("push.needTime"), true);
   const j = await getPushSub();
-  const { error } = await sb.rpc("parent_push_subscribe", { p_family: S.family.id, p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_times: times }); if (error) throw error;
+  const { error } = await sb.rpc("parent_push_subscribe", { p_family: S.family.id, p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_times: times, p_locale: curLang() }); if (error) throw error;
   store.set("pushOn", true); store.set("pushTimes", times); render(); toast(t("push.enabled"));
 };
 A.pushChild = async () => {
   const times = readTimes(); if (!times.length) return toast(t("push.needTime"), true);
   const j = await getPushSub();
-  const { error } = await sb.rpc("child_push_subscribe", { p_token: store.get("childToken"), p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_times: times }); if (error) throw error;
+  const { error } = await sb.rpc("child_push_subscribe", { p_token: store.get("childToken"), p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_times: times, p_locale: curLang() }); if (error) throw error;
   store.set("cpushOn", true); store.set("cpushTimes", times); render(); toast(t("push.enabled"));
 };
 A.pushOff = async () => {
