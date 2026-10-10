@@ -303,7 +303,7 @@ insert into public.tips(text, locale) values
  ('غيّروا المكافأة حين تفقد جاذبيتها. اسألوه عمّا يسعده.', 'ar'),
  ('المؤقّت يحوّل المهمة المملّة إلى تحدٍّ. استعملوه للأنشطة التي تتأخر.', 'ar'),
  ('في المساء، خذوا دقيقتين لتنظروا معًا إلى النبتة وتتحدثوا عن اليوم.', 'ar'),
- ('تجنّبوا سحب النجوم كعقاب: يجب أن تبقى النبتة مساحة إيجابية.', 'ar'),
+ ('احتفظوا بالنجمة المكسورة لتصرّف فوري فقط، لا لنشاط منسيّ: أما النبتة فتبقى دائمًا مساحة إيجابية.', 'ar'),
  ('أضيفوا نشاطًا إضافيًا للتحديات الصغيرة: يمنح نجومًا دون ضغط.', 'ar'),
  ('أعلنوا الانتقالات مسبقًا: «بعد خمس دقائق، يحين وقت الاستحمام.»', 'ar'),
  ('حين يُتقن الطفل نشاطًا منذ أسابيع، احذفوه واحتفلوا: لقد كبر!', 'ar');
@@ -324,3 +324,6 @@ begin
 end $$;
 
 commit;
+
+-- Mise à jour du 11 octobre (appliquée directement) : astuce n° 12 alignée sur la règle des étoiles cassées.
+-- update public.tips set text = 'Gardez l''étoile cassée pour un écart immédiat, jamais pour une routine oubliée : la plante, elle, reste toujours un espace positif.' where locale = 'fr' and text like 'Évitez de retirer des étoiles en punition%';
