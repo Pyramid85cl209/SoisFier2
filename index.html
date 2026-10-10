@@ -276,8 +276,6 @@ dialog#sheet::backdrop{background:rgba(20,30,25,.45)}
 .gift small.when{display:block;color:var(--muted)}
 .banner{background:var(--sun-l);border-radius:16px;padding:12px 14px;margin:10px 0}
 .banner p{margin:0 0 8px}
-.osm li label{align-items:flex-start}
-.osm small{color:var(--muted);display:block}
 
 /* Minuteur */
 .timer{text-align:center}
@@ -920,7 +918,7 @@ function pRewards() {
   const groups = TIERS.map(([k, l, d]) => { const ws = list.filter(w => (w.tier || "moment") === k).sort((a, b) => costFor(a, c.id) - costFor(b, c.id)); return ws.length ? `<h3 class="tier-h">${l}<small>${d}</small></h3><ul class="glist">${ws.map(row).join("")}</ul>` : ""; }).join("");
   return chips() + `<div class="balance"><span class="big">⭐ ${v.balance}</span><span>étoiles à dépenser pour ${esc(c.name)}</span>${v.pendingStars ? `<span class="muted">+${v.pendingStars} en attente de validation</span>` : ""}<span class="muted">Rythme : environ ${Math.round(r * 10) / 10} ⭐ par jour</span></div>
     ${drift && P ? `<div class="banner"><p>Le rythme de ${esc(c.name)} a changé depuis le calcul des prix (${Math.round(c.price_rhythm * 10) / 10} ⭐ par jour, contre ${Math.round(r * 10) / 10} aujourd'hui).</p><button class="btn sm" data-act="repriceChild">Recalculer ses prix</button></div>` : ""}
-    ${P ? `<div class="actions"><button class="btn" data-act="rewardTemplates">Choisir dans le référentiel</button><button class="btn ghost" data-act="newReward">Créer une récompense</button><button class="btn ghost" data-act="suggestOutings">📍 Sorties près de chez nous</button></div>` : ""}
+    ${P ? `<div class="actions"><button class="btn" data-act="rewardTemplates">Choisir dans le référentiel</button><button class="btn ghost" data-act="newReward">Créer une récompense</button></div>` : ""}
     ${groups || `<p class="empty">Aucune récompense pour l'instant. Commence par le référentiel : les prix s'adaptent au rythme de ${esc(c.name)}.</p>`}
     ${hist.length ? `<h3 class="grp">Historique</h3><ul class="hist">${hist.map(z => z.kind === "gift"
       ? `<li><span>${esc(z.emoji)} ${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span><span>−${z.cost} ⭐</span><span class="muted">par ${z.created_by ? esc(memberLabel(z.created_by)) : esc(c.name)}</span>${P ? `<button class="link" data-act="cancelRedeem" data-id="${z.id}">Annuler</button>` : ""}</li>`
@@ -1075,7 +1073,7 @@ async function refreshParent() {
     sb.from("child_stats").select("*").eq("family_id", fid),
     sb.from("family_members").select("user_id,display_name,relation,role").eq("family_id", fid),
     sb.from("child_devices").select("id,child_id,created_at,last_seen,label").eq("family_id", fid).order("created_at"),
-    sb.from("families").select("name,auto_validate,outing_radii").eq("id", fid),
+    sb.from("families").select("name,auto_validate").eq("id", fid),
     sb.from("penalties").select("*").eq("family_id", fid).eq("active", true).order("stars").order("created_at"),
     sb.from("penalty_events").select("*").eq("family_id", fid).order("created_at", { ascending: false }).limit(500),
     sb.from("child_badges").select("child_id,badge_key").eq("family_id", fid),
@@ -1087,7 +1085,7 @@ async function refreshParent() {
   const [c, r, w, x, z, s, m, d, f, pe, pv, b, pz, gdn, ot] = qs.map(q => q.data);
   const badges = {}; b.forEach(o => (badges[o.child_id] = badges[o.child_id] || []).push(o.badge_key));
   Object.assign(S, { children: c, routines: r, rewards: w, completions: x, redemptions: z, stats: Object.fromEntries(s.map(o => [o.child_id, o])),
-    members: m, devices: d, autoValidate: f[0] ? f[0].auto_validate : true, radii: (f[0] && f[0].outing_radii) || RADII_DEF, penalties: pe, pevents: pv, badges, pauses: pz, gardens: gdn || {}, oneoffTpl: ot || [], offline: false });
+    members: m, devices: d, autoValidate: f[0] ? f[0].auto_validate : true, penalties: pe, pevents: pv, badges, pauses: pz, gardens: gdn || {}, oneoffTpl: ot || [], offline: false });
   if (f[0]) S.family.name = f[0].name;
   const meRow = m.find(x => x.user_id === S.session?.user.id); if (meRow) S.me = { ...S.me, ...meRow };
   if (!isParent() && S.tab === "routines") S.tab = "today";
@@ -1462,76 +1460,6 @@ A.repriceChild = async () => {
   await reloadParent(`Prix de ${c.name} recalculés.`);
 };
 async function markPriced(ids) { for (const id of ids) { const c = S.children.find(k => k.id === id); if (c && !c.price_rhythm) await sb.from("children").update({ price_rhythm: rhythmOf(id) }).eq("id", id); } }
-
-// Sorties autour de chez soi (OpenStreetMap)
-const RADII_DEF = { proche: 5, moyen: 15, loin: 60 };
-const RADII_OPT = { proche: [2, 5, 10], moyen: [10, 15, 30], loin: [30, 60, 100] };
-const RADII_LBL = { proche: "Proche : aires de jeux, parcs, médiathèques, piscines", moyen: "Moyen : musées", loin: "Loin : zoos, fermes, aquariums, parcs aquatiques et d'attractions" };
-const OSM_KINDS = [
-  { q: '["leisure"="playground"]["name"]', l: "Aire de jeux", e: "🛝", d: 14, g: "proche", m: t => t.leisure === "playground" },
-  { q: '["leisure"="park"]["name"]', l: "Parc", e: "🌳", d: 21, g: "proche", m: t => t.leisure === "park" },
-  { q: '["amenity"="library"]["name"]', l: "Médiathèque", e: "📚", d: 21, g: "proche", m: t => t.amenity === "library" },
-  { q: '["leisure"="swimming_pool"]["access"!="private"]["name"]', l: "Piscine", e: "🏊", d: 30, g: "proche", m: t => t.leisure === "swimming_pool" },
-  { q: '["leisure"="sports_centre"]["sport"="swimming"]["name"]', l: "Piscine", e: "🏊", d: 30, g: "proche", m: t => t.sport === "swimming" },
-  { q: '["tourism"="museum"]["name"]', l: "Musée", e: "🏛️", d: 30, g: "moyen", m: t => t.tourism === "museum" },
-  { q: '["tourism"="zoo"]["name"]', l: "Zoo ou ferme", e: "🐐", d: 30, g: "loin", m: t => t.tourism === "zoo" },
-  { q: '["tourism"="aquarium"]["name"]', l: "Aquarium", e: "🐠", d: 30, g: "loin", m: t => t.tourism === "aquarium" },
-  { q: '["leisure"="water_park"]["name"]', l: "Parc aquatique", e: "🌊", d: 30, g: "loin", m: t => t.leisure === "water_park" },
-  { q: '["tourism"="theme_park"]["name"]', l: "Parc d'attractions", e: "🎢", d: 90, g: "loin", m: t => t.tourism === "theme_park" }
-];
-A.suggestOutings = () => {
-  const r = { ...RADII_DEF, ...(S.radii || {}) };
-  openSheet(`<h2>Sorties près de chez nous</h2><p class="muted">Recherche d'après OpenStreetMap. Ta position sert uniquement à cette recherche, elle n'est pas enregistrée. Les rayons sont partagés avec l'autre parent.</p>
-    ${Object.keys(RADII_DEF).map(k => `<label class="f">${RADII_LBL[k]}<select id="rad-${k}">${RADII_OPT[k].map(v => `<option value="${v}" ${v === +r[k] ? "selected" : ""}>${v} km</option>`).join("")}</select></label>`).join("")}
-    <div class="sheet-actions"><button class="btn" data-act="findOutings">Chercher autour de moi</button></div><div id="osm-res"></div>`);
-};
-const OVERPASS = ["https://overpass-api.de/api/interpreter", "https://overpass.private.coffee/api/interpreter", "https://overpass.kumi.systems/api/interpreter"];
-async function overpass(q) {
-  for (const url of OVERPASS) {
-    const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 35000);
-    try {
-      const r = await fetch(url, { method: "POST", body: "data=" + encodeURIComponent(q), headers: { "Content-Type": "application/x-www-form-urlencoded" }, signal: ctl.signal });
-      if (r.ok) return await r.json();
-    } catch (_) { /* serveur suivant */ } finally { clearTimeout(tm); }
-  }
-  throw new Error("overpass");
-}
-A.findOutings = async () => {
-  const radii = {}; Object.keys(RADII_DEF).forEach(k => radii[k] = +$("#rad-" + k).value);
-  if (JSON.stringify(radii) !== JSON.stringify({ ...RADII_DEF, ...(S.radii || {}) })) {
-    S.radii = radii; sb.from("families").update({ outing_radii: radii }).eq("id", S.family.id).then(() => {}, () => {});
-  }
-  const box = $("#osm-res"); box.innerHTML = `<p class="muted">Recherche de ta position…</p>`;
-  const fail = msg => { box.innerHTML = `<p class="empty">${esc(msg)}</p>`; };
-  let pos;
-  try {
-    pos = await new Promise((res, rej) => navigator.geolocation ? navigator.geolocation.getCurrentPosition(res, er => rej(new Error(er && er.code === 1 ? "Position refusée. Autorise la localisation pour ce site dans Chrome (cadenas à gauche de l'adresse, puis Autorisations)." : "Position introuvable. Active la localisation du téléphone puis réessaie.")), { timeout: 20000, maximumAge: 600000 }) : rej(new Error("Localisation indisponible sur cet appareil.")));
-  } catch (er) { return fail(er.message); }
-  const { latitude: la, longitude: lo } = pos.coords;
-  box.innerHTML = `<p class="muted">Recherche des lieux… Les grands rayons peuvent prendre quelques secondes.</p>`;
-  const groupsQ = Object.keys(RADII_DEF).map(g => `[out:json][timeout:25];(${OSM_KINDS.filter(k => k.g === g).map(k => `nwr${k.q}(around:${radii[g] * 1000},${la},${lo});`).join("")});out center 300;`);
-  const results = await Promise.all(groupsQ.map(q => overpass(q).catch(() => null)));
-  if (results.every(r => !r)) return fail("Le service OpenStreetMap ne répond pas pour le moment. Réessaie dans quelques minutes, ou réduis les rayons.");
-  const missed = Object.keys(RADII_DEF).filter((g, i) => !results[i]);
-  const data = { elements: results.flatMap(r => (r && r.elements) || []) };
-  const dist = p => { const t = Math.PI / 180, x = (p.lon - lo) * t * Math.cos((p.lat + la) / 2 * t), y = (p.lat - la) * t; return Math.round(Math.sqrt(x * x + y * y) * 6371e3); };
-  const seen = new Set(), per = {};
-  const items = data.elements.map(el => { const p = el.center || el, k = OSM_KINDS.find(o => o.m(el.tags)) || OSM_KINDS[0]; return { name: el.tags.name, k, m: dist(p) }; })
-    .filter(it => it.m <= radii[it.k.g] * 1000)
-    .sort((a, b) => a.m - b.m).filter(it => { const key = it.k.l + it.name; if (seen.has(key)) return false; seen.add(key); per[it.k.l] = (per[it.k.l] || 0) + 1; return per[it.k.l] <= 6; });
-  S.osm = items;
-  const groups = Object.keys(RADII_DEF).map(g => { const li = items.map((it, i) => ({ it, i })).filter(o => o.it.k.g === g); return li.length ? `<h3 class="tier-h">${RADII_LBL[g].split(" :")[0]}<small>jusqu'à ${radii[g]} km</small></h3><ul class="tpl osm">${li.map(({ it, i }) => `<li><label><input type="checkbox" value="${i}"><span>${it.k.e} ${esc(it.name)}<small>${it.k.l}, à ${it.m < 1000 ? it.m + " m" : (Math.round(it.m / 100) / 10) + " km"}</small></span></label></li>`).join("")}</ul>` : ""; }).join("");
-  box.innerHTML = groups ? groups + `<div class="sheet-actions"><button class="btn" data-act="addOutings">Ajouter aux récompenses</button></div><p class="muted small">Données © contributeurs OpenStreetMap.</p>` : `<p class="empty">Aucun lieu trouvé. Essaie des rayons plus grands.</p>`;
-  box.scrollIntoView({ behavior: "smooth", block: "start" });
-  if (missed.length) box.insertAdjacentHTML("beforeend", `<p class="muted small">Recherche incomplète (${missed.map(g => RADII_LBL[g].split(" :")[0].toLowerCase()).join(", ")}) : le service OpenStreetMap n'a pas répondu. Réessaie plus tard pour ces lieux.</p>`);
-};
-A.addOutings = async () => {
-  const picks = $$(".osm input:checked", dlg).map(i => S.osm[+i.value]); if (!picks.length) return toast("Coche au moins un lieu.", true);
-  const ids = S.children.map(c => c.id);
-  const rows = picks.map(it => { const tier = it.k.d >= 90 ? "grand" : "sortie"; return { family_id: S.family.id, title: `${it.k.l} : ${it.name}`.slice(0, 60), emoji: it.k.e, tier, duration_days: it.k.d, place: it.name, costs: pricesFor(it.k.d, ids), cost: roundPrice(it.k.d * 5) }; });
-  const { error } = await sb.from("rewards").insert(rows); if (error) throw error;
-  await markPriced(ids); closeSheet(); await reloadParent(`${rows.length} sortie${rows.length > 1 ? "s ajoutées" : " ajoutée"}.`);
-};
 
 // Routines exceptionnelles
 A.newOneoff = el => {
