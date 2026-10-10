@@ -35,7 +35,7 @@ jobs:
             echo "::error::SUPABASE_KEY est la clé service_role. Utilise la clé anon ou publishable."; exit 1
           fi
           mkdir _site
-          rsync -a --exclude .git --exclude .github --exclude README.md ./ _site/
+          rsync -a --exclude .git --exclude .github --exclude supabase --exclude README.md ./ _site/
           sed -i "s|__SUPABASE_URL__|${SUPABASE_URL}|; s|__SUPABASE_KEY__|${SUPABASE_KEY}|" _site/index.html
           if grep -q "__SUPABASE_" _site/index.html; then echo "::error::Injection incomplète"; exit 1; fi
       - uses: actions/configure-pages@v5

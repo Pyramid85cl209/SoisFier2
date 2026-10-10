@@ -1,0 +1,869 @@
+{
+ "common": {
+  "none": "Aucune.",
+  "by": "par {who}",
+  "suggestions": "Suggestions",
+  "alreadyAdded": "déjà ajoutée",
+  "addSelection": "Ajouter la sélection",
+  "deletedF": "Supprimée.",
+  "deletedM": "Supprimé.",
+  "savedM": "Enregistré.",
+  "starsReturned": "Les étoiles sont rendues à l'enfant."
+ },
+ "days": {
+  "short": [
+   "L",
+   "M",
+   "M",
+   "J",
+   "V",
+   "S",
+   "D"
+  ],
+  "long": [
+   "Lundi",
+   "Mardi",
+   "Mercredi",
+   "Jeudi",
+   "Vendredi",
+   "Samedi",
+   "Dimanche"
+  ],
+  "abbr": [
+   "Lun",
+   "Mar",
+   "Mer",
+   "Jeu",
+   "Ven",
+   "Sam",
+   "Dim"
+  ],
+  "all": "Tous les jours",
+  "week": "En semaine",
+  "weekend": "Le week-end"
+ },
+ "day": {
+  "today": "Aujourd'hui",
+  "yesterday": "Hier",
+  "nameNum": "{day} {num}",
+  "prev": "Jour précédent",
+  "next": "Jour suivant"
+ },
+ "week": {
+  "summary": "Semaine du {first}, week-end {weekend}, fuseau {tz}",
+  "noWeekend": "aucun",
+  "title": "Semaine et fuseau horaire",
+  "help": "Ils fixent l'ordre des jours, les choix « En semaine » et « Le week-end », les badges de semaine et de week-end, la fin des quinzaines du jardin et l'heure du changement de jour.",
+  "firstDay": "Premier jour de la semaine",
+  "weekendDays": "Jours de week-end",
+  "timezone": "Fuseau horaire",
+  "changeNote": "Les badges déjà gagnés sont conservés. La quinzaine en cours se prolonge jusqu'au nouveau dernier jour de la semaine (20 jours au plus), puis les suivantes durent 14 jours.",
+  "saved": "Réglages de la semaine enregistrés.",
+  "max3": "3 jours de week-end au maximum."
+ },
+ "moment": {
+  "matin": {
+   "group": "Le matin",
+   "short": "Matin"
+  },
+  "midi": {
+   "group": "Le midi",
+   "short": "Midi"
+  },
+  "journee": {
+   "group": "Dans la journée",
+   "short": "Journée"
+  },
+  "soir": {
+   "group": "Le soir",
+   "short": "Soir"
+  }
+ },
+ "places": [
+  "Chambre",
+  "Salle de bain",
+  "Cuisine",
+  "Salon",
+  "Entrée",
+  "Dehors",
+  "École"
+ ],
+ "emoGroup": {
+  "hygiene": "Hygiène",
+  "dressing": "Habillage",
+  "meals": "Repas",
+  "tidying": "Rangement",
+  "school": "École",
+  "home": "Maison et animaux",
+  "activities": "Activités",
+  "night": "Soir et sommeil",
+  "kindness": "Gentillesse",
+  "treats": "Gourmandises",
+  "shared": "Moments partagés",
+  "outside": "Dehors",
+  "outings": "Sorties",
+  "big": "Grands projets",
+  "perks": "Petits privilèges"
+ },
+ "err": {
+  "network": "Pas de connexion internet. Réessaie dans un instant.",
+  "badLogin": "E-mail ou mot de passe incorrect.",
+  "notConfirmed": "Confirme d'abord ton adresse e-mail avec le lien reçu, puis reconnecte-toi.",
+  "alreadyRegistered": "Un compte existe déjà avec cet e-mail. Connecte-toi.",
+  "passwordShort": "Le mot de passe doit contenir au moins 6 caractères.",
+  "rateLimit": "Trop de tentatives. Patiente quelques minutes."
+ },
+ "garden": {
+  "species": {
+   "tournesol": "Tournesol",
+   "marguerite": "Marguerite",
+   "cosmos-rose": "Cosmos rose",
+   "cosmos-orange": "Cosmos orange",
+   "cosmos-rouge": "Cosmos rouge",
+   "tulipe-rose": "Tulipe rose",
+   "tulipe-jaune": "Tulipe jaune",
+   "tulipe-violette": "Tulipe violette",
+   "tulipe-rouge": "Tulipe rouge",
+   "hellebore": "Rose de Noël"
+  },
+  "seasonOf": {
+   "printemps": "du printemps",
+   "ete": "de l'été",
+   "automne": "de l'automne",
+   "hiver": "de l'hiver"
+  },
+  "grade": [
+   "Un joli bouton",
+   "Une petite fleur",
+   "Une belle fleur",
+   "Une grande fleur"
+  ],
+  "stage": [
+   "Pot vide",
+   "Graine",
+   "Germe",
+   "Pousse",
+   "2 feuilles",
+   "4 feuilles",
+   "6 feuilles",
+   "Premier bouton",
+   "Deuxième bouton",
+   "Les boutons grossissent",
+   "Éclosion",
+   "Mi-ouverte",
+   "Grande ouverture",
+   "Fleur complète"
+  ],
+  "plant": "Plante",
+  "bed": "Parterre",
+  "bedOf": "Parterre {season}",
+  "gardenOfYear": "Le jardin de {name} {year}",
+  "gardenYear": "Jardin {year}",
+  "fortnightDays": "Jours de la quinzaine",
+  "see": "Voir le jardin de {name}",
+  "firstFrom": "Première fleur à partir de {date}",
+  "dayOf": "Jour {d}/{len}",
+  "goodDays": {
+   "one": "{n} bonne journée",
+   "other": "{n} bonnes journées"
+  },
+  "gardenOf": "Le jardin de {name}",
+  "firstFromDot": "Première fleur à partir de {date}.",
+  "status": "{stage} : jour {d}/{len}, {n} bonne(s) journée(s). Floraison {date}.",
+  "yearCount": "{n} fleurs, dont {big} grandes."
+ },
+ "oneoff": {
+  "note": "Exceptionnelle",
+  "noteBefore": "Exceptionnelle, avant {date}",
+  "btn": "Routine exceptionnelle",
+  "current": "Exceptionnelles en cours ou à venir",
+  "beforeShort": "avant le {date}",
+  "manageTpl": "Gérer les modèles",
+  "for": "Routine exceptionnelle pour {name}",
+  "myTpl": "Mes modèles",
+  "createNew": "Créer une nouvelle",
+  "when": "Quand",
+  "on": "Le",
+  "before": "Avant le",
+  "type": "Type",
+  "bonus": "Bonus",
+  "mandatory": "Obligatoire",
+  "typeHelp": "Bonus : elle rapporte des étoiles sans pouvoir gâcher la journée. Obligatoire : elle compte dans la bonne journée.",
+  "keepTpl": "Garder comme modèle",
+  "needDate": "Choisis une date à partir d'aujourd'hui.",
+  "added": "Routine exceptionnelle ajoutée.",
+  "delTitle": "Supprimer cette routine exceptionnelle ?",
+  "delText": "Les étoiles déjà gagnées sont conservées.",
+  "tplTitle": "Modèles exceptionnels",
+  "tplHelp": "Partagés par toute la famille. Classés du plus utilisé au moins utilisé.",
+  "times": "{n} fois",
+  "noTpl": "Aucun modèle. Coche « Garder comme modèle » en créant une routine exceptionnelle.",
+  "tplDeleted": "Modèle supprimé."
+ },
+ "tpl": {
+  "x": {
+   "suitcase": "Préparer sa valise",
+   "deepClean": "Ranger sa chambre à fond",
+   "poolBag": "Préparer son sac de piscine",
+   "tableGuests": "Mettre la table pour les invités",
+   "groceries": "Aider à porter les courses",
+   "cook": "Aider à cuisiner",
+   "sortToys": "Trier ses jouets à donner",
+   "birthdayCard": "Faire une carte d'anniversaire",
+   "waterGarden": "Arroser le jardin",
+   "carBoot": "Ranger le coffre de la voiture"
+  },
+  "r": {
+   "bed": "Faire son lit",
+   "dress": "S'habiller",
+   "breakfast": "Prendre son petit-déjeuner",
+   "teethMorning": "Se brosser les dents (matin)",
+   "face": "Se laver le visage",
+   "hair": "Se coiffer",
+   "shoes": "Mettre ses chaussures",
+   "schoolbag": "Préparer son cartable",
+   "hands": "Se laver les mains",
+   "setTable": "Mettre le couvert",
+   "clearPlate": "Débarrasser son assiette",
+   "toys": "Ranger ses jouets",
+   "homework": "Faire ses devoirs",
+   "read": "Lire un livre",
+   "plants": "Arroser les plantes",
+   "pet": "Nourrir l'animal",
+   "bath": "Prendre son bain",
+   "pyjamas": "Mettre son pyjama",
+   "teethEvening": "Se brosser les dents (soir)",
+   "laundry": "Mettre le linge sale au panier",
+   "clothesTomorrow": "Préparer ses habits pour demain",
+   "toilet": "Aller aux toilettes avant le dodo"
+  },
+  "w": {
+   "story": "Une histoire de plus",
+   "music": "Choisir la musique en voiture",
+   "sticker": "Un autocollant",
+   "game": "Une partie de jeu avec papa ou maman",
+   "dessert": "Choisir le dessert",
+   "bubbleBath": "Bain moussant avec jouets",
+   "lateBed": "15 minutes de coucher plus tard",
+   "cartoon": "Un dessin animé en plus",
+   "art": "Atelier dessin ou peinture ensemble",
+   "cake": "Faire un gâteau ensemble",
+   "dinner": "Choisir le repas du soir",
+   "hut": "Cabane dans le salon",
+   "movie": "Soirée film en famille",
+   "picnic": "Pique-nique au parc",
+   "library": "Sortie à la médiathèque avec goûter",
+   "pool": "Après-midi à la piscine",
+   "farm": "Visite d'une ferme pédagogique",
+   "toy": "Un jouet ou équipement choisi",
+   "themePark": "Journée parc d'attractions",
+   "myDay": "Une journée « c'est moi qui décide »"
+  },
+  "p": {
+   "tidyRefusal": "Refus de ranger après plusieurs rappels",
+   "swear": "Gros mot",
+   "sibling": "Dispute avec frère ou sœur",
+   "notListening": "Ne pas écouter",
+   "rough": "Geste brusque",
+   "lie": "Mensonge"
+  }
+ },
+ "badge": {
+  "cat": {
+   "routines": "Routines",
+   "stars": "Étoiles",
+   "regularity": "Régularité",
+   "garden": "Jardin",
+   "challenges": "Défis",
+   "savings": "Épargne",
+   "serenity": "Sérénité"
+  },
+  "routines": {
+   "first": "Première routine",
+   "n": "{n} routines"
+  },
+  "stars": {
+   "n": "{n} étoiles"
+  },
+  "streak": {
+   "n": "{n} bonnes journées de suite"
+  },
+  "flowers": {
+   "first": "Première fleur",
+   "n": "{n} fleurs"
+  },
+  "bigFlowers": {
+   "first": "Une grande fleur",
+   "n": "{n} grandes fleurs"
+  },
+  "beds": {
+   "first": "Premier parterre",
+   "n": "{n} parterres"
+  },
+  "bedSeason": "Parterre {season}",
+  "gardens": {
+   "first": "Premier jardin",
+   "n": "{n} jardins"
+  },
+  "perfectBed": "Parterre parfait (6 grandes fleurs)",
+  "fullGarden": "Jardin complet (4 saisons)",
+  "timers": {
+   "first": "Défi chrono réussi",
+   "n": "{n} défis chrono"
+  },
+  "bonus": {
+   "first": "Routine bonus",
+   "n": "{n} routines bonus"
+  },
+  "oneoff": {
+   "first": "Routine exceptionnelle",
+   "n": "{n} routines exceptionnelles"
+  },
+  "mornings": {
+   "first": "Matin parfait",
+   "n": "{n} matins parfaits"
+  },
+  "evenings": {
+   "first": "Soir parfait",
+   "n": "{n} soirs parfaits"
+  },
+  "fullDays": {
+   "first": "Journée à 100 %, bonus compris",
+   "n": "{n} journées à 100 %"
+  },
+  "weekends": {
+   "first": "Week-end parfait",
+   "n": "{n} week-ends parfaits"
+  },
+  "perfectWeek": "Semaine parfaite",
+  "saved": {
+   "n": "{n} étoiles de côté"
+  },
+  "outings": {
+   "first": "Première sortie gagnée",
+   "n": "{n} sorties gagnées"
+  },
+  "bigProjects": {
+   "first": "Premier grand projet",
+   "n": "{n} grands projets"
+  },
+  "patience": {
+   "n": "{n} jours d'économies"
+  },
+  "calm": {
+   "n": "{n} jours sans étoile cassée"
+  }
+ },
+ "tier": {
+  "coup": {
+   "name": "Coup de pouce",
+   "hint": "pour les 3-5 ans, environ 1 jour"
+  },
+  "petit": {
+   "name": "Petits plaisirs",
+   "hint": "2 à 4 jours"
+  },
+  "moment": {
+   "name": "Moments partagés",
+   "hint": "1 à 2 semaines"
+  },
+  "sortie": {
+   "name": "Sorties",
+   "hint": "environ 1 mois"
+  },
+  "grand": {
+   "name": "Grands projets",
+   "hint": "environ 3 mois"
+  },
+  "event": {
+   "name": "Événements",
+   "hint": "à une date précise"
+  }
+ },
+ "effort": {
+  "days": {
+   "one": "≈ {n} jour",
+   "other": "≈ {n} jours"
+  },
+  "weeks": "≈ {n} semaines",
+  "months": "≈ {n} mois"
+ },
+ "help": "Mode d'emploi",
+ "btn": {
+  "cancel": "Annuler",
+  "retry": "Réessayer",
+  "back": "Retour",
+  "edit": "Modifier",
+  "create": "Créer",
+  "logout": "Se déconnecter",
+  "save": "Enregistrer",
+  "add": "Ajouter",
+  "delete": "Supprimer",
+  "close": "Fermer",
+  "done": "Terminé",
+  "validate": "Valider",
+  "disable": "Désactiver",
+  "print": "Imprimer",
+  "share": "Partager",
+  "gotIt": "Compris"
+ },
+ "error": {
+  "title": "Impossible de charger",
+  "noService": "La connexion au service n'a pas pu démarrer. Vérifie ta connexion internet puis réessaie.",
+  "noConfig": "Configuration manquante : l'app doit être publiée par la GitHub Action, qui injecte SUPABASE_URL et SUPABASE_KEY."
+ },
+ "auth": {
+  "install": "Installer l'application sur ce téléphone",
+  "tagline": "Les routines des enfants, une étoile à la fois.",
+  "login": "Connexion",
+  "signup": "Créer un compte",
+  "firstName": "Ton prénom",
+  "email": "E-mail",
+  "password": "Mot de passe",
+  "createAccount": "Créer mon compte",
+  "connect": "Me connecter",
+  "forgot": "Mot de passe oublié",
+  "childPhone": "Ce téléphone est celui de ton enfant ?",
+  "haveCode": "J'ai un code enfant",
+  "needBoth": "Saisis ton e-mail et ton mot de passe.",
+  "needSignup": "Saisis un e-mail et un mot de passe de 6 caractères minimum.",
+  "checkMail": "Vérifie ta boîte mail",
+  "checkMailText": "Un lien de confirmation a été envoyé à {email}. Ouvre-le, puis reviens ici pour te connecter.",
+  "emailFirst": "Saisis d'abord ton e-mail.",
+  "resetSent": "E-mail de réinitialisation envoyé.",
+  "newPassword": "Nouveau mot de passe",
+  "passwordMin": "Mot de passe (6 caractères minimum)",
+  "min6": "6 caractères minimum.",
+  "passwordChanged": "Mot de passe modifié."
+ },
+ "pair": {
+  "title": "Code enfant",
+  "where": "Sur le téléphone d'un parent : Famille, puis « Connecter son appareil ».",
+  "code": "Code à 6 caractères",
+  "connect": "Connecter ce téléphone",
+  "need6": "Le code contient 6 caractères."
+ },
+ "onboard": {
+  "welcome": "Bienvenue",
+  "intro": "Crée l'espace de ta famille, ou rejoins celui de l'autre parent.",
+  "create": "Créer ma famille",
+  "familyName": "Nom de la famille",
+  "familyPlaceholder": "Famille Martin",
+  "iAm": "Je suis",
+  "join": "Rejoindre une famille",
+  "inviteCode": "Code d'invitation",
+  "joinBtn": "Rejoindre",
+  "defaultName": "Ma famille",
+  "joined": "Tu as rejoint la famille."
+ },
+ "relations": [
+  "Papa",
+  "Maman",
+  "Papy",
+  "Mamie",
+  "Tonton",
+  "Tata",
+  "Parrain",
+  "Marraine",
+  "Nounou"
+ ],
+ "member": {
+  "aParent": "Un parent",
+  "aMember": "Un membre",
+  "autoValidated": "validée automatiquement",
+  "relation": "Lien avec les enfants",
+  "otherRel": "Autre…",
+  "customLabel": "Libellé personnalisé (facultatif)",
+  "customPlaceholder": "Mamie Josette, Tonton Karim…",
+  "rights": "Droits",
+  "makeCode": "Créer le code",
+  "inviteWho": "Inviter {who}",
+  "aMemberLower": "un membre",
+  "thePerson": "La personne",
+  "inviteHelp": "{who} crée son compte SoisFier, puis choisit « Rejoindre une famille » et saisit ce code. Il est valable 48 heures. Droits : {role}.",
+  "member": "Membre",
+  "remove": "Retirer de la famille",
+  "saved": "Membre enregistré.",
+  "removeTitle": "Retirer {who} ?",
+  "thisMember": "ce membre",
+  "removeText": "Cette personne n'aura plus accès à la famille. L'historique de ses validations est conservé.",
+  "removeBtn": "Retirer",
+  "removed": "Membre retiré.",
+  "shareText": "Rejoins notre famille sur SoisFier avec le code {code} : {url}"
+ },
+ "sep": ", ",
+ "offline": "Hors ligne",
+ "nav": "Navigation",
+ "tab": {
+  "today": "Aujourd'hui",
+  "routines": "Routines",
+  "rewards": "Récompenses",
+  "malus": "Malus",
+  "family": "Famille"
+ },
+ "parent": {
+  "startTitle": "On commence ?",
+  "startText": "Ajoute ton premier enfant. Tu pourras ensuite choisir ses routines parmi des modèles.",
+  "toSpend": "{n} à dépenser",
+  "inARow": "{n} de suite",
+  "doneOf": "{n} routines faites sur {total}",
+  "nothing": "Rien de prévu ce jour-là.",
+  "addRoutines": "Ajouter des routines"
+ },
+ "child": {
+  "add": "Ajouter un enfant",
+  "firstName": "Prénom",
+  "avatar": "Avatar",
+  "avatarChosen": "Avatar choisi",
+  "potColor": "Couleur de son pot",
+  "color": "Couleur {c}",
+  "privacy": "Seul le prénom est enregistré. Pas de nom de famille ni de date de naissance.",
+  "needName": "Saisis un prénom.",
+  "joined": "{name} a rejoint la famille.",
+  "delTitle": "Supprimer {name} ?",
+  "delText": "Ses routines, ses étoiles et son historique seront effacés définitivement."
+ },
+ "routine": {
+  "bonus": "bonus",
+  "mandatory": "obligatoire",
+  "pending": "en attente de validation",
+  "deleted": "Routine supprimée",
+  "minutes": "{n} min",
+  "chooseTpl": "Choisir des modèles",
+  "create": "Créer une routine",
+  "none": "{name} n'a pas encore de routine. Les modèles couvrent le matin, le midi et le soir : coches-en trois ou quatre pour commencer.",
+  "new": "Nouvelle routine",
+  "edit": "Modifier la routine",
+  "placeholder": "Se brosser les dents",
+  "bonusHelp": "Routine bonus : facultative, elle rapporte des étoiles sans compter dans la journée",
+  "unchecked": "Routine décochée.",
+  "alreadyValidated": "Routine déjà validée. Pour retirer des étoiles, utilise une étoile cassée (onglet Malus).",
+  "needName": "Donne un nom à la routine.",
+  "needDay": "Choisis au moins un jour.",
+  "saved": "Routine enregistrée.",
+  "added": "Routine ajoutée.",
+  "delTitle": "Supprimer cette routine ?",
+  "delText": "Elle disparaît des journées à venir. Les étoiles déjà gagnées sont conservées.",
+  "deletedToast": "Routine supprimée.",
+  "tplFor": "Modèles de routines pour {name}",
+  "bonusTag": "(bonus)",
+  "needOne": "Coche au moins une routine.",
+  "addedN": {
+   "one": "{n} routine ajoutée.",
+   "other": "{n} routines ajoutées."
+  }
+ },
+ "validate": {
+  "title": "À valider",
+  "all": "Tout valider ({n})",
+  "timer": "défi chrono réussi",
+  "checkedBy": "cochée par {who}",
+  "refuse": "Refuser",
+  "autoOn": "Sans action de ta part, elles seront validées automatiquement à minuit.",
+  "autoOff": "Validation automatique désactivée : elles attendent ta décision.",
+  "section": "Validation des routines",
+  "sectionHelp": "Quand ton enfant coche une routine, ses étoiles attendent ta validation. Celles que tu coches toi-même sont validées directement.",
+  "autoLabel": "Valider automatiquement à minuit ce qui n'a pas été refusé",
+  "done": "Routine validée.",
+  "refused": "Refusée : la routine est à refaire, sans pénalité.",
+  "allDone": "Tout est validé.",
+  "autoEnabled": "Validation automatique à minuit activée.",
+  "manualOnly": "Validation manuelle uniquement."
+ },
+ "reward": {
+  "for": "Pour {name}",
+  "forAll": "Pour tous les enfants",
+  "exchangeN": "Échanger {n} étoiles",
+  "balanceFor": "étoiles à dépenser pour {name}",
+  "pending": "+{n} en attente de validation",
+  "rhythm": "Rythme : environ {n} ⭐ par jour",
+  "drift": "Le rythme de {name} a changé depuis le calcul des prix ({old} ⭐ par jour, contre {now} aujourd'hui).",
+  "reprice": "Recalculer ses prix",
+  "chooseTpl": "Choisir dans le référentiel",
+  "create": "Créer une récompense",
+  "none": "Aucune récompense pour l'instant. Commence par le référentiel : les prix s'adaptent au rythme de {name}.",
+  "history": "Historique",
+  "newEvent": "Nouvel événement",
+  "new": "Nouvelle récompense",
+  "edit": "Modifier la récompense",
+  "eventPlaceholder": "Spectacle de marionnettes",
+  "placeholder": "Pique-nique au parc",
+  "level": "Niveau",
+  "forLabel": "Pour",
+  "allChildren": "Tous les enfants",
+  "fixedHelp": "Prix fixe, identique pour tous, au lieu d'un prix calculé selon le rythme",
+  "effortDays": "Durée d'effort (jours)",
+  "fixedPrice": "Prix fixe (étoiles)",
+  "date": "Date (facultatif)",
+  "place": "Lieu (facultatif)",
+  "samePrice": "Même prix pour tous les enfants.",
+  "computed": "Prix calculé : {list}.",
+  "repriced": "Prix de {name} recalculés.",
+  "needName": "Donne un nom à la récompense.",
+  "badPrice": "Le prix doit être entre 1 et 5000 étoiles.",
+  "badDays": "La durée doit être entre 1 et 365 jours.",
+  "saved": "Récompense enregistrée.",
+  "added": "Récompense ajoutée.",
+  "delTitle": "Supprimer cette récompense ?",
+  "delText": "L'historique des échanges est conservé.",
+  "deleted": "Récompense supprimée.",
+  "tplTitle": "Référentiel de récompenses",
+  "tplHelp": "Proposées à tous les enfants. Le prix est calculé selon le rythme de chacun (pour {name} : environ {n} ⭐ par jour).",
+  "tplPrice": "({n} ⭐ pour {name})",
+  "eventHelp": "Un spectacle, un atelier, une fête de quartier : crée-le à partir du modèle et adapte-le.",
+  "createEvent": "Créer un événement",
+  "eventDefault": "Spectacle",
+  "needOne": "Coche au moins une récompense.",
+  "addedN": {
+   "one": "{n} récompense ajoutée.",
+   "other": "{n} récompenses ajoutées."
+  },
+  "exchangeTitle": "Échanger des étoiles ?",
+  "exchangeText": "{n} étoiles de {name} contre « {title} ».",
+  "exchange": "Échanger",
+  "exchanged": "Récompense échangée.",
+  "cancelTitle": "Annuler cet échange ?",
+  "cancelBtn": "Annuler l'échange",
+  "cancelled": "Échange annulé, étoiles rendues."
+ },
+ "role": {
+  "parent": "Parent",
+  "helper": "Proche"
+ },
+ "family": {
+  "hisPhone": "Son téléphone",
+  "since": "depuis le {date}",
+  "disconnect": "Déconnecter",
+  "connectDevice": "Connecter son appareil",
+  "childHere": "Mode enfant ici",
+  "you": "(toi)",
+  "children": "Enfants",
+  "noChild": "Aucun enfant pour l'instant.",
+  "members": "Membres de la famille",
+  "rolesHelp": "Un parent gère tout. Un proche coche et valide les routines et échange les récompenses, mais ne casse pas d'étoile et ne modifie pas la configuration.",
+  "invite": "Inviter un membre"
+ },
+ "pause": {
+  "title": "Pauses vacances ou maladie",
+  "help": "Les jours en pause ne comptent ni pour ni contre la fleur.",
+  "default": "Pause",
+  "range": "{from} au {to}",
+  "new": "Programmer une pause",
+  "during": "Pendant la pause, les jours ne comptent ni pour ni contre la fleur.",
+  "from": "Du",
+  "to": "Au",
+  "reason": "Motif",
+  "reasons": [
+   "Vacances",
+   "Maladie",
+   "Autre"
+  ],
+  "needChild": "Choisis au moins un enfant.",
+  "badDates": "Vérifie les dates : la fin doit être après le début.",
+  "saved": "Pause enregistrée.",
+  "delTitle": "Supprimer cette pause ?",
+  "delText": "Les jours concernés compteront à nouveau normalement.",
+  "deleted": "Pause supprimée."
+ },
+ "push": {
+  "title": "Rappels",
+  "parentHelp": "Un résumé des routines restantes arrive sur ce téléphone aux heures choisies.",
+  "morning": "Matin",
+  "evening": "Soir",
+  "update": "Mettre à jour les rappels",
+  "enable": "Activer les rappels",
+  "unsupported": "Ce navigateur ne gère pas les notifications. Installe l'application depuis Chrome.",
+  "blocked": "Les notifications sont bloquées. Autorise-les dans les réglages de Chrome pour ce site.",
+  "needTime": "Choisis au moins une heure.",
+  "enabled": "Rappels activés.",
+  "disabled": "Rappels désactivés."
+ },
+ "print": {
+  "title": "Planning à imprimer",
+  "help": "La semaine de chaque enfant sur une page A4, à cocher au crayon.",
+  "btn": "Imprimer le planning",
+  "weekOf": "La semaine de {name}",
+  "weekStart": "Semaine du {date}",
+  "routine": "Routine",
+  "none": "Aucune routine.",
+  "myRewards": "Mes récompenses :"
+ },
+ "pin": {
+  "title": "Code parent",
+  "help": "Il protège la sortie du mode enfant sur ce téléphone.",
+  "change": "Changer le code",
+  "create": "Créer un code",
+  "code4": "Code à 4 chiffres",
+  "createTitle": "Crée un code parent",
+  "createText": "Il sera demandé pour quitter le mode enfant sur ce téléphone.",
+  "need4": "Le code doit contenir 4 chiffres.",
+  "saved": "Code parent enregistré.",
+  "enter": "Saisis le code parent pour quitter le mode enfant.",
+  "wrong": "Code incorrect.",
+  "math": "Pour déconnecter ce téléphone, combien font {a} × {b} ?",
+  "answer": "Réponse",
+  "wrongAnswer": "Ce n'est pas la bonne réponse.",
+  "chooseText": "Choisis 4 chiffres. Ils protègent la sortie du mode enfant sur ce téléphone."
+ },
+ "backup": {
+  "title": "Sauvegarde",
+  "help": "Tes données sont dans ton espace Supabase. Tu peux aussi en garder une copie.",
+  "btn": "Télécharger une copie (JSON)",
+  "done": "Copie téléchargée."
+ },
+ "account": {
+  "title": "Compte",
+  "rename": "Renommer la famille",
+  "needName": "Saisis un nom.",
+  "nameSaved": "Nom enregistré."
+ },
+ "malus": {
+  "all": "Tous",
+  "byAt": "par {who}, à {time}",
+  "cancelAria": "Annuler ce malus",
+  "week": {
+   "one": "étoile cassée ces 7 derniers jours",
+   "other": "étoiles cassées ces 7 derniers jours"
+  },
+  "month": "{n} sur 30 jours, {total} malus au total",
+  "break": "Casser une étoile",
+  "catalog": "Malus prédéfinis",
+  "none": "Aucun malus. Tant mieux !",
+  "noneChild": "Aucun malus pour cet enfant. Tant mieux !",
+  "child": "Enfant",
+  "nothingToBreak": "{name} n'a aucune étoile à dépenser : rien à casser.",
+  "breakHelp": "Pour un écart immédiat de {name} (solde : {n} ⭐). 3 étoiles au maximum, jamais en dessous de zéro. La plante et les badges ne bougent pas.",
+  "noPreset": "Aucun malus prédéfini. Crée-les pour rester cohérent d'un parent à l'autre.",
+  "otherReason": "Autre motif",
+  "reason": "Motif",
+  "reasonPlaceholder": "A jeté son assiette",
+  "manage": "Gérer les malus prédéfinis",
+  "breakBtn": "Casser",
+  "needReason": "Indique un motif.",
+  "broken": {
+   "one": "{n} étoile cassée pour {name}.",
+   "other": "{n} étoiles cassées pour {name}."
+  },
+  "cancelTitle": "Annuler cette étoile cassée ?",
+  "cancelBtn": "Annuler le malus",
+  "cancelled": "Malus annulé, étoiles rendues.",
+  "catalogHelp": "Communs à tous les enfants, de 1 à 3 étoiles.",
+  "createTitle": "Créer un malus",
+  "needOne": "Coche une suggestion ou saisis un motif.",
+  "added": {
+   "one": "{n} malus ajouté.",
+   "other": "{n} malus ajoutés."
+  },
+  "deleted": "Malus supprimé."
+ },
+ "ctab": {
+  "today": "Mes routines",
+  "gifts": "Récompenses",
+  "garden": "Mon jardin",
+  "badges": "Badges"
+ },
+ "kid": {
+  "hello": "Salut {name}",
+  "starsAria": {
+   "one": "{n} étoile",
+   "other": "{n} étoiles"
+  },
+  "parentSpace": "Espace parent",
+  "offline": "Hors ligne : tes routines seront envoyées plus tard",
+  "parentsWillValidate": "Tes parents vont valider",
+  "validatedBy": "Validée par {who}",
+  "validated": "Validée",
+  "challenge": "Défi {n} min",
+  "oneoffs": "Exceptionnelles",
+  "potWaitsSeed": "Ton pot attend sa graine",
+  "firstFlowerStarts": "Ta première fleur commence {date}. Tes étoiles comptent déjà pour tes récompenses !",
+  "paused": "En pause : profite bien !",
+  "dayOfOpens": "Jour {d} sur {len}. Ta fleur s'ouvre {date}.",
+  "potWaits": "Ton pot t'attend",
+  "pendingStars": "{n} ⭐ en attente de validation",
+  "allDone": "Tout est fait aujourd'hui ! 🎉",
+  "doneOf": "{n} sur {total} routines faites",
+  "noRoutine": "Pas de routine aujourd'hui. Profite !",
+  "bonus": "Défis bonus",
+  "toSpend": "étoiles à dépenser",
+  "pendingShort": "+{n} en attente",
+  "choose": "Je choisis",
+  "stillNeed": "Encore {n} ⭐",
+  "askRewards": "Demande à tes parents d'ajouter des récompenses.",
+  "history": "Mon histoire",
+  "broken": "Étoile cassée : {title}",
+  "opens": "Ta fleur s'ouvre {date}.",
+  "myBed": "Mon parterre {season}",
+  "bedCount": "{n} fleur(s), et une qui pousse",
+  "myGarden": "Mon jardin {year}",
+  "oldGardens": "Mes anciens jardins",
+  "streak": {
+   "one": "{n} bonne journée de suite",
+   "other": "{n} bonnes journées de suite"
+  },
+  "startStreak": "Fais une bonne journée pour lancer une série !",
+  "seeBadges": "Voir mes badges",
+  "settings": "Réglages",
+  "sound": "Son quand je coche une routine",
+  "remindMorning": "Rappel matin",
+  "remindEvening": "Rappel soir",
+  "badgesOf": {
+   "one": "badge sur {total}",
+   "other": "badges sur {total}"
+  },
+  "nOf": "{n} sur {total}",
+  "gain": "+{n} ⭐ validées par tes parents !",
+  "newBadge": "Nouveau badge : {names}",
+  "disconnected": "Ce téléphone a été déconnecté par un parent.",
+  "alreadyValidated": "Tes parents ont déjà validé cette routine ✓",
+  "allDoneToast": "Tout est fait ! Tes parents vont valider tes étoiles 🎉",
+  "bravoToast": "Bravo ! Tes parents vont valider ton étoile.",
+  "exchangeConfirm": "Tu échanges {n} étoiles. Tu es sûr ?",
+  "yesChoose": "Oui, je choisis !",
+  "needInternet": "Il faut internet pour choisir une récompense.",
+  "bravo": "Bravo !",
+  "showParents": "Montre cet écran à tes parents : tu as gagné « {title} ».",
+  "super": "Super !"
+ },
+ "form": {
+  "icon": "Icône",
+  "iconChosen": "Icône choisie",
+  "iconHint": "Choisis ci-dessous ou tape un emoji",
+  "name": "Nom",
+  "moment": "Moment",
+  "days": "Jours",
+  "stars": "Étoiles",
+  "place": "Lieu",
+  "noPlace": "Aucun",
+  "timer": "Défi chrono",
+  "noTimer": "Sans minuteur",
+  "minutes": "{n} minutes"
+ },
+ "bloom": {
+  "title": "Ta fleur s'est ouverte !",
+  "yourFlower": "Ta fleur",
+  "text": "{name} rejoint ton parterre {season}. Un nouveau pot t'attend !",
+  "see": "Voir mon jardin"
+ },
+ "device": {
+  "phoneOf": "Téléphone de {name}",
+  "codeAria": "Code {code}",
+  "help": "Sur son téléphone, ouvre SoisFier, touche « J'ai un code enfant » et saisis ce code. Il expire dans 15 minutes.",
+  "revokeTitle": "Déconnecter cet appareil ?",
+  "revokeText": "Il faudra un nouveau code pour le reconnecter.",
+  "revoked": "Appareil déconnecté.",
+  "sameLabel": "Téléphone de {who} (mode enfant)"
+ },
+ "timer": {
+  "go": "Fais-le avant la fin du temps !",
+  "stop": "Arrêter",
+  "done": "J'ai fini !",
+  "over": "Temps écoulé !",
+  "doneAnyway": "C'est fait quand même",
+  "success": "Défi réussi ! ⚡"
+ },
+ "meta": {
+  "description": "Routines, étoiles et récompenses pour les enfants."
+ },
+ "dialog": "Fenêtre"
+}
