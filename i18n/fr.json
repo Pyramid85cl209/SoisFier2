@@ -865,5 +865,36 @@
  "meta": {
   "description": "Routines, étoiles et récompenses pour les enfants."
  },
- "dialog": "Fenêtre"
+ "dialog": "Fenêtre",
+ "lang": {
+  "title": "Langue",
+  "fr": "Français",
+  "ar": "العربية",
+  "en": "English",
+  "toReview": "Traduction à relire"
+ },
+ "srv": {
+  "device_unknown": "Appareil non reconnu.",
+  "already_validated_break": "Routine déjà validée : pour retirer des étoiles, un parent peut casser une étoile.",
+  "already_validated": "Routine déjà validée.",
+  "last_parent": "Il doit rester au moins un parent.",
+  "rights_parent_only": "Seul un parent peut changer les droits.",
+  "penalty_parent_only": "Seul un parent peut casser une étoile.",
+  "penalty_not_found": "Malus introuvable.",
+  "need_reason": "Indique un motif.",
+  "balance_zero": "Le solde est déjà à zéro : aucune étoile à casser.",
+  "bad_code": "Code invalide ou expiré.",
+  "reward_not_found": "Récompense introuvable.",
+  "not_enough_stars": "Pas assez d'étoiles.",
+  "routine_not_found": "Routine introuvable.",
+  "day_locked": "Jour non modifiable.",
+  "oneoff_out_of_range": "Routine exceptionnelle hors de ses dates.",
+  "validated_by_parent": "Déjà validée par un parent.",
+  "device_parent_only": "Seul un parent peut connecter un appareil.",
+  "login_required": "Connexion requise.",
+  "invite_parent_only": "Seul un parent peut inviter.",
+  "unknown_role": "Droits inconnus.",
+  "access_denied": "Accès refusé.",
+  "unknown": "Une erreur est survenue."
+ }
 }

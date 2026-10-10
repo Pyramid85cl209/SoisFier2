@@ -1,6 +1,6 @@
 /* SoisFier – service worker : hors ligne + notifications */
-const CACHE = "soisfier-v14";
-const CORE = ["./", "./index.html", "./i18n/fr.json", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
+const CACHE = "soisfier-v15";
+const CORE = ["./", "./index.html", "./i18n/fr.json", "./i18n/ar.json", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 const CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js";
 
 self.addEventListener("install", e => {
