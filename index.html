@@ -145,7 +145,8 @@ dialog#sheet::backdrop{background:rgba(20,30,25,.45)}
 .f{display:flex;flex-direction:column;gap:6px;margin:12px 0;font-weight:700;font-size:.95rem}
 .f input,.f select{font-weight:400;border:2px solid var(--line);border-radius:14px;padding:11px 12px;background:var(--sky);font-size:1rem}
 .f.two{flex-direction:row;gap:12px}
-.f.two label{flex:1;display:flex;flex-direction:column;gap:6px}
+.f.two label{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.f.two input,.f.two select{min-width:0;width:100%}
 .check{display:flex;gap:10px;align-items:flex-start;margin:12px 0}
 .check input{width:22px;height:22px;flex:none;accent-color:var(--leaf)}
 .emo-row{display:flex;flex-wrap:wrap;gap:6px}
@@ -1384,7 +1385,7 @@ function rewardForm(w, preset) {
     <div class="f two"><label>${t("reward.date")}<input id="w-date" type="date" value="${esc(w.event_date || "")}"></label><label>${t("reward.place")}<input id="w-place" maxlength="80" value="${esc(w.place || "")}"></label></div>
     <div class="sheet-actions">${isNew ? "" : `<button class="btn danger ghost" data-act="delReward" data-id="${w.id}">${t("btn.delete")}</button>`}<button class="btn" data-act="saveReward" data-id="${w.id || ""}">${isNew ? t("btn.add") : t("btn.save")}</button></div>`);
   const upd = () => { const d = +$("#w-days").value || 0, fx = $("#w-fixed").checked, who = $("#w-for").value;
-    $("#w-preview").textContent = fx ? t("reward.samePrice") : t("reward.computed", { list: (who ? [S.children.find(k => k.id === who)] : S.children).map(k => `${k.name} ${fmtNum(roundPrice(d * rhythmOf(k.id)))} ⭐`).join(t("sep")) }); };
+    $("#w-preview").textContent = fx ? t("reward.samePrice") : t("reward.computed", { list: (who ? [S.children.find(k => k.id === who)] : S.children).map(k => t("reward.priceOf", { name: k.name, n: fmtNum(roundPrice(d * rhythmOf(k.id))) })).join(t("sep")) }); };
   ["#w-days", "#w-for"].forEach(q => $(q).addEventListener("input", upd)); $("#w-fixed").addEventListener("change", upd); upd();
   $("#w-tier").addEventListener("change", e => { $("#w-days").value = TIER_DAYS[e.target.value]; upd(); });
   if (isNew && preset && preset.child_id === undefined && S.children.length > 1) $("#w-for").value = "";

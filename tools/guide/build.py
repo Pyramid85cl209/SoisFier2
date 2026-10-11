@@ -15,17 +15,27 @@ def langs():
         if os.path.exists(f"{G}/index.html" if c == "fr" else f"{G}/{c}/index.html") or c == LG: out[c] = (d["name"], d.get("rtl", False))
     return out
 
+LANG_CSS = (".lang-menu{position:relative}.lang-menu>summary{list-style:none;cursor:pointer}.lang-menu>summary::-webkit-details-marker{display:none}"
+            ".lang-pop{position:absolute;inset-inline-end:0;top:calc(100% + 6px);z-index:40;min-width:150px;display:flex;flex-direction:column;gap:2px;"
+            "background:var(--paper);border-radius:14px;padding:6px;box-shadow:0 4px 14px rgba(0,0,0,.18)}"
+            ".lang-pop a{padding:8px 12px;border-radius:10px;text-decoration:none;color:var(--earth)}.lang-pop a:hover{background:var(--leaf-l)}"
+            ".lang-pop a[aria-current]{font-weight:700;color:var(--leaf-d)}")
+
 def lang_links(cur):
-    """Liens vers les autres guides, depuis le guide cur."""
+    """Menu des langues du guide cur (une entrée par guide existant)."""
     pre = "" if cur == "fr" else "../"
-    return "".join(f'<a class="btn lang-link" href="{pre}{"" if c == "fr" else c + "/"}" hreflang="{c}" lang="{c}"{' dir="rtl"' if r else ""}>{html.escape(n)}</a>\n  '
-                   for c, (n, r) in langs().items() if c != cur)
+    items = "".join(f'<a href="{pre}{"" if c == "fr" else c + "/"}" hreflang="{c}" lang="{c}"{' dir="rtl"' if r else ""}{' aria-current="page"' if c == cur else ""}>{html.escape(n)}</a>'
+                    for c, (n, r) in langs().items())
+    return f'<details class="lang-menu"><summary class="btn" aria-label="Language / Langue / اللغة">🌐 {cur.upper()}</summary><div class="lang-pop">{items}</div></details>\n  '
 
 def patch_links(path, cur):
     s = open(path, encoding="utf-8").read()
     s = re.sub(r'(?:<a class="btn lang-link"[^>]*>[^<]*</a>\s*)+', "", s)
+    s = re.sub(r'<details class="lang-menu">.*?</details>\s*', "", s, flags=re.S)
     s = re.sub(r'(\n  )(<a class="btn" href="\.\./)', lambda m: m.group(1) + lang_links(cur) + m.group(2), s, count=1)
-    if ".bar .lang-link{" not in s: s = s.replace("</style>", ".lang-link{font-size:.9rem}\n@media (max-width:900px){.bar{gap:6px;padding-inline:10px}.bar .lang-link{padding:8px 10px}}\n</style>", 1)
+    s = re.sub(r"\.lang-link\{font-size:\.9rem\}\n(@media \(max-width:900px\)\{\.bar\{gap:6px;padding-inline:10px\}\.bar \.lang-link\{padding:8px 10px\}\}\n)?", "", s)
+    if ".lang-menu{" not in s: s = s.replace("</style>", LANG_CSS + "\n</style>", 1)
+    s = s.replace("document.querySelectorAll(\"figure a\")", "document.querySelectorAll(\"figure a\")", 1)
     open(path, "w", encoding="utf-8").write(s)
 
 def build():
@@ -40,7 +50,7 @@ def build():
            ("padding:18px 12px 40px 16px", "padding-block:18px 40px;padding-inline:16px 12px")]
     for a, b in rep: assert a in css, a; css = css.replace(a, b)
     if D.get("rtl"): css = css.replace("transform:translateX(-105%)", "transform:translateX(105%)")
-    css = css.replace("</style>", ".note{background:var(--sun-l);border-radius:16px;padding:12px 16px;font-size:.93rem}\n.lang-link{font-size:.9rem}\n@media (max-width:900px){.bar{gap:6px;padding-inline:10px}.bar .lang-link{padding:8px 10px}}\n</style>")
+    css = css.replace("</style>", ".note{background:var(--sun-l);border-radius:16px;padding:12px 16px;font-size:.93rem}\n</style>")
     body = open(f"{HERE}/content/{LG}.html", encoding="utf-8").read()
     def fig(m):
         fr, name, alt = m.group(1), m.group(2), m.group(3)

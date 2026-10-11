@@ -598,6 +598,7 @@
   "place": "Lieu (facultatif)",
   "samePrice": "Même prix pour tous les enfants.",
   "computed": "Prix calculé : {list}.",
+  "priceOf": "{name} : {n} ⭐",
   "repriced": "Prix de {name} recalculés.",
   "needName": "Donne un nom à la récompense.",
   "badPrice": "Le prix doit être entre 1 et 5000 étoiles.",

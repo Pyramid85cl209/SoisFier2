@@ -607,6 +607,7 @@
   "place": "Place (optional)",
   "samePrice": "Same price for all children.",
   "computed": "Calculated price: {list}.",
+  "priceOf": "{name}: {n} ⭐",
   "repriced": "{name}'s prices recalculated.",
   "needName": "Give the reward a name.",
   "badPrice": "The price must be between 1 and 5000 stars.",

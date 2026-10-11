@@ -8,3 +8,4 @@ Décisions : nom=English, rtl=non, pluriels=one/other, personne enfant=je (comme
 - [x] 5 Mode d'emploi (data [x], texte p0-p1 [x] p2 [x] p3-p5 [x], captures p1 [x] p2a-p2b [x] p2c-p2d [x] p3-p5 [x], assemblage [x], contrôle [x] fr/ar/en OK)
 - [x] 6 Fichier de validation (SoisFier-relecture-anglais.xlsx : 707 lignes app, 19 astuces et rappels)
 - [x] 7 Clôture
+- [x] Corrections avant fusion (11 octobre) : guide fr (exemple fictif « Famille Martin », point semaine (3), capture m4 refaite, mention des guides ar/en), rythme 9,9 / 300 dans le guide ar, débordement des champs côte à côte (.f.two), format « {name} : {n} ⭐ » (clé reward.priceOf), menu de langue 🌐 dans les guides, captures en et ar refaites

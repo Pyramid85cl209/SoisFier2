@@ -96,9 +96,7 @@ tr:last-child td{border-bottom:0}
   .bar .back-txt{display:none}
 }
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto} nav.toc{transition:none}}
-.lang-link{font-size:.9rem}
-.lang-link{font-size:.9rem}
-@media (max-width:900px){.bar{gap:6px;padding-inline:10px}.bar .lang-link{padding:8px 10px}}
+.lang-menu{position:relative}.lang-menu>summary{list-style:none;cursor:pointer}.lang-menu>summary::-webkit-details-marker{display:none}.lang-pop{position:absolute;inset-inline-end:0;top:calc(100% + 6px);z-index:40;min-width:150px;display:flex;flex-direction:column;gap:2px;background:var(--paper);border-radius:14px;padding:6px;box-shadow:0 4px 14px rgba(0,0,0,.18)}.lang-pop a{padding:8px 12px;border-radius:10px;text-decoration:none;color:var(--earth)}.lang-pop a:hover{background:var(--leaf-l)}.lang-pop a[aria-current]{font-weight:700;color:var(--leaf-d)}
 </style>
 </head>
 <body>
@@ -106,8 +104,7 @@ tr:last-child td{border-bottom:0}
   <button class="btn menu-btn" id="menu" aria-expanded="false" aria-controls="toc">☰ Sommaire</button>
   <span class="logo" aria-hidden="true">🌻</span>
   <h1>Mode d'emploi SoisFier</h1>
-  <a class="btn lang-link" href="ar/" hreflang="ar" lang="ar" dir="rtl">العربية</a>
-  <a class="btn lang-link" href="en/" hreflang="en" lang="en">English</a>
+  <details class="lang-menu"><summary class="btn" aria-label="Language / Langue / اللغة">🌐 FR</summary><div class="lang-pop"><a href="ar/" hreflang="ar" lang="ar" dir="rtl">العربية</a><a href="en/" hreflang="en" lang="en">English</a><a href="" hreflang="fr" lang="fr" aria-current="page">Français</a></div></details>
   <a class="btn" href="../" aria-label="Retour à l'application">←<span class="back-txt"> Retour à l'application</span></a>
 </header>
 <div class="scrim" id="scrim"></div>
@@ -157,7 +154,7 @@ tr:last-child td{border-bottom:0}
 <li><strong>Installer l'application sur ce téléphone</strong> : ajoute SoisFier à l'écran d'accueil du téléphone.</li>
 </ol>
 <h3 id="p1-choisir-la-langue">Choisir la langue</h3>
-<p>Le bouton 🌐 se trouve en haut de chaque écran, à côté du « ? » (et à côté du cadenas en mode enfant). La langue choisie s'applique tout de suite, sur cet appareil seulement, et sert aussi pour les rappels qu'il reçoit. Chaque membre de la famille, comme le téléphone de l'enfant, peut utiliser une langue différente. Le mode d'emploi existe aussi en arabe : <a href="ar/" lang="ar" hreflang="ar">العربية</a>.</p>
+<p>Le bouton 🌐 se trouve en haut de chaque écran, à côté du « ? » (et à côté du cadenas en mode enfant). La langue choisie s'applique tout de suite, sur cet appareil seulement, et sert aussi pour les rappels qu'il reçoit. Chaque membre de la famille, comme le téléphone de l'enfant, peut utiliser une langue différente. Le mode d'emploi existe aussi en <a href="ar/" lang="ar" hreflang="ar">العربية</a> et en <a href="en/" lang="en" hreflang="en">English</a> (bouton 🌐 en haut de cette page).</p>
 <figure><a href="img/l1.jpg" target="_blank" rel="noopener"><img src="img/l1.jpg" alt="Le bouton de langue, puis le choix de la langue" width="1270" height="1300" loading="lazy" decoding="async"></a><figcaption>Le bouton de langue, puis le choix de la langue</figcaption></figure>
 <h3 id="p1-etape-1-installer-lapplication">Étape 1 : installer l'application</h3>
 <p>Une fois installée, SoisFier s'ouvre comme une application, sans barre d'adresse.</p>
@@ -183,18 +180,19 @@ tr:last-child td{border-bottom:0}
 <p>Après la première connexion, l'écran « Bienvenue » demande de créer une famille ou d'en rejoindre une. Un seul parent crée la famille ; les autres membres la rejoignent avec un code.</p>
 <p><strong>Premier parent : créer la famille</strong></p>
 <ol>
-<li>Saisis le <strong>nom de la famille</strong> (1), par exemple « El Hagin ». Le champ affiche « Nom » tant qu'il est vide.</li>
+<li>Saisis le <strong>nom de la famille</strong> (1), par exemple « Famille Martin ».</li>
 <li>Dans <strong>Je suis</strong> (2), choisis ton lien avec les enfants : Papa, Maman, Papy, Mamie, Tonton, Tata, Parrain, Marraine ou Nounou.</li>
-<li>Touche <strong>Créer</strong> (3).</li>
+<li>Vérifie les <strong>réglages de la semaine</strong> (3) : l'application propose le premier jour de la semaine, les jours de week-end et le fuseau horaire d'après le téléphone. Touche <strong>Modifier</strong> pour les changer (voir ci-dessous).</li>
+<li>Touche <strong>Créer</strong> (4).</li>
 </ol>
 <p><strong>Autres membres : rejoindre la famille</strong></p>
 <ol>
 <li>Demande un code d'invitation à un parent. Il le génère dans <strong>Famille &gt; Inviter un membre</strong>, en choisissant ton lien et tes droits (parent ou proche). Le code est valable 48 heures.</li>
-<li>Saisis le <strong>code d'invitation</strong> à 6 caractères (4) et touche <strong>Rejoindre</strong> (5).</li>
+<li>Saisis le <strong>code d'invitation</strong> à 6 caractères (5) et touche <strong>Rejoindre</strong> (6).</li>
 </ol>
-<figure><a href="img/m4.jpg" target="_blank" rel="noopener"><img src="img/m4.jpg" alt="Créer ou rejoindre une famille, choix du lien, premier écran" width="1400" height="1195" loading="lazy" decoding="async"></a><figcaption>Créer ou rejoindre une famille, choix du lien, premier écran</figcaption></figure>
+<figure><a href="img/m4.jpg" target="_blank" rel="noopener"><img src="img/m4.jpg" alt="Créer ou rejoindre une famille, puis le premier écran" width="1270" height="1677" loading="lazy" decoding="async"></a><figcaption>Créer ou rejoindre une famille, puis le premier écran</figcaption></figure>
 <h4 id="p1-semaine-et-fuseau-horaire">Semaine et fuseau horaire</h4>
-<p>À la création de la famille, une fenêtre propose ces réglages, préremplis d'après le téléphone. Ils fixent l'ordre des jours, les choix « En semaine » et « Le week-end », les badges de semaine et de week-end, la fin des quinzaines du jardin et l'heure à laquelle commence une nouvelle journée (validation automatique et rappels).</p>
+<p>À la création de la famille, ces réglages sont préremplis d'après le téléphone ; le lien <strong>Modifier</strong> ouvre la fenêtre ci-dessous. Ils fixent l'ordre des jours, les choix « En semaine » et « Le week-end », les badges de semaine et de week-end, la fin des quinzaines du jardin et l'heure à laquelle commence une nouvelle journée (validation automatique et rappels).</p>
 <figure><a href="img/w1.jpg" target="_blank" rel="noopener"><img src="img/w1.jpg" alt="Réglages de la semaine et du fuseau horaire" width="660" height="1533" loading="lazy" decoding="async"></a><figcaption>Réglages de la semaine et du fuseau horaire</figcaption></figure>
 <ol>
 <li><strong>Premier jour de la semaine</strong> : par exemple lundi, samedi ou dimanche.</li>
