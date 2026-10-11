@@ -1,0 +1,608 @@
+<section class="part" id="p0"><h2><span class="num">🌻</span> Introduction</h2>
+<div class="lead">
+<p><strong>Welcome to SoisFier.</strong> SoisFier helps your family build everyday routines: brushing teeth, packing the school bag, going to bed on time. Your child ticks off what they've done, an adult approves it, and their efforts become visible: stars, a growing flower, and rewards they look forward to.</p>
+</div>
+<h3 id="p0-why">Why it works</h3>
+<ul>
+<li><strong>Your child sees their progress</strong>: every good day makes their flower grow.</li>
+<li><strong>They learn patience and saving</strong>: their stars are exchanged for rewards, big or small.</li>
+<li><strong>The adults speak with one voice</strong>: parents, grandparents or a nanny follow and approve the same routines.</li>
+</ul>
+<h3 id="p0-principles">The principles</h3>
+<ol>
+<li><strong>An adult approves.</strong> A star only counts once it is approved. By default, what the child ticks is approved at midnight unless it has been declined (<a href="#p3">part 3</a>).</li>
+<li><strong>No need to be perfect.</strong> A good day means at least 75% of the day's stars.</li>
+<li><strong>One flower per fortnight</strong>, more beautiful with each good day. The flowers make a flower bed each season and a garden each school year (<a href="#p4">part 4</a>).</li>
+<li><strong>Rewards that fit the child.</strong> Their price follows each child's pace (<a href="#p2c">part 2c</a>).</li>
+<li><strong>The unexpected isn't penalised.</strong> Holiday or illness: schedule a break, and those days are neutral (<a href="#p3-pauses">part 3</a>).</li>
+<li><strong>Broken stars stay rare.</strong> For parents only, 3 stars at most, with no effect on the flower or the badges (<a href="#p2c-malus">part 2c</a>).</li>
+<li><strong>The child's phone doesn't need an account.</strong> A code given by a parent is enough (<a href="#p2d-device">part 2d</a>).</li>
+</ol>
+<p>To get started, follow parts <a href="#p1">1</a>, <a href="#p2a">2a</a> and <a href="#p2b">2b</a> in order. Read the others when you need them. Tap any screenshot to enlarge it.</p>
+<p class="note">This English translation is being reviewed. In the screenshots, the week starts on Monday, the weekend is Saturday and Sunday, and all data is fictitious.</p>
+</section>
+
+<section class="part" id="p1"><h2><span class="num">1</span> Installation and account</h2>
+<p>This part installs SoisFier on an Android phone and creates a parent's account, in about 10 minutes.</p>
+<h3 id="p1-before">Before you start</h3>
+<ul>
+<li>An Android phone with Chrome.</li>
+<li>An e-mail address you can open on this phone.</li>
+<li>The app's address: https://pyramid85cl209.github.io/SoisFier2/</li>
+<li>To join an existing family: the 6-character invitation code given by a parent.</li>
+</ul>
+<h3 id="p1-home">The home screen</h3>
+<p>The home screen has everything you need to get started: sign in, create an account, connect a child's phone or install the app.</p>
+{{fig:m1|SoisFier's home screen, with numbered areas}}
+<ol>
+<li><strong>Sign in / Create an account</strong>: switches between the two forms.</li>
+<li><strong>E-mail and password</strong>: the parent's login details.</li>
+<li><strong>Sign in</strong>: opens the parent area.</li>
+<li><strong>Forgotten password</strong>: sends a reset link to the address entered.</li>
+<li><strong>I have a child code</strong>: only on the child's phone (see step 4).</li>
+<li><strong>Install the app on this phone</strong>: adds SoisFier to the phone's home screen.</li>
+<li><strong>🌐 Language</strong>: chooses the app's language on this device (see below).</li>
+</ol>
+<h3 id="p1-lang">Choosing the language</h3>
+<p>The 🌐 button is at the top of every screen, next to the “?” (and next to the padlock in child mode). The chosen language applies immediately, on this device only, and is also used for the reminders it receives. Each family member, and the child's phone, can use a different language.</p>
+{{fig:l1|The language button, then choosing the language}}
+<h3 id="p1-install">Step 1: install the app</h3>
+<p>Once installed, SoisFier opens like an app, without an address bar.</p>
+<ol>
+<li>Open https://pyramid85cl209.github.io/SoisFier2/ in <strong>Chrome</strong>.</li>
+<li>At the bottom of the home screen, tap <strong>Install the app on this phone</strong> (6). If the button doesn't appear: Chrome's ⋮ menu, then <strong>Add to home screen</strong>.</li>
+<li>In the window that opens, tap <strong>Install</strong>.</li>
+<li>The SoisFier icon appears on the phone's home screen. Open it: that's the one to use from now on.</li>
+</ol>
+{{figfr:m2|Installing from Chrome, then the icon on the home screen (screenshot in French)}}
+<h3 id="p1-account">Step 2: create your account</h3>
+<p>Each adult has their own account, with their own e-mail. An account is created only once.</p>
+<ol>
+<li>Tap the <strong>Create an account</strong> tab (1).</li>
+<li>Enter your <strong>first name</strong> (2), your <strong>e-mail</strong> (3) and a <strong>password</strong> of at least 6 characters (4).</li>
+<li>Tap <strong>Create my account</strong> (5). The “Check your inbox” message appears: tap <strong>Got it</strong>.</li>
+<li>Open the <strong>“Confirm your email address”</strong> e-mail sent by Supabase Auth and tap the <strong>Confirm email address</strong> link.</li>
+<li>Go back to SoisFier, <strong>Sign in</strong> tab, and sign in with your e-mail and password.</li>
+</ol>
+{{fig:m3|The account creation form and the confirmation message}}
+<p>The confirmation link may open a page in the browser instead of the app. That's fine: the account is confirmed, just go back to the app to sign in.</p>
+<h3 id="p1-family">Step 3: create or join your family</h3>
+<p>After your first sign-in, the “Welcome” screen asks you to create a family or join one. One parent creates the family; the other members join it with a code.</p>
+<p><strong>First parent: create the family</strong></p>
+<ol>
+<li>Enter the <strong>family name</strong> (1).</li>
+<li>In <strong>I am</strong> (2), choose your relationship to the children: Dad, Mum, Grandad, Grandma, Uncle, Auntie, Godfather, Godmother or Nanny.</li>
+<li>Check the <strong>week settings</strong> (3): the app suggests the first day of the week, the weekend days and the time zone from the phone. Tap <strong>Edit</strong> to change them (see below).</li>
+<li>Tap <strong>Create</strong> (4).</li>
+</ol>
+<p><strong>Other members: join the family</strong></p>
+<ol>
+<li>Ask a parent for an invitation code. They create it in <strong>Family &gt; Invite a member</strong>, choosing your relationship and your rights (parent or helper). The code is valid for 48 hours.</li>
+<li>Enter the 6-character <strong>invitation code</strong> (5) and tap <strong>Join</strong> (6).</li>
+</ol>
+{{fig:m4|Creating or joining a family, then the first screen}}
+<h4 id="p1-week">Week and time zone</h4>
+<p>These settings set the order of the days, the “Weekdays” and “Weekends” options, the week and weekend badges, the end of each garden fortnight and the time when a new day begins (automatic approval and reminders).</p>
+{{fig:w1|Week and time zone settings}}
+<ol>
+<li><strong>First day of the week</strong>: for example Monday, Saturday or Sunday.</li>
+<li><strong>Weekend days</strong>: up to 3 days, for example Saturday and Sunday.</li>
+<li><strong>Time zone</strong>: for example Europe/London.</li>
+<li><strong>Save</strong>.</li>
+</ol>
+<p>You can change them later in <strong>Family &gt; Week and time zone</strong> (<a href="#p5-week">part 5</a>).</p>
+<h3 id="p1-first">Step 4: first settings</h3>
+<p>The first screen, “Shall we start?”, invites you to add a child. The five tabs at the bottom (Today, Routines, Rewards, Penalties, Family) give access to everything else.</p>
+<ul>
+<li>☐ <strong>Add a child</strong>: first name, avatar and the colour of their pot. Only the first name is stored.</li>
+<li>☐ <strong>Choose their routines</strong> from the templates (morning, lunchtime, evening), then adjust the days and stars.</li>
+<li>☐ <strong>Add rewards</strong> from the catalogue: prices are calculated from the child's pace.</li>
+<li>☐ <strong>Invite the other parent</strong> and relatives: Family &gt; Invite a member.</li>
+<li>☐ <strong>Turn on reminders</strong>: Family &gt; Reminders, then allow notifications.</li>
+<li>☐ <strong>Create a 4-digit parent code</strong>: it protects leaving child mode.</li>
+</ul>
+<p><strong>Connecting the child's phone</strong></p>
+<ol>
+<li>On a parent's phone: <strong>Family</strong>, then <strong>Connect their device</strong> next to the child's name. A 6-character code appears, valid for 15 minutes.</li>
+<li>On the child's phone: install the app (step 1), tap <strong>I have a child code</strong>, enter the code (1) then <strong>Connect this phone</strong> (2). The child doesn't need an account.</li>
+</ol>
+<p>If the child uses a parent's phone, use <strong>Child mode here</strong> in Family instead: no code needed.</p>
+{{fig:m5|The child code screen}}
+<h3 id="p1-problems">If something goes wrong</h3>
+<div class="tbl"><table>
+<thead><tr><th>Problem</th><th>Solution</th></tr></thead>
+<tbody>
+<tr><td>Can't find the confirmation e-mail</td><td>Check your spam folder and search for “Supabase Auth”. Wait a few minutes before creating the account again.</td></tr>
+<tr><td>“Incorrect e-mail or password”</td><td>Check the address, otherwise tap <strong>Forgotten password</strong> on the sign-in screen.</td></tr>
+<tr><td>“First confirm your e-mail address”</td><td>Open the link in the Supabase Auth e-mail, then sign in again.</td></tr>
+<tr><td>Invitation code or child code rejected</td><td>The code has expired (48 hours for an invitation, 15 minutes for a child): create a new one.</td></tr>
+<tr><td>The install button doesn't appear</td><td>Chrome's ⋮ menu, then <strong>Add to home screen</strong>.</td></tr>
+<tr><td>The old version still shows after an update</td><td>Close the app completely and reopen it, twice.</td></tr>
+<tr><td>“Missing configuration”</td><td>The site is being deployed or was published incorrectly: try again later and tell the administrator.</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="part" id="p2a"><h2><span class="num">2a</span> The Family page and the first child</h2>
+<p>This part introduces the Family page and adds the first child with their routines, in about 5 minutes.</p>
+<p>It follows <a href="#p1">part 1</a>: the app is installed, the account is created and the family exists. Only a parent can add a child; a helper sees the Family page without these buttons.</p>
+<h3 id="p2a-page">The Family page</h3>
+<p>The <strong>Family</strong> tab (at the bottom) brings together the children, the members and all the settings. The page is long: scroll down to reach the lower sections.</p>
+{{fig:a1|The whole Family page, with numbered sections}}
+<ol>
+<li><strong>Children</strong>: the list of children. <strong>Add a child</strong> is the first thing to do.</li>
+<li><strong>Family members</strong>: each adult with their relationship (Dad, Mum…) and rights. <strong>Invite a member</strong> creates a code for the other parent or a relative.</li>
+<li><strong>Week and time zone</strong>: the family's first day of the week, weekend days and time zone.</li>
+<li><strong>Holiday or illness breaks</strong>: days on a break count neither for nor against the flower.</li>
+<li><strong>Approving routines</strong>: when ticked, the box automatically approves at midnight anything nobody has declined. Leave it ticked to begin with.</li>
+<li><strong>Reminders</strong>: choose a morning and an evening time, then tap <strong>Turn on reminders</strong> and allow notifications.</li>
+<li><strong>Printable planner</strong>: each child's week on an A4 page, to tick off in pencil.</li>
+<li><strong>Parent code</strong>: 4 digits asked for to leave child mode on this phone.</li>
+<li><strong>Backup</strong>: downloads a copy of all the family's data.</li>
+<li><strong>Account</strong>: rename the family or sign out.</li>
+</ol>
+<h3 id="p2a-child">Step 1: add a child</h3>
+<p>Only the first name is stored: no surname or date of birth.</p>
+<ol>
+<li>Tap <strong>Add a child</strong>, in the Family tab or on the “Shall we start?” screen.</li>
+<li>Enter their <strong>first name</strong> (1).</li>
+<li>Choose an <strong>avatar</strong> (2). It appears next to their name everywhere in the app.</li>
+<li>Choose the <strong>colour of their pot</strong> (3). With several children, a different colour for each helps tell their plants apart.</li>
+<li>Tap <strong>Add</strong> (4).</li>
+</ol>
+{{fig:a2|The add-a-child form}}
+<p>The name, avatar and colour can be changed later: Family, then <strong>Edit</strong> next to the child.</p>
+<h3 id="p2a-routines">Step 2: choose their first routines</h3>
+<p>Straight after adding the child, the list of 22 routine templates opens, sorted by time of day: morning, lunchtime, during the day and evening.</p>
+<ol>
+<li>Scroll through the list and tick the routines that fit the child's day.</li>
+<li>Tap <strong>Add selection</strong> (1), at the bottom of the list.</li>
+</ol>
+{{fig:a3|The routine templates list, top and bottom}}
+<p>A few tips for choosing:</p>
+<ul>
+<li><strong>Start small</strong>: 3 or 4 routines per time of day are enough for a young child. You can add more later.</li>
+<li><strong>“Weekdays”</strong>: the routine is scheduled on school days only (school bag, homework), meaning the days not set as weekend.</li>
+<li><strong>“Bonus”</strong>: the routine earns stars without counting towards a good day. Handy for little challenges.</li>
+<li>Each template comes with one or two stars and a place. You can adjust the days, stars and timer of each routine.</li>
+</ul>
+<h3 id="p2a-next">What next</h3>
+<p>The child appears in the <strong>Today</strong> tab with their pot and the day's routines. Their first flower starts the same day and opens on the last day of the week that falls at least 7 days later.</p>
+<p>For a second child, repeat these two steps from Family &gt; <strong>Add a child</strong>.</p>
+<p>Continue with <a href="#p2b">part 2b</a>: editing a routine, creating a new one, setting the days, stars and timer, and adding a one-off routine.</p>
+</section>
+
+<section class="part" id="p2b"><h2><span class="num">2b</span> Routines</h2>
+<p>This part explains how to add, create, edit and delete a child's routines, as well as one-off routines.</p>
+<p>It follows <a href="#p2a">part 2a</a>: the child exists and has a few routines. Only a parent manages regular routines; a helper can also add one-off routines.</p>
+<h3 id="p2b-tab">The Routines tab</h3>
+<p>The <strong>Routines</strong> tab shows the child's regular routines, sorted by time of day, then the one-off routines at the bottom of the page.</p>
+<p>As long as the child has no routines, the tab shows a message suggesting you choose three or four from the templates. Start with <strong>Choose templates</strong> (1).</p>
+{{fig:b0|The Routines tab, empty before the first routine}}
+<p>Once routines have been added, the tab looks like this:</p>
+{{fig:b1|The Routines tab, top and bottom, with numbered areas}}
+<ol>
+<li><strong>Selected child</strong>: with several children, tap a name to switch between them.</li>
+<li><strong>Choose templates</strong>: adds ready-made routines.</li>
+<li><strong>Create a routine</strong>: a tailor-made routine.</li>
+<li><strong>A routine</strong>: tap it to edit or delete it. Under its name: the days, the place and the timer; on the side: its stars.</li>
+<li><strong>Current or upcoming one-offs</strong>: with their date, type and a <strong>Delete</strong> link.</li>
+<li><strong>+ One-off routine</strong>: a one-time task.</li>
+<li><strong>Manage templates</strong>: one-off routines saved as templates.</li>
+</ol>
+<h3 id="p2b-more">Adding more templates</h3>
+<p>The templates remain available after the first selection, to complete the child's day.</p>
+<ol>
+<li>Tap <strong>Choose templates</strong>.</li>
+<li>Routines already added are greyed out with “already added” (1): they can't be added twice.</li>
+<li>Tick the new routines, then tap <strong>Add selection</strong> (2) at the bottom of the list.</li>
+</ol>
+{{fig:b2|Templates already added are greyed out, and a new selection}}
+<h3 id="p2b-create">Creating a routine</h3>
+<p>Tap <strong>Create a routine</strong> for a routine that isn't in the templates, for example “Football practice”.</p>
+{{fig:b3|The complete “New routine” form, with numbered fields}}
+<ol>
+<li><strong>Name</strong>: short and concrete, the child will read it every day.</li>
+<li><strong>Icon</strong>: choose it from the list sorted by category (scroll through it), or type an emoji in the box.</li>
+<li><strong>Time of day</strong>: morning, lunchtime, day or evening. It sets the group the routine appears in.</li>
+<li><strong>Days</strong>: in green, the days the routine is scheduled, starting from the first day of the family's week. Tap a day to remove it, or use the shortcuts <strong>Every day</strong>, <strong>Weekdays</strong> and <strong>Weekends</strong>.</li>
+<li><strong>Stars</strong>: from 1 to 5. The more effort a routine takes, the more stars it gives.</li>
+<li><strong>Place</strong>: optional. It appears under the name to help the child find their way.</li>
+<li><strong>Timer challenge</strong>: optional. A 2 to 30-minute timer the child can start to turn the routine into a challenge.</li>
+<li><strong>Bonus routine</strong>: when ticked, the routine earns stars but doesn't count towards a good day.</li>
+<li><strong>Add</strong>: the routine appears in the Routines tab and in the child's day.</li>
+</ol>
+<h3 id="p2b-edit">Editing or deleting a routine</h3>
+<ol>
+<li>In the Routines tab, tap the routine. The <strong>Edit routine</strong> form opens, already filled in.</li>
+<li>Change what you need: name, icon, time of day, days, stars, place, timer or “bonus”.</li>
+<li>At the bottom of the form, tap <strong>Save</strong> (2), or <strong>Delete</strong> (1) to remove the routine, then confirm.</li>
+</ol>
+{{fig:b5|The edit routine form}}
+<p>Deleting a routine removes it from upcoming days. The stars it earned are kept, and the plant doesn't go backwards.</p>
+<h3 id="p2b-oneoff">Adding a one-off routine</h3>
+<p>A one-off routine is a one-time task: on a given day, or before a certain date. Parents and helpers can add one, from the Routines tab or from the child's card in the Today tab.</p>
+<ol>
+<li>Tap <strong>+ One-off routine</strong>.</li>
+<li>Choose one of your templates (1), one of the ten suggestions, or tap <strong>Create a new one</strong> at the bottom of the list.</li>
+<li>Complete the form:<ol>
+<li><strong>Name</strong> (1) and icon, filled in if you started from a suggestion.</li>
+<li><strong>When</strong> (2): <strong>On</strong> = that day only; <strong>Before</strong> = shows every day until it's done.</li>
+<li><strong>Date</strong> (3).</li>
+<li><strong>Type</strong> (4): <strong>Bonus</strong> (by default) earns stars without spoiling the day; <strong>Required</strong> counts towards a good day.</li>
+<li><strong>Stars and time of day</strong> (5).</li>
+<li><strong>Keep as a template</strong> (6): tick it for a task that will come up again. It will appear at the top of the list next time.</li>
+</ol></li>
+<li>Tap <strong>Add</strong> (7).</li>
+</ol>
+{{fig:b6|The suggestions and the one-off routine form}}
+<p>The routine appears in the “Current or upcoming one-offs” section, then disappears once its date has passed. To delete a template you no longer need: <strong>Manage templates</strong>.</p>
+<h3 id="p2b-today">The result in the Today tab</h3>
+<p>The day's routines appear in the <strong>Today</strong> tab, on the child's card. The counter (1) shows the routines done out of the total (here 0/11), and the line under the name (2) shows the flower's progress.</p>
+{{fig:b7|The Today tab with the day's routines}}
+<p>Continue with <a href="#p2c">part 2c</a>: rewards and broken stars.</p>
+</section>
+
+<section class="part" id="p2c"><h2><span class="num">2c</span> Rewards and broken stars</h2>
+<p>The <strong>Rewards</strong> tab sets what the child can get with their stars. Prices are calculated automatically from their pace. This part follows <a href="#p2a">parts 2a</a> (creating the child) and <a href="#p2b">2b</a> (creating the routines): without routines, the pace is zero and no price can be calculated.</p>
+<p>How prices work: <strong>effort time × pace</strong>. The pace is the average number of stars the child earns per day, that is 75% of the stars scheduled over the week divided by 7. With a pace of 11.4 ⭐ a day, a 1-day reward costs about 11 ⭐ and a 1-month reward about 340 ⭐. The price is rounded, then fixed when the reward is created; it doesn't change if the routines change afterwards.</p>
+<h3 id="p2c-tab">The Rewards tab</h3>
+<p>Open the <strong>Rewards</strong> tab in the bottom bar. It shows the selected child's balance of stars to spend and their pace.</p>
+{{fig:c1|The Rewards tab, empty then filled}}
+<ol>
+<li><strong>Pace</strong>: average stars earned per day (here about 11.4). It's the basis for every price.</li>
+<li><strong>Choose from the catalogue</strong>: the quickest way to start.</li>
+<li><strong>Create a reward</strong>: a reward of your own.</li>
+</ol>
+<p>Once filled, the list is sorted by level, from cheapest to most expensive. Each card shows who it's for, the approximate effort time and the price. An event also shows its date.</p>
+<h3 id="p2c-catalog">Choosing from the catalogue</h3>
+<p>The catalogue offers ready-made rewards sorted into six levels. The prices shown are already calculated for each child.</p>
+{{fig:c2|The reward catalogue, from top to bottom}}
+<ol>
+<li><strong>Tick</strong> the rewards that suit you, across all levels.</li>
+<li><strong>Create an event</strong> opens the event form, already filled in.</li>
+<li><strong>Add selection</strong> adds everything ticked in one go. The rewards added are for all children, each at their own price.</li>
+</ol>
+<div class="tbl"><table>
+<thead><tr><th>Level</th><th>Effort time</th><th>Example (pace 11.4)</th></tr></thead>
+<tbody>
+<tr><td>Little boosts</td><td>about 1 day, for ages 3-5</td><td>One more story: 11 ⭐</td></tr>
+<tr><td>Small treats</td><td>2 to 4 days</td><td>Choose dessert: 25 ⭐</td></tr>
+<tr><td>Time together</td><td>1 to 2 weeks</td><td>Family film night: 160 ⭐</td></tr>
+<tr><td>Outings</td><td>about 1 month</td><td>Visit to a children's farm: 340 ⭐</td></tr>
+<tr><td>Big projects</td><td>about 3 months</td><td>A toy or piece of kit of your choice: 1000 ⭐</td></tr>
+<tr><td>Events</td><td>on a set date</td><td>A show or workshop: created by hand</td></tr>
+</tbody></table></div>
+<p>You can come back to the catalogue at any time to add more.</p>
+<h3 id="p2c-create">Creating a reward or an event</h3>
+<p>The form is the same for a reward and an event. Only the level changes: an event is a reward in the “Events” level, with a date.</p>
+{{fig:c4|The “New event” form}}
+<ol>
+<li><strong>Name</strong>: what the child will see, for example “Puppet show”.</li>
+<li><strong>Icon</strong>: tap an icon in the grid or type an emoji.</li>
+<li><strong>Level</strong>: from “Little boosts” to “Events”. Used for sorting, it suggests a default effort time.</li>
+<li><strong>For</strong>: the child concerned.</li>
+<li><strong>Fixed price</strong>: tick this box for a single price for everyone instead of a price based on pace.</li>
+<li><strong>Effort time (days)</strong> if the box is unticked, or <strong>Fixed price (stars)</strong> if it is ticked. Only one field counts.</li>
+<li><strong>Calculated price</strong>: a preview of the price for each child. Here 30 days × 11.4 ⭐, rounded to 340 ⭐.</li>
+<li><strong>Date</strong> and <strong>Place</strong>: optional. For an event, set the date; it shows on the card.</li>
+<li><strong>Add</strong> saves the reward to the list.</li>
+</ol>
+<p>Tip: for an event, choose an effort time that gives the child time to save up before the date. A show in 10 days ≈ 10 days of effort.</p>
+<h3 id="p2c-malus">Broken stars</h3>
+<p>A broken star takes 1 to 3 stars from the balance to spend, for an immediate slip. The balance never goes below zero, and neither the plant nor the badges are affected. Only a parent can break a star.</p>
+<h4>The Penalties tab</h4>
+{{fig:d1|The Penalties tab, empty}}
+<ol>
+<li><strong>All / child</strong>: filters the history. The broken star applies to the selected child.</li>
+<li><strong>Counter</strong>: broken stars over 7 days, over 30 days and in total.</li>
+<li><strong>Break a star</strong>: applies a broken star.</li>
+<li><strong>Preset penalties</strong>: the list shared by the parents.</li>
+</ol>
+<p>If the child has no stars to spend, the app says so: there's nothing to break.</p>
+<h4>Preparing preset reasons</h4>
+<p>Preset reasons apply to all children. They make sure the same behaviour costs the same whichever parent is there. Do this once before the first broken star.</p>
+{{fig:d2|Preset reasons: suggestions and creating a reason}}
+<ol>
+<li><strong>Tick</strong> the suggestions that suit you.</li>
+<li><strong>Reason</strong>: for a reason of your own, type it here.</li>
+<li><strong>Stars</strong>: choose 1, 2 or 3.</li>
+<li><strong>Back</strong> returns to the “Break a star” window without saving.</li>
+<li><strong>Save</strong> adds the ticked boxes and the typed reason in one go.</li>
+</ol>
+<p>Saved reasons move to the top of the list with a <strong>Delete</strong> link. A reason typed by hand gets the broken heart icon.</p>
+<div class="tbl"><table>
+<thead><tr><th>Suggestion</th><th>Stars</th></tr></thead>
+<tbody>
+<tr><td>Refusing to tidy up after several reminders</td><td>1</td></tr>
+<tr><td>Rude word</td><td>1</td></tr>
+<tr><td>Fighting with a brother or sister</td><td>1</td></tr>
+<tr><td>Not listening</td><td>1</td></tr>
+<tr><td>Rough behaviour</td><td>2</td></tr>
+<tr><td>Telling a lie</td><td>2</td></tr>
+</tbody></table></div>
+<h4>Breaking a star</h4>
+{{fig:d3|The “Break a star” window}}
+<ol>
+<li><strong>Tap a preset reason</strong>: it applies straight away, with no further confirmation.</li>
+<li><strong>Other reason</strong>: for an unexpected situation, type the reason.</li>
+<li><strong>Stars</strong>: 1, 2 or 3.</li>
+<li><strong>Manage preset penalties</strong> opens the shared list.</li>
+<li><strong>Break</strong> applies the other reason.</li>
+</ol>
+<p>The text at the top of the window reminds you of the child's current balance.</p>
+<h4>History and cancelling</h4>
+{{fig:d4|The history after a broken star, and cancelling}}
+<ol>
+<li>The <strong>counter</strong> updates.</li>
+<li>The <strong>history</strong> is sorted by day, most recent first. Each line shows the reason, the child, the parent who broke the star, the time and the number of stars.</li>
+<li><strong>Cancel</strong> (circular arrow): after confirming, the stars are given back to the child. Useful if you picked the wrong child or reason.</li>
+</ol>
+</section>
+
+<section class="part" id="p2d"><h2><span class="num">2d</span> Members and the child's phone</h2>
+<p>The <strong>Family</strong> tab is used to invite the adults who look after the child and to connect the child's phone. This part follows <a href="#p2a">part 2a</a> (creating the child).</p>
+<p>There are two levels of rights:</p>
+<div class="tbl"><table>
+<thead><tr><th>Rights</th><th>What they can do</th></tr></thead>
+<tbody>
+<tr><td>Parent</td><td>Everything: routines, rewards, broken stars, members, phones, settings.</td></tr>
+<tr><td>Helper</td><td>Tick and approve routines, exchange rewards. Doesn't break stars or change the settings.</td></tr>
+</tbody></table></div>
+<p>Each approval keeps the name of the person who made it, so you know who approved what.</p>
+{{fig:e1|The Family page}}
+<ol>
+<li><strong>Edit</strong> the child.</li>
+<li><strong>Connect their device</strong>: the child's phone.</li>
+<li><strong>Child mode here</strong>: your phone switches to child mode.</li>
+<li><strong>Edit</strong> a member.</li>
+<li><strong>Invite a member</strong>.</li>
+<li><strong>Disconnect</strong>: shown under the child for each connected phone.</li>
+</ol>
+<h3 id="p2d-invite">Inviting a member</h3>
+<p>Invitations use a 6-character code valid for 48 hours. Only a parent can invite.</p>
+{{fig:e2|Inviting a member: the form, then the code}}
+<ol>
+<li><strong>Relationship to the children</strong>: Dad, Mum, Grandad, Grandma, Uncle, Auntie, Godfather, Godmother, Nanny or Other.</li>
+<li><strong>Custom label</strong> (optional): the name shown, for example “Grandma Jo”. Useful when there are two grandmothers.</li>
+<li><strong>Rights</strong>: parent or helper (see the table above).</li>
+<li><strong>Create the code</strong> shows the invitation code.</li>
+<li><strong>Share</strong> sends the code by text message, WhatsApp or e-mail. Otherwise, read it out.</li>
+</ol>
+<p>If the code expires before it is used, simply create a new one.</p>
+<h3 id="p2d-join">For the invited person: joining the family</h3>
+<p>The invited person does these steps on their own phone.</p>
+<ol>
+<li>They install SoisFier and create their account as in <a href="#p1">part 1</a>.</li>
+<li>On the <strong>Welcome</strong> screen, they skip “Create my family” and scroll down to <strong>Join a family</strong> (see the step 3 screenshot in part 1).</li>
+<li>They enter the <strong>invitation code</strong>, then tap <strong>Join</strong>.</li>
+<li>They arrive on the Today screen, with the children and routines in place. The relationship and rights chosen in the invitation apply automatically.</li>
+</ol>
+<p>Careful: don't create a second family by mistake. The children and routines wouldn't be shared.</p>
+<h3 id="p2d-members">Editing or removing a member</h3>
+<p>Tap <strong>Edit</strong> next to the member. Everyone can change their own relationship and label. Rights and removing another member are for parents only.</p>
+{{fig:e4|Your card, and another member's card}}
+<ol>
+<li><strong>Rights</strong>: change a member from parent to helper, or the other way round.</li>
+<li><strong>Remove from the family</strong>: after confirming, the person no longer has access to the family. The history of their approvals is kept.</li>
+<li><strong>Save</strong> confirms the changes.</li>
+</ol>
+<p>Your own card has no rights or removal: a parent can't lower their own rights or remove themselves by mistake.</p>
+<h3 id="p2d-device">Connecting the child's phone</h3>
+<p>The child has no account and no e-mail: their phone is connected with a single-use code, valid for 15 minutes.</p>
+{{fig:e5|The code on the parent's phone, entering it on the child's phone, the child's screen}}
+<ol>
+<li>On your phone: <strong>Family</strong>, then <strong>Connect their device</strong> under the child. A 6-character code appears.</li>
+<li>On the child's phone: open SoisFier and tap <strong>I have a child code</strong> on the sign-in screen (see <a href="#p1">part 1</a>).</li>
+<li>Enter the code, then tap <strong>Connect this phone</strong>.</li>
+<li>The child arrives on their screen: their name, stars, pot and the day's routines. The <strong>padlock</strong> (1) lets a parent disconnect this phone. The 🌐 button (2) chooses this phone's language.</li>
+<li>On your phone, tap <strong>Done</strong>. The phone appears under the child on the Family page.</li>
+</ol>
+<p>To remove a phone (lost, replaced, an old test): <strong>Disconnect</strong> on its line, then confirm. A new code will be needed to reconnect it.</p>
+{{fig:e8|Confirming a device disconnection}}
+<h3 id="p2d-childmode">Child mode on your phone</h3>
+<p>For a child without a phone, your phone can switch to child mode while they tick their routines.</p>
+{{fig:e6|Creating the parent code, child mode, leaving child mode}}
+<ol>
+<li><strong>Family</strong>, then <strong>Child mode here</strong> under the child.</li>
+<li>The first time, create a <strong>4-digit parent code</strong>. It will be asked for to leave child mode on this phone; don't give it to the child.</li>
+<li>The child's screen appears, just as on their own phone.</li>
+<li>To go back to the parent area, tap the <strong>padlock</strong> (1) and enter the parent code.</li>
+</ol>
+<p>The phone appears under the child as “Dad's phone (child mode)”. Going back into child mode reuses the same line instead of creating a new one.</p>
+<h3 id="p2d-editchild">Editing a child</h3>
+<p>Tap <strong>Edit</strong> under the child to change their name, avatar or pot colour.</p>
+{{fig:e7|The edit child card}}
+<p>Only the first name is stored: no surname or date of birth. <strong>Delete</strong> erases the child together with their routines, stars and garden. Only use it for a child created by mistake.</p>
+</section>
+
+<section class="part" id="p3"><h2><span class="num">3</span> A parent's daily routine</h2>
+<p>Every day, a parent does three things: tick or approve routines, exchange rewards and, when needed, schedule a break. Everything happens in the <strong>Today</strong> and <strong>Rewards</strong> tabs; broken stars are in <a href="#p2c">part 2c</a>.</p>
+<p>The rule to remember: a star only counts once it is <strong>approved</strong> by an adult. Anything not declined is approved automatically at midnight, in the family's time zone.</p>
+<h3 id="p3-today">The Today screen</h3>
+<p>This is the opening screen. For each child it shows the routines scheduled that day.</p>
+{{fig:f1|The Today screen, top and bottom}}
+<ol>
+<li><strong>Arrows</strong>: go back up to 6 days to tick a forgotten routine. You can't go into the future.</li>
+<li><strong>To spend</strong>: the child's star balance.</li>
+<li><strong>Day 6/14, 4 good days</strong>: the current flower's progress and its number of good days.</li>
+<li><strong>Counter</strong>: routines done out of the day's total.</li>
+<li><strong>Tick box</strong> for each routine.</li>
+<li><strong>+ One-off routine</strong>: adds a one-time routine (<a href="#p2b">part 2b</a>).</li>
+</ol>
+<p>The light-bulb banner gives a different tip each day. It only shows on the current day.</p>
+<h3 id="p3-validate">Ticking and approving routines</h3>
+<p>It all depends on who ticks:</p>
+<div class="tbl"><table>
+<thead><tr><th>Who ticks</th><th>What happens</th></tr></thead>
+<tbody>
+<tr><td>An adult, from the Today screen</td><td>The routine is approved straight away: it turns green with “✓ Dad”.</td></tr>
+<tr><td>The child, from their phone or in child mode</td><td>The routine moves to the <strong>To approve</strong> section at the top of the Today screen.</td></tr>
+</tbody></table></div>
+{{fig:f2|The “To approve” section, then the approved routines}}
+<ol>
+<li><strong>Approve all</strong> approves all waiting routines in one go.</li>
+<li><strong>Decline</strong> (✕): the routine needs doing again, with no penalty. No stars are given.</li>
+<li><strong>Approve</strong> (✓): the stars are added to the balance and count towards the flower.</li>
+</ol>
+<p>Each line shows the child, the day, the stars and who ticked the routine. If you do nothing, everything left is approved automatically at midnight.</p>
+<p>Ticked by mistake? Tap the box again within 5 minutes to untick it. After that the routine is approved for good; to take stars away, use a broken star.</p>
+<h3 id="p3-redeem">Exchanging a reward</h3>
+<p>When the child has enough stars, the exchange is done in the <strong>Rewards</strong> tab, choosing the child at the top if there are several.</p>
+{{fig:f3|The prices available, then the confirmation}}
+<ol>
+<li><strong>Price in solid green</strong>: the child has enough stars. Tap the price to exchange.</li>
+<li><strong>Price with a light outline</strong>: not enough stars yet, and the button does nothing.</li>
+</ol>
+<p>Confirm with <strong>Exchange</strong>: the price is taken from the balance and the message “Reward exchanged” appears. The reward stays in the list and can be exchanged again later.</p>
+<p>The child can also exchange it themselves from their phone (<a href="#p4">part 4</a>).</p>
+<p>Each exchange is recorded in the <strong>History</strong> at the bottom of the Rewards tab, with the date, the price and who made it. A parent can <strong>cancel</strong> it (1) from this list: after confirming, the stars are given back to the child.</p>
+{{fig:h2|The exchange history}}
+<p>Tapping a reward card (outside the price) opens it for editing or deleting.</p>
+<p>If the child's pace changes by more than 20% (routines added or deleted), a banner offers to recalculate the prices.</p>
+<h3 id="p3-pauses">Holiday or illness</h3>
+<p>A break makes days neutral: they count neither for nor against the flower. Nothing is lost during a holiday, an illness or a weekend at the grandparents'.</p>
+{{fig:h1|Scheduling a break}}
+<ol>
+<li><strong>Family</strong>, <strong>Holiday or illness breaks</strong> section, then <strong>Schedule a break</strong>.</li>
+<li><strong>Children</strong> (1): tick the child or children concerned.</li>
+<li><strong>From</strong> and <strong>To</strong> (2): the first and last days are included. The end must be after the start.</li>
+<li><strong>Reason</strong> (3): holiday, illness or other.</li>
+<li><strong>Save</strong> (4).</li>
+</ol>
+<p>The break then appears in the section's list, with the child, the reason and the dates. <strong>Delete</strong> cancels it: the days concerned count normally again. A break can be scheduled in advance or recorded afterwards, for example once an illness is over.</p>
+</section>
+
+<section class="part" id="p4"><h2><span class="num">4</span> The child's side</h2>
+<p>This part shows what the child sees on their phone or in child mode (<a href="#p2d">part 2d</a>). Go through it with them the first time. The child's screens talk to them directly (“My routines”, “My garden”).</p>
+<div class="tbl"><table>
+<thead><tr><th>Tab</th><th>What they do there</th></tr></thead>
+<tbody>
+<tr><td>My routines</td><td>Tick what they've done and start a timer challenge.</td></tr>
+<tr><td>Rewards</td><td>See what they can get and how many stars they still need.</td></tr>
+<tr><td>My garden</td><td>Follow their flower, the season's flower bed and the year's garden.</td></tr>
+<tr><td>Badges</td><td>See the badges they've earned and the next ones.</td></tr>
+</tbody></table></div>
+<p>The child can't change anything: not the routines, the prices or the broken stars. The padlock at the top is for parents.</p>
+<h3 id="p4-routines">My routines</h3>
+<p>The opening screen shows the day's routines sorted by time of day: one-offs, morning, day, evening.</p>
+{{fig:g1|My routines, before and after ticking}}
+<ol>
+<li>The <strong>stars</strong> to spend.</li>
+<li>The <strong>padlock</strong>: for parents (parent code or a little sum).</li>
+<li>The <strong>current flower</strong>: its stage, a circle for each day and the date it opens.</li>
+<li>The <strong>tick box</strong>: the child taps it when the routine is done.</li>
+<li>The routine turns yellow with an <strong>hourglass</strong>: “Your parents will approve”.</li>
+<li>The stars <strong>awaiting approval</strong> show under the flower; they join the balance once a parent approves them.</li>
+</ol>
+<p>The child can untick as long as a parent hasn't approved. Without internet, ticks are saved on the phone and sent as soon as the connection is back.</p>
+<h3 id="p4-timer">The timer challenge</h3>
+<p>A routine can have a timer (set by the parent in the routine, <a href="#p2b">part 2b</a>). A yellow <strong>X-min challenge</strong> button then appears under the routine.</p>
+{{fig:g2|The challenge button, the timer, the end of the challenge}}
+<ol>
+<li>The child taps <strong>2-min challenge</strong>: the timer starts.</li>
+<li>When they've finished, they tap <strong>I've finished!</strong>. Before the time is up, the message “Challenge won” appears.</li>
+<li>The routine is ticked and goes for approval as usual.</li>
+</ol>
+<p><strong>Stop</strong> stops the timer without ticking. A won challenge doesn't give an extra star, but it counts towards the “Challenges” badges, and the parent sees it in the “To approve” section (“timer challenge won”).</p>
+<h3 id="p4-gifts">Rewards on the child's side</h3>
+{{fig:g3|The child's Rewards tab}}
+<ol>
+<li>The <strong>stars to spend</strong> at the top.</li>
+<li><strong>X ⭐ to go</strong>: what's still needed for each reward. When there are enough stars, the text becomes an <strong>I choose this</strong> button.</li>
+</ol>
+<p>When the child has enough stars:</p>
+{{fig:g6|Choosing, confirming, the screen to show the parents, my story}}
+<ol>
+<li>They tap <strong>I choose this</strong>, then confirm with <strong>Yes, I choose this!</strong>. The stars are taken straight away.</li>
+<li>A <strong>Well done!</strong> screen asks them to show it to their parents.</li>
+<li>The reward is added to <strong>My story</strong> (3) at the bottom of the tab.</li>
+</ol>
+<p>This step needs the internet. The parent sees the exchange in the Rewards tab history and can cancel it if needed (<a href="#p3">part 3</a>).</p>
+<h3 id="p4-garden">My garden and settings</h3>
+<p>The garden shows how far the child has come, beyond the current flower.</p>
+{{fig:g4|My garden, top and bottom of the tab}}
+<ol>
+<li><strong>The season's flower bed</strong>: the season's flowers, one per fortnight.</li>
+<li><strong>Counter</strong>: finished flowers and the one growing.</li>
+<li><strong>The year's garden</strong>: four flower beds, from autumn to summer. The year changes on 23 September.</li>
+<li><strong>Streak</strong>: the number of good days in a row.</li>
+<li><strong>Sound</strong> when a routine is ticked: can be turned off.</li>
+<li>Morning and evening <strong>reminders</strong>: choose the times, then <strong>Turn on reminders</strong>, and accept notifications.</li>
+</ol>
+<div class="tbl"><table>
+<thead><tr><th>Flower</th><th>Share of good days in the fortnight</th></tr></thead>
+<tbody>
+<tr><td>A big flower</td><td>90% or more</td></tr>
+<tr><td>A lovely flower</td><td>65% or more</td></tr>
+<tr><td>A little flower</td><td>35% or more</td></tr>
+<tr><td>A pretty bud</td><td>less than 35%</td></tr>
+</tbody></table></div>
+<p>A good day = at least 75% of the day's scheduled stars approved. Days without routines or on a break count neither for nor against. Each fortnight runs from the first to the last day of the family's week, so two weeks.</p>
+<h3 id="p4-badges">Badges</h3>
+{{fig:g5|The Badges tab}}
+<ol>
+<li><strong>Total</strong>: badges earned out of 92.</li>
+<li><strong>Categories</strong>: each category shows its progress.</li>
+</ol>
+<p>An earned badge is in colour with its date. The others are greyed out with a progress bar (0 / 10, 0 / 50…). The milestones go a long way, up to 15,000 routines, to last for years. Broken stars never take a badge away. The “Perfect week” and “Perfect weekend” badges follow the family's week and weekend days.</p>
+</section>
+
+<section class="part" id="p5"><h2><span class="num">5</span> Settings</h2>
+<p>The settings are at the bottom of the <strong>Family</strong> tab. They are for parents. Some apply to the whole family, others only to the phone you set them on:</p>
+<div class="tbl"><table>
+<thead><tr><th>Setting</th><th>Applies to</th></tr></thead>
+<tbody>
+<tr><td>Week and time zone</td><td>The whole family</td></tr>
+<tr><td>Automatic approval</td><td>The whole family</td></tr>
+<tr><td>Reminders</td><td>This phone (each parent turns on their own)</td></tr>
+<tr><td>Language</td><td>This phone</td></tr>
+<tr><td>Printable planner</td><td>The whole family</td></tr>
+<tr><td>Parent code</td><td>This phone</td></tr>
+<tr><td>Backup</td><td>The whole family</td></tr>
+<tr><td>Family name</td><td>The whole family</td></tr>
+</tbody></table></div>
+<h3 id="p5-week">Week and time zone</h3>
+{{fig:w2|The Week and time zone section, then editing}}
+<ol>
+<li><strong>Edit</strong> opens the same window as when the family was created (<a href="#p1-week">part 1</a>).</li>
+</ol>
+<p>Badges already earned are kept. If you change the first day of the week, the current fortnight is extended to the new last day of the week (20 days at most), then the following fortnights last 14 days.</p>
+<h3 id="p5-auto">Automatic approval at midnight</h3>
+<p>When the child ticks a routine, their stars wait for your approval. This setting decides what happens if nobody approves during the day.</p>
+{{fig:i1|Automatic approval on, then off}}
+<div class="tbl"><table>
+<thead><tr><th>The box (1)</th><th>At midnight, anything still awaiting approval…</th></tr></thead>
+<tbody>
+<tr><td>Ticked (default)</td><td>is approved automatically. The child isn't penalised when parents forget.</td></tr>
+<tr><td>Unticked</td><td>keeps waiting for your decision. Message: “Manual approval only”.</td></tr>
+</tbody></table></div>
+<p>Either way, what you tick yourself is approved straight away. Tip: leave the box ticked unless you want to check every routine.</p>
+<h3 id="p5-push">Reminders</h3>
+<p>At the chosen times, a notification summarises the remaining routines, in this phone's language. Each parent turns them on on their own phone; the child has their own reminders in “My garden” (<a href="#p4">part 4</a>).</p>
+{{fig:i2|Choosing times, reminders on, notifications blocked}}
+<ol>
+<li><strong>Morning</strong>: time of the first reminder.</li>
+<li><strong>Evening</strong>: time of the second.</li>
+<li><strong>Turn on reminders</strong>, then <strong>Allow</strong> when Chrome asks for permission to send notifications.</li>
+<li><strong>Update reminders</strong>: after changing a time.</li>
+<li><strong>Turn off</strong>: stops reminders on this phone.</li>
+</ol>
+<p>If you answered “Don't allow”, the app shows “Notifications are blocked”. To fix it: in Chrome, tap the padlock to the left of the address, then <strong>Permissions</strong>, then set <strong>Notifications</strong> to <strong>Allow</strong>. Then go back to “Turn on reminders”.</p>
+<h3 id="p5-print">Printable planner</h3>
+<p>For the fridge or for a child without a phone: the current week on an A4 page, to tick off in pencil.</p>
+{{fig:i3|The button and the planner preview}}
+<ol>
+<li>Tap <strong>Print the planner</strong> (1). With several children, choose whose planner to print.</li>
+<li>Android opens the print preview: choose your printer, or <strong>Save as PDF</strong> to send it.</li>
+</ol>
+<p>The page shows the routines by time of day, with a circle for each scheduled day (grey boxes are days without that routine), starting from the first day of the family's week, and lists the rewards with their prices at the bottom. Ticks on paper don't go into the app: they need to be entered from the Today screen (up to 6 days back).</p>
+<h3 id="p5-account">Parent code, backup and account</h3>
+{{fig:i4|Parent code, backup, account, renaming the family}}
+<ol>
+<li><strong>Parent code</strong>: <strong>Change the code</strong>, then 4 digits. It protects leaving child mode on this phone (<a href="#p2d">part 2d</a>). Without a code, the app asks a little sum instead.</li>
+<li><strong>Download a copy (JSON)</strong>: a file with all the family's data (children, routines, stars, rewards, broken stars, badges, flowers, breaks), saved in Downloads. Worth doing every three months, just in case.</li>
+<li><strong>Rename the family</strong>: changes the name shown at the top of the app for all members.</li>
+<li><strong>Sign out</strong>: signs your account out on this phone. The data stays online; just sign in again with your e-mail and password.</li>
+</ol>
+<p>The account's e-mail is shown above the buttons.</p>
+</section>
