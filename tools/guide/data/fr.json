@@ -1,0 +1,40 @@
+{
+ "locale": "fr-FR",
+ "tz": "Europe/Paris",
+ "week_start": 1,
+ "weekend": [
+  6,
+  7
+ ],
+ "work_days": [
+  1,
+  2,
+  3,
+  4,
+  5
+ ],
+ "member": "Prénom",
+ "family": "Famille",
+ "child": "Enfant 1",
+ "rel_parent": "Papa",
+ "rel_helper": "Mamie",
+ "event": "Spectacle de marionnettes",
+ "place": "Théâtre",
+ "pause": "Vacances",
+ "tip": "Félicitez l'effort plutôt que le résultat : « tu as pris le temps de bien ranger » motive plus que « tu es sage ».",
+ "routine_new": "Entraînement de foot",
+ "malus_new": "A jeté son assiette",
+ "captions": {
+  "l1": [
+   "Bouton de langue",
+   "Choix de la langue"
+  ],
+  "w2": [
+   "La section Semaine",
+   "La modification"
+  ]
+ },
+ "lang": "fr",
+ "rtl": false,
+ "name": "Français"
+}

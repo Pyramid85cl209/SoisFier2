@@ -1,0 +1,43 @@
+<a class="top-link" href="#haut" aria-label="Revenir en haut">↑</a>
+<div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-label="Capture agrandie"><button class="btn" id="vclose">✕ Fermer</button><img alt=""></div>
+<script>
+(() => {
+  const toc = document.getElementById("toc"), menu = document.getElementById("menu"), scrim = document.getElementById("scrim");
+  const setOpen = o => { toc.classList.toggle("open", o); scrim.classList.toggle("open", o); menu.setAttribute("aria-expanded", o); };
+  menu.addEventListener("click", () => setOpen(!toc.classList.contains("open")));
+  scrim.addEventListener("click", () => setOpen(false));
+  toc.addEventListener("click", e => { if (e.target.closest("a")) setOpen(false); });
+
+  // Sommaire actif
+  const links = [...toc.querySelectorAll("a")], byId = new Map(links.map(a => [a.hash.slice(1), a]));
+  const targets = [...document.querySelectorAll("section.part, main h3[id]")];
+  let current = null;
+  const mark = id => {
+    if (id === current) return; current = id;
+    links.forEach(a => a.classList.remove("on"));
+    const a = byId.get(id); if (!a) return; a.classList.add("on");
+    const part = a.closest("ol > li"); if (part) part.querySelector("a.p").classList.add("on");
+    if (!toc.classList.contains("open")) a.scrollIntoView({ block: "nearest" });
+  };
+  const io = new IntersectionObserver(es => {
+    const vis = targets.filter(t => t.getBoundingClientRect().top < window.innerHeight * 0.35);
+    if (vis.length) mark(vis[vis.length - 1].id);
+  }, { rootMargin: "0px 0px -60% 0px", threshold: [0, 1] });
+  targets.forEach(t => io.observe(t));
+  addEventListener("scroll", () => { const vis = targets.filter(t => t.getBoundingClientRect().top < 120); if (vis.length) mark(vis[vis.length - 1].id); }, { passive: true });
+
+  // Visionneuse
+  const v = document.getElementById("viewer"), vi = v.querySelector("img");
+  document.querySelectorAll("figure a").forEach(a => a.addEventListener("click", e => {
+    e.preventDefault(); const t = a.querySelector("img"), r = t.naturalWidth / t.naturalHeight || 1;
+    const w = Math.min(t.naturalWidth || 1400, Math.max(innerWidth - 24, (innerHeight - 90) * r));
+    vi.style.width = w + "px"; vi.src = a.href; vi.alt = t.alt; v.classList.add("open"); v.scrollTo(0, 0);
+  }));
+  const close = () => v.classList.remove("open");
+  document.getElementById("vclose").addEventListener("click", close);
+  v.addEventListener("click", e => { if (e.target === v) close(); });
+  addEventListener("keydown", e => { if (e.key === "Escape") { close(); setOpen(false); } });
+})();
+</script>
+</body>
+</html>
