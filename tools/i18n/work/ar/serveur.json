@@ -1,0 +1,116 @@
+[
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 1,
+  "fr": "Félicitez l'effort plutôt que le résultat : « Tu as pris le temps de bien ranger » motive plus que « Tu es sage ».",
+  "xx": "امدحوا الجهد لا النتيجة: «أخذتَ وقتك لترتّب جيدًا» تحفّز أكثر من «أنت ولد مطيع»."
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 2,
+  "fr": "Trois à cinq routines par moment de la journée suffisent. Au-delà, l'enfant décroche.",
+  "xx": "تكفي ثلاثة إلى خمسة أنشطة في كل فترة من اليوم. أكثر من ذلك يفقد الطفل تركيزه."
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 3,
+  "fr": "Laissez votre enfant choisir l'ordre de ses routines quand c'est possible : il se sent acteur.",
+  "xx": "اتركوا طفلكم يختار ترتيب أنشطته متى أمكن: يشعر بأنه صاحب القرار."
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 4,
+  "fr": "Préférez des récompenses partagées (une histoire de plus, choisir le film) aux objets : elles renforcent le lien.",
+  "xx": "فضّلوا المكافآت المشتركة (قصة إضافية، اختيار الفيلم) على الأشياء: فهي تقوّي العلاقة."
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 5,
+  "fr": "Une routine oubliée n'est pas un échec. Demain est une nouvelle journée, sans reproche.",
+  "xx": "النشاط المنسيّ ليس فشلًا. غدًا يوم جديد، بلا لوم."
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 6,
+  "fr": "Montrez l'exemple : faire son lit en même temps que lui, c'est déjà la moitié du chemin.",
+  "xx": "كونوا قدوة: ترتيب سريركم في الوقت نفسه معه هو نصف الطريق."
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 7,
+  "fr": "Décrivez ce que vous voyez au lieu de juger : « Je vois que tes chaussures sont rangées ! »",
+  "xx": "صِفوا ما ترونه بدل الحكم: «أرى أن حذاءك في مكانه!»"
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 8,
+  "fr": "Pour les plus petits, une routine = une seule action. « Se brosser les dents » plutôt que « Se préparer ».",
+  "xx": "للصغار، النشاط الواحد = فعل واحد. «تنظيف الأسنان» بدل «الاستعداد»."
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 9,
+  "fr": "Changez une récompense quand elle ne fait plus envie. Demandez-lui ce qui lui ferait plaisir.",
+  "xx": "غيّروا المكافأة حين تفقد جاذبيتها. اسألوه عمّا يسعده."
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 10,
+  "fr": "Le minuteur transforme une corvée en défi. Utilisez-le pour les routines qui traînent.",
+  "xx": "المؤقّت يحوّل المهمة المملّة إلى تحدٍّ. استعملوه للأنشطة التي تتأخر."
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 11,
+  "fr": "Le soir, prenez deux minutes pour regarder la plante ensemble et parler de la journée.",
+  "xx": "في المساء، خذوا دقيقتين لتنظروا معًا إلى النبتة وتتحدثوا عن اليوم."
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 12,
+  "fr": "Gardez l'étoile cassée pour un écart immédiat, jamais pour une routine oubliée : la plante, elle, reste toujours un espace positif.",
+  "xx": "احتفظوا بالنجمة المكسورة لتصرّف فوري فقط، لا لنشاط منسيّ: أما النبتة فتبقى دائمًا مساحة إيجابية."
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 13,
+  "fr": "Ajoutez une routine bonus pour les petits défis : elle donne des étoiles sans pression.",
+  "xx": "أضيفوا نشاطًا إضافيًا للتحديات الصغيرة: يمنح نجومًا دون ضغط."
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 14,
+  "fr": "Annoncez les transitions à l'avance : « Dans cinq minutes, c'est l'heure du bain. »",
+  "xx": "أعلنوا الانتقالات مسبقًا: «بعد خمس دقائق، يحين وقت الاستحمام.»"
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 15,
+  "fr": "Quand une routine est acquise depuis des semaines, retirez-la et célébrez-le : il a grandi !",
+  "xx": "حين يُتقن الطفل نشاطًا منذ أسابيع، احذفوه واحتفلوا: لقد كبر!"
+ },
+ {
+  "type": "Notification",
+  "n": 1,
+  "fr": "Rappel enfant : titre — C'est l'heure de tes routines 🌱",
+  "xx": "حان وقت أنشطتنا 🌱"
+ },
+ {
+  "type": "Notification",
+  "n": 2,
+  "fr": "Rappel enfant : texte — Encore {n} à faire. Ta plante t'attend !",
+  "xx": "بقي {n} لننجزه. نبتتنا تنتظرنا!"
+ },
+ {
+  "type": "Notification",
+  "n": 3,
+  "fr": "Rappel parent : titre — Routines du jour 🌱",
+  "xx": "أنشطة اليوم 🌱"
+ },
+ {
+  "type": "Notification",
+  "n": 4,
+  "fr": "Rappel parent : à valider — ({n} à valider)",
+  "xx": "({n} بانتظار التأكيد)"
+ }
+]
