@@ -13,6 +13,8 @@ Source : le français (`i18n/fr.json`, `guide/index.html`). Ces règles s'appliq
 - Chiffres occidentaux (0-9) et calendrier grégorien, quelle que soit la langue (`-u-ca-gregory-nu-latn`).
 - Ne pas traduire : `{variables}`, émojis, « SoisFier », codes `SF:…`.
 - Pluriels : fournir **toutes** les formes de `Intl.PluralRules(langue)` pour chaque clé plurielle du français ; ajouter un pluriel quand la langue en a besoin même si le français n'en a pas (comme l'arabe pour les compteurs).
+- Noms de jours en milieu de phrase : minuscule par défaut ; si la langue les écrit avec une majuscule (anglais, allemand…), ajouter son code à `CAP_DAYS` dans `index.html`.
+- Format des dates : si la langue a plusieurs variantes (en-GB / en-US), fixer la variante dans `REGION` (`index.html`).
 - Boutons et onglets courts : un onglet tient en 12 caractères environ ; vérifier à l'écran (captures).
 - Ponctuation et guillemets de la langue cible (« » en français, “ ” en anglais, « » ou ” en arabe…).
 

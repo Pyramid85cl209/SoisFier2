@@ -409,7 +409,8 @@ function detectWeek() {
 const tzList = () => { try { return Intl.supportedValuesOf("timeZone"); } catch { return ["Europe/Paris"]; } };
 const tzLabel = z => z.replace(/_/g, " ");
 const listFmt = a => { try { return new Intl.ListFormat(loc(), { type: "conjunction" }).format(a); } catch { return a.join(", "); } };
-const lower = s => s.toLocaleLowerCase(loc());
+const CAP_DAYS = ["en"];   // langues où les noms de jours gardent leur majuscule en milieu de phrase
+const lower = s => CAP_DAYS.includes(I18N.lang) ? s : s.toLocaleLowerCase(loc());
 function weekSummary(w) {
   const first = w.weekend.find(d => !w.weekend.includes(((d + 5) % 7) + 1)) || w.weekend[0];   // début du bloc de week-end
   const we = w.weekend.length ? listFmt(w.weekend.slice().sort((a, b) => ((a - first + 7) % 7) - ((b - first + 7) % 7)).map(d => lower(dayName(d)))) : t("week.noWeekend");
