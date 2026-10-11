@@ -1,0 +1,152 @@
+{
+ "locale": "en-GB",
+ "tz": "Europe/London",
+ "week_start": 1,
+ "weekend": [
+  6,
+  7
+ ],
+ "work_days": [
+  1,
+  2,
+  3,
+  4,
+  5
+ ],
+ "member": "First name",
+ "family": "Family",
+ "child": "Child 1",
+ "rel_parent": "Dad",
+ "rel_helper": "Grandma",
+ "event": "Puppet show",
+ "place": "Theatre",
+ "pause": "Holiday",
+ "tip": "Praise the effort, not the result: “you took the time to tidy up properly” motivates more than “you're so good”.",
+ "routine_new": "Football practice",
+ "malus_new": "Threw their plate",
+ "captions": {
+  "m3": [
+   "Creating the account",
+   "Confirmation message"
+  ],
+  "m4": [
+   "Create or join a family",
+   "First screen"
+  ],
+  "l1": [
+   "Language button",
+   "Choosing the language"
+  ],
+  "a3": [
+   "Top of the list",
+   "Bottom of the list"
+  ],
+  "b1": [
+   "Top of the tab",
+   "Bottom of the tab"
+  ],
+  "b2": [
+   "Templates already added",
+   "New selection"
+  ],
+  "b6": [
+   "Suggestions",
+   "The form"
+  ],
+  "c1": [
+   "Before adding rewards",
+   "After adding them"
+  ],
+  "c2": [
+   "Top of the list",
+   "Bottom of the list"
+  ],
+  "d4": [
+   "History",
+   "Cancelling"
+  ],
+  "e2": [
+   "The invitation",
+   "The code"
+  ],
+  "e4": [
+   "Your card",
+   "Another member's card"
+  ],
+  "e5": [
+   "On the parent's phone",
+   "On the child's phone",
+   "The child's screen"
+  ],
+  "e6": [
+   "Parent code",
+   "Child mode",
+   "Leaving"
+  ],
+  "f1": [
+   "Top of the screen",
+   "Bottom of the screen"
+  ],
+  "f2": [
+   "Awaiting approval",
+   "After approval"
+  ],
+  "f3": [
+   "Prices available",
+   "Confirmation"
+  ],
+  "g1": [
+   "Before ticking",
+   "After ticking"
+  ],
+  "g2": [
+   "Challenge button",
+   "The timer",
+   "Challenge over"
+  ],
+  "g6": [
+   "I choose",
+   "Confirmation",
+   "I show my parents",
+   "My story"
+  ],
+  "g4": [
+   "Top of the tab",
+   "Bottom of the tab"
+  ],
+  "i1": [
+   "On",
+   "Off"
+  ],
+  "i2": [
+   "Choosing times",
+   "Reminders on",
+   "Notifications blocked"
+  ],
+  "i3": [
+   "The button",
+   "Planner preview"
+  ],
+  "i4": [
+   "Settings",
+   "Renaming the family"
+  ],
+  "w2": [
+   "The Week section",
+   "Editing"
+  ]
+ },
+ "lang": "en",
+ "rtl": false,
+ "name": "English",
+ "ui": {
+  "title": "SoisFier user guide",
+  "toc": "Contents",
+  "back": "Back to the app",
+  "back_arrow": "←",
+  "top": "Back to top",
+  "zoom": "Enlarged screenshot",
+  "close": "Close",
+  "description": "The complete SoisFier user guide: installation, routines, rewards, broken stars, members, daily use, the child's side and settings."
+ }
+}

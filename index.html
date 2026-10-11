@@ -345,13 +345,14 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": 
 const pad = n => String(n).padStart(2, "0");
 /* ================= Langues ================= */
 // Textes dans i18n/<langue>.json ; « ?lang=qps » active une pseudo-langue de contrôle (textes déformés : tout texte resté en clair est un oubli).
-const LANGS = ["fr", "ar"];        // langues proposées (fichier i18n/<code>.json + ligne dans public.languages)
+const LANGS = ["fr", "ar", "en"];        // langues proposées (fichier i18n/<code>.json + ligne dans public.languages)
 const RTL = ["ar"];                // écriture de droite à gauche
-const REVIEW = ["ar"];             // traduction encore à relire (mention dans le choix de la langue)
+const REVIEW = ["ar", "en"];             // traduction encore à relire (mention dans le choix de la langue)
 const I18N = { lang: "fr", d: {}, fr: {} };
 I18N.ready = new Promise(r => { I18N.done = r; });
 const lget = (o, k) => k.split(".").reduce((a, p) => (a == null ? a : a[p]), o);
-const loc = () => (I18N.lang === "qps" ? "fr" : I18N.lang) + "-u-ca-gregory-nu-latn";   // calendrier grégorien et chiffres 0123 imposés
+const REGION = { en: "en-GB" };   // variante régionale pour les dates et nombres (anglais britannique)
+const loc = () => (I18N.lang === "qps" ? "fr" : REGION[I18N.lang] || I18N.lang) + "-u-ca-gregory-nu-latn";   // calendrier grégorien et chiffres 0123 imposés
 const fmtNum = n => Number(n).toLocaleString(loc());
 function t(k, p = {}) {
   let v = lget(I18N.d, k); if (v == null) v = lget(I18N.fr, k); if (v == null) return k;
