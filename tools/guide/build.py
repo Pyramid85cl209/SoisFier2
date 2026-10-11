@@ -25,7 +25,7 @@ def patch_links(path, cur):
     s = open(path, encoding="utf-8").read()
     s = re.sub(r'(?:<a class="btn lang-link"[^>]*>[^<]*</a>\s*)+', "", s)
     s = re.sub(r'(\n  )(<a class="btn" href="\.\./)', lambda m: m.group(1) + lang_links(cur) + m.group(2), s, count=1)
-    if ".lang-link{" not in s: s = s.replace("</style>", ".lang-link{font-size:.9rem}\n</style>", 1)
+    if ".bar .lang-link{" not in s: s = s.replace("</style>", ".lang-link{font-size:.9rem}\n@media (max-width:900px){.bar{gap:6px;padding-inline:10px}.bar .lang-link{padding:8px 10px}}\n</style>", 1)
     open(path, "w", encoding="utf-8").write(s)
 
 def build():
@@ -40,7 +40,7 @@ def build():
            ("padding:18px 12px 40px 16px", "padding-block:18px 40px;padding-inline:16px 12px")]
     for a, b in rep: assert a in css, a; css = css.replace(a, b)
     if D.get("rtl"): css = css.replace("transform:translateX(-105%)", "transform:translateX(105%)")
-    css = css.replace("</style>", ".note{background:var(--sun-l);border-radius:16px;padding:12px 16px;font-size:.93rem}\n.lang-link{font-size:.9rem}\n</style>")
+    css = css.replace("</style>", ".note{background:var(--sun-l);border-radius:16px;padding:12px 16px;font-size:.93rem}\n.lang-link{font-size:.9rem}\n@media (max-width:900px){.bar{gap:6px;padding-inline:10px}.bar .lang-link{padding:8px 10px}}\n</style>")
     body = open(f"{HERE}/content/{LG}.html", encoding="utf-8").read()
     def fig(m):
         fr, name, alt = m.group(1), m.group(2), m.group(3)
