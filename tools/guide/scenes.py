@@ -150,7 +150,7 @@ async def main(only=None):
         if await scene("d3"):
             p = await s.page()
             await s.act(p, "A.tab({ dataset: { tab: 'malus' } }); A.breakStar();")
-            a = await s.shot(p, "d3", [(".pen", 1, 0), ("#pen-title", 2), ("#pen-stars", 3), ("button[data-act=penaltyCatalog]", 4), ("button.btn.danger[data-act=applyPenalty]", 5)], sheet=True)
+            a = await s.shot(p, "d3", [(".pen", 1, 0), ("#pen-title", 2), ("#pen-stars", 3), ("dialog[open] button[data-act=penaltyCatalog]", 4), ("button.btn.danger[data-act=applyPenalty]", 5)], sheet=True)
             await s.compose("d3", [(a, C("d3", 0))])
         if await scene("d4"):
             p = await s.page()
