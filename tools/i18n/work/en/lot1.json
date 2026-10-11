@@ -1,0 +1,274 @@
+{
+ "common": {
+  "none": "None.",
+  "by": "by {who}",
+  "suggestions": "Suggestions",
+  "alreadyAdded": "already added",
+  "addSelection": "Add selection",
+  "deletedF": "Deleted.",
+  "deletedM": "Deleted.",
+  "savedM": "Saved.",
+  "starsReturned": "The stars have been given back to the child."
+ },
+ "days": {
+  "short": [
+   "M",
+   "T",
+   "W",
+   "T",
+   "F",
+   "S",
+   "S"
+  ],
+  "long": [
+   "Monday",
+   "Tuesday",
+   "Wednesday",
+   "Thursday",
+   "Friday",
+   "Saturday",
+   "Sunday"
+  ],
+  "abbr": [
+   "Mon",
+   "Tue",
+   "Wed",
+   "Thu",
+   "Fri",
+   "Sat",
+   "Sun"
+  ],
+  "all": "Every day",
+  "week": "Weekdays",
+  "weekend": "Weekends"
+ },
+ "day": {
+  "today": "Today",
+  "yesterday": "Yesterday",
+  "nameNum": "{day} {num}",
+  "prev": "Previous day",
+  "next": "Next day"
+ },
+ "week": {
+  "summary": "Week starts {first}, weekend {weekend}, time zone {tz}",
+  "noWeekend": "none",
+  "title": "Week and time zone",
+  "help": "These set the order of the days, the “Weekdays” and “Weekends” options, the week and weekend badges, the end of each garden fortnight and the time when a new day begins.",
+  "firstDay": "First day of the week",
+  "weekendDays": "Weekend days",
+  "timezone": "Time zone",
+  "changeNote": "Badges already earned are kept. The current fortnight is extended to the new last day of the week (20 days at most), then the following ones last 14 days.",
+  "saved": "Week settings saved.",
+  "max3": "3 weekend days at most."
+ },
+ "moment": {
+  "matin": {
+   "group": "In the morning",
+   "short": "Morning"
+  },
+  "midi": {
+   "group": "At lunchtime",
+   "short": "Lunch"
+  },
+  "journee": {
+   "group": "During the day",
+   "short": "Day"
+  },
+  "soir": {
+   "group": "In the evening",
+   "short": "Evening"
+  }
+ },
+ "places": [
+  "Bedroom",
+  "Bathroom",
+  "Kitchen",
+  "Living room",
+  "Hallway",
+  "Outside",
+  "School"
+ ],
+ "emoGroup": {
+  "hygiene": "Hygiene",
+  "dressing": "Getting dressed",
+  "meals": "Meals",
+  "tidying": "Tidying up",
+  "school": "School",
+  "home": "Home and pets",
+  "activities": "Activities",
+  "night": "Evening and sleep",
+  "kindness": "Kindness",
+  "treats": "Treats",
+  "shared": "Time together",
+  "outside": "Outside",
+  "outings": "Outings",
+  "big": "Big projects",
+  "perks": "Small privileges"
+ },
+ "err": {
+  "network": "No internet connection. Try again in a moment.",
+  "badLogin": "Incorrect e-mail or password.",
+  "notConfirmed": "First confirm your e-mail address with the link you received, then sign in again.",
+  "alreadyRegistered": "An account already exists with this e-mail. Please sign in.",
+  "passwordShort": "The password must be at least 6 characters long.",
+  "rateLimit": "Too many attempts. Please wait a few minutes."
+ },
+ "garden": {
+  "species": {
+   "tournesol": "Sunflower",
+   "marguerite": "Daisy",
+   "cosmos-rose": "Pink cosmos",
+   "cosmos-orange": "Orange cosmos",
+   "cosmos-rouge": "Red cosmos",
+   "tulipe-rose": "Pink tulip",
+   "tulipe-jaune": "Yellow tulip",
+   "tulipe-violette": "Purple tulip",
+   "tulipe-rouge": "Red tulip",
+   "hellebore": "Christmas rose"
+  },
+  "seasonOf": {
+   "printemps": "spring",
+   "ete": "summer",
+   "automne": "autumn",
+   "hiver": "winter"
+  },
+  "grade": [
+   "A pretty bud",
+   "A little flower",
+   "A lovely flower",
+   "A big flower"
+  ],
+  "stage": [
+   "Empty pot",
+   "Seed",
+   "Sprout",
+   "Shoot",
+   "2 leaves",
+   "4 leaves",
+   "6 leaves",
+   "First bud",
+   "Second bud",
+   "The buds are growing",
+   "Blooming",
+   "Half open",
+   "Wide open",
+   "Full flower"
+  ],
+  "plant": "Plant",
+  "bed": "Flower bed",
+  "bedOf": "{season} flower bed",
+  "gardenOfYear": "{name}'s garden {year}",
+  "gardenYear": "Garden {year}",
+  "fortnightDays": "Days of the fortnight",
+  "see": "See {name}'s garden",
+  "firstFrom": "First flower from {date}",
+  "dayOf": "Day {d}/{len}",
+  "goodDays": {
+   "one": "{n} good day",
+   "other": "{n} good days"
+  },
+  "gardenOf": "{name}'s garden",
+  "firstFromDot": "First flower from {date}.",
+  "status": "{stage}: day {d}/{len}, {n} good day(s). Blooms {date}.",
+  "yearCount": "{n} flowers, {big} of them big."
+ },
+ "oneoff": {
+  "note": "One-off",
+  "noteBefore": "One-off, before {date}",
+  "btn": "One-off routine",
+  "current": "Current or upcoming one-offs",
+  "beforeShort": "before {date}",
+  "manageTpl": "Manage templates",
+  "for": "One-off routine for {name}",
+  "myTpl": "My templates",
+  "createNew": "Create a new one",
+  "when": "When",
+  "on": "On",
+  "before": "Before",
+  "type": "Type",
+  "bonus": "Bonus",
+  "mandatory": "Required",
+  "typeHelp": "Bonus: it earns stars but can't spoil the day. Required: it counts towards a good day.",
+  "keepTpl": "Keep as a template",
+  "needDate": "Choose a date from today onwards.",
+  "added": "One-off routine added.",
+  "delTitle": "Delete this one-off routine?",
+  "delText": "Stars already earned are kept.",
+  "tplTitle": "One-off templates",
+  "tplHelp": "Shared by the whole family. Sorted from most to least used.",
+  "times": {
+   "one": "once",
+   "other": "{n} times"
+  },
+  "noTpl": "No templates. Tick “Keep as a template” when creating a one-off routine.",
+  "tplDeleted": "Template deleted."
+ },
+ "tpl": {
+  "x": {
+   "suitcase": "Pack your suitcase",
+   "deepClean": "Give your room a big tidy",
+   "poolBag": "Pack your swimming bag",
+   "tableGuests": "Set the table for guests",
+   "groceries": "Help carry the shopping",
+   "cook": "Help with the cooking",
+   "sortToys": "Sort out toys to give away",
+   "birthdayCard": "Make a birthday card",
+   "waterGarden": "Water the garden",
+   "carBoot": "Tidy the car boot"
+  },
+  "r": {
+   "bed": "Make your bed",
+   "dress": "Get dressed",
+   "breakfast": "Eat breakfast",
+   "teethMorning": "Brush your teeth (morning)",
+   "face": "Wash your face",
+   "hair": "Brush your hair",
+   "shoes": "Put your shoes on",
+   "schoolbag": "Pack your school bag",
+   "hands": "Wash your hands",
+   "setTable": "Set the table",
+   "clearPlate": "Clear your plate",
+   "toys": "Tidy away your toys",
+   "homework": "Do your homework",
+   "read": "Read a book",
+   "plants": "Water the plants",
+   "pet": "Feed the pet",
+   "bath": "Have a bath",
+   "pyjamas": "Put your pyjamas on",
+   "teethEvening": "Brush your teeth (evening)",
+   "laundry": "Put dirty clothes in the basket",
+   "clothesTomorrow": "Lay out clothes for tomorrow",
+   "toilet": "Go to the toilet before bed"
+  },
+  "w": {
+   "story": "One more story",
+   "music": "Choose the music in the car",
+   "sticker": "A sticker",
+   "game": "A game with Mum or Dad",
+   "dessert": "Choose dessert",
+   "bubbleBath": "Bubble bath with toys",
+   "lateBed": "Go to bed 15 minutes later",
+   "cartoon": "One more cartoon",
+   "art": "Drawing or painting together",
+   "cake": "Bake a cake together",
+   "dinner": "Choose what's for dinner",
+   "hut": "A den in the living room",
+   "movie": "Family film night",
+   "picnic": "Picnic in the park",
+   "library": "Trip to the library with a snack",
+   "pool": "Afternoon at the swimming pool",
+   "farm": "Visit to a children's farm",
+   "toy": "A toy or piece of kit of your choice",
+   "themePark": "Day at a theme park",
+   "myDay": "An “I'm in charge” day"
+  },
+  "p": {
+   "tidyRefusal": "Refusing to tidy up after several reminders",
+   "swear": "Rude word",
+   "sibling": "Fighting with a brother or sister",
+   "notListening": "Not listening",
+   "rough": "Rough behaviour",
+   "lie": "Telling a lie"
+  }
+ }
+}
