@@ -345,7 +345,9 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": 
 const pad = n => String(n).padStart(2, "0");
 /* ================= Langues ================= */
 // Textes dans i18n/<langue>.json ; « ?lang=qps » active une pseudo-langue de contrôle (textes déformés : tout texte resté en clair est un oubli).
-const LANGS = ["fr", "ar"];
+const LANGS = ["fr", "ar"];        // langues proposées (fichier i18n/<code>.json + ligne dans public.languages)
+const RTL = ["ar"];                // écriture de droite à gauche
+const REVIEW = ["ar"];             // traduction encore à relire (mention dans le choix de la langue)
 const I18N = { lang: "fr", d: {}, fr: {} };
 I18N.ready = new Promise(r => { I18N.done = r; });
 const lget = (o, k) => k.split(".").reduce((a, p) => (a == null ? a : a[p]), o);
@@ -372,7 +374,7 @@ async function loadI18n() {
   I18N.lang = lang === "qps" ? "qps" : LANGS.includes(lang) ? lang : "fr";
   I18N.d = I18N.lang === "qps" ? pseudo(I18N.fr) : I18N.lang === "fr" ? I18N.fr : await get(I18N.lang).catch(() => I18N.fr);
   document.documentElement.lang = I18N.lang === "qps" ? "fr" : I18N.lang;
-  document.documentElement.dir = I18N.lang === "ar" ? "rtl" : "ltr";
+  document.documentElement.dir = RTL.includes(I18N.lang) ? "rtl" : "ltr";
   document.querySelector('meta[name="description"]').setAttribute("content", t("meta.description"));
   $("#sheet").setAttribute("aria-label", t("dialog"));
   BADGES = buildBadges();
@@ -871,7 +873,7 @@ function render() {
 }
 
 /* ---------- Langue et aide ---------- */
-const guideHref = () => curLang() === "ar" ? "guide/ar/" : "guide/";
+const guideHref = () => curLang() === "fr" ? "guide/" : `guide/${curLang()}/`;
 const langBtn = () => `<button class="lang-btn" data-act="pickLang" aria-label="${t("lang.title")}">🌐</button>`;
 const topButtons = (help = true) => `<div class="help-float">${langBtn()}${help ? `<a class="help" href="${guideHref()}" aria-label="${t("help")}">?</a>` : ""}</div>`;
 
@@ -1472,7 +1474,7 @@ A.forgot = async () => {
 };
 A.closeSheet = () => closeSheet();
 // Langue : choisie sur l'appareil ; enregistrée aussi pour le membre connecté et pour les rappels de cet appareil
-A.pickLang = () => openSheet(`<h2>${t("lang.title")}</h2><ul class="tpl">${LANGS.map(l => `<li><button class="pen" data-act="setLang" data-v="${l}" lang="${l}"><span>${t("lang." + l)}${l === "ar" ? ` <small class="muted">(${t("lang.toReview")})</small>` : ""}</span><span>${l === curLang() ? "✓" : ""}</span></button></li>`).join("")}</ul>
+A.pickLang = () => openSheet(`<h2>${t("lang.title")}</h2><ul class="tpl">${LANGS.map(l => `<li><button class="pen" data-act="setLang" data-v="${l}" lang="${l}"><span>${t("lang." + l)}${REVIEW.includes(l) ? ` <small class="muted">(${t("lang.toReview")})</small>` : ""}</span><span>${l === curLang() ? "✓" : ""}</span></button></li>`).join("")}</ul>
   <div class="sheet-actions"><button class="btn ghost" data-act="closeSheet">${t("btn.close")}</button></div>`);
 A.setLang = async el => {
   const l = el.dataset.v; if (!LANGS.includes(l)) return;

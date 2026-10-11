@@ -1,12 +1,16 @@
 /* SoisFier – service worker : hors ligne + notifications */
-const CACHE = "soisfier-v17";
-const CORE = ["./", "./index.html", "./i18n/fr.json", "./i18n/ar.json", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
+const CACHE = "soisfier-v18";
+const CORE = ["./", "./index.html", "./i18n/fr.json", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 const CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js";
 
 self.addEventListener("install", e => {
   e.waitUntil((async () => {
     const c = await caches.open(CACHE);
     await c.addAll(CORE);
+    // Seul le français (langue de secours) est préchargé ; les autres langues déjà utilisées sur l'appareil sont reprises, à jour.
+    const used = new Set();
+    for (const k of await caches.keys()) if (k !== CACHE) for (const r of await (await caches.open(k)).keys()) if (/\/i18n\/\w+\.json$/.test(new URL(r.url).pathname)) used.add(r.url);
+    for (const u of used) try { await c.add(u); } catch (_) {}
     try { await c.add(new Request(CDN, { mode: "cors" })); } catch (_) {}
     self.skipWaiting();
   })());
