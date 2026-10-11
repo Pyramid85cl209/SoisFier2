@@ -1,0 +1,116 @@
+[
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 1,
+  "fr": "Félicitez l'effort plutôt que le résultat : « Tu as pris le temps de bien ranger » motive plus que « Tu es sage ».",
+  "xx": "Praise the effort rather than the result: “You took the time to tidy up properly” motivates more than “You're so good”."
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 2,
+  "fr": "Trois à cinq routines par moment de la journée suffisent. Au-delà, l'enfant décroche.",
+  "xx": "Three to five routines per time of day are enough. Any more and children lose interest."
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 3,
+  "fr": "Laissez votre enfant choisir l'ordre de ses routines quand c'est possible : il se sent acteur.",
+  "xx": "Let your child choose the order of their routines when possible: they feel in charge."
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 4,
+  "fr": "Préférez des récompenses partagées (une histoire de plus, choisir le film) aux objets : elles renforcent le lien.",
+  "xx": "Choose shared rewards (one more story, picking the film) over things: they strengthen your bond."
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 5,
+  "fr": "Une routine oubliée n'est pas un échec. Demain est une nouvelle journée, sans reproche.",
+  "xx": "A forgotten routine isn't a failure. Tomorrow is a new day, with no blame."
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 6,
+  "fr": "Montrez l'exemple : faire son lit en même temps que lui, c'est déjà la moitié du chemin.",
+  "xx": "Lead by example: making your bed at the same time as your child is already halfway there."
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 7,
+  "fr": "Décrivez ce que vous voyez au lieu de juger : « Je vois que tes chaussures sont rangées ! »",
+  "xx": "Describe what you see instead of judging: “I can see your shoes are put away!”"
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 8,
+  "fr": "Pour les plus petits, une routine = une seule action. « Se brosser les dents » plutôt que « Se préparer ».",
+  "xx": "For the youngest, one routine = one action. “Brush your teeth” rather than “Get ready”."
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 9,
+  "fr": "Changez une récompense quand elle ne fait plus envie. Demandez-lui ce qui lui ferait plaisir.",
+  "xx": "Change a reward when it's no longer exciting. Ask your child what they would enjoy."
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 10,
+  "fr": "Le minuteur transforme une corvée en défi. Utilisez-le pour les routines qui traînent.",
+  "xx": "The timer turns a chore into a challenge. Use it for routines that drag on."
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 11,
+  "fr": "Le soir, prenez deux minutes pour regarder la plante ensemble et parler de la journée.",
+  "xx": "In the evening, take two minutes to look at the plant together and talk about the day."
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 12,
+  "fr": "Gardez l'étoile cassée pour un écart immédiat, jamais pour une routine oubliée : la plante, elle, reste toujours un espace positif.",
+  "xx": "Keep broken stars for immediate slips, never for a forgotten routine: the plant always stays a positive space."
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 13,
+  "fr": "Ajoutez une routine bonus pour les petits défis : elle donne des étoiles sans pression.",
+  "xx": "Add a bonus routine for little challenges: it gives stars with no pressure."
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 14,
+  "fr": "Annoncez les transitions à l'avance : « Dans cinq minutes, c'est l'heure du bain. »",
+  "xx": "Announce transitions in advance: “In five minutes, it's bath time.”"
+ },
+ {
+  "type": "Astuce du jour (parents)",
+  "n": 15,
+  "fr": "Quand une routine est acquise depuis des semaines, retirez-la et célébrez-le : il a grandi !",
+  "xx": "When a routine has been mastered for weeks, remove it and celebrate: your child has grown!"
+ },
+ {
+  "type": "Notification",
+  "n": 1,
+  "fr": "Rappel enfant : titre — C'est l'heure de tes routines 🌱",
+  "xx": "Rappel enfant : titre — Time for your routines 🌱"
+ },
+ {
+  "type": "Notification",
+  "n": 2,
+  "fr": "Rappel enfant : texte — Encore {n} à faire. Ta plante t'attend !",
+  "xx": "Rappel enfant : texte — {n} still to do. Your plant is waiting for you!"
+ },
+ {
+  "type": "Notification",
+  "n": 3,
+  "fr": "Rappel parent : titre — Routines du jour 🌱",
+  "xx": "Rappel parent : titre — Today's routines 🌱"
+ },
+ {
+  "type": "Notification",
+  "n": 4,
+  "fr": "Rappel parent : à valider — ({n} à valider)",
+  "xx": "Rappel parent : à valider — ({n} to approve)"
+ }
+]
