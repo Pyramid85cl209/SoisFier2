@@ -1,16 +1,19 @@
 <!doctype html>
-<html lang="fr">
+<html lang="fr" dir="ltr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SoisFier – Les routines des enfants, une étoile à la fois</title>
-<meta name="description" content="SoisFier aide les familles à installer les routines du quotidien : l'enfant coche, un adulte valide, les étoiles font pousser une fleur et s'échangent contre des récompenses.">
+<meta name="description" content="SoisFier aide les familles à installer les routines du quotidien : l&#x27;enfant coche, un adulte valide, les étoiles font pousser une fleur et s&#x27;échangent contre des récompenses.">
 <meta name="robots" content="noindex, nofollow"><!-- vitrine provisoire : à retirer au passage au domaine -->
 <meta name="theme-color" content="#2E8B57">
 <link rel="icon" href="../icon-192.png">
+<link rel="alternate" hreflang="ar" href="ar/">
+<link rel="alternate" hreflang="en" href="en/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
+<!-- Généré par tools/vitrine/build.py : modifier les textes là-bas -->
 <style>
 :root{
   --sky:#E3F1FB; --paper:#FFFFFF; --leaf:#2E8B57; --leaf-d:#1F6B41; --leaf-l:#DDF2E5;
@@ -42,7 +45,6 @@ h1,h2,h3{font-family:var(--display);font-weight:600;line-height:1.15;margin:0}
   font:700 1rem var(--body);padding:12px 22px;text-decoration:none;box-shadow:0 2px 0 rgba(74,46,31,.12);white-space:nowrap}
 .btn.ghost{background:transparent;color:var(--leaf-d);box-shadow:inset 0 0 0 2px var(--leaf)}
 .btn.sm{padding:8px 14px;font-size:.92rem}
-.short{display:none}
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .btn:not(.ghost){color:#0F2219} }
 :root[data-theme="dark"] .btn:not(.ghost){color:#0F2219}
 
@@ -103,7 +105,11 @@ footer{padding:28px 0 calc(40px + env(safe-area-inset-bottom,0px));color:var(--m
   .shots figure{scroll-snap-align:center}
   section{padding:28px 0}
 }
-@media (max-width:480px){ .bar .pill,.bar .long{display:none} .bar .short{display:inline} }
+.bar .lang-menu{position:relative}.lang-menu>summary{list-style:none;cursor:pointer}.lang-menu>summary::-webkit-details-marker{display:none}
+.lang-pop{position:absolute;inset-inline-end:0;top:calc(100% + 6px);z-index:40;min-width:150px;display:flex;flex-direction:column;gap:2px;background:var(--paper);border-radius:14px;padding:6px;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.lang-pop a{padding:8px 12px;border-radius:10px;text-decoration:none;color:var(--earth)}.lang-pop a:hover{background:var(--leaf-l)}.lang-pop a[aria-current]{font-weight:700;color:var(--leaf-d)}
+[dir="rtl"] .hero .phone{transform:rotate(-2deg)}
+@media (max-width:560px){ .bar .pill,.bar .long{display:none} .bar .short{display:inline} .bar .wrap{gap:8px} }
 @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} .hero .phone{transform:none} }
 </style>
 </head>
@@ -111,8 +117,9 @@ footer{padding:28px 0 calc(40px + env(safe-area-inset-bottom,0px));color:var(--m
 <header class="bar">
   <div class="wrap">
     <a class="brand" href="./"><img src="../icon-192.png" alt="" width="32" height="32">SoisFier <span class="pill">Bêta</span></a>
+    <details class="lang-menu"><summary class="btn ghost sm" aria-label="Language / Langue / اللغة">🌐<span class="long">&nbsp;FR</span></summary><div class="lang-pop"><a href="ar/" hreflang="ar" lang="ar" dir="rtl">العربية</a><a href="en/" hreflang="en" lang="en">English</a><a href="./" hreflang="fr" lang="fr" aria-current="page">Français</a></div></details>
     <a class="btn ghost sm" href="../guide/" aria-label="Mode d'emploi"><span class="long">Mode d'emploi</span><span class="short" aria-hidden="true">?</span></a>
-    <a class="btn sm" href="../">Ouvrir<span class="long">&nbsp;l'application</span></a>
+    <a class="btn sm" href="../" aria-label="Ouvrir l'application"><span class="long">Ouvrir l'application</span><span class="short">Ouvrir</span></a>
   </div>
 </header>
 
@@ -127,7 +134,7 @@ footer{padding:28px 0 calc(40px + env(safe-area-inset-bottom,0px));color:var(--m
           <a class="btn ghost" href="#comment">Comment ça marche</a>
         </div>
       </div>
-      <img class="phone" src="img/jardin.jpg" alt="L'onglet Mon jardin de l'enfant, avec son parterre et son jardin de l'année" width="440" height="960">
+      <img class="phone" src="img/jardin.jpg" alt="L&#x27;onglet Mon jardin de l&#x27;enfant : la fleur en cours dans son pot, puis son parterre de saison" width="440" height="914">
     </div>
   </div>
 
@@ -142,9 +149,9 @@ footer{padding:28px 0 calc(40px + env(safe-area-inset-bottom,0px));color:var(--m
         <li><div class="ico" aria-hidden="true">🎁</div><h3>Il choisit sa récompense</h3><p>Les étoiles s'échangent contre des récompenses, petites ou grandes, à son rythme.</p></li>
       </ol>
       <div class="shots">
-        <figure><img class="phone" src="img/aujourdhui.jpg" alt="L'écran Aujourd'hui du parent, avec les routines du jour" width="440" height="960" loading="lazy" decoding="async"><figcaption>Les routines du jour</figcaption></figure>
-        <figure><img class="phone" src="img/validation.jpg" alt="Les routines cochées, validées par un parent" width="440" height="960" loading="lazy" decoding="async"><figcaption>Validées par un adulte</figcaption></figure>
-        <figure><img class="phone" src="img/recompense.jpg" alt="L'enfant vient d'échanger ses étoiles contre une récompense" width="320" height="692" loading="lazy" decoding="async"><figcaption>Une récompense gagnée</figcaption></figure>
+        <figure><img class="phone" src="img/aujourdhui.jpg" alt="L&#x27;écran Aujourd&#x27;hui du parent, avec les routines du jour" width="440" height="914" loading="lazy" decoding="async"><figcaption>Les routines du jour</figcaption></figure>
+        <figure><img class="phone" src="img/validation.jpg" alt="Les routines cochées, validées par un parent" width="440" height="914" loading="lazy" decoding="async"><figcaption>Validées par un adulte</figcaption></figure>
+        <figure><img class="phone" src="img/recompense.jpg" alt="L&#x27;enfant vient d&#x27;échanger ses étoiles contre une récompense" width="440" height="914" loading="lazy" decoding="async"><figcaption>Une récompense gagnée</figcaption></figure>
       </div>
     </div>
   </section>
@@ -188,5 +195,9 @@ footer{padding:28px 0 calc(40px + env(safe-area-inset-bottom,0px));color:var(--m
 </main>
 
 <footer>SoisFier · version bêta · captures sur données fictives</footer>
+<script>
+// Ferme le menu de langue au clic à l'extérieur
+document.addEventListener("click", e => { const m = document.querySelector(".lang-menu"); if (m && m.open && !m.contains(e.target)) m.open = false; });
+</script>
 </body>
 </html>
