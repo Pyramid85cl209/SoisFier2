@@ -1,5 +1,7 @@
 /* SoisFier – service worker : hors ligne + notifications */
-const CACHE = "soisfier-v19";
+const CACHE = "soisfier-v20";
+// Vitrine provisoire : jamais mise en cache, toujours servie en direct (retours des bêta-testeurs sur la dernière version).
+const VITRINE = new URL("vitrine/", self.registration.scope).pathname;
 const CORE = ["./", "./index.html", "./i18n/fr.json", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 const CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js";
 
@@ -28,6 +30,7 @@ self.addEventListener("fetch", e => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.hostname.endsWith("supabase.co")) return; // données : toujours en direct
+  if (url.origin === self.location.origin && url.pathname.startsWith(VITRINE)) return; // vitrine : hors service worker
   const cacheable = url.origin === self.location.origin || /(^|\.)(jsdelivr\.net|googleapis\.com|gstatic\.com)$/.test(url.hostname);
   if (!cacheable) return;
   e.respondWith((async () => {
