@@ -883,6 +883,70 @@
   "en": "English",
   "toReview": "Translation to review"
  },
+ "premium": {
+  "tag": "Premium",
+  "see": "Discover Premium",
+  "discover": "Discover Premium",
+  "later": "Later",
+  "free": "Your child's motivation loop (routines, stars, flower, rewards) stays free.",
+  "children": {
+   "emoji": "👨‍👩‍👧‍👦",
+   "title": "Follow all your children",
+   "text": "The free version follows one child. With Premium, add all your children, each with their own routines, flower and rewards."
+  },
+  "adults": {
+   "emoji": "👪",
+   "title": "The whole family can approve",
+   "text": "The free version brings two parents together. With Premium, invite as many adults as you like."
+  },
+  "helpers": {
+   "emoji": "👵",
+   "title": "Grandpa, Grandma, the nanny can approve too",
+   "text": "Helpers tick and approve routines and exchange rewards, without touching the settings. They are part of Premium."
+  },
+  "malus": {
+   "emoji": "💔",
+   "title": "Penalties are part of Premium",
+   "text": "Break a star when a rule isn't respected, with ready-made reasons and a weekly and monthly overview."
+  },
+  "oneoff": {
+   "emoji": "🎯",
+   "title": "Pack the suitcase, the big clean-up…",
+   "text": "One-off routines are added for one day or until a date, and can be reused with templates. They are part of Premium."
+  },
+  "garden": {
+   "emoji": "🏞️",
+   "title": {
+    "one": "{year} garden: {n} flower to discover",
+    "other": "{year} garden: {n} flowers to discover"
+   },
+   "text": "Every flower joins the school-year garden. With Premium, see this year's garden and those of past years. Nothing is lost: everything that has grown appears as soon as you switch to Premium."
+  },
+  "badges": {
+   "emoji": "🏅",
+   "title": {
+    "one": "{n} more badge with Premium",
+    "other": "{n} more badges with Premium"
+   },
+   "text": "Challenges, garden, savings, calm… Badges already earned are kept and appear as soon as you switch to Premium. Your child only sees the free badges."
+  },
+  "badgesGot": "{name}: {n} of {total} free badges",
+  "myPlan": "My plan",
+  "plan": {
+   "free": "Free",
+   "premium": "Premium",
+   "founder": "Founder"
+  },
+  "planHelp": {
+   "free": "One child, two parents, routines, stars, flower and rewards.",
+   "premium": "Every feature, for the whole family.",
+   "founder": "Premium for life. Thank you for supporting SoisFier from the start!"
+  },
+  "nudge": {
+   "flower": "A flower has bloomed! With Premium, keep the whole year's garden and unlock every badge.",
+   "year": "A new school year is starting. With Premium, see last year's garden again."
+  }
+ },
  "srv": {
   "device_unknown": "Device not recognised.",
   "already_validated_break": "Routine already approved: to take stars away, a parent can break a star.",
@@ -905,6 +969,12 @@
   "invite_parent_only": "Only a parent can invite.",
   "unknown_role": "Unknown rights.",
   "access_denied": "Access denied.",
-  "unknown": "Something went wrong."
+  "unknown": "Something went wrong.",
+  "premium_children": "The free version follows one child: Premium lets you add more.",
+  "premium_adults": "The free version brings two parents together: Premium lets you invite more.",
+  "premium_helpers": "Helpers are part of Premium.",
+  "premium_malus": "Penalties are part of Premium.",
+  "premium_oneoff": "One-off routines are part of Premium.",
+  "plan_readonly": "The plan can't be changed here."
  }
 }
