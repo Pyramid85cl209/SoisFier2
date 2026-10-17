@@ -1816,7 +1816,7 @@ A.holSaveDates = async el => {
 // Supprimer (pas encore commencée) ou arrêter (dernier jour : hier ; les étoiles gagnées restent)
 A.holStop = async el => {
   const p = S.holidays.find(x => x.id === el.dataset.id), td = todayISO(), started = p.start_day < td;
-  if (!await confirmSheet(started ? t("hol.stopTitle") : t("hol.delTitle"), started ? t("hol.stopText") : t("hol.delText"), started ? t("hol.stop") : t("btn.delete"), true)) return A.holReview(el);
+  if (!await confirmSheet(started ? t("hol.stopTitle") : t("hol.delTitle"), started ? t("hol.stopText", { date: fmtLong(addDays(td, -1)), name: esc(p.name) }) : t("hol.delText"), started ? t("hol.stop") : t("btn.delete"), true)) return A.holReview(el);
   const { error } = started ? await sb.from("holiday_periods").update({ end_day: addDays(td, -1) }).eq("id", p.id)
     : await sb.from("holiday_periods").delete().eq("id", p.id);
   if (error) throw error;

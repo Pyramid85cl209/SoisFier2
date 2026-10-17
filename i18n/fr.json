@@ -965,7 +965,7 @@
   "editDates": "Nom et dates",
   "stop": "Arrêter",
   "stopTitle": "Arrêter ces vacances ?",
-  "stopText": "Les routines habituelles reprennent dès aujourd'hui. Les étoiles déjà gagnées restent.",
+  "stopText": "« {name} » se termine : le dernier jour de vacances devient hier, {date}. Dès aujourd'hui, les routines habituelles reprennent sur tous les téléphones de la famille. Les étoiles déjà gagnées pendant les vacances restent.",
   "stopped": "Vacances arrêtées : les routines habituelles reprennent.",
   "delTitle": "Supprimer ces vacances ?",
   "delText": "Les réglages et les routines de vacances seront supprimés.",

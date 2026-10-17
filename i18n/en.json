@@ -974,7 +974,7 @@
   "editDates": "Name and dates",
   "stop": "Stop",
   "stopTitle": "Stop these holidays?",
-  "stopText": "The usual routines resume from today. Stars already earned are kept.",
+  "stopText": "\"{name}\" ends: the last holiday day becomes yesterday, {date}. From today, the usual routines resume on every family phone. Stars already earned during the holidays are kept.",
   "stopped": "Holidays stopped: the usual routines resume.",
   "delTitle": "Delete these holidays?",
   "delText": "The settings and holiday routines will be deleted.",
