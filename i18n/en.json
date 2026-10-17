@@ -945,7 +945,73 @@
   "nudge": {
    "flower": "A flower has bloomed! With Premium, keep the whole year's garden and unlock every badge.",
    "year": "A new school year is starting. With Premium, see last year's garden again."
+  },
+  "holidays": {
+   "emoji": "🏖️",
+   "title": "Holiday mode is part of Premium",
+   "text": "During the holidays, pause routines, change their status, days or stars, and add holiday routines, without stopping the flower."
   }
+ },
+ "hol": {
+  "title": "Holiday mode",
+  "help": "Adapt routines during the holidays without pausing everything: the flower keeps growing.",
+  "new": "Schedule holiday mode",
+  "newHelp": "Choose the child and the dates. You will then set each routine.",
+  "child": "Child",
+  "name": "Name",
+  "namePlaceholder": "Summer holidays",
+  "copyFrom": "Reuse the settings of",
+  "copyNone": "Start from scratch",
+  "next": "Continue",
+  "needName": "Give the holidays a name.",
+  "pastDates": "These holidays are already over.",
+  "review": "Review",
+  "state": {
+   "now": "in progress",
+   "next": "upcoming",
+   "past": "over"
+  },
+  "editDates": "Name and dates",
+  "stop": "Stop",
+  "stopTitle": "Stop these holidays?",
+  "stopText": "The usual routines resume from today. Stars already earned are kept.",
+  "stopped": "Holidays stopped: the usual routines resume.",
+  "delTitle": "Delete these holidays?",
+  "delText": "The settings and holiday routines will be deleted.",
+  "habitTitle": "Usual routines",
+  "habitHelp": "Tap a routine to pause it or change its status, days or stars during these holidays.",
+  "same": "As usual",
+  "off": "Paused",
+  "status": "During the holidays",
+  "starsN": {
+   "one": "{n} star",
+   "other": "{n} stars"
+  },
+  "usually": "Usually: {what}",
+  "editHelp": "This setting only applies to these holidays. The usual routine doesn't change.",
+  "reset": "As usual",
+  "vacTitle": "Holiday routines",
+  "vacNone": "None yet: add routines that only exist during these holidays.",
+  "newRoutine": "Holiday routine",
+  "vacRoutine": "holidays",
+  "tplHelp": "These routines will only exist during the holidays.",
+  "fromSibling": "Copy from a brother or sister",
+  "fromSiblingHelp": "Copies the chosen holiday routines. Settings for usual routines stay specific to each child.",
+  "routinesN": {
+   "one": "{n} routine",
+   "other": "{n} routines"
+  },
+  "copied": {
+   "one": "{n} item copied.",
+   "other": "{n} items copied."
+  },
+  "until": "until {date}",
+  "vacView": "You are seeing the holiday routines. Every change only applies to the current holidays.",
+  "habitView": "You are seeing the usual routines, which resume after the holidays.",
+  "seeHabitual": "See the usual routines",
+  "seeVac": "See the holiday version",
+  "adjusted": "adjusted for the holidays",
+  "onlyThese": "This change only applies to the current holidays."
  },
  "srv": {
   "device_unknown": "Device not recognised.",
@@ -975,6 +1041,10 @@
   "premium_helpers": "Helpers are part of Premium.",
   "premium_malus": "Penalties are part of Premium.",
   "premium_oneoff": "One-off routines are part of Premium.",
-  "plan_readonly": "The plan can't be changed here."
+  "plan_readonly": "The plan can't be changed here.",
+  "premium_holidays": "Holiday mode is part of Premium.",
+  "holiday_overlap": "These dates overlap other holidays for this child.",
+  "holiday_started": "These holidays have started: use \"Stop\".",
+  "holiday_out_of_range": "This routine only exists during the holidays."
  }
 }

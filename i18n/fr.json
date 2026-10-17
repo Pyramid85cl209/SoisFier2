@@ -936,7 +936,73 @@
   "nudge": {
    "flower": "Une fleur a éclos ! Avec le Premium, gardez le jardin de toute l'année et débloquez tous les badges.",
    "year": "Une nouvelle année scolaire commence. Avec le Premium, retrouvez le jardin de l'année passée."
+  },
+  "holidays": {
+   "emoji": "🏖️",
+   "title": "Le mode vacances fait partie du Premium",
+   "text": "Pendant les vacances, mettez des routines en pause, changez leur statut, leurs jours ou leurs étoiles, et ajoutez des routines de vacances, sans arrêter la fleur."
   }
+ },
+ "hol": {
+  "title": "Mode vacances",
+  "help": "Adaptez les routines pendant les vacances sans tout mettre en pause : la fleur continue de pousser.",
+  "new": "Programmer le mode vacances",
+  "newHelp": "Choisissez l'enfant et les dates. Vous réglerez ensuite chaque routine.",
+  "child": "Enfant",
+  "name": "Nom",
+  "namePlaceholder": "Vacances d'été",
+  "copyFrom": "Reprendre les réglages de",
+  "copyNone": "Partir de zéro",
+  "next": "Continuer",
+  "needName": "Donnez un nom aux vacances.",
+  "pastDates": "Ces vacances sont déjà terminées.",
+  "review": "Revoir",
+  "state": {
+   "now": "en cours",
+   "next": "à venir",
+   "past": "terminées"
+  },
+  "editDates": "Nom et dates",
+  "stop": "Arrêter",
+  "stopTitle": "Arrêter ces vacances ?",
+  "stopText": "Les routines habituelles reprennent dès aujourd'hui. Les étoiles déjà gagnées restent.",
+  "stopped": "Vacances arrêtées : les routines habituelles reprennent.",
+  "delTitle": "Supprimer ces vacances ?",
+  "delText": "Les réglages et les routines de vacances seront supprimés.",
+  "habitTitle": "Routines habituelles",
+  "habitHelp": "Touchez une routine pour la mettre en pause, changer son statut, ses jours ou ses étoiles pendant ces vacances.",
+  "same": "Comme d'habitude",
+  "off": "En pause",
+  "status": "Pendant les vacances",
+  "starsN": {
+   "one": "{n} étoile",
+   "other": "{n} étoiles"
+  },
+  "usually": "D'habitude : {what}",
+  "editHelp": "Ce réglage ne vaut que pour ces vacances. La routine habituelle ne change pas.",
+  "reset": "Comme d'habitude",
+  "vacTitle": "Routines de vacances",
+  "vacNone": "Aucune pour l'instant : ajoutez des routines qui n'existent que pendant ces vacances.",
+  "newRoutine": "Routine de vacances",
+  "vacRoutine": "vacances",
+  "tplHelp": "Ces routines n'existeront que pendant les vacances.",
+  "fromSibling": "Copier d'un frère ou d'une sœur",
+  "fromSiblingHelp": "Copie les routines de vacances choisies. Les réglages des routines habituelles restent propres à chaque enfant.",
+  "routinesN": {
+   "one": "{n} routine",
+   "other": "{n} routines"
+  },
+  "copied": {
+   "one": "{n} élément copié.",
+   "other": "{n} éléments copiés."
+  },
+  "until": "jusqu'au {date}",
+  "vacView": "Vous voyez les routines des vacances. Chaque modification ne s'applique qu'aux vacances en cours.",
+  "habitView": "Vous voyez les routines habituelles, qui reprendront après les vacances.",
+  "seeHabitual": "Voir les routines habituelles",
+  "seeVac": "Voir la version vacances",
+  "adjusted": "réglée pour les vacances",
+  "onlyThese": "Cette modification ne s'applique qu'aux vacances en cours."
  },
  "srv": {
   "device_unknown": "Appareil non reconnu.",
@@ -966,6 +1032,10 @@
   "premium_helpers": "Les proches font partie du Premium.",
   "premium_malus": "Les malus font partie du Premium.",
   "premium_oneoff": "Les routines exceptionnelles font partie du Premium.",
-  "plan_readonly": "L'offre ne peut pas être modifiée ici."
+  "plan_readonly": "L'offre ne peut pas être modifiée ici.",
+  "premium_holidays": "Le mode vacances fait partie du Premium.",
+  "holiday_overlap": "Ces dates chevauchent d'autres vacances de cet enfant.",
+  "holiday_started": "Ces vacances ont commencé : utilisez « Arrêter ».",
+  "holiday_out_of_range": "Cette routine n'existe que pendant les vacances."
  }
 }

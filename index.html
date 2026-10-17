@@ -291,6 +291,10 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
 .teaser{display:flex;gap:12px;align-items:center;width:100%;text-align:start;border:2px dashed var(--sun-l);background:none;border-radius:16px;padding:12px 14px;margin:12px 0 0;font:inherit;color:inherit;cursor:pointer}
 .teaser>span:first-child{font-size:28px}
 .teaser small{display:block;opacity:.75;font-weight:400}
+.banner.hol{background:#DDF1F7}
+.hol-pill{background:#DDF1F7;font-weight:700}
+.rt.off{opacity:.55}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .banner.hol, :root:not([data-theme="light"]) .hol-pill{background:#17394A} }
 .nudge .btns{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 
 /* Minuteur */
@@ -652,16 +656,29 @@ function dots14(gd) {
 const fmtLong = s => parseISO(s).toLocaleDateString(loc(), { weekday: "long", day: "numeric", month: "long" });
 
 /* ================= Calculs ================= */
+/* Mode vacances : périodes actives de l'enfant (parent : S.holidays ; enfant : S.cs.holidays), réglages par routine dans « ov » */
+const holidaysOf = childId => S.screen === "child" ? ((S.cs && S.cs.holidays) || []) : (S.holidays || []).filter(p => p.child_id === childId);
+const periodOn = (childId, day) => holidaysOf(childId).find(p => p.start_day <= day && day <= p.end_day) || null;
+const isHolidayR = r => !!r.holiday_period_id;
+// Routine telle qu'elle s'applique ce jour-là (null si elle n'est pas due du tout : en pause, ou routine de vacances hors période)
+function effective(r, day) {
+  if (r.kind === "oneoff") return r;
+  const p = periodOn(r.child_id, day);
+  if (isHolidayR(r)) return p && p.id === r.holiday_period_id ? r : null;
+  const o = p && p.ov && p.ov[r.id]; if (!o) return r;
+  if (o.status === "off") return null;
+  return { ...r, is_bonus: o.status ? o.status === "bonus" : r.is_bonus, days: o.days || r.days, stars: o.stars || r.stars, adjusted: true };
+}
 function dueOn(routines, childId, day, comps) {
   const dw = dowOf(day);
-  return routines.filter(r => {
-    if (r.child_id !== childId || r.active === false) return false;
+  return routines.filter(r => r.child_id === childId && r.active !== false).map(r => {
     if (r.kind === "oneoff") {
-      if (!(r.start_day <= day && day <= r.end_day)) return false;
-      return !(comps || []).some(c => c.routine_id === r.id && c.day !== day);   // déjà faite un autre jour
+      if (!(r.start_day <= day && day <= r.end_day)) return null;
+      return (comps || []).some(c => c.routine_id === r.id && c.day !== day) ? null : r;   // déjà faite un autre jour
     }
-    return (r.days || []).includes(dw) && String(r.created_at || "").slice(0, 10) <= day;
-  });
+    const e = effective(r, day);
+    return e && (e.days || []).includes(dw) && String(r.created_at || "").slice(0, 10) <= day ? e : null;
+  }).filter(Boolean);
 }
 const isOneoff = r => r.kind === "oneoff";
 const oneoffNote = r => r.start_day === r.end_day ? t("oneoff.note") : t("oneoff.noteBefore", { date: fmtLong(r.end_day) });
@@ -805,7 +822,7 @@ const TPL_W = [
 ];
 const TIER_RANK = { coup: 0, petit: 1, moment: 2, sortie: 3, grand: 4, event: 3 };
 function rhythmOf(childId) {
-  const rs = S.routines.filter(r => r.child_id === childId && !r.is_bonus); let tot = 0;
+  const rs = S.routines.filter(r => r.child_id === childId && !r.is_bonus && !isHolidayR(r)); let tot = 0;
   for (let d = 1; d <= 7; d++) tot += rs.filter(r => (r.days || []).includes(d)).reduce((a, r) => a + r.stars, 0);
   const v = tot / 7 * .75; return v > 0 ? v : 5;
 }
@@ -1021,7 +1038,7 @@ function pToday() {
     const n = gardenNow(S.gardens[c.id]);
     return `<section class="kid" style="--c:${esc(c.color)}">
       <div class="kid-head"><button class="kid-plant" data-act="showGarden" data-id="${c.id}" aria-label="${t("garden.see", { name: esc(c.name) })}" style="border:0;background:none;padding:0">${n ? stageSVG(n.stage, n.species, c.color) : plantSVG(0, c.color)}</button>
-        <div><h2>${esc(c.emoji)} ${esc(c.name)}</h2><p class="meta"><span>⭐ ${t("parent.toSpend", { n: v.balance })}</span>${!n ? "" : n.waiting ? `<span>🌱 ${t("garden.firstFrom", { date: fmtLong(n.start) })}</span>` : `<span>🌱 ${t("garden.dayOf", { d: n.dayIdx, len: n.len })}${t("sep")}${t("garden.goodDays", { n: n.good })}</span>`}${v.current > 1 ? `<span>🔥 ${t("parent.inARow", { n: v.current })}</span>` : ""}</p></div>
+        <div><h2>${esc(c.emoji)} ${esc(c.name)}</h2><p class="meta"><span>⭐ ${t("parent.toSpend", { n: v.balance })}</span>${!n ? "" : n.waiting ? `<span>🌱 ${t("garden.firstFrom", { date: fmtLong(n.start) })}</span>` : `<span>🌱 ${t("garden.dayOf", { d: n.dayIdx, len: n.len })}${t("sep")}${t("garden.goodDays", { n: n.good })}</span>`}${v.current > 1 ? `<span>🔥 ${t("parent.inARow", { n: v.current })}</span>` : ""}${periodOn(c.id, day) ? `<span>🏖️ ${esc(periodOn(c.id, day).name)}</span>` : ""}</p></div>
         <div class="ring" style="--p:${main.length ? Math.round(nd / main.length * 100) : 0}" aria-label="${t("parent.doneOf", { n: nd, total: main.length })}"><span>${fmtNum(nd)}/${fmtNum(main.length)}</span></div></div>
       ${due.length ? `<ul class="rlist">${[...due.filter(isOneoff), ...main.filter(r => !isOneoff(r)), ...bonus.filter(r => !isOneoff(r))].map(r => rowP(c, r, day, v)).join("")}</ul>`
         : `<p class="empty">${t("parent.nothing")}${isParent() ? ` <button class="link" data-act="tab" data-tab="routines" data-child="${c.id}">${t("parent.addRoutines")}</button>` : ""}</p>`}
@@ -1031,24 +1048,32 @@ function pToday() {
   return nav + (day === td ? pendingBlock() + nudge() : "") + tip + blocks;
 }
 function pRoutines() {
-  const c = curChild(), t0 = todayISO(); const list = S.routines.filter(r => r.child_id === c.id && !isOneoff(r));
+  const c = curChild(), t0 = todayISO(), hp = periodOn(c.id, t0), vac = !!hp && !S.showHabitual;
+  if (!dlg.open) { S.hctx = vac ? hp.id : null; S.reviewing = null; }
+  const habit = S.routines.filter(r => r.child_id === c.id && !isOneoff(r) && !isHolidayR(r));
+  // Pendant des vacances : routines habituelles telles qu'elles s'appliquent, puis routines de vacances
+  const list = vac ? [...habit.map(r => ({ ...(effective(r, t0) || r), off: !effective(r, t0), habit: true })), ...S.routines.filter(r => r.holiday_period_id === hp.id).map(r => ({ ...r, hol: true }))] : habit;
+  const banner = hp ? `<div class="banner hol"><p>🏖️ <b>${esc(hp.name)}</b>${t("sep")}${t("hol.until", { date: fmtLong(hp.end_day) })}</p><p class="small">${vac ? t("hol.vacView") : t("hol.habitView")}</p>
+    <button class="btn sm ghost" data-act="toggleHabitual">${vac ? t("hol.seeHabitual") : t("hol.seeVac")}</button></div>` : "";
   const oneoffs = S.routines.filter(r => r.child_id === c.id && isOneoff(r) && r.end_day >= t0).sort((a, b) => a.start_day < b.start_day ? -1 : 1);
   const extra = `<h3 class="grp">⭐ ${t("oneoff.current")}</h3>${oneoffs.length ? `<ul class="hist">${oneoffs.map(r => `<li><span>${esc(r.emoji)} ${esc(r.title)}</span><span class="muted">${r.start_day === r.end_day ? fmtDate(r.start_day) : t("oneoff.beforeShort", { date: fmtDate(r.end_day) })}${t("sep")}${r.is_bonus ? t("routine.bonus") : t("routine.mandatory")}</span><button class="link" data-act="delOneoff" data-id="${r.id}">${t("btn.delete")}</button></li>`).join("")}</ul>` : `<p class="muted">${t("common.none")}</p>`}
     <div class="actions"><button class="btn ghost" data-act="newOneoff" data-child="${c.id}">+ ${t("oneoff.btn")}${ptag()}</button><button class="btn ghost" data-act="manageOneoffTpl">${t("oneoff.manageTpl")}${ptag()}</button></div>`;
   const groups = MOMENTS().map(([k, l, , e]) => {
     const rs = list.filter(r => r.moment === k); if (!rs.length) return "";
     return `<h3 class="grp">${e} ${l}</h3><ul class="rlist">${rs.map(r => {
-      const parts = [daysLabel(r.days)];
-      if (r.place) parts.push(esc(r.place));
-      if (r.timer_minutes) parts.push("⏱ " + t("routine.minutes", { n: r.timer_minutes }));
-      if (r.is_bonus) parts.push(t("routine.bonus"));
-      return `<li><button class="rt" data-act="editRoutine" data-id="${r.id}">
+      const parts = r.off ? [t("hol.off")] : [daysLabel(r.days)];
+      if (!r.off && r.place) parts.push(esc(r.place));
+      if (!r.off && r.timer_minutes) parts.push("⏱ " + t("routine.minutes", { n: r.timer_minutes }));
+      if (!r.off && r.is_bonus) parts.push(t("routine.bonus"));
+      if (r.adjusted) parts.push(t("hol.adjusted"));
+      if (r.hol) parts.unshift("🏖️ " + t("hol.vacRoutine"));
+      return `<li><button class="rt ${r.off ? "off" : ""}" ${r.habit ? `data-act="holEdit" data-p="${hp.id}"` : `data-act="editRoutine"`} data-id="${r.id}">
       <span class="rt-emo" aria-hidden="true">${esc(r.emoji)}</span>
       <span class="rt-txt"><b>${esc(r.title)}</b><small>${parts.join(t("sep"))}</small></span>
       <span class="rt-stars">${fmtNum(r.stars)} ⭐</span></button></li>`; }).join("")}</ul>`;
   }).join("");
-  return chips() + `<div class="actions"><button class="btn" data-act="routineTemplates">${t("routine.chooseTpl")}</button><button class="btn ghost" data-act="newRoutine">${t("routine.create")}</button></div>`
-    + (groups || `<p class="empty">${t("routine.none", { name: esc(c.name) })}</p>`) + extra;
+  return chips() + banner + `<div class="actions"><button class="btn" data-act="routineTemplates">${t("routine.chooseTpl")}</button><button class="btn ghost" data-act="newRoutine">${vac ? t("hol.newRoutine") : t("routine.create")}</button></div>`
+    + (groups || `<p class="empty">${t("routine.none", { name: esc(c.name) })}</p>`) + (vac ? "" : extra);
 }
 function pRewards() {
   const c = curChild(), v = viewFor(c), r = rhythmOf(c.id), td = todayISO();
@@ -1090,6 +1115,7 @@ function pFamily() {
     ${P ? `<section class="sec"><h2>${t("pause.title")}</h2><p class="muted">${t("pause.help")}</p>
       ${S.pauses.length ? `<ul class="hist">${S.pauses.map(p => { const k = S.children.find(c => c.id === p.child_id); return `<li><span>${esc(k ? k.emoji + " " + k.name : "")}${t("sep")}${esc(p.reason || t("pause.default"))}</span><span class="muted">${t("pause.range", { from: fmtDate(p.start_day), to: fmtDate(p.end_day) })}</span><button class="link" data-act="delPause" data-id="${p.id}">${t("btn.delete")}</button></li>`; }).join("")}</ul>` : ""}
       <div class="actions"><button class="btn ghost" data-act="newPause">${t("pause.new")}</button></div></section>
+    ${holidaySection()}
     <section class="sec"><h2>${t("validate.section")}</h2><p class="muted">${t("validate.sectionHelp")}</p>
       <label class="check"><input type="checkbox" data-act="toggleAuto" ${S.autoValidate ? "checked" : ""}> ${t("validate.autoLabel")}</label></section>` : ""}
     <section class="sec"><h2>${t("push.title")}</h2><p class="muted">${t("push.parentHelp")}</p>
@@ -1170,6 +1196,7 @@ function cToday(v, routines) {
       <div class="hero-txt">${gn && gn.waiting ? `<h1>${t("kid.potWaitsSeed")}</h1><p>${t("kid.firstFlowerStarts", { date: fmtLong(gn.start) })}</p>` : gn ? `<h1>${STAGE_NAME[gn.stage]}</h1>${dots14(v.garden)}
       <p>${gn.pausedToday ? t("kid.paused") : t("kid.dayOfOpens", { d: gn.dayIdx, len: gn.len, date: fmtLong(gn.end) })}</p>` : `<h1>${t("kid.potWaits")}</h1>`}
       ${v.pendingStars ? `<p class="wait-note">⏳ ${t("kid.pendingStars", { n: v.pendingStars })}</p>` : ""}</div></section>
+    ${periodOn(v.child.id, td) ? `<p class="center"><span class="pill hol-pill">🏖️ ${esc(periodOn(v.child.id, td).name)}</span></p>` : ""}
     <p class="today-count">${main.length ? (nd === main.length ? t("kid.allDone") : t("kid.doneOf", { n: nd, total: main.length })) : t("kid.noRoutine")}</p>
     ${groups}${bonus.filter(r => !isOneoff(r)).length ? `<h3 class="grp">💪 ${t("kid.bonus")}</h3><ul class="kcards">${bonus.filter(r => !isOneoff(r)).map(card).join("")}</ul>` : ""}`;
 }
@@ -1245,13 +1272,16 @@ async function refreshParent() {
     sb.from("child_badges").select("child_id,badge_key").eq("family_id", fid),
     sb.from("pauses").select("*").eq("family_id", fid).gte("end_day", todayISO()).order("start_day"),
     sb.rpc("family_gardens", { p_family: fid }),
-    sb.from("oneoff_templates").select("*").eq("family_id", fid).order("use_count", { ascending: false }).order("last_used", { ascending: false })
+    sb.from("oneoff_templates").select("*").eq("family_id", fid).order("use_count", { ascending: false }).order("last_used", { ascending: false }),
+    sb.from("holiday_periods").select("*").eq("family_id", fid).eq("active", true).order("start_day"),
+    sb.from("holiday_overrides").select("*").eq("family_id", fid)
   ]);
-  for (const q of qs) if (q.error) throw q.error;
-  const [c, r, w, x, z, s, m, d, f, pe, pv, b, pz, gdn, ot] = qs.map(q => q.data);
+  qs.forEach((q, i) => { if (q.error && i < 15) throw q.error; });   // Mode vacances (2 dernières) : facultatif si la base n'est pas encore à jour
+  const [c, r, w, x, z, s, m, d, f, pe, pv, b, pz, gdn, ot, hp, ho] = qs.map(q => q.error ? null : q.data);
+  const holidays = (hp || []).map(p => ({ ...p, ov: Object.fromEntries((ho || []).filter(o => o.period_id === p.id).map(o => [o.routine_id, o])) }));
   const badges = {}; b.forEach(o => (badges[o.child_id] = badges[o.child_id] || []).push(o.badge_key));
   Object.assign(S, { children: c, routines: r, rewards: w, completions: x, redemptions: z, stats: Object.fromEntries(s.map(o => [o.child_id, o])),
-    members: m, devices: d, autoValidate: f[0] ? f[0].auto_validate : true, penalties: pe, pevents: pv, badges, pauses: pz, gardens: gdn || {}, oneoffTpl: ot || [], offline: false });
+    members: m, devices: d, autoValidate: f[0] ? f[0].auto_validate : true, penalties: pe, pevents: pv, badges, pauses: pz, gardens: gdn || {}, oneoffTpl: ot || [], holidays, offline: false });
   if (f[0]) { S.family.name = f[0].name; S.plan = f[0].plan || "founder"; setWeek(f[0]); S.family.week = { ...WEEK }; }
   const meRow = m.find(x => x.user_id === S.session?.user.id); if (meRow) S.me = { ...S.me, ...meRow };
   if (!isParent() && S.tab === "routines") S.tab = "today";
@@ -1261,7 +1291,7 @@ async function refreshParent() {
   S.children.forEach(k => newBadges(viewFor(k)).forEach(key => { rows.push({ child_id: k.id, family_id: fid, badge_key: key }); (S.badges[k.id] = S.badges[k.id] || []).push(key); }));
   if (rows.length) sb.from("child_badges").upsert(rows, { onConflict: "child_id,badge_key", ignoreDuplicates: true }).then(() => {}, () => {});
   store.set("parentCache", { family: S.family, me: S.me, children: c, routines: r, rewards: w, completions: x, redemptions: z, stats: S.stats, members: m, devices: d,
-    autoValidate: S.autoValidate, penalties: pe, pevents: pv, badges: S.badges, pauses: pz, gardens: S.gardens, week: { ...WEEK }, plan: S.plan });
+    autoValidate: S.autoValidate, penalties: pe, pevents: pv, badges: S.badges, pauses: pz, gardens: S.gardens, week: { ...WEEK }, plan: S.plan, holidays });
 }
 async function loadTip() {
   try {
@@ -1290,6 +1320,7 @@ async function loadChild() {
     if (error) throw error;
     S.cs = data; S.offline = false; setWeek(data.family);
     S.cs.badges = S.cs.badges || []; S.cs.penalties = S.cs.penalties || [];
+    S.cs.holidays = (S.cs.holidays || []).map(p => ({ ...p, child_id: S.cs.child.id, ov: Object.fromEntries((p.overrides || []).map(o => [o.routine_id, o])) }));
     applyQueueToState();
     const last = store.get("lastEarned"), e = S.cs.stats.earned || 0;
     let gain = null;
@@ -1390,7 +1421,7 @@ const readTimes = () => [$("#t1")?.value, $("#t2")?.value].filter(v => /^\d{2}:\
 function printPlanning(ids) {
   const td = todayISO(), first = addDays(td, -((dowOf(td) - WEEK.start + 7) % 7)), order = weekOrder();
   const pages = S.children.filter(c => ids.includes(c.id)).map(c => {
-    const rs = S.routines.filter(r => r.child_id === c.id && !isOneoff(r));
+    const rs = S.routines.filter(r => r.child_id === c.id && !isOneoff(r) && !isHolidayR(r));
     const rows = MOMENTS().map(([k, l, , e]) => {
       const list = rs.filter(r => r.moment === k); if (!list.length) return "";
       return `<tr class="grp-row"><td colspan="8">${e} ${l}</td></tr>` + list.map(r => `<tr><td class="n">${esc(r.emoji)} ${esc(r.title)} (${fmtNum(r.stars)} ⭐)${r.is_bonus ? t("sep") + t("routine.bonus") : ""}</td>${order.map(d => (r.days || []).includes(d) ? `<td><span class="circ"></span></td>` : `<td class="off"></td>`).join("")}</tr>`).join("");
@@ -1499,7 +1530,7 @@ document.addEventListener("click", async e => {
 A.reload = () => location.reload();
 A.upsell = el => upsell(el.dataset.key, el.dataset.n ? { n: +el.dataset.n, year: el.dataset.y } : {});
 A.dismissNudge = el => { store.set("nudge:" + el.dataset.k, Date.now()); store.set("nudgeAt", Date.now()); if (el.tagName === "A") location.href = el.getAttribute("href"); else render(); };
-A.tab = el => { S.tab = el.dataset.tab; if (el.dataset.child) S.currentChild = el.dataset.child; if (S.tab === "today") S.day = todayISO(); render(); scrollTo(0, 0); };
+A.tab = el => { S.tab = el.dataset.tab; S.reviewing = null; if (el.dataset.child) S.currentChild = el.dataset.child; if (S.tab === "today") S.day = todayISO(); render(); scrollTo(0, 0); };
 A.ctab = el => { S.ctab = el.dataset.tab; render(); scrollTo(0, 0); };
 A.pickChild = el => { S.currentChild = el.dataset.id; render(); };
 A.dayPrev = () => { S.day = addDays(S.day, -1); render(); };
@@ -1660,6 +1691,150 @@ A.delPause = async el => {
   const { error } = await sb.from("pauses").delete().eq("id", el.dataset.id); if (error) throw error;
   await reloadParent(t("pause.deleted"));
 };
+/* ================= Mode vacances (Premium) =================
+   Une période par enfant. Pendant la période, chaque routine habituelle suit son réglage (holiday_overrides),
+   et les routines de vacances (routines.holiday_period_id) s'ajoutent. Le serveur applique les mêmes règles (private.routine_rules). */
+const holLabel = p => t("pause.range", { from: fmtDate(p.start_day), to: fmtDate(p.end_day) });
+const holState = p => { const td = todayISO(); return p.end_day < td ? "past" : p.start_day > td ? "next" : "now"; };
+function holidaySection() {
+  const td = todayISO(), list = (S.holidays || []).filter(p => p.end_day >= td);
+  return `<section class="sec"><h2>🏖️ ${t("hol.title")}${ptag()}</h2><p class="muted">${t("hol.help")}</p>
+    ${list.length ? `<ul class="hist">${list.map(p => { const k = S.children.find(c => c.id === p.child_id) || { emoji: "", name: "" };
+      return `<li><span>${esc(k.emoji + " " + k.name)}${t("sep")}<b>${esc(p.name)}</b></span><span class="muted">${holLabel(p)}${t("sep")}${t("hol.state." + holState(p))}</span><button class="link" data-act="holReview" data-id="${p.id}">${t("hol.review")}</button></li>`; }).join("")}</ul>` : ""}
+    <div class="actions"><button class="btn ghost" data-act="holNew">${t("hol.new")}${ptag()}</button></div></section>`;
+}
+// Après une modification faite pendant des vacances : alerte, puis retour à la revue si elle était ouverte
+async function afterHolidayEdit(msg, holiday) {
+  const back = S.reviewing; await refreshParent();
+  if (back && (S.holidays || []).some(p => p.id === back)) { A.holReview({ dataset: { id: back } }); render(); }
+  else { closeSheet(); render(); }
+  toast(holiday ? t("hol.onlyThese") : msg);
+}
+A.toggleHabitual = () => { S.showHabitual = !S.showHabitual; render(); };
+// Création : enfant, nom, dates, reprise éventuelle d'une période précédente du même enfant
+A.holNew = el => {
+  if (needPremium("holidays")) return;
+  const pick = el && el.dataset.child, keep = id => pick && dlg.open ? $(id)?.value : null;   // changement d'enfant : on garde la saisie
+  const f = S.hform = { child: pick || curChild().id, name: keep("#h-name") ?? "", from: keep("#h-from") || todayISO(), to: keep("#h-to") || addDays(todayISO(), 13) };
+  const prev = (S.holidays || []).filter(p => p.child_id === f.child).sort((a, b) => a.start_day < b.start_day ? 1 : -1);
+  openSheet(`<h2>🏖️ ${t("hol.new")}</h2><p class="muted">${t("hol.newHelp")}</p>
+    <div class="f"><span>${t("hol.child")}</span><div class="seg" role="radiogroup">${S.children.map(c => `<button type="button" role="radio" aria-checked="${c.id === f.child}" class="${c.id === f.child ? "on" : ""}" data-act="holNew" data-child="${c.id}">${esc(c.emoji)} ${esc(c.name)}</button>`).join("")}</div></div>
+    <label class="f">${t("hol.name")}<input id="h-name" maxlength="40" value="${esc(f.name)}" placeholder="${t("hol.namePlaceholder")}"></label>
+    <div class="f two"><label>${t("pause.from")}<input type="date" id="h-from" value="${f.from}"></label><label>${t("pause.to")}<input type="date" id="h-to" value="${f.to}"></label></div>
+    ${prev.length ? `<label class="f">${t("hol.copyFrom")}<select id="h-copy"><option value="">${t("hol.copyNone")}</option>${prev.map(p => `<option value="${p.id}">${esc(p.name)} (${holLabel(p)})</option>`).join("")}</select></label>` : ""}
+    <div class="sheet-actions"><button class="btn" data-act="holCreate">${t("hol.next")}</button></div>`);
+};
+A.holCreate = async () => {
+  const f = S.hform, name = $("#h-name").value.trim(), a = $("#h-from").value, b = $("#h-to").value, copy = $("#h-copy") ? $("#h-copy").value : "";
+  if (!name) return toast(t("hol.needName"), true);
+  if (!a || !b || b < a) return toast(t("pause.badDates"), true);
+  if (b < todayISO()) return toast(t("hol.pastDates"), true);
+  const { data, error } = await sb.from("holiday_periods").insert({ family_id: S.family.id, child_id: f.child, name, start_day: a, end_day: b }).select().single();
+  if (error) throw error;
+  if (copy) await holCopy(copy, data.id, f.child, true);
+  S.hform = null; S.currentChild = f.child; await refreshParent(); A.holReview({ dataset: { id: data.id } }); render();
+};
+// Copie : réglages des routines habituelles (même enfant seulement) et routines de vacances
+async function holCopy(fromId, toId, childId, withSettings) {
+  const src = (S.holidays || []).find(p => p.id === fromId); if (!src) return;
+  const alive = new Set(S.routines.filter(r => r.child_id === childId && !isHolidayR(r) && !isOneoff(r)).map(r => r.id));
+  const ov = withSettings ? Object.values(src.ov || {}).filter(o => alive.has(o.routine_id))
+    .map(o => ({ period_id: toId, routine_id: o.routine_id, child_id: childId, family_id: S.family.id, status: o.status, days: o.days, stars: o.stars })) : [];
+  if (ov.length) { const { error } = await sb.from("holiday_overrides").upsert(ov); if (error) throw error; }
+  const base = S.routines.filter(r => r.child_id === childId).length;
+  const have = new Set(S.routines.filter(r => r.holiday_period_id === toId).map(r => r.title.toLowerCase()));
+  const rows = S.routines.filter(r => r.holiday_period_id === fromId && !have.has(r.title.toLowerCase())).map((r, i) => ({ family_id: S.family.id, child_id: childId, holiday_period_id: toId,
+    title: r.title, emoji: r.emoji, moment: r.moment, place: r.place, stars: r.stars, days: r.days, is_bonus: r.is_bonus, timer_minutes: r.timer_minutes, position: base + i }));
+  if (rows.length) { const { error } = await sb.from("routines").insert(rows); if (error) throw error; }
+  return ov.length + rows.length;
+}
+// Revue : chaque routine habituelle (comme d'habitude par défaut), puis les routines de vacances
+A.holReview = el => {
+  const p = (S.holidays || []).find(x => x.id === el.dataset.id); if (!p) return closeSheet();
+  const c = S.children.find(k => k.id === p.child_id); S.currentChild = c.id; S.hctx = p.id; S.reviewing = p.id;
+  const habit = S.routines.filter(r => r.child_id === c.id && !isOneoff(r) && !isHolidayR(r)).sort((a, b) => MOMENTS_K.findIndex(m => m[0] === a.moment) - MOMENTS_K.findIndex(m => m[0] === b.moment));
+  const vac = S.routines.filter(r => r.holiday_period_id === p.id);
+  const sibs = (S.holidays || []).filter(x => x.child_id !== c.id && S.routines.some(r => r.holiday_period_id === x.id));
+  const setting = r => { const o = p.ov[r.id]; if (!o) return t("hol.same");
+    if (o.status === "off") return "⏸ " + t("hol.off");
+    const parts = [o.status ? t(o.status === "bonus" ? "routine.bonus" : "routine.mandatory") : null, o.days ? daysLabel(o.days) : null, o.stars ? t("hol.starsN", { n: o.stars }) : null].filter(Boolean);
+    return "✏️ " + parts.join(t("sep")); };
+  const started = holState(p) !== "next";
+  openSheet(`<h2>🏖️ ${esc(p.name)}</h2><p class="muted">${esc(c.emoji + " " + c.name)}${t("sep")}${holLabel(p)}${t("sep")}${t("hol.state." + holState(p))}</p>
+    <div class="actions" style="margin-top:0"><button class="btn sm ghost" data-act="holDates" data-id="${p.id}">${t("hol.editDates")}</button><button class="btn sm ghost danger" data-act="holStop" data-id="${p.id}">${started ? t("hol.stop") : t("btn.delete")}</button></div>
+    <h3 class="grp">${t("hol.habitTitle")}</h3><p class="muted small">${t("hol.habitHelp")}</p>
+    ${habit.length ? `<ul class="tpl">${habit.map(r => `<li><button class="pen" data-act="holEdit" data-p="${p.id}" data-id="${r.id}"><span>${esc(r.emoji)} ${esc(r.title)}</span><span class="muted">${setting(r)}</span></button></li>`).join("")}</ul>` : `<p class="empty">${t("common.none")}</p>`}
+    <h3 class="grp">🏖️ ${t("hol.vacTitle")}</h3>
+    ${vac.length ? `<ul class="tpl">${vac.map(r => `<li><button class="pen" data-act="editRoutine" data-id="${r.id}"><span>${esc(r.emoji)} ${esc(r.title)}</span><span class="muted">${daysLabel(r.days)}${t("sep")}${fmtNum(r.stars)} ⭐${r.is_bonus ? t("sep") + t("routine.bonus") : ""}</span></button></li>`).join("")}</ul>` : `<p class="muted">${t("hol.vacNone")}</p>`}
+    <div class="actions"><button class="btn ghost sm" data-act="newRoutine">+ ${t("hol.newRoutine")}</button><button class="btn ghost sm" data-act="routineTemplates">${t("routine.chooseTpl")}</button>${sibs.length ? `<button class="btn ghost sm" data-act="holSib" data-id="${p.id}">${t("hol.fromSibling")}</button>` : ""}</div>
+    <div class="sheet-actions"><button class="btn" data-act="holClose">${t("btn.done")}</button></div>`);
+};
+A.holClose = () => { S.reviewing = null; S.hctx = null; closeSheet(); render(); };
+// Réglage d'une routine habituelle pour la période
+A.holEdit = el => {
+  const p = S.holidays.find(x => x.id === el.dataset.p), r = S.routines.find(x => x.id === el.dataset.id), o = p.ov[r.id] || {};
+  S.form = { st: o.status || "", days: [...(o.days || r.days)], p: p.id, r: r.id };
+  const cap = x => x.charAt(0).toLocaleUpperCase(loc()) + x.slice(1);
+  const opts = [["", t("hol.same")], ["required", cap(t("routine.mandatory"))], ["bonus", cap(t("routine.bonus"))], ["off", t("hol.off")]];
+  openSheet(`<h2>${esc(r.emoji)} ${esc(r.title)}</h2><p class="muted">🏖️ ${esc(p.name)}${t("sep")}${t("hol.usually", { what: [daysLabel(r.days), t("hol.starsN", { n: r.stars }), r.is_bonus ? t("routine.bonus") : t("routine.mandatory")].join(t("sep")) })}</p>
+    <div class="f"><span>${t("hol.status")}</span><div class="seg" role="radiogroup">${opts.map(([k, l]) => `<button type="button" role="radio" aria-checked="${S.form.st === k}" class="${S.form.st === k ? "on" : ""}" data-act="seg" data-group="st" data-v="${k}">${l}</button>`).join("")}</div></div>
+    <div class="f"><span>${t("form.days")}</span><div class="days">${weekOrder().map(d => `<button type="button" class="day ${S.form.days.includes(d) ? "on" : ""}" data-act="toggleDay" data-v="${d}" aria-pressed="${S.form.days.includes(d)}" aria-label="${dayName(d)}">${DAYS()[d - 1]}</button>`).join("")}</div>
+      <div class="presets"><button type="button" class="link" data-act="daysPreset" data-v="all">${t("days.all")}</button>${WEEK.weekend.length ? `<button type="button" class="link" data-act="daysPreset" data-v="week">${t("days.week")}</button><button type="button" class="link" data-act="daysPreset" data-v="we">${t("days.weekend")}</button>` : ""}</div></div>
+    <label class="f">${t("form.stars")}<select id="h-stars">${[1, 2, 3, 4, 5].map(n => `<option value="${n}" ${n === (o.stars || r.stars) ? "selected" : ""}>${fmtNum(n)}</option>`).join("")}</select></label>
+    <p class="muted small">${t("hol.editHelp")}</p>
+    <div class="sheet-actions">${p.ov[r.id] ? `<button class="btn ghost" data-act="holReset">${t("hol.reset")}</button>` : ""}<button class="btn" data-act="holSave">${t("btn.save")}</button></div>`);
+};
+A.holSave = async () => {
+  const f = S.form, p = S.holidays.find(x => x.id === f.p), r = S.routines.find(x => x.id === f.r);
+  if (!f.days.length) return toast(t("routine.needDay"), true);
+  const days = [...f.days].sort((a, b) => a - b), stars = +$("#h-stars").value;
+  const row = { period_id: p.id, routine_id: r.id, child_id: r.child_id, family_id: S.family.id, status: f.st || null,
+    days: days.join() === [...r.days].sort((a, b) => a - b).join() ? null : days, stars: stars === r.stars ? null : stars };
+  const { error } = (row.status || row.days || row.stars) ? await sb.from("holiday_overrides").upsert(row)
+    : await sb.from("holiday_overrides").delete().eq("period_id", p.id).eq("routine_id", r.id);
+  if (error) throw error;
+  S.reviewing = S.reviewing || null; await afterHolidayEdit(t("common.savedM"), true);
+};
+A.holReset = async () => {
+  const f = S.form; const { error } = await sb.from("holiday_overrides").delete().eq("period_id", f.p).eq("routine_id", f.r); if (error) throw error;
+  await afterHolidayEdit(t("common.savedM"), true);
+};
+// Nom et dates (début modifiable tant que la période n'a pas commencé)
+A.holDates = el => {
+  const p = S.holidays.find(x => x.id === el.dataset.id), started = holState(p) !== "next";
+  openSheet(`<h2>🏖️ ${t("hol.editDates")}</h2><label class="f">${t("hol.name")}<input id="h-name" maxlength="40" value="${esc(p.name)}"></label>
+    <div class="f two"><label>${t("pause.from")}<input type="date" id="h-from" value="${p.start_day}" ${started ? "disabled" : ""}></label><label>${t("pause.to")}<input type="date" id="h-to" value="${p.end_day}"></label></div>
+    <div class="sheet-actions"><button class="btn ghost" data-act="holReview" data-id="${p.id}">${t("btn.back")}</button><button class="btn" data-act="holSaveDates" data-id="${p.id}">${t("btn.save")}</button></div>`);
+};
+A.holSaveDates = async el => {
+  const name = $("#h-name").value.trim(), a = $("#h-from").value, b = $("#h-to").value;
+  if (!name) return toast(t("hol.needName"), true);
+  if (!a || !b || b < a) return toast(t("pause.badDates"), true);
+  const { error } = await sb.from("holiday_periods").update({ name, start_day: a, end_day: b }).eq("id", el.dataset.id); if (error) throw error;
+  await refreshParent(); A.holReview(el); render(); toast(t("common.savedM"));
+};
+// Supprimer (pas encore commencée) ou arrêter (dernier jour : hier ; les étoiles gagnées restent)
+A.holStop = async el => {
+  const p = S.holidays.find(x => x.id === el.dataset.id), td = todayISO(), started = p.start_day < td;
+  if (!await confirmSheet(started ? t("hol.stopTitle") : t("hol.delTitle"), started ? t("hol.stopText") : t("hol.delText"), started ? t("hol.stop") : t("btn.delete"), true)) return A.holReview(el);
+  const { error } = started ? await sb.from("holiday_periods").update({ end_day: addDays(td, -1) }).eq("id", p.id)
+    : await sb.from("holiday_periods").delete().eq("id", p.id);
+  if (error) throw error;
+  S.reviewing = null; S.hctx = null; closeSheet(); await reloadParent(started ? t("hol.stopped") : t("common.deletedF"));
+};
+// Copier les routines de vacances d'un frère ou d'une sœur
+A.holSib = el => {
+  const p = S.holidays.find(x => x.id === el.dataset.id);
+  const sibs = S.holidays.filter(x => x.child_id !== p.child_id && S.routines.some(r => r.holiday_period_id === x.id));
+  openSheet(`<h2>${t("hol.fromSibling")}</h2><p class="muted">${t("hol.fromSiblingHelp")}</p>
+    <ul class="tpl">${sibs.map(x => { const k = S.children.find(c => c.id === x.child_id) || { emoji: "", name: "" }; const n = S.routines.filter(r => r.holiday_period_id === x.id).length;
+      return `<li><button class="pen" data-act="holSibCopy" data-from="${x.id}" data-id="${p.id}"><span>${esc(k.emoji + " " + k.name)}${t("sep")}${esc(x.name)}</span><span class="muted">${t("hol.routinesN", { n })}</span></button></li>`; }).join("")}</ul>
+    <div class="sheet-actions"><button class="btn ghost" data-act="holReview" data-id="${p.id}">${t("btn.back")}</button></div>`);
+};
+A.holSibCopy = async el => {
+  const p = S.holidays.find(x => x.id === el.dataset.id); const n = await holCopy(el.dataset.from, p.id, p.child_id, false);
+  await refreshParent(); A.holReview(el); render(); toast(t("hol.copied", { n: n || 0 }));
+};
 A.repriceChild = async () => {
   const c = curChild(), r = rhythmOf(c.id), ws = S.rewards.filter(w => w.duration_days && (!w.child_id || w.child_id === c.id) && w.costs && w.costs[c.id] != null);
   for (const w of ws) { const costs = { ...w.costs, [c.id]: roundPrice(w.duration_days * r) }; const { error } = await sb.from("rewards").update({ costs, ...(w.child_id ? { cost: costs[c.id] } : {}) }).eq("id", w.id); if (error) throw error; }
@@ -1786,9 +1961,9 @@ A.saveRoutine = async el => {
     stars: +$("#f-stars").value, place: $("#f-place").value || null, timer_minutes: $("#f-timer").value ? +$("#f-timer").value : null, is_bonus: $("#f-bonus").checked };
   const id = el.dataset.id;
   const { error } = id ? await sb.from("routines").update(row).eq("id", id)
-    : await sb.from("routines").insert({ ...row, family_id: S.family.id, child_id: S.currentChild, position: S.routines.filter(r => r.child_id === S.currentChild).length });
+    : await sb.from("routines").insert({ ...row, family_id: S.family.id, child_id: S.currentChild, holiday_period_id: S.hctx || null, position: S.routines.filter(r => r.child_id === S.currentChild).length });
   if (error) throw error;
-  closeSheet(); await reloadParent(id ? t("routine.saved") : t("routine.added"));
+  await afterHolidayEdit(id ? t("routine.saved") : t("routine.added"), !!(S.hctx || (id && isHolidayR(S.routines.find(r => r.id === id) || {}))));
 };
 A.delRoutine = async el => {
   if (!await confirmSheet(t("routine.delTitle"), t("routine.delText"), t("btn.delete"), true)) return;
@@ -1796,8 +1971,8 @@ A.delRoutine = async el => {
   await reloadParent(t("routine.deletedToast"));
 };
 A.routineTemplates = () => {
-  const c = curChild(); const have = new Set(S.routines.filter(r => r.child_id === c.id).map(r => r.title.toLowerCase()));
-  openSheet(`<h2>${t("routine.tplFor", { name: esc(c.name) })}</h2>${MOMENTS().map(([k, l, , e]) => {
+  const c = curChild(); const have = new Set(S.routines.filter(r => r.child_id === c.id && (!isHolidayR(r) || r.holiday_period_id === S.hctx)).map(r => r.title.toLowerCase()));
+  openSheet(`<h2>${S.hctx ? "🏖️ " : ""}${t("routine.tplFor", { name: esc(c.name) })}</h2>${S.hctx ? `<p class="muted">${t("hol.tplHelp")}</p>` : ""}${MOMENTS().map(([k, l, , e]) => {
     const list = TPL_R.map((x, i) => ({ ...x, i })).filter(x => x.m === k); if (!list.length) return "";
     return `<h3 class="grp">${e} ${l}</h3><ul class="tpl">${list.map(x => { const had = have.has(x.t.toLowerCase()); return `<li><label class="${had ? "had" : ""}"><input type="checkbox" value="${x.i}" ${had ? "disabled" : ""}><span>${x.e} ${esc(x.t)}${x.b ? " " + t("routine.bonusTag") : ""}${x.d ? t("sep") + lower(t("days.week")) : ""}${had ? t("sep") + t("common.alreadyAdded") : ""}</span></label></li>`; }).join("")}</ul>`;
   }).join("")}<div class="sheet-actions"><button class="btn" data-act="addRoutineTpl">${t("common.addSelection")}</button></div>`);
@@ -1807,9 +1982,9 @@ A.addRoutineTpl = async () => {
   if (!picks.length) return toast(t("routine.needOne"), true);
   const base = S.routines.filter(r => r.child_id === S.currentChild).length;
   const rows = picks.map((x, i) => ({ family_id: S.family.id, child_id: S.currentChild, title: x.t, emoji: x.e, moment: x.m, place: x.p != null ? PLACES()[x.p] : null,
-    stars: x.s || 1, days: tplDays(x.d), is_bonus: !!x.b, timer_minutes: x.tm || null, position: base + i }));
+    stars: x.s || 1, days: tplDays(x.d), is_bonus: !!x.b, timer_minutes: x.tm || null, position: base + i, holiday_period_id: S.hctx || null }));
   const { error } = await sb.from("routines").insert(rows); if (error) throw error;
-  closeSheet(); await reloadParent(t("routine.addedN", { n: rows.length }));
+  await afterHolidayEdit(t("routine.addedN", { n: rows.length }), !!S.hctx);
 };
 
 // Récompenses
