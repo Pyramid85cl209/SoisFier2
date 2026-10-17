@@ -874,6 +874,70 @@
   "en": "English",
   "toReview": "Traduction à relire"
  },
+ "premium": {
+  "tag": "Premium",
+  "see": "Découvrir le Premium",
+  "discover": "Découvrir le Premium",
+  "later": "Plus tard",
+  "free": "La boucle de motivation de l'enfant (routines, étoiles, fleur, récompenses) reste gratuite.",
+  "children": {
+   "emoji": "👨‍👩‍👧‍👦",
+   "title": "Suivez toute la fratrie",
+   "text": "La version gratuite suit un enfant. Avec le Premium, ajoutez tous vos enfants, chacun avec ses routines, sa fleur et ses récompenses."
+  },
+  "adults": {
+   "emoji": "👪",
+   "title": "Toute la famille peut valider",
+   "text": "La version gratuite réunit deux parents. Avec le Premium, invitez autant d'adultes que vous le souhaitez."
+  },
+  "helpers": {
+   "emoji": "👵",
+   "title": "Papy, Mamie, Nounou peuvent valider aussi",
+   "text": "Les proches cochent et valident les routines et échangent les récompenses, sans toucher aux réglages. Ils font partie du Premium."
+  },
+  "malus": {
+   "emoji": "💔",
+   "title": "Les malus font partie du Premium",
+   "text": "Cassez une étoile quand une règle n'est pas respectée, avec des motifs prêts à l'emploi et un suivi sur la semaine et le mois."
+  },
+  "oneoff": {
+   "emoji": "🎯",
+   "title": "Préparez la valise, le grand ménage…",
+   "text": "Les routines exceptionnelles s'ajoutent pour un jour ou jusqu'à une date, et se réutilisent grâce aux modèles. Elles font partie du Premium."
+  },
+  "garden": {
+   "emoji": "🏞️",
+   "title": {
+    "one": "Jardin {year} : {n} fleur à découvrir",
+    "other": "Jardin {year} : {n} fleurs à découvrir"
+   },
+   "text": "Chaque fleur rejoint le jardin de l'année scolaire. Avec le Premium, retrouvez le jardin de l'année et ceux des années passées. Rien n'est perdu : tout ce qui a poussé apparaît dès le passage au Premium."
+  },
+  "badges": {
+   "emoji": "🏅",
+   "title": {
+    "one": "{n} badge de plus avec le Premium",
+    "other": "{n} badges de plus avec le Premium"
+   },
+   "text": "Défis, jardin, épargne, sérénité… Les badges mérités sont gardés et apparaissent dès le passage au Premium. Votre enfant ne voit que les badges gratuits."
+  },
+  "badgesGot": "{name} : {n} badges gratuits sur {total}",
+  "myPlan": "Mon offre",
+  "plan": {
+   "free": "Gratuit",
+   "premium": "Premium",
+   "founder": "Fondateur"
+  },
+  "planHelp": {
+   "free": "Un enfant, deux parents, routines, étoiles, fleur et récompenses.",
+   "premium": "Toutes les fonctions, pour toute la famille.",
+   "founder": "Premium à vie. Merci d'avoir accompagné SoisFier depuis le début !"
+  },
+  "nudge": {
+   "flower": "Une fleur a éclos ! Avec le Premium, gardez le jardin de toute l'année et débloquez tous les badges.",
+   "year": "Une nouvelle année scolaire commence. Avec le Premium, retrouvez le jardin de l'année passée."
+  }
+ },
  "srv": {
   "device_unknown": "Appareil non reconnu.",
   "already_validated_break": "Routine déjà validée : pour retirer des étoiles, un parent peut casser une étoile.",
@@ -896,6 +960,12 @@
   "invite_parent_only": "Seul un parent peut inviter.",
   "unknown_role": "Droits inconnus.",
   "access_denied": "Accès refusé.",
-  "unknown": "Une erreur est survenue."
+  "unknown": "Une erreur est survenue.",
+  "premium_children": "La version gratuite suit un seul enfant : le Premium permet d'en ajouter.",
+  "premium_adults": "La version gratuite réunit deux parents : le Premium permet d'en inviter plus.",
+  "premium_helpers": "Les proches font partie du Premium.",
+  "premium_malus": "Les malus font partie du Premium.",
+  "premium_oneoff": "Les routines exceptionnelles font partie du Premium.",
+  "plan_readonly": "L'offre ne peut pas être modifiée ici."
  }
 }
