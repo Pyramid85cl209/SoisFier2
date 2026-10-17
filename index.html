@@ -294,6 +294,7 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
 .banner.hol{background:#DDF1F7}
 .hol-pill{background:#DDF1F7;font-weight:700}
 .rt.off{opacity:.55}
+.hrow{align-items:center}.hrow small{display:block;font-weight:400;opacity:.8;margin-top:2px}.hrow .link{white-space:nowrap}
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .banner.hol, :root:not([data-theme="light"]) .hol-pill{background:#17394A} }
 .nudge .btns{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 
@@ -1421,13 +1422,20 @@ const readTimes = () => [$("#t1")?.value, $("#t2")?.value].filter(v => /^\d{2}:\
 function printPlanning(ids) {
   const td = todayISO(), first = addDays(td, -((dowOf(td) - WEEK.start + 7) % 7)), order = weekOrder();
   const pages = S.children.filter(c => ids.includes(c.id)).map(c => {
-    const rs = S.routines.filter(r => r.child_id === c.id && !isOneoff(r) && !isHolidayR(r));
+    // Semaine imprimée : chaque jour suit le Mode vacances s'il s'applique (routines en pause, statut, jours, étoiles, routines de vacances)
+    const dates = order.map((_, i) => addDays(first, i));
+    const due = dates.map(d => new Map(dueOn(S.routines, c.id, d).filter(r => !isOneoff(r)).map(r => [r.id, r])));
+    const rs = S.routines.filter(r => r.child_id === c.id && !isOneoff(r) && due.some(m => m.has(r.id)));
+    const hols = holidaysOf(c.id).filter(p => p.start_day <= dates[6] && p.end_day >= dates[0]);
     const rows = MOMENTS().map(([k, l, , e]) => {
       const list = rs.filter(r => r.moment === k); if (!list.length) return "";
-      return `<tr class="grp-row"><td colspan="8">${e} ${l}</td></tr>` + list.map(r => `<tr><td class="n">${esc(r.emoji)} ${esc(r.title)} (${fmtNum(r.stars)} ⭐)${r.is_bonus ? t("sep") + t("routine.bonus") : ""}</td>${order.map(d => (r.days || []).includes(d) ? `<td><span class="circ"></span></td>` : `<td class="off"></td>`).join("")}</tr>`).join("");
+      return `<tr class="grp-row"><td colspan="8">${e} ${l}</td></tr>` + list.map(r => {
+        const ef = due.map(m => m.get(r.id)).find(Boolean) || r;   // étoiles et statut du premier jour où elle est due
+        return `<tr><td class="n">${isHolidayR(r) ? "🏖️ " : ""}${esc(r.emoji)} ${esc(r.title)} (${fmtNum(ef.stars)} ⭐)${ef.is_bonus ? t("sep") + t("routine.bonus") : ""}</td>${due.map(m => m.has(r.id) ? `<td><span class="circ"></span></td>` : `<td class="off"></td>`).join("")}</tr>`;
+      }).join("");
     }).join("");
     const gifts = S.rewards.filter(w => !w.child_id || w.child_id === c.id);
-    return `<section class="pp"><h1>${esc(c.emoji)} ${t("print.weekOf", { name: esc(c.name) })}</h1><p>${t("print.weekStart", { date: parseISO(first).toLocaleDateString(loc(), { day: "numeric", month: "long" }) })}</p>
+    return `<section class="pp"><h1>${esc(c.emoji)} ${t("print.weekOf", { name: esc(c.name) })}</h1><p>${t("print.weekStart", { date: parseISO(first).toLocaleDateString(loc(), { day: "numeric", month: "long" }) })}</p>${hols.map(p => `<p>🏖️ ${esc(p.name)}${t("sep")}${holLabel(p)}</p>`).join("")}
       <table><thead><tr><th class="n">${t("print.routine")}</th>${order.map(d => `<th>${t("days.abbr")[d - 1]}</th>`).join("")}</tr></thead><tbody>${rows || `<tr><td colspan="8">${t("print.none")}</td></tr>`}</tbody></table>
       ${gifts.length ? `<div class="gifts"><b>${t("print.myRewards")}</b> ${gifts.map(w => `${esc(w.emoji)} ${esc(w.title)} (${fmtNum(w.cost)} ⭐)`).join(t("sep"))}</div>` : ""}</section>`;
   }).join("");
@@ -1699,8 +1707,8 @@ const holState = p => { const td = todayISO(); return p.end_day < td ? "past" : 
 function holidaySection() {
   const td = todayISO(), list = (S.holidays || []).filter(p => p.end_day >= td);
   return `<section class="sec"><h2>🏖️ ${t("hol.title")}${ptag()}</h2><p class="muted">${t("hol.help")}</p>
-    ${list.length ? `<ul class="hist">${list.map(p => { const k = S.children.find(c => c.id === p.child_id) || { emoji: "", name: "" };
-      return `<li><span>${esc(k.emoji + " " + k.name)}${t("sep")}<b>${esc(p.name)}</b></span><span class="muted">${holLabel(p)}${t("sep")}${t("hol.state." + holState(p))}</span><button class="link" data-act="holReview" data-id="${p.id}">${t("hol.review")}</button></li>`; }).join("")}</ul>` : ""}
+    ${list.length ? `<ul class="tpl">${list.map(p => { const k = S.children.find(c => c.id === p.child_id) || { emoji: "", name: "" };
+      return `<li><button class="pen hrow" data-act="holReview" data-id="${p.id}" aria-label="${t("hol.review")} ${esc(p.name)}"><span><b>${esc(p.name)}</b><small>${esc(k.emoji + " " + k.name)}${t("sep")}${holLabel(p)}${t("sep")}${t("hol.state." + holState(p))}</small></span><span class="link">${t("hol.review")}</span></button></li>`; }).join("")}</ul>` : ""}
     <div class="actions"><button class="btn ghost" data-act="holNew">${t("hol.new")}${ptag()}</button></div></section>`;
 }
 // Après une modification faite pendant des vacances : alerte, puis retour à la revue si elle était ouverte
