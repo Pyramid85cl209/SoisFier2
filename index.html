@@ -1256,43 +1256,74 @@ async function loadParent() {
   S.family = { id: mem[0].family_id, name: mem[0].families?.name || t("onboard.defaultName") }; S.me = mem[0];
   await refreshParent();
 }
-async function refreshParent() {
-  const fid = S.family.id, since = addDays(todayISO(), -62);
-  const qs = await Promise.all([
-    sb.from("children").select("*").eq("family_id", fid).order("position").order("created_at"),
-    sb.from("routines").select("*").eq("family_id", fid).eq("active", true).order("position").order("created_at"),
-    sb.from("rewards").select("*").eq("family_id", fid).eq("active", true).order("cost"),
-    sb.from("completions").select("child_id,routine_id,day,stars,source,validated_at,validated_by,created_by").eq("family_id", fid).gte("day", since),
-    sb.from("redemptions").select("*").eq("family_id", fid).order("created_at", { ascending: false }).limit(100),
-    sb.from("child_stats").select("*").eq("family_id", fid),
-    sb.from("family_members").select("user_id,display_name,relation,role").eq("family_id", fid),
-    sb.from("child_devices").select("id,child_id,created_at,last_seen,label").eq("family_id", fid).order("created_at"),
-    sb.from("families").select("name,auto_validate,week_start,weekend_days,timezone,plan").eq("id", fid),
-    sb.from("penalties").select("*").eq("family_id", fid).eq("active", true).order("stars").order("created_at"),
-    sb.from("penalty_events").select("*").eq("family_id", fid).order("created_at", { ascending: false }).limit(500),
-    sb.from("child_badges").select("child_id,badge_key").eq("family_id", fid),
-    sb.from("pauses").select("*").eq("family_id", fid).gte("end_day", todayISO()).order("start_day"),
-    sb.rpc("family_gardens", { p_family: fid }),
-    sb.from("oneoff_templates").select("*").eq("family_id", fid).order("use_count", { ascending: false }).order("last_used", { ascending: false }),
-    sb.from("holiday_periods").select("*").eq("family_id", fid).eq("active", true).order("start_day"),
-    sb.from("holiday_overrides").select("*").eq("family_id", fid)
-  ]);
-  qs.forEach((q, i) => { if (q.error && i < 15) throw q.error; });   // Mode vacances (2 dernières) : facultatif si la base n'est pas encore à jour
-  const [c, r, w, x, z, s, m, d, f, pe, pv, b, pz, gdn, ot, hp, ho] = qs.map(q => q.error ? null : q.data);
-  const holidays = (hp || []).map(p => ({ ...p, ov: Object.fromEntries((ho || []).filter(o => o.period_id === p.id).map(o => [o.routine_id, o])) }));
-  const badges = {}; b.forEach(o => (badges[o.child_id] = badges[o.child_id] || []).push(o.badge_key));
-  Object.assign(S, { children: c, routines: r, rewards: w, completions: x, redemptions: z, stats: Object.fromEntries(s.map(o => [o.child_id, o])),
-    members: m, devices: d, autoValidate: f[0] ? f[0].auto_validate : true, penalties: pe, pevents: pv, badges, pauses: pz, gardens: gdn || {}, oneoffTpl: ot || [], holidays, offline: false });
-  if (f[0]) { S.family.name = f[0].name; S.plan = f[0].plan || "founder"; setWeek(f[0]); S.family.week = { ...WEEK }; }
-  const meRow = m.find(x => x.user_id === S.session?.user.id); if (meRow) S.me = { ...S.me, ...meRow };
+/* Requêtes du parent, par partie : refreshParent recharge tout, refreshParts seulement ce qu'une action a changé */
+const PQ = {
+  c: f => sb.from("children").select("*").eq("family_id", f).order("position").order("created_at"),
+  r: f => sb.from("routines").select("*").eq("family_id", f).eq("active", true).order("position").order("created_at"),
+  w: f => sb.from("rewards").select("*").eq("family_id", f).eq("active", true).order("cost"),
+  x: f => sb.from("completions").select("child_id,routine_id,day,stars,source,validated_at,validated_by,created_by").eq("family_id", f).gte("day", addDays(todayISO(), -62)),
+  z: f => sb.from("redemptions").select("*").eq("family_id", f).order("created_at", { ascending: false }).limit(100),
+  s: f => sb.from("child_stats").select("*").eq("family_id", f),
+  m: f => sb.from("family_members").select("user_id,display_name,relation,role").eq("family_id", f),
+  d: f => sb.from("child_devices").select("id,child_id,created_at,last_seen,label").eq("family_id", f).order("created_at"),
+  f: f => sb.from("families").select("name,auto_validate,week_start,weekend_days,timezone,plan").eq("id", f),
+  pe: f => sb.from("penalties").select("*").eq("family_id", f).eq("active", true).order("stars").order("created_at"),
+  pv: f => sb.from("penalty_events").select("*").eq("family_id", f).order("created_at", { ascending: false }).limit(500),
+  b: f => sb.from("child_badges").select("child_id,badge_key").eq("family_id", f),
+  pz: f => sb.from("pauses").select("*").eq("family_id", f).gte("end_day", todayISO()).order("start_day"),
+  g: f => sb.rpc("family_gardens", { p_family: f }),
+  ot: f => sb.from("oneoff_templates").select("*").eq("family_id", f).order("use_count", { ascending: false }).order("last_used", { ascending: false }),
+  hp: f => sb.from("holiday_periods").select("*").eq("family_id", f).eq("active", true).order("start_day"),
+  ho: f => sb.from("holiday_overrides").select("*").eq("family_id", f)
+};
+const OPTIONAL = ["hp", "ho"];   // Mode vacances : facultatif si la base n'est pas encore à jour
+async function fetchParts(keys) {
+  const fid = S.family.id, qs = await Promise.all(keys.map(k => PQ[k](fid))), o = {};
+  keys.forEach((k, i) => { const q = qs[i]; if (q.error && !OPTIONAL.includes(k)) throw q.error; o[k] = q.error ? null : q.data; });
+  return o;
+}
+function applyParts(o) {
+  const has = k => k in o;
+  if (has("c")) S.children = o.c;
+  if (has("r")) S.routines = o.r;
+  if (has("w")) S.rewards = o.w;
+  if (has("x")) S.completions = o.x;
+  if (has("z")) S.redemptions = o.z;
+  if (has("s")) S.stats = Object.fromEntries(o.s.map(v => [v.child_id, v]));
+  if (has("m")) { S.members = o.m; const me = o.m.find(v => v.user_id === S.session?.user.id); if (me) S.me = { ...S.me, ...me }; }
+  if (has("d")) S.devices = o.d;
+  if (has("f") && o.f[0]) { const f = o.f[0]; S.autoValidate = f.auto_validate; S.family.name = f.name; S.plan = f.plan || "founder"; setWeek(f); S.family.week = { ...WEEK }; }
+  if (has("pe")) S.penalties = o.pe;
+  if (has("pv")) S.pevents = o.pv;
+  if (has("b")) { const badges = {}; o.b.forEach(v => (badges[v.child_id] = badges[v.child_id] || []).push(v.badge_key)); S.badges = badges; }
+  if (has("pz")) S.pauses = o.pz;
+  if (has("g")) S.gardens = o.g || {};
+  if (has("ot")) S.oneoffTpl = o.ot || [];
+  if (has("hp")) S.hp = o.hp || [];
+  if (has("ho")) S.ho = o.ho || [];
+  if (has("hp") || has("ho")) S.holidays = (S.hp || []).map(p => ({ ...p, ov: Object.fromEntries((S.ho || []).filter(v => v.period_id === p.id).map(v => [v.routine_id, v])) }));
+  S.offline = false;
   if (!isParent() && S.tab === "routines") S.tab = "today";
   if (!S.children.find(k => k.id === S.currentChild)) S.currentChild = S.children[0]?.id || null;
+}
+function saveParentCache() {
+  store.set("parentCache", { family: S.family, me: S.me, children: S.children, routines: S.routines, rewards: S.rewards, completions: S.completions, redemptions: S.redemptions, stats: S.stats, members: S.members, devices: S.devices,
+    autoValidate: S.autoValidate, penalties: S.penalties, pevents: S.pevents, badges: S.badges, pauses: S.pauses, gardens: S.gardens, week: { ...WEEK }, plan: S.plan, holidays: S.holidays });
+}
+async function refreshParent() {
+  applyParts(await fetchParts(Object.keys(PQ)));
   // Badges obtenus : enregistrés une fois pour toutes
-  const rows = [];
+  const rows = [], fid = S.family.id;
   S.children.forEach(k => newBadges(viewFor(k)).forEach(key => { rows.push({ child_id: k.id, family_id: fid, badge_key: key }); (S.badges[k.id] = S.badges[k.id] || []).push(key); }));
   if (rows.length) sb.from("child_badges").upsert(rows, { onConflict: "child_id,badge_key", ignoreDuplicates: true }).then(() => {}, () => {});
-  store.set("parentCache", { family: S.family, me: S.me, children: c, routines: r, rewards: w, completions: x, redemptions: z, stats: S.stats, members: m, devices: d,
-    autoValidate: S.autoValidate, penalties: pe, pevents: pv, badges: S.badges, pauses: pz, gardens: S.gardens, week: { ...WEEK }, plan: S.plan, holidays });
+  saveParentCache();
+}
+// Rechargement ciblé : seulement les parties qu'une action a changées ; le reste (jardins, compteurs) suit en arrière-plan
+async function refreshParts(keys) { applyParts(await fetchParts(keys)); saveParentCache(); bgRefresh(); }
+let bgTimer = null;
+function bgRefresh() {
+  clearTimeout(bgTimer);
+  bgTimer = setTimeout(async () => { try { await refreshParent(); if (S.screen === "parent") render(); } catch {} }, 700);
 }
 async function loadTip() {
   try {
@@ -1311,7 +1342,7 @@ async function enterParent() {
   }
   render();
 }
-async function reloadParent(msg) { await refreshParent(); render(); if (msg) toast(msg); }
+async function reloadParent(msg, parts) { if (parts) await refreshParts(parts); else await refreshParent(); render(); if (msg) toast(msg); }
 
 /* ================= Données enfant ================= */
 async function loadChild() {
@@ -1625,21 +1656,21 @@ A.pToggle = async el => {
   } else {
     return toast(t("routine.alreadyValidated"), true);
   }
-  await reloadParent();
+  await reloadParent(null, ["x", "s"]);
 };
 A.validateOne = async el => {
   const { id, day } = el.dataset;
   const { error } = await sb.from("completions").update({ validated_at: new Date().toISOString() }).eq("routine_id", id).eq("day", day).is("validated_at", null);
-  if (error) throw error; celebrate(false); await reloadParent(t("validate.done"));
+  if (error) throw error; celebrate(false); await reloadParent(t("validate.done"), ["x", "s"]);
 };
 A.refuseOne = async el => {
   const { id, day } = el.dataset;
   const { error } = await sb.from("completions").delete().eq("routine_id", id).eq("day", day).is("validated_at", null);
-  if (error) throw error; await reloadParent(t("validate.refused"));
+  if (error) throw error; await reloadParent(t("validate.refused"), ["x", "s"]);
 };
 A.validateAll = async () => {
   const { error } = await sb.from("completions").update({ validated_at: new Date().toISOString() }).eq("family_id", S.family.id).is("validated_at", null);
-  if (error) throw error; celebrate(true); await reloadParent(t("validate.allDone"));
+  if (error) throw error; celebrate(true); await reloadParent(t("validate.allDone"), ["x", "s"]);
 };
 A.toggleAuto = async el => {
   const v = el.checked;
@@ -1692,12 +1723,12 @@ A.savePause = async () => {
   if (!ids.length) return toast(t("pause.needChild"), true);
   if (!a || !b || b < a) return toast(t("pause.badDates"), true);
   const { error } = await sb.from("pauses").insert(ids.map(id => ({ family_id: S.family.id, child_id: id, start_day: a, end_day: b, reason: $("#pz-why").value })));
-  if (error) throw error; closeSheet(); await reloadParent(t("pause.saved"));
+  if (error) throw error; closeSheet(); await reloadParent(t("pause.saved"), ["pz"]);
 };
 A.delPause = async el => {
   if (!await confirmSheet(t("pause.delTitle"), t("pause.delText"), t("btn.delete"), true)) return;
   const { error } = await sb.from("pauses").delete().eq("id", el.dataset.id); if (error) throw error;
-  await reloadParent(t("pause.deleted"));
+  await reloadParent(t("pause.deleted"), ["pz"]);
 };
 /* ================= Mode vacances (Premium) =================
    Une période par enfant. Pendant la période, chaque routine habituelle suit son réglage (holiday_overrides),
@@ -1713,7 +1744,7 @@ function holidaySection() {
 }
 // Après une modification faite pendant des vacances : alerte, puis retour à la revue si elle était ouverte
 async function afterHolidayEdit(msg, holiday) {
-  const back = S.reviewing; await refreshParent();
+  const back = S.reviewing; await refreshParts(["hp", "ho", "r"]);
   if (back && (S.holidays || []).some(p => p.id === back)) { A.holReview({ dataset: { id: back } }); render(); }
   else { closeSheet(); render(); }
   toast(holiday ? t("hol.onlyThese") : msg);
@@ -1737,25 +1768,10 @@ A.holCreate = async () => {
   if (!name) return toast(t("hol.needName"), true);
   if (!a || !b || b < a) return toast(t("pause.badDates"), true);
   if (b < todayISO()) return toast(t("hol.pastDates"), true);
-  const { data, error } = await sb.from("holiday_periods").insert({ family_id: S.family.id, child_id: f.child, name, start_day: a, end_day: b }).select().single();
+  const { data: id, error } = await sb.rpc("holiday_create", { p_child: f.child, p_name: name, p_from: a, p_to: b, p_copy: copy || null });
   if (error) throw error;
-  if (copy) await holCopy(copy, data.id, f.child, true);
-  S.hform = null; S.currentChild = f.child; await refreshParent(); A.holReview({ dataset: { id: data.id } }); render();
+  S.hform = null; S.currentChild = f.child; await refreshParts(["hp", "ho", "r"]); A.holReview({ dataset: { id } }); render();
 };
-// Copie : réglages des routines habituelles (même enfant seulement) et routines de vacances
-async function holCopy(fromId, toId, childId, withSettings) {
-  const src = (S.holidays || []).find(p => p.id === fromId); if (!src) return;
-  const alive = new Set(S.routines.filter(r => r.child_id === childId && !isHolidayR(r) && !isOneoff(r)).map(r => r.id));
-  const ov = withSettings ? Object.values(src.ov || {}).filter(o => alive.has(o.routine_id))
-    .map(o => ({ period_id: toId, routine_id: o.routine_id, child_id: childId, family_id: S.family.id, status: o.status, days: o.days, stars: o.stars })) : [];
-  if (ov.length) { const { error } = await sb.from("holiday_overrides").upsert(ov); if (error) throw error; }
-  const base = S.routines.filter(r => r.child_id === childId).length;
-  const have = new Set(S.routines.filter(r => r.holiday_period_id === toId).map(r => r.title.toLowerCase()));
-  const rows = S.routines.filter(r => r.holiday_period_id === fromId && !have.has(r.title.toLowerCase())).map((r, i) => ({ family_id: S.family.id, child_id: childId, holiday_period_id: toId,
-    title: r.title, emoji: r.emoji, moment: r.moment, place: r.place, stars: r.stars, days: r.days, is_bonus: r.is_bonus, timer_minutes: r.timer_minutes, position: base + i }));
-  if (rows.length) { const { error } = await sb.from("routines").insert(rows); if (error) throw error; }
-  return ov.length + rows.length;
-}
 // Revue : chaque routine habituelle (comme d'habitude par défaut), puis les routines de vacances
 A.holReview = el => {
   const p = (S.holidays || []).find(x => x.id === el.dataset.id); if (!p) return closeSheet();
@@ -1798,15 +1814,21 @@ A.holSave = async () => {
   const days = [...f.days].sort((a, b) => a - b), stars = +$("#h-stars").value;
   const row = { period_id: p.id, routine_id: r.id, child_id: r.child_id, family_id: S.family.id, status: f.st || null,
     days: days.join() === [...r.days].sort((a, b) => a - b).join() ? null : days, stars: stars === r.stars ? null : stars };
-  const { error } = (row.status || row.days || row.stars) ? await sb.from("holiday_overrides").upsert(row)
-    : await sb.from("holiday_overrides").delete().eq("period_id", p.id).eq("routine_id", r.id);
-  if (error) throw error;
-  S.reviewing = S.reviewing || null; await afterHolidayEdit(t("common.savedM"), true);
+  await holWrite(p, r, (row.status || row.days || row.stars) ? row : null);
 };
-A.holReset = async () => {
-  const f = S.form; const { error } = await sb.from("holiday_overrides").delete().eq("period_id", f.p).eq("routine_id", f.r); if (error) throw error;
-  await afterHolidayEdit(t("common.savedM"), true);
-};
+A.holReset = async () => { const f = S.form; await holWrite(S.holidays.find(x => x.id === f.p), S.routines.find(x => x.id === f.r), null); };
+// Écrit un réglage : l'écran est mis à jour tout de suite, l'enregistrement suit ; en cas d'erreur, retour à l'état précédent
+async function holWrite(p, r, row) {
+  const before = p.ov[r.id], ho = S.ho || [];
+  const apply = o => { if (o) p.ov[r.id] = o; else delete p.ov[r.id];
+    S.ho = [...ho.filter(v => !(v.period_id === p.id && v.routine_id === r.id)), ...(o ? [o] : [])]; };
+  apply(row);
+  if (S.reviewing) A.holReview({ dataset: { id: S.reviewing } }); else closeSheet();
+  render(); toast(t("hol.onlyThese"));
+  const { error } = row ? await sb.from("holiday_overrides").upsert(row) : await sb.from("holiday_overrides").delete().eq("period_id", p.id).eq("routine_id", r.id);
+  if (error) { apply(before); if (S.reviewing && dlg.open) A.holReview({ dataset: { id: S.reviewing } }); render(); throw error; }
+  saveParentCache(); bgRefresh();
+}
 // Nom et dates (début modifiable tant que la période n'a pas commencé)
 A.holDates = el => {
   const p = S.holidays.find(x => x.id === el.dataset.id), started = holState(p) !== "next";
@@ -1819,7 +1841,7 @@ A.holSaveDates = async el => {
   if (!name) return toast(t("hol.needName"), true);
   if (!a || !b || b < a) return toast(t("pause.badDates"), true);
   const { error } = await sb.from("holiday_periods").update({ name, start_day: a, end_day: b }).eq("id", el.dataset.id); if (error) throw error;
-  await refreshParent(); A.holReview(el); render(); toast(t("common.savedM"));
+  await refreshParts(["hp"]); A.holReview(el); render(); toast(t("common.savedM"));
 };
 // Supprimer (pas encore commencée) ou arrêter (dernier jour : hier ; les étoiles gagnées restent)
 A.holStop = async el => {
@@ -1828,7 +1850,7 @@ A.holStop = async el => {
   const { error } = started ? await sb.from("holiday_periods").update({ end_day: addDays(td, -1) }).eq("id", p.id)
     : await sb.from("holiday_periods").delete().eq("id", p.id);
   if (error) throw error;
-  S.reviewing = null; S.hctx = null; closeSheet(); await reloadParent(started ? t("hol.stopped") : t("common.deletedF"));
+  S.reviewing = null; S.hctx = null; closeSheet(); await reloadParent(started ? t("hol.stopped") : t("common.deletedF"), ["hp", "ho", "r"]);
 };
 // Copier les routines de vacances d'un frère ou d'une sœur
 A.holSib = el => {
@@ -1840,14 +1862,14 @@ A.holSib = el => {
     <div class="sheet-actions"><button class="btn ghost" data-act="holReview" data-id="${p.id}">${t("btn.back")}</button></div>`);
 };
 A.holSibCopy = async el => {
-  const p = S.holidays.find(x => x.id === el.dataset.id); const n = await holCopy(el.dataset.from, p.id, p.child_id, false);
-  await refreshParent(); A.holReview(el); render(); toast(t("hol.copied", { n: n || 0 }));
+  const { data: n, error } = await sb.rpc("holiday_copy", { p_from: el.dataset.from, p_to: el.dataset.id }); if (error) throw error;
+  await refreshParts(["r"]); A.holReview(el); render(); toast(t("hol.copied", { n: n || 0 }));
 };
 A.repriceChild = async () => {
   const c = curChild(), r = rhythmOf(c.id), ws = S.rewards.filter(w => w.duration_days && (!w.child_id || w.child_id === c.id) && w.costs && w.costs[c.id] != null);
   for (const w of ws) { const costs = { ...w.costs, [c.id]: roundPrice(w.duration_days * r) }; const { error } = await sb.from("rewards").update({ costs, ...(w.child_id ? { cost: costs[c.id] } : {}) }).eq("id", w.id); if (error) throw error; }
   const { error } = await sb.from("children").update({ price_rhythm: r }).eq("id", c.id); if (error) throw error;
-  await reloadParent(t("reward.repriced", { name: c.name }));
+  await reloadParent(t("reward.repriced", { name: c.name }), ["w", "c"]);
 };
 async function markPriced(ids) { for (const id of ids) { const c = S.children.find(k => k.id === id); if (c && !c.price_rhythm) await sb.from("children").update({ price_rhythm: rhythmOf(id) }).eq("id", id); } }
 
@@ -1886,17 +1908,17 @@ A.saveOneoff = async () => {
   const { error } = await sb.from("routines").insert(row); if (error) throw error;
   if (S.form.tpl) { const tp = S.oneoffTpl.find(x => x.id === S.form.tpl); await sb.from("oneoff_templates").update({ use_count: (tp.use_count || 0) + 1, last_used: new Date().toISOString() }).eq("id", tp.id); }
   else if ($("#x-keep") && $("#x-keep").checked) await sb.from("oneoff_templates").upsert({ family_id: S.family.id, title, emoji: row.emoji, stars: row.stars, moment: row.moment, is_bonus: row.is_bonus }, { onConflict: "family_id,title" });
-  closeSheet(); await reloadParent(t("oneoff.added"));
+  closeSheet(); await reloadParent(t("oneoff.added"), ["r", "ot"]);
 };
 A.delOneoff = async el => {
   if (!await confirmSheet(t("oneoff.delTitle"), t("oneoff.delText"), t("btn.delete"), true)) return;
   const { error } = await sb.from("routines").update({ active: false }).eq("id", el.dataset.id); if (error) throw error;
-  await reloadParent(t("common.deletedF"));
+  await reloadParent(t("common.deletedF"), ["r"]);
 };
 A.manageOneoffTpl = () => needPremium("oneoff") || openSheet(`<h2>${t("oneoff.tplTitle")}</h2><p class="muted">${t("oneoff.tplHelp")}</p>
   ${S.oneoffTpl.length ? `<ul class="hist">${S.oneoffTpl.map(x => `<li><span>${esc(x.emoji)} ${esc(x.title)}</span><span class="muted">${t("oneoff.times", { n: x.use_count })}</span><button class="link" data-act="delOneoffTpl" data-id="${x.id}">${t("btn.delete")}</button></li>`).join("")}</ul>` : `<p class="empty">${t("oneoff.noTpl")}</p>`}
   <div class="sheet-actions"><button class="btn" data-act="closeSheet">${t("btn.close")}</button></div>`);
-A.delOneoffTpl = async el => { const { error } = await sb.from("oneoff_templates").delete().eq("id", el.dataset.id); if (error) throw error; await reloadParent(t("oneoff.tplDeleted")); A.manageOneoffTpl(); };
+A.delOneoffTpl = async el => { const { error } = await sb.from("oneoff_templates").delete().eq("id", el.dataset.id); if (error) throw error; await reloadParent(t("oneoff.tplDeleted"), ["ot"]); A.manageOneoffTpl(); };
 
 // Étoiles cassées
 A.mFilter = el => { S.mfilter = el.dataset.id; if (el.dataset.id !== "all") S.currentChild = el.dataset.id; render(); };
@@ -1922,12 +1944,12 @@ A.applyPenalty = async el => {
   if (!pid) { title = $("#pen-title").value.trim(); stars = +$("#pen-stars").value; if (!title) return toast(t("malus.needReason"), true); }
   const { data, error } = await sb.rpc("apply_penalty", { p_child: c.id, p_penalty: pid, p_title: title, p_emoji: null, p_stars: stars });
   if (error) throw error;
-  closeSheet(); await reloadParent(t("malus.broken", { n: data, name: c.name }));
+  closeSheet(); await reloadParent(t("malus.broken", { n: data, name: c.name }), ["pv", "s"]);
 };
 A.cancelPenalty = async el => {
   if (!await confirmSheet(t("malus.cancelTitle"), t("common.starsReturned"), t("malus.cancelBtn"))) return;
   const { error } = await sb.from("penalty_events").delete().eq("id", el.dataset.id); if (error) throw error;
-  await reloadParent(t("malus.cancelled"));
+  await reloadParent(t("malus.cancelled"), ["pv", "s"]);
 };
 A.penaltyCatalog = () => {
   if (needPremium("malus")) return;
@@ -1946,11 +1968,11 @@ A.savePenalties = async () => {
   if (title) rows.push({ family_id: S.family.id, title, emoji: "💔", stars: +$("#np-stars").value });
   if (!rows.length) return toast(t("malus.needOne"), true);
   const { error } = await sb.from("penalties").insert(rows); if (error) throw error;
-  await reloadParent(t("malus.added", { n: rows.length })); A.penaltyCatalog();
+  await reloadParent(t("malus.added", { n: rows.length }), ["pe"]); A.penaltyCatalog();
 };
 A.delPenalty = async el => {
   const { error } = await sb.from("penalties").update({ active: false }).eq("id", el.dataset.id); if (error) throw error;
-  await reloadParent(t("malus.deleted")); A.penaltyCatalog();
+  await reloadParent(t("malus.deleted"), ["pe"]); A.penaltyCatalog();
 };
 
 // Routines
@@ -1976,7 +1998,7 @@ A.saveRoutine = async el => {
 A.delRoutine = async el => {
   if (!await confirmSheet(t("routine.delTitle"), t("routine.delText"), t("btn.delete"), true)) return;
   const { error } = await sb.from("routines").update({ active: false }).eq("id", el.dataset.id); if (error) throw error;
-  await reloadParent(t("routine.deletedToast"));
+  await reloadParent(t("routine.deletedToast"), ["r"]);
 };
 A.routineTemplates = () => {
   const c = curChild(); const have = new Set(S.routines.filter(r => r.child_id === c.id && (!isHolidayR(r) || r.holiday_period_id === S.hctx)).map(r => r.title.toLowerCase()));
@@ -2011,12 +2033,12 @@ A.saveReward = async el => {
   const id = el.dataset.id;
   const { error } = id ? await sb.from("rewards").update(row).eq("id", id) : await sb.from("rewards").insert({ ...row, family_id: S.family.id });
   if (error) throw error;
-  closeSheet(); await reloadParent(id ? t("reward.saved") : t("reward.added"));
+  closeSheet(); await reloadParent(id ? t("reward.saved") : t("reward.added"), ["w", "c"]);
 };
 A.delReward = async el => {
   if (!await confirmSheet(t("reward.delTitle"), t("reward.delText"), t("btn.delete"), true)) return;
   const { error } = await sb.from("rewards").update({ active: false }).eq("id", el.dataset.id); if (error) throw error;
-  await reloadParent(t("reward.deleted"));
+  await reloadParent(t("reward.deleted"), ["w"]);
 };
 A.rewardTemplates = () => {
   const have = new Set(S.rewards.map(w => w.title.toLowerCase())), c = curChild();
@@ -2038,18 +2060,18 @@ A.addRewardTpl = async () => {
       while (costs[id] <= lower) costs[id] += stepOf(costs[id]); maxBelow[id][r] = Math.max(maxBelow[id][r] || 0, costs[id]); });
     return { family_id: S.family.id, title: x.t, emoji: x.e, tier: x.tier, duration_days: x.d, costs, cost: roundPrice(x.d * 5) }; });
   const { error } = await sb.from("rewards").insert(rows); if (error) throw error;
-  await markPriced(ids); closeSheet(); await reloadParent(t("reward.addedN", { n: rows.length }));
+  await markPriced(ids); closeSheet(); await reloadParent(t("reward.addedN", { n: rows.length }), ["w", "c"]);
 };
 A.pRedeem = async el => {
   const w = S.rewards.find(x => x.id === el.dataset.id), c = curChild(), cost = costFor(w, c.id);
   if (!await confirmSheet(t("reward.exchangeTitle"), t("reward.exchangeText", { n: cost, name: c.name, title: w.title }), t("reward.exchange"))) return;
   const { error } = await sb.from("redemptions").insert({ family_id: S.family.id, child_id: c.id, reward_id: w.id, title: w.title, emoji: w.emoji, cost }); if (error) throw error;
-  celebrate(true); await reloadParent(t("reward.exchanged"));
+  celebrate(true); await reloadParent(t("reward.exchanged"), ["z", "s"]);
 };
 A.cancelRedeem = async el => {
   if (!await confirmSheet(t("reward.cancelTitle"), t("common.starsReturned"), t("reward.cancelBtn"), true)) return;
   const { error } = await sb.from("redemptions").delete().eq("id", el.dataset.id); if (error) throw error;
-  await reloadParent(t("reward.cancelled"));
+  await reloadParent(t("reward.cancelled"), ["z", "s"]);
 };
 
 // Enfants
