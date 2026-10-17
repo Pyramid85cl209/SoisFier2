@@ -1,8 +1,9 @@
 /* SoisFier – service worker : hors ligne + notifications */
-const CACHE = "soisfier-v24";
+const CACHE = "soisfier-v25";
 // Vitrine provisoire : jamais mise en cache, toujours servie en direct (retours des bêta-testeurs sur la dernière version).
 const VITRINE = new URL("vitrine/", self.registration.scope).pathname;
-const CORE = ["./", "./index.html", "./i18n/fr.json", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
+const CORE = ["./", "./index.html", "./css/app.css", "./js/config.js", "./js/core.js", "./js/garden.js", "./js/rules.js", "./js/ui.js", "./js/premium.js", "./js/parent.js", "./js/child.js", "./js/data.js", "./js/forms.js", "./js/actions.js", "./js/holidays.js", "./js/actions-parent.js", "./js/actions-family.js", "./js/boot.js",
+  "./i18n/fr.json", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 const CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js";
 
 self.addEventListener("install", e => {

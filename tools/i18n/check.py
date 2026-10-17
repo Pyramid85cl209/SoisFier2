@@ -1,11 +1,11 @@
-"""Contrôle d'un fichier de traduction i18n/xx.json par rapport à i18n/fr.json.
+"""Contrôle d'un fichier de traduction app/i18n/xx.json par rapport à app/i18n/fr.json.
 Vérifie : clés manquantes ou en trop, variables {x} identiques, formes de pluriel complètes (Intl.PluralRules via node),
 textes restés identiques au français (à confirmer), présence de lang.xx dans toutes les langues.
 Usage : python3 tools/i18n/check.py xx"""
 import json, re, sys, subprocess, os, glob
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 LG = sys.argv[1]
-fr = json.load(open(f"{ROOT}/i18n/fr.json", encoding="utf-8")); xx = json.load(open(f"{ROOT}/i18n/{LG}.json", encoding="utf-8"))
+fr = json.load(open(f"{ROOT}/app/i18n/fr.json", encoding="utf-8")); xx = json.load(open(f"{ROOT}/app/i18n/{LG}.json", encoding="utf-8"))
 PL = {"zero", "one", "two", "few", "many", "other"}
 def cats(l): return set(json.loads(subprocess.run(["node", "-e", f"console.log(JSON.stringify(new Intl.PluralRules('{l}').resolvedOptions().pluralCategories))"], capture_output=True, text=True).stdout))
 def leaves(d, p=""):
@@ -37,7 +37,7 @@ for k in sorted(set(F) & set(X)):
             continue
         if vars_(f) != vars_(x): print("VARIABLES DIFFÉRENTES", k, vars_(f), vars_(x)); pb += 1
         if isinstance(f, str) and f == x and len(f) > 3 and re.search(r"[a-zà-ÿ]{4}", f): print("IDENTIQUE AU FRANÇAIS (à confirmer)", k)
-for f in glob.glob(f"{ROOT}/i18n/*.json"):
+for f in glob.glob(f"{ROOT}/app/i18n/*.json"):
     if LG not in json.load(open(f, encoding="utf-8")).get("lang", {}): print("lang." + LG, "absent de", os.path.basename(f)); pb += 1
 print(f"{len(X)} textes, catégories de pluriel {sorted(need)}, {pb} problème(s)")
 sys.exit(1 if pb else 0)

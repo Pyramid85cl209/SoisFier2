@@ -1,4 +1,4 @@
-# Publie l'app sur GitHub Pages en injectant la configuration Supabase depuis les secrets d'environnement.
+# Publie l'app, le guide et la vitrine sur GitHub Pages en injectant la configuration Supabase depuis les secrets d'environnement.
 name: Déploiement GitHub Pages
 on:
   push:
@@ -34,10 +34,14 @@ jobs:
           if echo "$PAYLOAD" | base64 -d 2>/dev/null | grep -q '"service_role"'; then
             echo "::error::SUPABASE_KEY est la clé service_role. Utilise la clé anon ou publishable."; exit 1
           fi
+          # Plan du site publié : l'app (dossier app/) à la racine, le guide dans guide/, la vitrine dans vitrine/.
+          # Au passage au domaine : vitrine à la racine et app dans app/ (modifier ces lignes et PATHS dans app/js/config.js).
           mkdir _site
-          rsync -a --exclude .git --exclude .github --exclude supabase --exclude tools --exclude README.md ./ _site/
-          sed -i "s|__SUPABASE_URL__|${SUPABASE_URL}|; s|__SUPABASE_KEY__|${SUPABASE_KEY}|" _site/index.html
-          if grep -q "__SUPABASE_" _site/index.html; then echo "::error::Injection incomplète"; exit 1; fi
+          rsync -a app/ _site/
+          rsync -a guide _site/
+          rsync -a vitrine _site/
+          sed -i "s|__SUPABASE_URL__|${SUPABASE_URL}|; s|__SUPABASE_KEY__|${SUPABASE_KEY}|" _site/js/config.js
+          if grep -rq "__SUPABASE_" _site --include=*.js --include=*.html; then echo "::error::Injection incomplète"; exit 1; fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
