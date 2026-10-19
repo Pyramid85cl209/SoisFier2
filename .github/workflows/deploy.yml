@@ -1,9 +1,16 @@
 # Publie l'app, le guide et la vitrine sur GitHub Pages en injectant la configuration Supabase depuis les secrets d'environnement.
+# Aperçu : lancer ce workflow à la main (Actions > Run workflow, depuis main) en indiquant une branche ;
+# elle est publiée dans /preview/, à côté de la production (main). L'aperçu disparaît au déploiement suivant sans branche.
 name: Déploiement GitHub Pages
 on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      apercu:
+        description: "Branche à publier en aperçu dans /preview/ (vide : production seule)"
+        required: false
+        default: ""
 permissions:
   contents: read
   pages: write
@@ -19,10 +26,17 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Injecter la configuration Supabase
+      - name: Récupérer la branche d'aperçu
+        if: ${{ inputs.apercu != '' }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.apercu }}
+          path: _apercu_src
+      - name: Construire le site et injecter la configuration Supabase
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          APERCU: ${{ inputs.apercu }}
         run: |
           if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_KEY" ]; then
             echo "::error::Secrets SUPABASE_URL ou SUPABASE_KEY absents de l'environnement github-pages"; exit 1
@@ -34,13 +48,31 @@ jobs:
           if echo "$PAYLOAD" | base64 -d 2>/dev/null | grep -q '"service_role"'; then
             echo "::error::SUPABASE_KEY est la clé service_role. Utilise la clé anon ou publishable."; exit 1
           fi
-          # Plan du site publié : l'app (dossier app/) à la racine, le guide dans guide/, la vitrine dans vitrine/.
-          # Au passage au domaine : vitrine à la racine et app dans app/ (modifier ces lignes et PATHS dans app/js/config.js).
-          mkdir _site
-          rsync -a app/ _site/
-          rsync -a guide _site/
-          rsync -a vitrine _site/
-          sed -i "s|__SUPABASE_URL__|${SUPABASE_URL}|; s|__SUPABASE_KEY__|${SUPABASE_KEY}|" _site/js/config.js
+          # Assemble un site depuis un dépôt : organisation app/ (depuis la v25) ou ancienne organisation à la racine.
+          # Plan publié : l'app à la racine, le guide dans guide/, la vitrine dans vitrine/.
+          # Au passage au domaine : vitrine à la racine et app dans app/ (modifier ici et PATHS dans app/js/config.js).
+          build() {
+            src="$1"; out="$2"; mkdir -p "$out"
+            if [ -d "$src/app" ]; then
+              rsync -a "$src/app/" "$out/"
+              rsync -a "$src/guide" "$out/"
+              rsync -a "$src/vitrine" "$out/"
+            else
+              rsync -a --exclude .git --exclude .github --exclude supabase --exclude tools --exclude README.md --exclude _apercu_src --exclude _site "$src/" "$out/"
+            fi
+            grep -rl "__SUPABASE_" "$out" --include=*.js --include=*.html | xargs -r sed -i "s|__SUPABASE_URL__|${SUPABASE_URL}|; s|__SUPABASE_KEY__|${SUPABASE_KEY}|"
+          }
+          build . _site
+          if [ -n "$APERCU" ]; then
+            LABEL=$(printf %s "$APERCU" | tr -cd 'A-Za-z0-9._/-')
+            build _apercu_src _site/preview
+            # Cache hors ligne propre à l'aperçu : il n'efface jamais celui de la production
+            sed -i 's|const CACHE = "soisfier-|const CACHE = "apercu-soisfier-|; s|if (k !== CACHE) await caches.delete(k)|if (k !== CACHE \&\& k.startsWith("apercu-")) await caches.delete(k)|' _site/preview/sw.js
+            grep -q 'apercu-soisfier-' _site/preview/sw.js || { echo "::error::Cache de l'aperçu non renommé"; exit 1; }
+            # Repère visuel et non-indexation
+            sed -i 's|<head>|<head>\n<meta name="robots" content="noindex">|' _site/preview/index.html
+            sed -i "s|</body>|<div style=\"position:fixed;top:4px;left:50%;transform:translateX(-50%);z-index:9999;background:#E8484F;color:#fff;font:700 12px/1 sans-serif;padding:4px 10px;border-radius:999px;pointer-events:none\">APERÇU ${LABEL}</div>\n</body>|" _site/preview/index.html
+          fi
           if grep -rq "__SUPABASE_" _site --include=*.js --include=*.html; then echo "::error::Injection incomplète"; exit 1; fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

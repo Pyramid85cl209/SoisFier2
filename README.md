@@ -18,6 +18,10 @@ Application familiale de routines pour enfants : étoiles validées par les pare
 
 Le fichier `app/js/config.js` du dépôt contient des marqueurs `__SUPABASE_URL__` et `__SUPABASE_KEY__` : ouverte telle quelle, l'app affiche « Configuration manquante ».
 
+## Aperçu avant fusion
+
+Actions > « Déploiement GitHub Pages » > *Run workflow* (depuis `main`), en indiquant une branche : elle est publiée dans `/preview/`, à côté de la production, avec un repère « APERÇU » et son propre cache hors ligne. Mêmes données que la production (une seule base). Ne pas installer l'aperçu comme app ni y activer les rappels. L'aperçu disparaît au déploiement suivant sans branche.
+
 ## Mise à jour
 
 Remplacer les fichiers et pousser. Si l'ancienne version reste affichée, incrémenter `CACHE` dans `app/sw.js`. Un nouveau fichier JS ou CSS doit aussi être ajouté à `CORE` dans `app/sw.js` (hors ligne).
