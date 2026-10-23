@@ -1,5 +1,5 @@
 """Fichier de validation des traductions (xlsx) : français / langue proposée / correction / remarque / statut.
-Entrées : i18n/fr.json, i18n/xx.json, et tools/i18n/work/xx/serveur.json (astuces et rappels, voir SKILL).
+Entrées : app/i18n/fr.json, app/i18n/xx.json, et tools/i18n/work/xx/serveur.json (astuces et rappels, voir SKILL).
 Usage : python3 tools/i18n/review.py xx "Nom de la langue en français" sortie.xlsx"""
 import json, sys, os
 from openpyxl import Workbook
@@ -7,7 +7,7 @@ from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.worksheet.datavalidation import DataValidation
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 LG, NAME, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
-fr = json.load(open(f"{ROOT}/i18n/fr.json", encoding="utf-8")); xx = json.load(open(f"{ROOT}/i18n/{LG}.json", encoding="utf-8"))
+fr = json.load(open(f"{ROOT}/app/i18n/fr.json", encoding="utf-8")); xx = json.load(open(f"{ROOT}/app/i18n/{LG}.json", encoding="utf-8"))
 SRV = json.load(open(f"{ROOT}/tools/i18n/work/{LG}/serveur.json", encoding="utf-8"))   # [{"type","n","fr","xx"}]
 SCREEN = {"common": "Général", "days": "Jours", "day": "Jours", "week": "Semaine et fuseau", "moment": "Moments de la journée", "places": "Lieux",
   "emoGroup": "Choix d'icônes", "err": "Messages d'erreur", "error": "Messages d'erreur", "srv": "Messages d'erreur", "garden": "Jardin",

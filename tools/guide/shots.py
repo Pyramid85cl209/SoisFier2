@@ -21,7 +21,7 @@ def C(name, i):
     return caps[i] if i < len(caps) else ""
 
 def fixtures():
-    tr = json.load(open(f"{ROOT}/i18n/{LG}.json", encoding="utf-8"))
+    tr = json.load(open(f"{ROOT}/app/i18n/{LG}.json", encoding="utf-8"))
     R, Wd, P, X, places = tr["tpl"]["r"], tr["tpl"]["w"], tr["tpl"]["p"], tr["tpl"]["x"], tr["places"]
     def routine(i, key, e, m, stars=1, days=(1, 2, 3, 4, 5, 6, 7), place=None, tm=None, bonus=False):
         return dict(id=f"R{i}", family_id="F", child_id="C1", title=R[key], emoji=e, moment=m, stars=stars, days=list(days), is_bonus=bonus,
@@ -41,10 +41,11 @@ async def route(r):
     if "fonts.g" in u: return await r.fulfill(body="", content_type="text/css")
     path = u.split("://", 1)[1].split("/", 1)[1].split("?")[0].split("#")[0] or "index.html"
     f = os.path.join(ROOT, path)
+    if not os.path.exists(f): f = os.path.join(ROOT, "app", path)   # l'app (dossier app/) est servie à la racine, comme sur le site publié
     if os.path.isdir(f): f = os.path.join(f, "index.html")
     if not os.path.exists(f): return await r.fulfill(status=404, body="")
     body = open(f, "rb").read()
-    if path == "index.html":
+    if path == "js/config.js":
         body = body.decode().replace("__SUPABASE_URL__", "https://x.supabase.co").replace("__SUPABASE_KEY__", "k").encode()
     ct = "text/html" if f.endswith(".html") else "application/json" if f.endswith(".json") else "application/javascript"
     await r.fulfill(body=body, content_type=ct)
