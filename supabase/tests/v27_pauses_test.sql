@@ -51,7 +51,9 @@ $m$;
   insert into public.pauses(family_id, child_id, start_day, end_day, reason, created_at) values (fid, cid, td, td+1, 'sick', now()-interval '3 days') returning id into p_fut;
   res := res || ' 8.del_today=' || pg_temp.tryit(format('delete from public.pauses where id=%L', p_fut));
   -- suppression de l'enfant fictif : la cascade passe
-  res := res || ' 9.cascade=' || pg_temp.tryit(format('delete from public.children where id=%L', cid)) || ' left=' || (select count(*) from public.pauses where child_id=cid);
+  -- (deux instructions : un comptage dans la même instruction verrait l'état d'avant la suppression)
+  res := res || ' 9.cascade=' || pg_temp.tryit(format('delete from public.children where id=%L', cid));
+  res := res || ' left=' || (select count(*) from public.pauses where child_id = cid);
   raise exception 'RESULT:%', res;
 end $t$;
 rollback;
