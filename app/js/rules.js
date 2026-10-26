@@ -5,6 +5,18 @@
 const holidaysOf = childId => S.screen === "child" ? ((S.cs && S.cs.holidays) || []) : (S.holidays || []).filter(p => p.child_id === childId);
 const periodOn = (childId, day) => holidaysOf(childId).find(p => p.start_day <= day && day <= p.end_day) || null;
 const isHolidayR = r => !!r.holiday_period_id;
+/* Pauses : la pause l'emporte sur le Mode vacances à l'affichage (⏸️ au lieu de 🏖️, jour neutre pour la fleur).
+   Les réglages de vacances restent appliqués aux routines, comme côté serveur (étoiles d'une routine cochée). */
+const PAUSE_REASONS = ["trip", "sick", "other"];
+const pausesOf = childId => S.screen === "child" ? ((S.cs && S.cs.garden && S.cs.garden.pauses) || []) : (S.pauses || []).filter(p => p.child_id === childId);
+function pauseOn(childId, day) {
+  const p = pausesOf(childId).find(x => x.start_day <= day && day <= x.end_day); if (p) return p;
+  const gd = S.screen === "child" ? S.cs && S.cs.garden : S.gardens && S.gardens[childId];   // jours passés : drapeau du jardin
+  const d = gd && (gd.days || []).find(x => x.day === day);
+  return d && d.paused ? { garden: true } : null;
+}
+// Motif enregistré en clé (v27) ; un ancien texte libre s'affiche tel quel
+const pauseReason = p => PAUSE_REASONS.includes(p.reason) ? t("pause.r." + p.reason) : (p.reason || t("pause.default"));
 // Routine telle qu'elle s'applique ce jour-là (null si elle n'est pas due du tout : en pause, ou routine de vacances hors période)
 function effective(r, day) {
   if (r.kind === "oneoff") return r;

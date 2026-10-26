@@ -311,3 +311,11 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
   .pp .off{background:#e6e6e6}
   .pp .gifts{margin-top:6mm;font-size:12pt}
 }
+
+/* Pause (v27) : jour neutre, la pause l'emporte sur le Mode vacances */
+.meta .pz,.hrow .pz{font-weight:700;color:var(--earth)}
+.ring.pz{background:var(--line)}
+.ring.pz span{font-size:1.1rem;font-weight:400}
+.kid-pause{background:var(--paper);border-radius:18px;padding:14px;margin:12px 0;text-align:center;box-shadow:var(--lift)}
+.kid-pause p{margin:0 0 10px;font-weight:700}
+.kid-pause p:last-child{margin:0}

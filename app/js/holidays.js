@@ -5,12 +5,20 @@
    et les routines de vacances (routines.holiday_period_id) s'ajoutent. Le serveur applique les mêmes règles (private.routine_rules). */
 const holLabel = p => t("pause.range", { from: fmtDate(p.start_day), to: fmtDate(p.end_day) });
 const holState = p => { const td = todayISO(); return p.end_day < td ? "past" : p.start_day > td ? "next" : "now"; };
-function holidaySection() {
-  const td = todayISO(), list = (S.holidays || []).filter(p => p.end_day >= td);
-  return `<section class="sec"><h2>🏖️ ${t("hol.title")}${ptag()}</h2><p class="muted">${t("hol.help")}</p>
-    ${list.length ? `<ul class="tpl">${list.map(p => { const k = S.children.find(c => c.id === p.child_id) || { emoji: "", name: "" };
-      return `<li><button class="pen hrow" data-act="holReview" data-id="${p.id}" aria-label="${t("hol.review")} ${esc(p.name)}"><span><b>${esc(p.name)}</b><small>${esc(k.emoji + " " + k.name)}${t("sep")}${holLabel(p)}${t("sep")}${t("hol.state." + holState(p))}</small></span><span class="link">${t("hol.review")}</span></button></li>`; }).join("")}</ul>` : ""}
-    <div class="actions"><button class="btn ghost" data-act="holNew">${t("hol.new")}${ptag()}</button></div></section>`;
+/* Section « Vacances et absences » de Famille (v27) : Mode vacances d'abord, pause ensuite, une seule liste chronologique.
+   Une pause qui chevauche un Mode vacances l'emporte (jour neutre) : la ligne le dit. */
+function vacSection() {
+  const td = todayISO(), kid = id => S.children.find(c => c.id === id) || { emoji: "", name: "" };
+  const hols = (S.holidays || []).filter(p => p.end_day >= td), pzs = (S.pauses || []).filter(p => p.end_day >= td);
+  const rows = [...hols.map(p => ({ k: "h", p })), ...pzs.map(p => ({ k: "p", p }))]
+    .sort((a, b) => a.p.start_day < b.p.start_day ? -1 : a.p.start_day > b.p.start_day ? 1 : a.k < b.k ? -1 : 1);
+  const row = ({ k, p }) => { const c = kid(p.child_id), who = esc(c.emoji + " " + c.name);
+    if (k === "h") return `<li><button class="pen hrow" data-act="holReview" data-id="${p.id}" aria-label="${t("hol.review")} ${esc(p.name)}"><span><b>🏖️ ${esc(p.name)}</b><small>${who}${t("sep")}${holLabel(p)}${t("sep")}${t("hol.state." + holState(p))}</small></span><span class="link">${t("hol.review")}</span></button></li>`;
+    const wins = hols.some(h => h.child_id === p.child_id && h.active !== false && h.start_day <= p.end_day && p.start_day <= h.end_day);
+    return `<li><button class="pen hrow" data-act="editPause" data-id="${p.id}" aria-label="${t("pause.edit")}"><span><b>⏸️ ${esc(pauseReason(p))}</b><small>${who}${t("sep")}${holLabel(p)}${t("sep")}${t("pause.state." + holState(p))}${wins ? `<br><span class="pz">${t("vac.pauseWins")}</span>` : ""}</small></span><span class="link">${t("btn.edit")}</span></button></li>`; };
+  return `<section class="sec" id="vac"><h2>${t("vac.title")}</h2><p class="muted">${t("vac.help")}</p>
+    ${rows.length ? `<ul class="tpl">${rows.map(row).join("")}</ul>` : ""}
+    <div class="actions"><button class="btn" data-act="holNew">${t("hol.new")}${ptag()}</button><button class="btn ghost" data-act="newPause">${t("pause.new")}</button></div></section>`;
 }
 // Après une modification faite pendant des vacances : alerte, puis retour à la revue si elle était ouverte
 async function afterHolidayEdit(msg, holiday) {
@@ -50,7 +58,7 @@ A.holReview = el => {
   const vac = S.routines.filter(r => r.holiday_period_id === p.id);
   const sibs = (S.holidays || []).filter(x => x.child_id !== c.id && S.routines.some(r => r.holiday_period_id === x.id));
   const setting = r => { const o = p.ov[r.id]; if (!o) return t("hol.same");
-    if (o.status === "off") return "⏸ " + t("hol.off");
+    if (o.status === "off") return "⏸️ " + t("hol.off");
     const parts = [o.status ? t(o.status === "bonus" ? "routine.bonus" : "routine.mandatory") : null, o.days ? daysLabel(o.days) : null, o.stars ? t("hol.starsN", { n: o.stars }) : null].filter(Boolean);
     return "✏️ " + parts.join(t("sep")); };
   const started = holState(p) !== "next";

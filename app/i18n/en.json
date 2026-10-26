@@ -8,7 +8,8 @@
   "deletedF": "Deleted.",
   "deletedM": "Deleted.",
   "savedM": "Saved.",
-  "starsReturned": "The stars have been given back to the child.", "undone": "Action undone, please try again."
+  "starsReturned": "The stars have been given back to the child.",
+  "undone": "Action undone, please try again."
  },
  "days": {
   "short": [
@@ -654,8 +655,6 @@
   "invite": "Invite a member"
  },
  "pause": {
-  "title": "Holiday or illness breaks",
-  "help": "Days on a break count neither for nor against the flower.",
   "default": "Break",
   "range": "{from} to {to}",
   "new": "Schedule a break",
@@ -663,17 +662,32 @@
   "from": "From",
   "to": "To",
   "reason": "Reason",
-  "reasons": [
-   "Holiday",
-   "Illness",
-   "Other"
-  ],
   "needChild": "Choose at least one child.",
   "badDates": "Check the dates: the end must be after the start.",
   "saved": "Break saved.",
   "delTitle": "Delete this break?",
   "delText": "These days will count normally again.",
-  "deleted": "Break deleted."
+  "deleted": "Break deleted.",
+  "r": {
+   "trip": "Trip",
+   "sick": "Illness",
+   "other": "Other"
+  },
+  "state": {
+   "now": "in progress",
+   "next": "upcoming",
+   "past": "over"
+  },
+  "edit": "Edit break",
+  "on": "On a break",
+  "neutral": "neutral day for the flower",
+  "lockedHelp": "This break has started: its first day can no longer change. You can extend it or stop it.",
+  "graceHelp": "This break has started but was created less than 24 hours ago: you can still correct its dates or delete it.",
+  "endTooEarly": "For a break that has started, the end can't be before yesterday.",
+  "stop": "Stop",
+  "stopTitle": "Stop this break?",
+  "stopText": "{name}'s break ends: the last day becomes yesterday, {date}. From today, days count for the flower again. Days already on a break stay neutral.",
+  "stopped": "Break stopped: days count again."
  },
  "push": {
   "title": "Reminders",
@@ -833,7 +847,9 @@
   "needInternet": "You need the internet to choose a reward.",
   "bravo": "Well done!",
   "showParents": "Show this screen to your parents: you've won “{title}”.",
-  "super": "Great!"
+  "super": "Great!",
+  "pauseDay": "Break day: your flower stays the same. You can still earn stars.",
+  "anyway": "Do my routines anyway"
  },
  "form": {
   "icon": "Icon",
@@ -952,8 +968,12 @@
    "text": "During the holidays, pause routines, change their status, days or stars, and add holiday routines, without stopping the flower."
   }
  },
+ "vac": {
+  "title": "Holidays and breaks",
+  "help": "Holiday mode: routines carry on, adapted to the holidays. Break: days count neither for nor against the flower, ideal for a trip or an illness.",
+  "pauseWins": "The break takes priority over holiday mode"
+ },
  "hol": {
-  "title": "Holiday mode",
   "help": "Adapt routines during the holidays without pausing everything: the flower keeps growing.",
   "new": "Schedule holiday mode",
   "newHelp": "Choose the child and the dates. You will then set each routine.",
@@ -1045,6 +1065,7 @@
   "premium_holidays": "Holiday mode is part of Premium.",
   "holiday_overlap": "These dates overlap other holidays for this child.",
   "holiday_started": "These holidays have started: use \"Stop\".",
-  "holiday_out_of_range": "This routine only exists during the holidays."
+  "holiday_out_of_range": "This routine only exists during the holidays.",
+  "pause_started": "This break started more than 24 hours ago: it can no longer be deleted or moved earlier. You can stop it."
  }
 }

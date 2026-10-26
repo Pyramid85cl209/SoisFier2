@@ -54,11 +54,13 @@ function pToday() {
     const v = viewFor(c), due = dueOn(S.routines, c.id, day, S.completions);
     const main = due.filter(r => !r.is_bonus), bonus = due.filter(r => r.is_bonus);
     const nd = main.filter(r => v.done.has(r.id + "|" + day)).length;
-    const n = gardenNow(S.gardens[c.id]);
-    return `<section class="kid" style="--c:${esc(c.color)}">
+    const n = gardenNow(S.gardens[c.id]), pz = pauseOn(c.id, day), hp = periodOn(c.id, day);
+    // Jour en pause : ⏸️ et motif à la place de 🏖️, « jour neutre » à la place de la fleur, anneau remplacé par ⏸️ ; les routines restent cochables
+    const flower = !n ? "" : pz ? `<span>🌱 ${t("pause.neutral")}</span>` : n.waiting ? `<span>🌱 ${t("garden.firstFrom", { date: fmtLong(n.start) })}</span>` : `<span>🌱 ${t("garden.dayOf", { d: n.dayIdx, len: n.len })}${t("sep")}${t("garden.goodDays", { n: n.good })}</span>`;
+    return `<section class="kid ${pz ? "paused" : ""}" style="--c:${esc(c.color)}">
       <div class="kid-head"><button class="kid-plant" data-act="showGarden" data-id="${c.id}" aria-label="${t("garden.see", { name: esc(c.name) })}" style="border:0;background:none;padding:0">${n ? stageSVG(n.stage, n.species, c.color) : plantSVG(0, c.color)}</button>
-        <div><h2>${esc(c.emoji)} ${esc(c.name)}</h2><p class="meta"><span>⭐ ${t("parent.toSpend", { n: v.balance })}</span>${!n ? "" : n.waiting ? `<span>🌱 ${t("garden.firstFrom", { date: fmtLong(n.start) })}</span>` : `<span>🌱 ${t("garden.dayOf", { d: n.dayIdx, len: n.len })}${t("sep")}${t("garden.goodDays", { n: n.good })}</span>`}${v.current > 1 ? `<span>🔥 ${t("parent.inARow", { n: v.current })}</span>` : ""}${periodOn(c.id, day) ? `<span>🏖️ ${esc(periodOn(c.id, day).name)}</span>` : ""}</p></div>
-        <div class="ring" style="--p:${main.length ? Math.round(nd / main.length * 100) : 0}" aria-label="${t("parent.doneOf", { n: nd, total: main.length })}"><span>${fmtNum(nd)}/${fmtNum(main.length)}</span></div></div>
+        <div><h2>${esc(c.emoji)} ${esc(c.name)}</h2><p class="meta">${pz ? `<span class="pz">⏸️ ${t("pause.on")}${pz.garden ? "" : t("sep") + esc(pauseReason(pz))}</span>` : ""}<span>⭐ ${t("parent.toSpend", { n: v.balance })}</span>${flower}${v.current > 1 ? `<span>🔥 ${t("parent.inARow", { n: v.current })}</span>` : ""}${hp && !pz ? `<span>🏖️ ${esc(hp.name)}</span>` : ""}</p></div>
+        ${pz ? `<div class="ring pz" aria-label="${t("pause.on")}"><span aria-hidden="true">⏸️</span></div>` : `<div class="ring" style="--p:${main.length ? Math.round(nd / main.length * 100) : 0}" aria-label="${t("parent.doneOf", { n: nd, total: main.length })}"><span>${fmtNum(nd)}/${fmtNum(main.length)}</span></div>`}</div>
       ${due.length ? `<ul class="rlist">${[...due.filter(isOneoff), ...main.filter(r => !isOneoff(r)), ...bonus.filter(r => !isOneoff(r))].map(r => rowP(c, r, day, v)).join("")}</ul>`
         : `<p class="empty">${t("parent.nothing")}${isParent() ? ` <button class="link" data-act="tab" data-tab="routines" data-child="${c.id}">${t("parent.addRoutines")}</button>` : ""}</p>`}
       ${day === td ? `<div class="actions" style="margin:10px 0 0"><button class="btn sm ghost" data-act="newOneoff" data-child="${c.id}">+ ${t("oneoff.btn")}${ptag()}</button></div>` : ""}
@@ -131,10 +133,7 @@ function pFamily() {
     <section class="sec"><h2>${t("family.members")}</h2>${members}
       ${P ? `<p class="muted small">${t("family.rolesHelp")}</p><div class="actions"><button class="btn ghost" data-act="invite">${t("family.invite")}</button></div>` : ""}</section>
     <section class="sec"><h2>${t("week.title")}</h2><p class="muted">${esc(weekSummary(WEEK))}</p><p class="muted small">${t("week.help")}</p>${P ? `<div class="actions"><button class="btn ghost" data-act="editWeek" data-mode="family">${t("btn.edit")}</button></div>` : ""}</section>
-    ${P ? `<section class="sec"><h2>${t("pause.title")}</h2><p class="muted">${t("pause.help")}</p>
-      ${S.pauses.length ? `<ul class="hist">${S.pauses.map(p => { const k = S.children.find(c => c.id === p.child_id); return `<li><span>${esc(k ? k.emoji + " " + k.name : "")}${t("sep")}${esc(p.reason || t("pause.default"))}</span><span class="muted">${t("pause.range", { from: fmtDate(p.start_day), to: fmtDate(p.end_day) })}</span><button class="link" data-act="delPause" data-id="${p.id}">${t("btn.delete")}</button></li>`; }).join("")}</ul>` : ""}
-      <div class="actions"><button class="btn ghost" data-act="newPause">${t("pause.new")}</button></div></section>
-    ${holidaySection()}
+    ${P ? `${vacSection()}
     <section class="sec"><h2>${t("validate.section")}</h2><p class="muted">${t("validate.sectionHelp")}</p>
       <label class="check"><input type="checkbox" data-act="toggleAuto" ${S.autoValidate ? "checked" : ""}> ${t("validate.autoLabel")}</label></section>` : ""}
     <section class="sec"><h2>${t("push.title")}</h2><p class="muted">${t("push.parentHelp")}</p>

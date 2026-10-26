@@ -162,12 +162,19 @@ A.showYear = el => {
   const y = el.dataset.y, fl = (S.cs.garden.flowers || []).filter(f => f.garden_year === y);
   openSheet(`<h2>${t("kid.myGarden", { year: esc(y) })}</h2><div class="scene">${gardenSVG(S.cs.child.name, y, fl, null)}</div><p>${t("garden.yearCount", { n: fl.length, big: fl.filter(f => f.grade === 3).length })}</p><div class="sheet-actions"><button class="btn" data-act="closeSheet">${t("btn.close")}</button></div>`);
 };
+/* Pauses (v27) : modifiables comme une période. Une pause commencée (premier jour passé) et créée il y a plus
+   de 24 h ne se supprime plus : son premier jour est figé, « Arrêter » fixe son dernier jour à hier.
+   Même règle côté serveur (déclencheur pauses_check, code SF:pause_started). */
+const pauseGrace = p => !p.created_at || Date.now() - Date.parse(p.created_at) < 864e5;
+const pauseLocked = p => p.start_day < todayISO() && !pauseGrace(p);
+const reasonSelect = cur => `<label class="f">${t("pause.reason")}<select id="pz-why">${PAUSE_REASONS.map(k => `<option value="${k}" ${k === cur ? "selected" : ""}>${t("pause.r." + k)}</option>`).join("")}${cur && !PAUSE_REASONS.includes(cur) ? `<option value="${esc(cur)}" selected>${esc(cur)}</option>` : ""}</select></label>`;
+A.cAnyway = () => { S.kidAnyway = todayISO(); render(); };
 A.newPause = () => {
   const td = todayISO();
-  openSheet(`<h2>${t("pause.new")}</h2><p class="muted">${t("pause.during")}</p>
+  openSheet(`<h2>⏸️ ${t("pause.new")}</h2><p class="muted">${t("pause.during")}</p>
     <div class="f"><span>${t("family.children")}</span><ul class="tpl">${S.children.map(c => `<li><label><input type="checkbox" value="${c.id}" checked> ${esc(c.emoji)} ${esc(c.name)}</label></li>`).join("")}</ul></div>
     <div class="f two"><label>${t("pause.from")}<input type="date" id="pz-from" value="${td}"></label><label>${t("pause.to")}<input type="date" id="pz-to" value="${addDays(td, 6)}"></label></div>
-    <label class="f">${t("pause.reason")}<select id="pz-why">${t("pause.reasons").map(r => `<option>${r}</option>`).join("")}</select></label>
+    ${reasonSelect("sick")}
     <div class="sheet-actions"><button class="btn" data-act="savePause">${t("btn.save")}</button></div>`);
 };
 A.savePause = async () => {
@@ -177,8 +184,36 @@ A.savePause = async () => {
   const { error } = await sb.from("pauses").insert(ids.map(id => ({ family_id: S.family.id, child_id: id, start_day: a, end_day: b, reason: $("#pz-why").value })));
   if (error) throw error; closeSheet(); await reloadParent(t("pause.saved"), ["pz"]);
 };
+// Modifier : dates (premier jour figé si la pause est verrouillée) et motif ; arrêter ou supprimer
+A.editPause = el => {
+  const p = (S.pauses || []).find(x => x.id === el.dataset.id); if (!p) return;
+  const c = S.children.find(k => k.id === p.child_id) || { emoji: "", name: "" }, td = todayISO(), locked = pauseLocked(p);
+  const help = locked ? t("pause.lockedHelp") : p.start_day < td ? t("pause.graceHelp") : "";
+  openSheet(`<h2>⏸️ ${t("pause.edit")}</h2><p class="muted">${esc(c.emoji + " " + c.name)}${t("sep")}${t("pause.state." + holState(p))}</p>
+    ${help ? `<p class="muted small">${help}</p>` : ""}
+    <div class="f two"><label>${t("pause.from")}<input type="date" id="pz-from" value="${p.start_day}" ${locked ? "disabled" : ""}></label><label>${t("pause.to")}<input type="date" id="pz-to" value="${p.end_day}" ${locked ? `min="${addDays(td, -1)}"` : ""}></label></div>
+    ${reasonSelect(p.reason)}
+    <div class="actions"><button class="btn sm ghost danger" data-act="${locked ? "stopPause" : "delPause"}" data-id="${p.id}">${locked ? t("pause.stop") : t("btn.delete")}</button></div>
+    <div class="sheet-actions"><button class="btn" data-act="savePauseEdit" data-id="${p.id}">${t("btn.save")}</button></div>`);
+};
+A.savePauseEdit = async el => {
+  const p = (S.pauses || []).find(x => x.id === el.dataset.id); if (!p) return closeSheet();
+  const locked = pauseLocked(p), a = locked ? p.start_day : $("#pz-from").value, b = $("#pz-to").value;
+  if (!a || !b || b < a) return toast(t("pause.badDates"), true);
+  if (locked && b < addDays(todayISO(), -1) && b < p.end_day) return toast(t("pause.endTooEarly"), true);
+  const { error } = await sb.from("pauses").update({ start_day: a, end_day: b, reason: $("#pz-why").value }).eq("id", p.id);
+  if (error) throw error; closeSheet(); await reloadParent(t("pause.saved"), ["pz"]);
+};
+// Arrêter : dernier jour = hier ; les jours déjà en pause restent neutres
+A.stopPause = async el => {
+  const p = (S.pauses || []).find(x => x.id === el.dataset.id); if (!p) return;
+  const c = S.children.find(k => k.id === p.child_id) || { name: "" }, y = addDays(todayISO(), -1);
+  if (!await confirmSheet(t("pause.stopTitle"), t("pause.stopText", { name: c.name, date: fmtLong(y) }), t("pause.stop"), true)) return A.editPause(el);
+  const { error } = await sb.from("pauses").update({ end_day: y }).eq("id", p.id); if (error) throw error;
+  await reloadParent(t("pause.stopped"), ["pz"]);
+};
 A.delPause = async el => {
-  if (!await confirmSheet(t("pause.delTitle"), t("pause.delText"), t("btn.delete"), true)) return;
+  if (!await confirmSheet(t("pause.delTitle"), t("pause.delText"), t("btn.delete"), true)) return A.editPause(el);
   const { error } = await sb.from("pauses").delete().eq("id", el.dataset.id); if (error) throw error;
   await reloadParent(t("pause.deleted"), ["pz"]);
 };

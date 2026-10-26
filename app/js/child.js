@@ -17,6 +17,10 @@ function cToday(v, routines) {
   const td = todayISO(), due = dueOn(routines, v.child.id, td, S.cs.completions);
   const main = due.filter(r => !r.is_bonus), bonus = due.filter(r => r.is_bonus);
   const nd = main.filter(r => v.done.has(r.id + "|" + td)).length;
+  // Jour en pause (la pause l'emporte sur le Mode vacances) : routines repliées derrière « Faire quand même »,
+  // dépliées d'office si quelque chose est déjà coché aujourd'hui ; cocher rapporte toujours des étoiles
+  const pz = pauseOn(v.child.id, td), hp = periodOn(v.child.id, td);
+  const folded = !!pz && S.kidAnyway !== td && !due.some(r => v.done.has(r.id + "|" + td));
   const card = r => {
     const d = v.done.has(r.id + "|" + td), val = v.valid.has(r.id + "|" + td);
     return `<li><button class="kcard ${val ? "done" : d ? "pending" : ""}" data-act="cToggle" data-id="${r.id}" aria-pressed="${d}">
@@ -33,9 +37,10 @@ function cToday(v, routines) {
       <div class="hero-txt">${gn && gn.waiting ? `<h1>${t("kid.potWaitsSeed")}</h1><p>${t("kid.firstFlowerStarts", { date: fmtLong(gn.start) })}</p>` : gn ? `<h1>${STAGE_NAME[gn.stage]}</h1>${dots14(v.garden)}
       <p>${gn.pausedToday ? t("kid.paused") : t("kid.dayOfOpens", { d: gn.dayIdx, len: gn.len, date: fmtLong(gn.end) })}</p>` : `<h1>${t("kid.potWaits")}</h1>`}
       ${v.pendingStars ? `<p class="wait-note">⏳ ${t("kid.pendingStars", { n: v.pendingStars })}</p>` : ""}</div></section>
-    ${periodOn(v.child.id, td) ? `<p class="center"><span class="pill hol-pill">🏖️ ${esc(periodOn(v.child.id, td).name)}</span></p>` : ""}
-    <p class="today-count">${main.length ? (nd === main.length ? t("kid.allDone") : t("kid.doneOf", { n: nd, total: main.length })) : t("kid.noRoutine")}</p>
-    ${groups}${bonus.filter(r => !isOneoff(r)).length ? `<h3 class="grp">💪 ${t("kid.bonus")}</h3><ul class="kcards">${bonus.filter(r => !isOneoff(r)).map(card).join("")}</ul>` : ""}`;
+    ${pz ? `<div class="kid-pause"><p><span aria-hidden="true">⏸️</span> ${t("kid.pauseDay")}</p>${folded && due.length ? `<button class="btn ghost" data-act="cAnyway">${t("kid.anyway")}</button>` : ""}</div>`
+      : hp ? `<p class="center"><span class="pill hol-pill">🏖️ ${esc(hp.name)}</span></p>` : ""}
+    ${folded ? "" : `<p class="today-count">${main.length ? (nd === main.length ? t("kid.allDone") : t("kid.doneOf", { n: nd, total: main.length })) : t("kid.noRoutine")}</p>
+    ${groups}${bonus.filter(r => !isOneoff(r)).length ? `<h3 class="grp">💪 ${t("kid.bonus")}</h3><ul class="kcards">${bonus.filter(r => !isOneoff(r)).map(card).join("")}</ul>` : ""}`}`;
 }
 function cGifts(v, routines, cs) {
   const hist = [

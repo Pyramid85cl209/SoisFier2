@@ -47,7 +47,7 @@ async def route(r):
     body = open(f, "rb").read()
     if path == "js/config.js":
         body = body.decode().replace("__SUPABASE_URL__", "https://x.supabase.co").replace("__SUPABASE_KEY__", "k").encode()
-    ct = "text/html" if f.endswith(".html") else "application/json" if f.endswith(".json") else "application/javascript"
+    ct = "text/html" if f.endswith(".html") else "application/json" if f.endswith(".json") else "text/css" if f.endswith(".css") else "image/png" if f.endswith(".png") else "application/javascript"
     await r.fulfill(body=body, content_type=ct)
 
 class Shots:
