@@ -87,37 +87,42 @@ A.pair = async () => {
 };
 
 // Aujourd'hui (parent)
+// Coches, validations et refus : écran changé tout de suite (instant), compteurs ajustés localement, retour arrière si le serveur refuse
+const isDone = (c, rid, day) => c.routine_id === rid && c.day === day;
+const earnStats = c => ({ pending_stars: -c.stars, pending_count: -1, earned: c.stars, done_count: 1 });
 A.pToggle = async el => {
   const childId = el.dataset.child, rid = el.dataset.id, day = S.day;
-  const cur = S.completions.find(c => c.routine_id === rid && c.day === day);
+  const cur = S.completions.find(c => isDone(c, rid, day));
   if (!cur) {
-    S.completions.push({ child_id: childId, routine_id: rid, day, stars: 0, source: "parent", validated_at: new Date().toISOString() }); render(); celebrate(false);
-    const { error } = await sb.from("completions").insert({ family_id: S.family.id, child_id: childId, routine_id: rid, day, source: "parent" });
-    if (error && error.code !== "23505") throw error;
-  } else if (!cur.validated_at) {
-    return A.validateOne({ dataset: { id: rid, day } });
-  } else if (Date.now() - new Date(cur.validated_at).getTime() < 5 * 60 * 1000) {
-    S.completions = S.completions.filter(c => c !== cur); render();
-    const { error } = await sb.from("completions").delete().eq("routine_id", rid).eq("day", day); if (error) throw error;
-    toast(t("routine.unchecked"));
-  } else {
-    return toast(t("routine.alreadyValidated"), true);
+    const r = S.routines.find(x => x.id === rid), stars = r ? (effective(r, day) || r).stars : 0, me = S.session?.user.id;
+    celebrate(false);
+    return instant(() => { S.completions = [...S.completions, { child_id: childId, routine_id: rid, day, stars, source: "parent", validated_at: new Date().toISOString(), validated_by: me, created_by: me }]; bumpStats(childId, { earned: stars, done_count: 1 }); },
+      async () => { const res = await sb.from("completions").insert({ family_id: S.family.id, child_id: childId, routine_id: rid, day, source: "parent" }); return res.error && res.error.code === "23505" ? {} : res; },
+      ["x", "s"]);
   }
-  await reloadParent(null, ["x", "s"]);
+  if (!cur.validated_at) return A.validateOne({ dataset: { id: rid, day } });
+  if (Date.now() - new Date(cur.validated_at).getTime() >= 5 * 60 * 1000) return toast(t("routine.alreadyValidated"), true);
+  return instant(() => { S.completions = S.completions.filter(c => c !== cur); bumpStats(cur.child_id, { earned: -cur.stars, done_count: -1 }); },
+    () => sb.from("completions").delete().eq("routine_id", rid).eq("day", day), ["x", "s"], t("routine.unchecked"));
 };
 A.validateOne = async el => {
-  const { id, day } = el.dataset;
-  const { error } = await sb.from("completions").update({ validated_at: new Date().toISOString() }).eq("routine_id", id).eq("day", day).is("validated_at", null);
-  if (error) throw error; celebrate(false); await reloadParent(t("validate.done"), ["x", "s"]);
+  const { id, day } = el.dataset, now = new Date().toISOString(), me = S.session?.user.id;
+  const cur = S.completions.find(c => isDone(c, id, day) && !c.validated_at); if (!cur) return;
+  celebrate(false);
+  return instant(() => { S.completions = S.completions.map(c => c === cur ? { ...c, validated_at: now, validated_by: me } : c); bumpStats(cur.child_id, earnStats(cur)); },
+    () => sb.from("completions").update({ validated_at: now }).eq("routine_id", id).eq("day", day).is("validated_at", null), ["x", "s"], t("validate.done"));
 };
 A.refuseOne = async el => {
   const { id, day } = el.dataset;
-  const { error } = await sb.from("completions").delete().eq("routine_id", id).eq("day", day).is("validated_at", null);
-  if (error) throw error; await reloadParent(t("validate.refused"), ["x", "s"]);
+  const cur = S.completions.find(c => isDone(c, id, day) && !c.validated_at); if (!cur) return;
+  return instant(() => { S.completions = S.completions.filter(c => c !== cur); bumpStats(cur.child_id, { pending_stars: -cur.stars, pending_count: -1 }); },
+    () => sb.from("completions").delete().eq("routine_id", id).eq("day", day).is("validated_at", null), ["x", "s"], t("validate.refused"));
 };
 A.validateAll = async () => {
-  const { error } = await sb.from("completions").update({ validated_at: new Date().toISOString() }).eq("family_id", S.family.id).is("validated_at", null);
-  if (error) throw error; celebrate(true); await reloadParent(t("validate.allDone"), ["x", "s"]);
+  const now = new Date().toISOString(), me = S.session?.user.id, pend = S.completions.filter(c => !c.validated_at); if (!pend.length) return;
+  celebrate(true);
+  return instant(() => { S.completions = S.completions.map(c => c.validated_at ? c : { ...c, validated_at: now, validated_by: me }); pend.forEach(c => bumpStats(c.child_id, earnStats(c))); },
+    () => sb.from("completions").update({ validated_at: now }).eq("family_id", S.family.id).is("validated_at", null), ["x", "s"], t("validate.allDone"));
 };
 A.toggleAuto = async el => {
   const v = el.checked;

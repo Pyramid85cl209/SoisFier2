@@ -92,7 +92,7 @@ function pRoutines() {
       <span class="rt-stars">${fmtNum(r.stars)} ⭐</span></button></li>`; }).join("")}</ul>`;
   }).join("");
   return chips() + banner + `<div class="actions"><button class="btn" data-act="routineTemplates">${t("routine.chooseTpl")}</button><button class="btn ghost" data-act="newRoutine">${vac ? t("hol.newRoutine") : t("routine.create")}</button></div>`
-    + (groups || `<p class="empty">${t("routine.none", { name: esc(c.name) })}</p>`) + (vac ? "" : extra);
+    + (groups || `<p class="empty">${t("routine.none", { name: esc(c.name) })}</p>`) + extra;   // exceptionnelles en cours visibles aussi en vue vacances
 }
 function pRewards() {
   const c = curChild(), v = viewFor(c), r = rhythmOf(c.id), td = todayISO();

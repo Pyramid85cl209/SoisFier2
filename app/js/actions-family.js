@@ -75,14 +75,17 @@ A.editMember = el => {
 A.saveMember = async el => {
   const id = el.dataset.id, self = id === S.session?.user.id, row = { relation: readRelation("mem") };
   if (isParent() && !self) row.role = S.form.role;
-  const { error } = await sb.from("family_members").update(row).eq("family_id", S.family.id).eq("user_id", id); if (error) throw error;
-  closeSheet(); await reloadParent(t("member.saved"));
+  await mutate(() => sb.from("family_members").update(row).eq("family_id", S.family.id).eq("user_id", id));
+  S.members = S.members.map(m => m.user_id === id ? { ...m, ...row } : m); if (self) S.me = { ...S.me, ...row };
+  closeSheet(); saveParentCache(); render(); toast(t("member.saved"));
+  refreshParts(["m"]).then(render).catch(() => {});
 };
 A.removeMember = async el => {
   const m = S.members.find(x => x.user_id === el.dataset.id);
   if (!await confirmSheet(t("member.removeTitle", { who: m.relation || m.display_name || t("member.thisMember") }), t("member.removeText"), t("member.removeBtn"), true)) return;
-  const { error } = await sb.from("family_members").delete().eq("family_id", S.family.id).eq("user_id", m.user_id); if (error) throw error;
-  await reloadParent(t("member.removed"));
+  await mutate(() => sb.from("family_members").delete().eq("family_id", S.family.id).eq("user_id", m.user_id));
+  S.members = S.members.filter(x => x.user_id !== m.user_id); saveParentCache(); render(); toast(t("member.removed"));
+  refreshParts(["m"]).then(render).catch(() => {});
 };
 A.shareInvite = async el => { try { await navigator.share({ title: "SoisFier", text: t("member.shareText", { code: el.dataset.code, url: location.origin + location.pathname }) }); } catch {} };
 A.setPin = async () => {
@@ -103,8 +106,11 @@ A.saveWeek = async () => {
   const w = { start: +$("#wk-start").value, weekend: $$(".wk-we:checked", dlg).map(i => +i.value).sort((a, b) => a - b), tz: $("#wk-tz").value };
   if (w.weekend.length > 3) return toast(t("week.max3"), true);
   if (S.form.wkMode === "onboard") { S.wk = w; closeSheet(); const o = $("#o-week"); if (o) o.textContent = weekSummary(w); return; }
-  const { error } = await sb.from("families").update({ week_start: w.start, weekend_days: w.weekend, timezone: w.tz }).eq("id", S.family.id); if (error) throw error;
-  closeSheet(); await reloadParent(t("week.saved"));
+  await mutate(() => sb.from("families").update({ week_start: w.start, weekend_days: w.weekend, timezone: w.tz }).eq("id", S.family.id));
+  // Semaine appliquée tout de suite ; compteurs et jardins (recalculés par le serveur) suivent
+  setWeek({ week_start: w.start, weekend_days: w.weekend, timezone: w.tz }); S.family.week = { ...WEEK };
+  closeSheet(); saveParentCache(); render(); toast(t("week.saved"));
+  refreshParts(["f", "s", "g"]).then(render).catch(() => {});
 };
 A.printPlan = () => {
   if (S.children.length === 1) return printPlanning([S.children[0].id]);
