@@ -69,18 +69,20 @@ function parentCache() {
   return c && c.family && uid && (c.uid || c.me?.user_id) === uid ? c : null;   // jamais le cache d'un autre compte
 }
 function useParentCache(c) { const { uid, ...rest } = c; Object.assign(S, rest); if (c.week) Object.assign(WEEK, c.week); }
-// Écritures en cours : une lecture partie avant la fin d'une écriture est ignorée, puis relancée (pas de retour en arrière visible)
+// Écritures en cours : une lecture qui croise une écriture est ignorée (pas de retour en arrière visible).
+// Rechargement complet : relancé ; rechargement ciblé ou d'arrière-plan : abandonné, l'écriture en cours rechargera elle-même.
 let WRITES = 0, PENDING = 0;
 async function mutate(fn) {
   WRITES++; PENDING++;
   try { const res = await fn(); if (res && res.error) throw res.error; return res ? res.data : undefined; }
   finally { PENDING--; WRITES++; }
 }
-async function fresh(keys) {
-  for (let i = 0; i < 4; i++) {
+async function fresh(keys, tries = 1) {
+  for (let i = 0; i < tries; i++) {
+    if (i) await new Promise(r => setTimeout(r, 300));
+    if (PENDING) continue;
     const w = WRITES, o = await fetchParts(keys);
     if (w === WRITES && !PENDING) { applyParts(o); return true; }
-    await new Promise(r => setTimeout(r, 300));
   }
   return false;
 }
@@ -91,11 +93,11 @@ function awardBadges() {
   if (rows.length) sb.from("child_badges").upsert(rows, { onConflict: "child_id,badge_key", ignoreDuplicates: true }).then(() => {}, () => {});
 }
 async function refreshParent() {
-  if (!await fresh(Object.keys(PQ))) return;
+  if (!await fresh(Object.keys(PQ), 6)) return;
   awardBadges(); saveParentCache();
 }
 // Rechargement ciblé : seulement les parties qu'une action a changées ; compteurs, badges et jardins suivent en arrière-plan
-async function refreshParts(keys) { if (await fresh(keys)) saveParentCache(); bgRefresh(keys); }
+async function refreshParts(keys, tries = 3) { if (await fresh(keys, tries)) saveParentCache(); bgRefresh(keys); }
 const BG = ["s", "b", "g"];
 let bgTimer = null; const bgKeys = new Set();
 function bgRefresh(done = []) {
@@ -116,11 +118,11 @@ async function instant(apply, write, parts, msg) {
   catch (e) {
     console.error(e); Object.assign(S, snap); render();
     toast(/SF:\w+/.test((e && e.message) || "") ? errMsg(e) : t("common.undone"), true);
-    refreshParts(parts).then(render).catch(() => {});
+    refreshParts(parts, 1).then(render).catch(() => {});
     return { ok: false };
   }
   saveParentCache();
-  refreshParts(parts).then(render).catch(() => {});
+  refreshParts(parts, 1).then(render).catch(() => {});   // abandonné si une autre action écrit encore : elle rechargera après
   return { ok: true, data };
 }
 // Compteurs de l'enfant ajustés localement en attendant ceux du serveur
