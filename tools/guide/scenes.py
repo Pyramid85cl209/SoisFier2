@@ -231,11 +231,6 @@ async def main(only=None):
             await s.act(p, "A.pRedeem({ dataset: { id: 'W2' } });")
             b = await s.shot(p, "f3b")
             await s.compose("f3", [(a, C("f3", 0)), (b, C("f3", 1))])
-        if await scene("h1"):
-            p = await s.page()
-            await s.act(p, "A.tab({ dataset: { tab: 'family' } }); A.newPause();")
-            a = await s.shot(p, "h1", [(".tpl", 1), ("#pz-from", 2), ("#pz-why", 3), ("button[data-act=savePause]", 4)], sheet=True)
-            await s.compose("h1", [(a, C("h1", 0))])
         if await scene("h2"):
             p = await s.page()
             await s.act(p, "A.tab({ dataset: { tab: 'rewards' } }); scrollTo(0, 99999);")
@@ -329,6 +324,50 @@ async def main(only=None):
             await s.act(p, "A.editWeek({ dataset: { mode: 'family' } });")
             b = await s.shot(p, "w2b", sheet=True)
             await s.compose("w2", [(a, C("w2", 0)), (b, C("w2", 1))])
+        # ---------- Partie 6 : Vacances et absences (v27) ----------
+        # Liste unique : pause en cours (Maladie), vacances à venir, pause qui chevauche les vacances (la pause l'emporte)
+        VAC = {"holiday_periods": [{"id": "H1", "family_id": "F", "child_id": "C1", "name": "", "start_day": d(10), "end_day": d(23), "active": True}],
+               "holiday_overrides": [{"period_id": "H1", "routine_id": "R5", "family_id": "F", "child_id": "C1", "status": "off"},
+                                     {"period_id": "H1", "routine_id": "R9", "family_id": "F", "child_id": "C1", "status": "required", "days": [1, 2, 3, 4, 5, 6, 7]}],
+               "pauses": [{"id": "PZ0", "family_id": "F", "child_id": "C1", "start_day": d(-2), "end_day": d(1), "reason": "sick", "created_at": d(-2) + "T07:00:00Z"},
+                          {"id": "PZ1", "family_id": "F", "child_id": "C1", "start_day": d(20), "end_day": d(27), "reason": "trip", "created_at": d(-1) + "T10:00:00Z"}]}
+        VAC_JS = ("S.hp.forEach(p => p.name = t('hol.namePlaceholder')); S.holidays.forEach(p => p.name = t('hol.namePlaceholder'));"
+                  "S.routines.push({ id: 'R30', family_id: 'F', child_id: 'C1', title: __FXJSON.X.waterGarden, emoji: '🪴', moment: 'soir', stars: 1, days: [1,2,3,4,5,6,7], is_bonus: false, kind: 'regular', active: true, holiday_period_id: 'H1', created_at: '2026-09-01T08:00:00Z', position: 30 });"
+                  "S.gardens.C1.days.forEach(x => { if (x.day >= addDays(todayISO(), -2)) { x.paused = true; x.good = false; } });")
+        if await scene("v1"):
+            p = await s.page(ovr=VAC, h=1010)
+            await s.act(p, VAC_JS + "A.tab({ dataset: { tab: 'family' } }); scrollTo(0, $('#vac').offsetTop - 70);")
+            a = await s.shot(p, "v1a", [("#vac [data-act=holReview]", 1), ("#vac [data-act=holNew]", 2)])
+            await s.act(p, "A.holReview({ dataset: { id: 'H1' } });")
+            await p.set_viewport_size({"width": 360, "height": 740})
+            b = await s.shot(p, "v1b", [("button[data-act=holDates]", 3), ("button[data-act=holEdit]", 4, 0), ("button[data-act=newRoutine]", 5)], sheet=True)
+            await s.compose("v1", [(a, C("v1", 0)), (b, C("v1", 1))])
+        if await scene("h1"):
+            p = await s.page(ovr=VAC, h=1010)
+            await s.act(p, VAC_JS + "A.tab({ dataset: { tab: 'family' } }); scrollTo(0, $('#vac').offsetTop - 70);")
+            a = await s.shot(p, "h1a", [("#vac [data-act=editPause]", 1, 0), ("#vac .pz", 2), ("#vac [data-act=newPause]", 3)])
+            await p.set_viewport_size({"width": 360, "height": 740}); await s.act(p, "A.newPause();")
+            b = await s.shot(p, "h1b", [(".tpl", 4), ("#pz-from", 5), ("#pz-why", 6), ("button[data-act=savePause]", 7)], sheet=True)
+            await s.compose("h1", [(a, C("h1", 0)), (b, C("h1", 1))])
+        if await scene("h3"):
+            p = await s.page(ovr=VAC)
+            await s.act(p, VAC_JS + "A.tab({ dataset: { tab: 'family' } }); A.editPause({ dataset: { id: 'PZ0' } });")
+            a = await s.shot(p, "h3a", [("#pz-from", 1), ("#pz-to", 2), ("button[data-act=stopPause]", 3)], sheet=True)
+            await s.act(p, "A.stopPause({ dataset: { id: 'PZ0' } });")
+            b = await s.shot(p, "h3b")
+            await s.compose("h3", [(a, C("h3", 0)), (b, C("h3", 1))])
+        if await scene("f4"):
+            p = await s.page(ovr=VAC)
+            await s.act(p, VAC_JS + "render();")
+            a = await s.shot(p, "f4", [(".meta .pz", 1), (".ring.pz", 2), (".rlist li", 3, 0)])
+            await s.compose("f4", [(a, C("f4", 0))])
+        if await scene("g7"):
+            p = await s.page(child=True)
+            await s.act(p, f"S.cs.garden.pauses = {json.dumps(VAC['pauses'][:1])}; S.cs.garden.days.forEach(x => {{ if (x.day >= addDays(todayISO(), -2)) {{ x.paused = true; x.good = false; }} }}); render();")
+            a = await s.shot(p, "g7a", [(".kid-pause p", 1), ("button[data-act=cAnyway]", 2)])
+            await s.act(p, "A.cAnyway();")
+            b = await s.shot(p, "g7b", [(".kcard", 3, 0)])
+            await s.compose("g7", [(a, C("g7", 0)), (b, C("g7", 1))])
         print("erreurs:", s.errs)
 
 asyncio.run(main(set(sys.argv[1:]) or None))

@@ -8,7 +8,8 @@
   "deletedF": "Supprimée.",
   "deletedM": "Supprimé.",
   "savedM": "Enregistré.",
-  "starsReturned": "Les étoiles sont rendues à l'enfant.", "undone": "Action annulée, réessaie."
+  "starsReturned": "Les étoiles sont rendues à l'enfant.",
+  "undone": "Action annulée, réessaie."
  },
  "days": {
   "short": [
@@ -645,8 +646,6 @@
   "invite": "Inviter un membre"
  },
  "pause": {
-  "title": "Pauses vacances ou maladie",
-  "help": "Les jours en pause ne comptent ni pour ni contre la fleur.",
   "default": "Pause",
   "range": "{from} au {to}",
   "new": "Programmer une pause",
@@ -654,17 +653,32 @@
   "from": "Du",
   "to": "Au",
   "reason": "Motif",
-  "reasons": [
-   "Vacances",
-   "Maladie",
-   "Autre"
-  ],
   "needChild": "Choisis au moins un enfant.",
   "badDates": "Vérifie les dates : la fin doit être après le début.",
   "saved": "Pause enregistrée.",
   "delTitle": "Supprimer cette pause ?",
   "delText": "Les jours concernés compteront à nouveau normalement.",
-  "deleted": "Pause supprimée."
+  "deleted": "Pause supprimée.",
+  "r": {
+   "trip": "Voyage",
+   "sick": "Maladie",
+   "other": "Autre"
+  },
+  "state": {
+   "now": "en cours",
+   "next": "à venir",
+   "past": "terminée"
+  },
+  "edit": "Modifier la pause",
+  "on": "En pause",
+  "neutral": "jour neutre pour la fleur",
+  "lockedHelp": "Pause commencée : le premier jour ne change plus. Vous pouvez la prolonger ou l'arrêter.",
+  "graceHelp": "Pause commencée, mais créée il y a moins de 24 h : vous pouvez encore corriger ses dates ou la supprimer.",
+  "endTooEarly": "Pour une pause commencée, la fin ne peut pas être avant hier.",
+  "stop": "Arrêter",
+  "stopTitle": "Arrêter cette pause ?",
+  "stopText": "La pause de {name} se termine : le dernier jour devient hier, {date}. Dès aujourd'hui, les journées comptent à nouveau pour la fleur. Les jours déjà en pause restent neutres.",
+  "stopped": "Pause arrêtée : les journées comptent à nouveau."
  },
  "push": {
   "title": "Rappels",
@@ -824,7 +838,9 @@
   "needInternet": "Il faut internet pour choisir une récompense.",
   "bravo": "Bravo !",
   "showParents": "Montre cet écran à tes parents : tu as gagné « {title} ».",
-  "super": "Super !"
+  "super": "Super !",
+  "pauseDay": "Jour de pause : ta fleur ne bouge pas. Tu peux quand même gagner des étoiles.",
+  "anyway": "Faire quand même mes routines"
  },
  "form": {
   "icon": "Icône",
@@ -943,8 +959,12 @@
    "text": "Pendant les vacances, mettez des routines en pause, changez leur statut, leurs jours ou leurs étoiles, et ajoutez des routines de vacances, sans arrêter la fleur."
   }
  },
+ "vac": {
+  "title": "Vacances et absences",
+  "help": "Mode vacances : les routines continuent, adaptées aux vacances. Pause : les jours ne comptent ni pour ni contre la fleur, idéal pour un voyage ou une maladie.",
+  "pauseWins": "La pause l'emporte sur le mode vacances"
+ },
  "hol": {
-  "title": "Mode vacances",
   "help": "Adaptez les routines pendant les vacances sans tout mettre en pause : la fleur continue de pousser.",
   "new": "Programmer le mode vacances",
   "newHelp": "Choisissez l'enfant et les dates. Vous réglerez ensuite chaque routine.",
@@ -1036,6 +1056,7 @@
   "premium_holidays": "Le mode vacances fait partie du Premium.",
   "holiday_overlap": "Ces dates chevauchent d'autres vacances de cet enfant.",
   "holiday_started": "Ces vacances ont commencé : utilisez « Arrêter ».",
-  "holiday_out_of_range": "Cette routine n'existe que pendant les vacances."
+  "holiday_out_of_range": "Cette routine n'existe que pendant les vacances.",
+  "pause_started": "Cette pause a commencé il y a plus de 24 h : elle ne peut plus être supprimée ni avancée. Vous pouvez l'arrêter."
  }
 }

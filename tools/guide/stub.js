@@ -31,7 +31,7 @@
     penalties: [{ id: "P1", family_id: "F", title: P.swear, emoji: "🗯️", stars: 1, active: true }, { id: "P2", family_id: "F", title: P.lie, emoji: "🤥", stars: 2, active: true }],
     penalty_events: [{ id: "PE1", child_id: "C1", title: P.swear, emoji: "🗯️", stars: 1, created_at: at(-1, 17), created_by: "U" }],
     child_badges: ["first", "r10", "r50", "s25", "s100", "st3", "st7", "f", "f1", "timer", "bonus", "matin", "soir", "we1", "week1", "big", "parterre"].map(k => ({ child_id: "C1", badge_key: k })),
-    pauses: [{ id: "PZ1", child_id: "C1", start_day: day(20), end_day: day(27), reason: L.pause }],
+    pauses: [{ id: "PZ1", child_id: "C1", start_day: day(20), end_day: day(27), reason: "trip", created_at: at(-1, 10) }],
     oneoff_templates: [{ id: "OT1", title: X.cook, emoji: "🧑‍🍳", stars: 2, moment: "soir", is_bonus: true, use_count: 3 }],
     tips: [{ text: L.tip }]
   }, O);
