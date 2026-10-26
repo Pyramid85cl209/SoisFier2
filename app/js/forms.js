@@ -16,10 +16,10 @@ function printPlanning(ids) {
         return `<tr><td class="n">${isHolidayR(r) ? "🏖️ " : ""}${esc(r.emoji)} ${esc(r.title)} (${fmtNum(ef.stars)} ⭐)${ef.is_bonus ? t("sep") + t("routine.bonus") : ""}</td>${due.map(m => m.has(r.id) ? `<td><span class="circ"></span></td>` : `<td class="off"></td>`).join("")}</tr>`;
       }).join("");
     }).join("");
-    const gifts = S.rewards.filter(w => !w.child_id || w.child_id === c.id);
+    const gifts = S.rewards.filter(w => (!w.child_id || w.child_id === c.id) && (!w.event_date || w.event_date >= td));   // sans les événements passés
     return `<section class="pp"><h1>${esc(c.emoji)} ${t("print.weekOf", { name: esc(c.name) })}</h1><p>${t("print.weekStart", { date: parseISO(first).toLocaleDateString(loc(), { day: "numeric", month: "long" }) })}</p>${hols.map(p => `<p>🏖️ ${esc(p.name)}${t("sep")}${holLabel(p)}</p>`).join("")}
       <table><thead><tr><th class="n">${t("print.routine")}</th>${order.map(d => `<th>${t("days.abbr")[d - 1]}</th>`).join("")}</tr></thead><tbody>${rows || `<tr><td colspan="8">${t("print.none")}</td></tr>`}</tbody></table>
-      ${gifts.length ? `<div class="gifts"><b>${t("print.myRewards")}</b> ${gifts.map(w => `${esc(w.emoji)} ${esc(w.title)} (${fmtNum(w.cost)} ⭐)`).join(t("sep"))}</div>` : ""}</section>`;
+      ${gifts.length ? `<div class="gifts"><b>${t("print.myRewards")}</b> ${gifts.map(w => `${esc(w.emoji)} ${esc(w.title)} (${fmtNum(costFor(w, c.id))} ⭐)`).join(t("sep"))}</div>` : ""}</section>`;
   }).join("");
   $("#print").innerHTML = pages; setTimeout(() => window.print(), 50);
 }

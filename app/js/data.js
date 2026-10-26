@@ -59,25 +59,78 @@ function applyParts(o) {
   if (!isParent() && S.tab === "routines") S.tab = "today";
   if (!S.children.find(k => k.id === S.currentChild)) S.currentChild = S.children[0]?.id || null;
 }
+// Cache du parent, rattaché au compte : affiché dès l'ouverture, puis remplacé par les données fraîches
 function saveParentCache() {
-  store.set("parentCache", { family: S.family, me: S.me, children: S.children, routines: S.routines, rewards: S.rewards, completions: S.completions, redemptions: S.redemptions, stats: S.stats, members: S.members, devices: S.devices,
-    autoValidate: S.autoValidate, penalties: S.penalties, pevents: S.pevents, badges: S.badges, pauses: S.pauses, gardens: S.gardens, week: { ...WEEK }, plan: S.plan, holidays: S.holidays });
+  store.set("parentCache", { uid: S.session?.user.id, family: S.family, me: S.me, children: S.children, routines: S.routines, rewards: S.rewards, completions: S.completions, redemptions: S.redemptions, stats: S.stats, members: S.members, devices: S.devices,
+    autoValidate: S.autoValidate, penalties: S.penalties, pevents: S.pevents, badges: S.badges, pauses: S.pauses, gardens: S.gardens, week: { ...WEEK }, plan: S.plan, holidays: S.holidays, hp: S.hp, ho: S.ho, oneoffTpl: S.oneoffTpl });
 }
-async function refreshParent() {
-  applyParts(await fetchParts(Object.keys(PQ)));
-  // Badges obtenus : enregistrés une fois pour toutes
+function parentCache() {
+  const c = store.get("parentCache"), uid = S.session?.user.id;
+  return c && c.family && uid && (c.uid || c.me?.user_id) === uid ? c : null;   // jamais le cache d'un autre compte
+}
+function useParentCache(c) { const { uid, ...rest } = c; Object.assign(S, rest); if (c.week) Object.assign(WEEK, c.week); }
+// Écritures en cours : une lecture qui croise une écriture est ignorée (pas de retour en arrière visible).
+// Rechargement complet : relancé ; rechargement ciblé ou d'arrière-plan : abandonné, l'écriture en cours rechargera elle-même.
+let WRITES = 0, PENDING = 0;
+async function mutate(fn) {
+  WRITES++; PENDING++;
+  try { const res = await fn(); if (res && res.error) throw res.error; return res ? res.data : undefined; }
+  finally { PENDING--; WRITES++; }
+}
+async function fresh(keys, tries = 1) {
+  for (let i = 0; i < tries; i++) {
+    if (i) await new Promise(r => setTimeout(r, 300));
+    if (PENDING) continue;
+    const w = WRITES, o = await fetchParts(keys);
+    if (w === WRITES && !PENDING) { applyParts(o); return true; }
+  }
+  return false;
+}
+// Badges obtenus : enregistrés une fois pour toutes
+function awardBadges() {
   const rows = [], fid = S.family.id;
   S.children.forEach(k => newBadges(viewFor(k)).forEach(key => { rows.push({ child_id: k.id, family_id: fid, badge_key: key }); (S.badges[k.id] = S.badges[k.id] || []).push(key); }));
   if (rows.length) sb.from("child_badges").upsert(rows, { onConflict: "child_id,badge_key", ignoreDuplicates: true }).then(() => {}, () => {});
-  saveParentCache();
 }
-// Rechargement ciblé : seulement les parties qu'une action a changées ; le reste (jardins, compteurs) suit en arrière-plan
-async function refreshParts(keys) { applyParts(await fetchParts(keys)); saveParentCache(); bgRefresh(); }
-let bgTimer = null;
-function bgRefresh() {
+async function refreshParent() {
+  if (!await fresh(Object.keys(PQ), 6)) return;
+  awardBadges(); saveParentCache();
+}
+// Rechargement ciblé : seulement les parties qu'une action a changées ; compteurs, badges et jardins suivent en arrière-plan
+async function refreshParts(keys, tries = 3) { if (await fresh(keys, tries)) saveParentCache(); bgRefresh(keys); }
+const BG = ["s", "b", "g"];
+let bgTimer = null; const bgKeys = new Set();
+function bgRefresh(done = []) {
+  BG.filter(k => !done.includes(k)).forEach(k => bgKeys.add(k));
+  if (!bgKeys.size) return;
   clearTimeout(bgTimer);
-  bgTimer = setTimeout(async () => { try { await refreshParent(); if (S.screen === "parent") render(); } catch {} }, 700);
+  bgTimer = setTimeout(async () => {
+    const keys = [...bgKeys]; bgKeys.clear();
+    try { if (await fresh(keys)) { awardBadges(); saveParentCache(); if (S.screen === "parent") render(); } } catch {}
+  }, 700);
 }
+// Action à affichage immédiat : l'écran change tout de suite ; si le serveur refuse, il revient en arrière avec un message
+async function instant(apply, write, parts, msg) {
+  const snap = { completions: S.completions, redemptions: S.redemptions, pevents: S.pevents, stats: structuredClone(S.stats) };
+  apply(); render(); if (msg) toast(msg);
+  let data;
+  try { data = await mutate(write); }
+  catch (e) {
+    console.error(e); Object.assign(S, snap); render();
+    toast(/SF:\w+/.test((e && e.message) || "") ? errMsg(e) : t("common.undone"), true);
+    refreshParts(parts, 1).then(render).catch(() => {});
+    return { ok: false };
+  }
+  saveParentCache();
+  refreshParts(parts, 1).then(render).catch(() => {});   // abandonné si une autre action écrit encore : elle rechargera après
+  return { ok: true, data };
+}
+// Compteurs de l'enfant ajustés localement en attendant ceux du serveur
+function bumpStats(childId, d) {
+  const s = S.stats[childId] = { ...(S.stats[childId] || {}) };
+  Object.entries(d).forEach(([k, v]) => { s[k] = Math.max(0, (s[k] || 0) + v); });
+}
+const newId = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : null;
 async function loadTip() {
   try {
     let { data } = await sb.from("tips").select("text").eq("locale", curLang()).order("id");
@@ -85,12 +138,14 @@ async function loadTip() {
     if (data && data.length) { const n = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 864e5); S.tip = data[n % data.length].text; if (S.screen === "parent") render(); }
   } catch {}
 }
+// Ouverture : la dernière visite s'affiche tout de suite (même compte), les données fraîches suivent en arrière-plan
 async function enterParent() {
-  S.screen = "loading"; render();
-  try { await loadParent(); if (S.screen !== "onboard") { S.screen = "parent"; loadTip(); } }
+  const cache = parentCache();
+  if (cache) { useParentCache(cache); S.screen = "parent"; loadTip(); } else S.screen = "loading";
+  render();
+  try { await loadParent(); if (S.screen !== "onboard") { if (!cache) loadTip(); S.screen = "parent"; } }
   catch (e) {
-    const cache = store.get("parentCache");
-    if (cache && isNetErr(e)) { Object.assign(S, cache); if (cache.week) Object.assign(WEEK, cache.week); S.offline = true; S.screen = "parent"; }
+    if (cache && isNetErr(e)) S.offline = true;
     else { S.screen = "error"; S.err = errMsg(e); }
   }
   render();

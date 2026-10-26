@@ -69,14 +69,17 @@ A.applyPenalty = async el => {
   const c = curChild(), pid = el.dataset.id || null;
   let title = null, stars = null;
   if (!pid) { title = $("#pen-title").value.trim(); stars = +$("#pen-stars").value; if (!title) return toast(t("malus.needReason"), true); }
-  const { data, error } = await sb.rpc("apply_penalty", { p_child: c.id, p_penalty: pid, p_title: title, p_emoji: null, p_stars: stars });
-  if (error) throw error;
-  closeSheet(); await reloadParent(t("malus.broken", { n: data, name: c.name }), ["pv", "s"]);
+  const pe = pid && S.penalties.find(p => p.id === pid);
+  const n = Math.min(pe ? pe.stars : stars, viewFor(c).balance);   // le solde ne passe jamais sous zéro (même règle que le serveur)
+  closeSheet();
+  return instant(() => { S.pevents = [{ id: "tmp:" + Date.now(), tmp: true, child_id: c.id, title: pe ? pe.title : title, emoji: pe ? pe.emoji : "💔", stars: n, created_at: new Date().toISOString(), created_by: S.session?.user.id }, ...S.pevents]; bumpStats(c.id, { broken: n, broken_count: 1 }); },
+    () => sb.rpc("apply_penalty", { p_child: c.id, p_penalty: pid, p_title: title, p_emoji: null, p_stars: stars }), ["pv", "s"], t("malus.broken", { n, name: c.name }));
 };
 A.cancelPenalty = async el => {
+  const e = S.pevents.find(x => x.id === el.dataset.id); if (!e || e.tmp) return;
   if (!await confirmSheet(t("malus.cancelTitle"), t("common.starsReturned"), t("malus.cancelBtn"))) return;
-  const { error } = await sb.from("penalty_events").delete().eq("id", el.dataset.id); if (error) throw error;
-  await reloadParent(t("malus.cancelled"), ["pv", "s"]);
+  return instant(() => { S.pevents = S.pevents.filter(x => x !== e); bumpStats(e.child_id, { broken: -e.stars, broken_count: -1 }); },
+    () => sb.from("penalty_events").delete().eq("id", e.id), ["pv", "s"], t("malus.cancelled"));
 };
 A.penaltyCatalog = () => {
   if (needPremium("malus")) return;
@@ -192,13 +195,17 @@ A.addRewardTpl = async () => {
 A.pRedeem = async el => {
   const w = S.rewards.find(x => x.id === el.dataset.id), c = curChild(), cost = costFor(w, c.id);
   if (!await confirmSheet(t("reward.exchangeTitle"), t("reward.exchangeText", { n: cost, name: c.name, title: w.title }), t("reward.exchange"))) return;
-  const { error } = await sb.from("redemptions").insert({ family_id: S.family.id, child_id: c.id, reward_id: w.id, title: w.title, emoji: w.emoji, cost }); if (error) throw error;
-  celebrate(true); await reloadParent(t("reward.exchanged"), ["z", "s"]);
+  // Identifiant créé dans l'app : la ligne d'historique est annulable tout de suite
+  const id = newId(), row = { family_id: S.family.id, child_id: c.id, reward_id: w.id, title: w.title, emoji: w.emoji, cost, ...(id ? { id } : {}) };
+  celebrate(true);
+  return instant(() => { S.redemptions = [{ ...row, id: id || "tmp:" + Date.now(), tmp: !id, created_at: new Date().toISOString(), created_by: S.session?.user.id }, ...S.redemptions]; bumpStats(c.id, { spent: cost, redeemed_count: 1 }); },
+    () => sb.from("redemptions").insert(row), ["z", "s"], t("reward.exchanged"));
 };
 A.cancelRedeem = async el => {
+  const z = S.redemptions.find(x => x.id === el.dataset.id); if (!z || z.tmp) return;
   if (!await confirmSheet(t("reward.cancelTitle"), t("common.starsReturned"), t("reward.cancelBtn"), true)) return;
-  const { error } = await sb.from("redemptions").delete().eq("id", el.dataset.id); if (error) throw error;
-  await reloadParent(t("reward.cancelled"), ["z", "s"]);
+  return instant(() => { S.redemptions = S.redemptions.filter(x => x !== z); bumpStats(z.child_id, { spent: -z.cost, redeemed_count: -1 }); },
+    () => sb.from("redemptions").delete().eq("id", z.id), ["z", "s"], t("reward.cancelled"));
 };
 
 // Enfants
@@ -212,15 +219,24 @@ A.saveChild = async el => {
   const res = id ? await sb.from("children").update(row).eq("id", id).select().single()
     : await sb.from("children").insert({ ...row, family_id: S.family.id, position: S.children.length }).select().single();
   if (res.error) throw res.error;
+  // Enfant enregistré : affiché tout de suite, prix des récompenses et enfants recalés en arrière-plan
+  S.children = id ? S.children.map(k => k.id === id ? { ...k, ...res.data } : k) : [...S.children, res.data];
   S.currentChild = res.data.id; closeSheet();
-  await reloadParent(id ? t("common.savedM") : t("child.joined", { name }));
-  if (!id) { S.tab = "routines"; render(); A.routineTemplates(); }
+  if (!id) S.tab = "routines";
+  render(); toast(id ? t("common.savedM") : t("child.joined", { name }));
+  if (!id) A.routineTemplates();
+  refreshParts(["c", "w"]).then(render).catch(() => {});
 };
 A.delChild = async el => {
   const c = S.children.find(k => k.id === el.dataset.id);
   if (!await confirmSheet(t("child.delTitle", { name: c.name }), t("child.delText"), t("btn.delete"), true)) return;
-  const { error } = await sb.from("children").delete().eq("id", c.id); if (error) throw error;
-  await reloadParent(t("common.deletedM"));
+  await mutate(() => sb.from("children").delete().eq("id", c.id));
+  const other = x => x.child_id !== c.id;
+  S.children = S.children.filter(k => k.id !== c.id);
+  ["routines", "completions", "redemptions", "pevents", "devices", "pauses", "holidays", "hp", "ho"].forEach(k => { if (Array.isArray(S[k])) S[k] = S[k].filter(other); });
+  if (S.currentChild === c.id) S.currentChild = S.children[0]?.id || null;
+  saveParentCache(); render(); toast(t("common.deletedM"));
+  refreshParts(["c", "w", "d"]).then(render).catch(() => {});
 };
 A.deviceCode = async el => {
   const c = S.children.find(k => k.id === el.dataset.id);
@@ -229,11 +245,13 @@ A.deviceCode = async el => {
     <p>${t("device.help")}</p>
     <div class="sheet-actions"><button class="btn" data-act="closeSheetReload">${t("btn.done")}</button></div>`);
 };
-A.closeSheetReload = async () => { closeSheet(); await reloadParent(); };
+A.closeSheetReload = async () => { closeSheet(); await reloadParent(null, ["d"]); };   // l'appareil relié apparaît
 A.revokeDevice = async el => {
+  const id = el.dataset.id;
   if (!await confirmSheet(t("device.revokeTitle"), t("device.revokeText"), t("family.disconnect"), true)) return;
-  const { error } = await sb.from("child_devices").delete().eq("id", el.dataset.id); if (error) throw error;
-  await reloadParent(t("device.revoked"));
+  await mutate(() => sb.from("child_devices").delete().eq("id", id));
+  S.devices = S.devices.filter(d => d.id !== id); saveParentCache(); render(); toast(t("device.revoked"));
+  refreshParts(["d"]).then(render).catch(() => {});
 };
 A.childHere = async el => {
   if (!await ensurePin()) return;

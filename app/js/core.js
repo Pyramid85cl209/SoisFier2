@@ -55,7 +55,10 @@ const WEEK = { start: 1, weekend: [6, 7], tz: "Europe/Paris" };   // remplacé p
 function setWeek(f) { if (!f) return; WEEK.start = f.week_start || 1; WEEK.weekend = f.weekend_days || []; WEEK.tz = f.timezone || "Europe/Paris"; }
 const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 // Jour (AAAA-MM-JJ) d'un instant, dans le fuseau de la famille
-function isoInTz(d) { try { return new Intl.DateTimeFormat("en-CA", { timeZone: WEEK.tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(d); } catch { return iso(d); } }
+// Formateurs de dates gardés en mémoire (en créer un par appel est lent sur une longue liste)
+const FMT = new Map();
+const fmtr = (locale, opts) => { const k = locale + JSON.stringify(opts); let f = FMT.get(k); if (!f) { f = new Intl.DateTimeFormat(locale, opts); FMT.set(k, f); } return f; };
+function isoInTz(d) { try { return fmtr("en-CA", { timeZone: WEEK.tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(d); } catch { return iso(d); } }
 const todayISO = () => isoInTz(new Date());
 const parseISO = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
 const addDays = (s, n) => { const d = parseISO(s); d.setDate(d.getDate() + n); return iso(d); };
@@ -121,7 +124,7 @@ function fmtDate(ts) {
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return parseISO(s).toLocaleDateString(loc(), { day: "numeric", month: "short" });
   try { return new Date(ts).toLocaleDateString(loc(), { day: "numeric", month: "short", timeZone: WEEK.tz }); } catch { return new Date(ts).toLocaleDateString(loc(), { day: "numeric", month: "short" }); }
 }
-const fmtTime = ts => { try { return new Date(ts).toLocaleTimeString(loc(), { hour: "2-digit", minute: "2-digit", timeZone: WEEK.tz }); } catch { return new Date(ts).toLocaleTimeString(loc(), { hour: "2-digit", minute: "2-digit" }); } };
+const fmtTime = ts => { try { return fmtr(loc(), { hour: "2-digit", minute: "2-digit", timeZone: WEEK.tz }).format(new Date(ts)); } catch { return new Date(ts).toLocaleTimeString(loc(), { hour: "2-digit", minute: "2-digit" }); } };
 function daysLabel(days) {
   const set = [...new Set(days || [])], same = (a, b) => a.length === b.length && a.every(x => b.includes(x));
   if (set.length === 7) return t("days.all");

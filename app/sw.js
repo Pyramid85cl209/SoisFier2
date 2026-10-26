@@ -1,5 +1,5 @@
 /* SoisFier – service worker : hors ligne + notifications */
-const CACHE = "soisfier-v25";
+const CACHE = "soisfier-v26";
 // Vitrine provisoire : jamais mise en cache, toujours servie en direct (retours des bêta-testeurs sur la dernière version).
 const VITRINE = new URL("vitrine/", self.registration.scope).pathname;
 // Aperçu d'une branche (/preview/) : jamais servi par le service worker de la production (il a le sien).
