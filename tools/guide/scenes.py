@@ -8,6 +8,11 @@ TODAY_DONE = [{"child_id": "C1", "routine_id": "R1", "day": d(0), "stars": 1, "s
               {"child_id": "C1", "routine_id": "R2", "day": d(0), "stars": 1, "source": "child", "validated_at": None, "created_by": None},
               {"child_id": "C1", "routine_id": "R4", "day": d(0), "stars": 1, "source": "timer", "validated_at": None, "created_by": None}]
 
+# Historique (v28) : aujourd'hui 2 routines validées et 2 en attente ; hier et avant-hier 4 validées (avec le malus d'hier et l'échange d'avant-hier du stub)
+HISTC = [{"child_id": "C1", "routine_id": f"R{r}", "day": d(n), "stars": st, "source": "child",
+          "validated_at": (d(n) + "T19:00:00Z") if (n < 0 or r < 3) else None, "validated_by": "U", "created_by": None}
+         for n in (0, -1, -2) for r, st in ((1, 1), (2, 1), (6, 2), (7, 2))]
+
 async def main(only=None):
     async with Shots() as s:
         async def scene(name):
@@ -137,30 +142,35 @@ async def main(only=None):
             await s.compose("c4", [(a, C("c4", 0))])
 
         # ---------- Malus ----------
-        if await scene("d1"):
-            p = await s.page(ovr={"penalty_events": []})
-            await s.act(p, "A.tab({ dataset: { tab: 'malus' } });")
-            a = await s.shot(p, "d1", [(".chip", 1), (".balance", 2), ("button[data-act=breakStar]", 3), ("button[data-act=penaltyCatalog]", 4)])
-            await s.compose("d1", [(a, C("d1", 0))])
-        if await scene("d2"):
-            p = await s.page(ovr={"penalties": []})
-            await s.act(p, "A.tab({ dataset: { tab: 'malus' } }); A.penaltyCatalog(); [0, 1].forEach(i => $$('.tpl input', dlg)[i].checked = true); $('#np-title').value = __L.malus_new;")
-            a = await s.shot(p, "d2", [(".tpl input", 1, 0), ("#np-title", 2), ("#np-stars", 3), ("button[data-act=breakStar]", 4), ("button[data-act=savePenalties]", 5)], sheet=True)
-            await s.compose("d2", [(a, C("d2", 0))])
+        if await scene("d1"):   # v28 : onglet Historique
+            p = await s.page(ovr={"completions": HISTC})
+            await s.act(p, "A.tab({ dataset: { tab: 'history' } });")
+            a = await s.shot(p, "d1a", [(".chip", 1), (".balance", 2), ("button[data-act=breakStar]", 3), (".day-h .net", 4, 0), (".h-earn", 5, 0), (".h-wait", 6, 0)])
+            await s.act(p, "scrollTo(0, $$('.day-h')[1].offsetTop - 80);")
+            b = await s.shot(p, "d1b", [(".h-broken", 7, 0)])
+            await s.compose("d1", [(a, C("d1", 0)), (b, C("d1", 1))])
+        if await scene("d2"):   # v28 : malus prédéfinis dans Famille
+            p = await s.page()
+            await s.act(p, "store.set('famOpen', { kids: false, vac: false, malus: true }); A.tab({ dataset: { tab: 'family' } }); scrollTo(0, $('[data-sec=malus]').offsetTop - 70);")
+            a = await s.shot(p, "d2a", [("[data-sec=malus] .hist li", 1, 0), ("[data-sec=malus] [data-act=delPenalty]", 2, 0), ("[data-sec=malus] [data-act=penaltyCatalog]", 3)])
+            await s.act(p, "A.penaltyCatalog({ dataset: { from: 'family' } }); [0, 1].forEach(i => $$('.tpl input', dlg)[i].checked = true); $('#np-title').value = __L.malus_new;")
+            b = await s.shot(p, "d2b", [(".tpl input", 4, 0), ("#np-title", 5), ("#np-stars", 6), ("button[data-act=savePenalties]", 7)], sheet=True)
+            await s.compose("d2", [(a, C("d2", 0)), (b, C("d2", 1))])
         if await scene("d3"):
             p = await s.page()
-            await s.act(p, "A.tab({ dataset: { tab: 'malus' } }); A.breakStar();")
+            await s.act(p, "A.tab({ dataset: { tab: 'history' } }); A.breakStar();")
             a = await s.shot(p, "d3", [(".pen", 1, 0), ("#pen-title", 2), ("#pen-stars", 3), ("dialog[open] button[data-act=penaltyCatalog]", 4), ("button.btn.danger[data-act=applyPenalty]", 5)], sheet=True)
             await s.compose("d3", [(a, C("d3", 0))])
-        if await scene("d4"):
-            p = await s.page()
-            await s.act(p, "A.tab({ dataset: { tab: 'malus' } });")
-            a = await s.shot(p, "d4a", [(".balance", 1), (".vlist li", 2), ("button[data-act=cancelPenalty]", 3)])
+        if await scene("d4"):   # v28 : annuler un malus depuis l'onglet Historique
+            p = await s.page(ovr={"completions": HISTC})
+            await s.act(p, "A.tab({ dataset: { tab: 'history' } }); scrollTo(0, $('.h-broken').getBoundingClientRect().top + scrollY - 260);")
+            a = await s.shot(p, "d4a", [(".h-broken .grow", 1, 0), (".h-broken [data-act=cancelPenalty]", 2, 0)])
             await s.act(p, "A.cancelPenalty({ dataset: { id: 'PE1' } });")
             b = await s.shot(p, "d4b")
             await s.compose("d4", [(a, C("d4", 0)), (b, C("d4", 1))])
 
         # ---------- Partie 2d ----------
+
         if await scene("e1"):
             p = await s.page()
             await s.act(p, "store.set('famOpen', { members: true }); A.tab({ dataset: { tab: 'family' } }); $$('.kid-row .btns').forEach(b => b.style.gap = '30px 30px');")
@@ -231,9 +241,9 @@ async def main(only=None):
             await s.act(p, "A.pRedeem({ dataset: { id: 'W2' } });")
             b = await s.shot(p, "f3b")
             await s.compose("f3", [(a, C("f3", 0)), (b, C("f3", 1))])
-        if await scene("h2"):
-            p = await s.page()
-            await s.act(p, "A.tab({ dataset: { tab: 'rewards' } }); scrollTo(0, 99999);")
+        if await scene("h2"):   # v28 : un échange dans l'onglet Historique
+            p = await s.page(ovr={"completions": HISTC})
+            await s.act(p, "A.tab({ dataset: { tab: 'history' } }); scrollTo(0, $('.h-gift').getBoundingClientRect().top + scrollY - 300);")
             a = await s.shot(p, "h2", [("button[data-act=cancelRedeem]", 1)])
             await s.compose("h2", [(a, C("h2", 0))])
 
@@ -342,6 +352,19 @@ async def main(only=None):
             await p.set_viewport_size({"width": 360, "height": 740})
             b = await s.shot(p, "v1b", [("button[data-act=holDates]", 3), ("button[data-act=holEdit]", 4, 0), ("button[data-act=newRoutine]", 5)], sheet=True)
             await s.compose("v1", [(a, C("v1", 0)), (b, C("v1", 1))])
+        # v28 : scène v2 (régler une routine, onglet Routines pendant des vacances en cours), absente jusqu'ici de l'outillage
+        VAC2 = {"holiday_periods": [{"id": "H2", "family_id": "F", "child_id": "C1", "name": "", "start_day": d(-3), "end_day": d(4), "active": True}],
+                "holiday_overrides": [{"period_id": "H2", "routine_id": "R9", "family_id": "F", "child_id": "C1", "status": "required", "days": [1, 2, 3, 4, 5, 6, 7], "stars": 2},
+                                      {"period_id": "H2", "routine_id": "R5", "family_id": "F", "child_id": "C1", "status": "off"}]}
+        VAC2_JS = ("S.hp.forEach(p => p.name = t('hol.namePlaceholder')); S.holidays.forEach(p => p.name = t('hol.namePlaceholder'));"
+                   "S.routines.push({ id: 'R30', family_id: 'F', child_id: 'C1', title: __FXJSON.X.waterGarden, emoji: '🪴', moment: 'journee', stars: 2, days: [1,2,3,4,5,6,7], is_bonus: false, kind: 'regular', active: true, holiday_period_id: 'H2', created_at: '2026-09-01T08:00:00Z', position: 30 });")
+        if await scene("v2"):
+            p = await s.page(ovr=VAC2)
+            await s.act(p, VAC2_JS + "A.tab({ dataset: { tab: 'routines' } }); A.holEdit({ dataset: { p: 'H2', id: 'R9' } }); document.activeElement.blur();")
+            a = await s.shot(p, "v2a", [(".seg", 1), (".days", 2), ("#h-stars", 3)], sheet=True)
+            await s.act(p, "closeSheet(); render();")
+            b = await s.shot(p, "v2b", [(".banner.hol p", 4, 0), ("button[data-act=toggleHabitual]", 5), ("button[data-act=newRoutine]", 6)])
+            await s.compose("v2", [(a, C("v2", 0)), (b, C("v2", 1))])
         if await scene("h1"):
             p = await s.page(ovr=VAC, h=1010)
             await s.act(p, VAC_JS + "A.tab({ dataset: { tab: 'family' } }); scrollTo(0, $('[data-sec=vac]').offsetTop - 70);")

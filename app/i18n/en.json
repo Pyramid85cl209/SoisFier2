@@ -508,8 +508,8 @@
   "today": "Today",
   "routines": "Routines",
   "rewards": "Rewards",
-  "malus": "Penalties",
-  "family": "Family"
+  "family": "Family",
+  "history": "History"
  },
  "parent": {
   "startTitle": "Shall we start?",
@@ -593,7 +593,6 @@
   "chooseTpl": "Choose from the catalogue",
   "create": "Create a reward",
   "none": "No rewards yet. Start with the catalogue: prices adapt to {name}'s pace.",
-  "history": "History",
   "newEvent": "New event",
   "new": "New reward",
   "edit": "Edit reward",
@@ -636,7 +635,8 @@
   "exchanged": "Reward exchanged.",
   "cancelTitle": "Cancel this exchange?",
   "cancelBtn": "Cancel the exchange",
-  "cancelled": "Exchange cancelled, stars given back."
+  "cancelled": "Exchange cancelled, stars given back.",
+  "seeHistory": "See the history"
  },
  "role": {
   "parent": "Parent",
@@ -655,7 +655,11 @@
   "rolesHelp": "A parent manages everything. A helper ticks and approves routines and exchanges rewards, but doesn't break stars or change the settings.",
   "invite": "Invite a member",
   "settings": "Settings",
-  "account": "Account and backup"
+  "account": "Account and backup",
+  "malus": "Penalties",
+  "malusAdd": "Add penalties",
+  "malusNone": "No preset penalties yet.",
+  "malusHelp": "Shared by all children, from 1 to 3 stars. Set them up once so every adult applies the same rate. To break a star, open the History tab."
  },
  "pause": {
   "default": "Break",
@@ -743,18 +747,9 @@
   "nameSaved": "Name saved."
  },
  "malus": {
-  "all": "All",
   "byAt": "by {who}, at {time}",
-  "cancelAria": "Cancel this penalty",
-  "week": {
-   "one": "star broken in the last 7 days",
-   "other": "stars broken in the last 7 days"
-  },
-  "month": "{n} in 30 days, {total} penalties in total",
   "break": "Break a star",
   "catalog": "Preset penalties",
-  "none": "No penalties. All good!",
-  "noneChild": "No penalties for this child. All good!",
   "child": "Child",
   "nothingToBreak": "{name} has no stars to spend: nothing to break.",
   "breakHelp": "For an immediate slip by {name} (balance: {n} ⭐). 3 stars at most, never below zero. The plant and badges are not affected.",
@@ -927,7 +922,7 @@
   "malus": {
    "emoji": "💔",
    "title": "Penalties are part of Premium",
-   "text": "Break a star when a rule isn't respected, with ready-made reasons and a weekly and monthly overview."
+   "text": "Break a star when a rule isn't respected, with ready-made reasons shared by the whole family."
   },
   "oneoff": {
    "emoji": "🎯",
@@ -1071,5 +1066,17 @@
   "holiday_started": "These holidays have started: use \"Stop\".",
   "holiday_out_of_range": "This routine only exists during the holidays.",
   "pause_started": "This break started more than 24 hours ago: it can no longer be deleted or moved earlier. You can stop it."
+ },
+ "hist": {
+  "validated": {
+   "one": "{n} routine approved",
+   "other": "{n} routines approved"
+  },
+  "pending": {
+   "one": "{n} routine awaiting approval",
+   "other": "{n} routines awaiting approval"
+  },
+  "none": "Nothing in the last 30 days.",
+  "netAria": "Day total: {n} stars"
  }
 }
