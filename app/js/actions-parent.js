@@ -48,11 +48,9 @@ A.manageOneoffTpl = () => needPremium("oneoff") || openSheet(`<h2>${t("oneoff.tp
 A.delOneoffTpl = async el => { const { error } = await sb.from("oneoff_templates").delete().eq("id", el.dataset.id); if (error) throw error; await reloadParent(t("oneoff.tplDeleted"), ["ot"]); A.manageOneoffTpl(); };
 
 // Étoiles cassées
-A.mFilter = el => { S.mfilter = el.dataset.id; if (el.dataset.id !== "all") S.currentChild = el.dataset.id; render(); };
 A.pickPenChild = el => { S.currentChild = el.value; A.breakStar(); };
 A.breakStar = () => {
   if (needPremium("malus")) return;
-  if (S.tab === "malus" && S.mfilter && S.mfilter !== "all") S.currentChild = S.mfilter;
   const c = curChild(), v = viewFor(c);
   const pick = S.children.length > 1 ? `<label class="f">${t("malus.child")}<select id="pen-child" onchange="A.pickPenChild(this)">${S.children.map(k => `<option value="${k.id}" ${k.id === c.id ? "selected" : ""}>${esc(k.emoji + " " + k.name)}</option>`).join("")}</select></label>` : "";
   if (v.balance <= 0 && !pick) return toast(t("malus.nothingToBreak", { name: c.name }), true);
@@ -81,8 +79,9 @@ A.cancelPenalty = async el => {
   return instant(() => { S.pevents = S.pevents.filter(x => x !== e); bumpStats(e.child_id, { broken: -e.stars, broken_count: -1 }); },
     () => sb.from("penalty_events").delete().eq("id", e.id), ["pv", "s"], t("malus.cancelled"));
 };
-A.penaltyCatalog = () => {
+A.penaltyCatalog = el => {
   if (needPremium("malus")) return;
+  if (el && el.dataset) S.penFrom = el.dataset.from || null;   // ouverte depuis Famille : « Retour » ferme la fenêtre
   const have = new Set(S.penalties.map(p => p.title.toLowerCase()));
   const sugg = TPL_P.map((x, i) => ({ ...x, i })).filter(x => !have.has(x.t.toLowerCase()));
   openSheet(`<h2>${t("malus.catalog")}</h2><p class="muted">${t("malus.catalogHelp")}</p>
@@ -90,7 +89,7 @@ A.penaltyCatalog = () => {
     ${sugg.length ? `<h3 class="grp">${t("common.suggestions")}</h3><ul class="tpl">${sugg.map(x => `<li><label><input type="checkbox" value="${x.i}"><span>${x.e} ${esc(x.t)} (${fmtNum(x.s)} ⭐)</span></label></li>`).join("")}</ul>` : ""}
     <h3 class="grp">${t("malus.createTitle")}</h3>
     <div class="f two"><label>${t("malus.reason")}<input id="np-title" maxlength="60"></label><label>${t("form.stars")}<select id="np-stars">${[1, 2, 3].map(n => `<option value="${n}">${fmtNum(n)}</option>`).join("")}</select></label></div>
-    <div class="sheet-actions"><button class="btn ghost" data-act="breakStar">${t("btn.back")}</button><button class="btn" data-act="savePenalties">${t("btn.save")}</button></div>`);
+    <div class="sheet-actions"><button class="btn ghost" data-act="${S.penFrom === "family" ? "closeSheet" : "breakStar"}">${t("btn.back")}</button><button class="btn" data-act="savePenalties">${t("btn.save")}</button></div>`);
 };
 A.savePenalties = async () => {
   const rows = $$(".tpl input:checked", dlg).map(i => TPL_P[+i.value]).map(x => ({ family_id: S.family.id, title: x.t, emoji: x.e, stars: x.s }));
@@ -102,7 +101,7 @@ A.savePenalties = async () => {
 };
 A.delPenalty = async el => {
   const { error } = await sb.from("penalties").update({ active: false }).eq("id", el.dataset.id); if (error) throw error;
-  await reloadParent(t("malus.deleted"), ["pe"]); A.penaltyCatalog();
+  await reloadParent(t("malus.deleted"), ["pe"]); if (el.dataset.from !== "page") A.penaltyCatalog();
 };
 
 // Routines

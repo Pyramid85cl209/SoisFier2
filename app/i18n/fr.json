@@ -499,8 +499,8 @@
   "today": "Aujourd'hui",
   "routines": "Routines",
   "rewards": "Récompenses",
-  "malus": "Malus",
-  "family": "Famille"
+  "family": "Famille",
+  "history": "Historique"
  },
  "parent": {
   "startTitle": "On commence ?",
@@ -584,7 +584,6 @@
   "chooseTpl": "Choisir dans le référentiel",
   "create": "Créer une récompense",
   "none": "Aucune récompense pour l'instant. Commence par le référentiel : les prix s'adaptent au rythme de {name}.",
-  "history": "Historique",
   "newEvent": "Nouvel événement",
   "new": "Nouvelle récompense",
   "edit": "Modifier la récompense",
@@ -627,7 +626,8 @@
   "exchanged": "Récompense échangée.",
   "cancelTitle": "Annuler cet échange ?",
   "cancelBtn": "Annuler l'échange",
-  "cancelled": "Échange annulé, étoiles rendues."
+  "cancelled": "Échange annulé, étoiles rendues.",
+  "seeHistory": "Voir l'historique"
  },
  "role": {
   "parent": "Parent",
@@ -646,7 +646,11 @@
   "rolesHelp": "Un parent gère tout. Un proche coche et valide les routines et échange les récompenses, mais ne casse pas d'étoile et ne modifie pas la configuration.",
   "invite": "Inviter un membre",
   "settings": "Réglages",
-  "account": "Compte et sauvegarde"
+  "account": "Compte et sauvegarde",
+  "malus": "Malus",
+  "malusAdd": "Ajouter des malus",
+  "malusNone": "Aucun malus prédéfini pour l'instant.",
+  "malusHelp": "Communs à tous les enfants, de 1 à 3 étoiles. Préparez-les une fois : chaque adulte applique le même tarif. Pour casser une étoile, ouvrez l'onglet Historique."
  },
  "pause": {
   "default": "Pause",
@@ -734,18 +738,9 @@
   "nameSaved": "Nom enregistré."
  },
  "malus": {
-  "all": "Tous",
   "byAt": "par {who}, à {time}",
-  "cancelAria": "Annuler ce malus",
-  "week": {
-   "one": "étoile cassée ces 7 derniers jours",
-   "other": "étoiles cassées ces 7 derniers jours"
-  },
-  "month": "{n} sur 30 jours, {total} malus au total",
   "break": "Casser une étoile",
   "catalog": "Malus prédéfinis",
-  "none": "Aucun malus. Tant mieux !",
-  "noneChild": "Aucun malus pour cet enfant. Tant mieux !",
   "child": "Enfant",
   "nothingToBreak": "{name} n'a aucune étoile à dépenser : rien à casser.",
   "breakHelp": "Pour un écart immédiat de {name} (solde : {n} ⭐). 3 étoiles au maximum, jamais en dessous de zéro. La plante et les badges ne bougent pas.",
@@ -918,7 +913,7 @@
   "malus": {
    "emoji": "💔",
    "title": "Les malus font partie du Premium",
-   "text": "Cassez une étoile quand une règle n'est pas respectée, avec des motifs prêts à l'emploi et un suivi sur la semaine et le mois."
+   "text": "Cassez une étoile quand une règle n'est pas respectée, avec des motifs prêts à l'emploi, communs à toute la famille."
   },
   "oneoff": {
    "emoji": "🎯",
@@ -1062,5 +1057,17 @@
   "holiday_started": "Ces vacances ont commencé : utilisez « Arrêter ».",
   "holiday_out_of_range": "Cette routine n'existe que pendant les vacances.",
   "pause_started": "Cette pause a commencé il y a plus de 24 h : elle ne peut plus être supprimée ni avancée. Vous pouvez l'arrêter."
+ },
+ "hist": {
+  "validated": {
+   "one": "{n} routine validée",
+   "other": "{n} routines validées"
+  },
+  "pending": {
+   "one": "{n} routine en attente de validation",
+   "other": "{n} routines en attente de validation"
+  },
+  "none": "Rien sur les 30 derniers jours.",
+  "netAria": "Bilan du jour : {n} étoiles"
  }
 }

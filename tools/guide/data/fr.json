@@ -79,6 +79,58 @@
   "g8": [
    "Mes rappels",
    "Après la connexion"
+  ],
+  "a3": [
+   "Haut de la liste",
+   "Bas de la liste"
+  ],
+  "b2": [
+   "Déjà ajoutées : grisées",
+   "Nouvelle sélection"
+  ],
+  "b6": [
+   "Suggestions",
+   "Formulaire"
+  ],
+  "c1": [
+   "Onglet vide",
+   "Avec des récompenses"
+  ],
+  "c2": [
+   "Haut du référentiel",
+   "Bas du référentiel"
+  ],
+  "e2": [
+   "L'invitation",
+   "Le code"
+  ],
+  "f1": [
+   "Haut de l'écran",
+   "Bas de l'écran"
+  ],
+  "f2": [
+   "À valider",
+   "Après validation"
+  ],
+  "f3": [
+   "Prix accessibles",
+   "Confirmer l'échange"
+  ],
+  "d1": [
+   "Haut de l'onglet",
+   "Plus bas"
+  ],
+  "d2": [
+   "La section Malus",
+   "Ajouter des malus"
+  ],
+  "d4": [
+   "Un malus dans l'historique",
+   "Confirmation"
+  ],
+  "v2": [
+   "Régler une routine",
+   "L'onglet Routines pendant les vacances"
   ]
  },
  "lang": "fr",

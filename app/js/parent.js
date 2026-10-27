@@ -9,10 +9,10 @@ function chips() {
   return `<div class="chips" role="tablist">${S.children.map(c => `<button role="tab" aria-selected="${c.id === S.currentChild}" class="chip ${c.id === S.currentChild ? "on" : ""}" style="--c:${esc(c.color)}" data-act="pickChild" data-id="${c.id}">${esc(c.emoji)} ${esc(c.name)}</button>`).join("")}</div>`;
 }
 function renderParent() {
-  const tabs = [["today", t("tab.today"), "☀️"], ["routines", t("tab.routines"), "📋"], ["rewards", t("tab.rewards"), "🎁"], ["malus", t("tab.malus"), "💔"], ["family", t("tab.family"), "🏡"]].filter(x => isParent() || x[0] !== "routines");
+  const tabs = [["today", t("tab.today"), "☀️"], ["routines", t("tab.routines"), "📋"], ["rewards", t("tab.rewards"), "🎁"], ["history", t("tab.history"), "📜"], ["family", t("tab.family"), "🏡"]].filter(x => isParent() || x[0] !== "routines");
   let body;
   if (!S.children.length && S.tab !== "family") body = `<section class="card center">${plantSVG(0)}<h1>${t("parent.startTitle")}</h1><p>${t("parent.startText")}</p><button class="btn" data-act="newChild">${t("child.add")}</button></section>`;
-  else body = { today: pToday, routines: pRoutines, rewards: pRewards, malus: pMalus, family: pFamily }[S.tab]();
+  else body = { today: pToday, routines: pRoutines, rewards: pRewards, history: pHistory, family: pFamily }[S.tab]();
   app.innerHTML = `<header class="top"><div class="brand">${miniLogo()}<span>${esc(S.family?.name || "SoisFier")}</span></div><div class="top-r">${S.offline ? `<span class="pill">${t("offline")}</span>` : ""}${langBtn()}<a class="help" href="${guideHref()}" aria-label="${t("help")}">?</a></div></header>
     <main class="wrap">${body}</main>
     <nav class="tabbar" aria-label="${t("nav")}">${tabs.map(([k, l, e]) => `<button data-act="tab" data-tab="${k}" class="${S.tab === k ? "on" : ""}" aria-current="${S.tab === k ? "page" : "false"}"><span aria-hidden="true">${e}</span>${l}</button>`).join("")}</nav>`;
@@ -99,10 +99,6 @@ function pRoutines() {
 function pRewards() {
   const c = curChild(), v = viewFor(c), r = rhythmOf(c.id), td = todayISO();
   const list = S.rewards.filter(w => (!w.child_id || w.child_id === c.id) && (!w.event_date || w.event_date >= td));
-  const hist = [
-    ...S.redemptions.filter(z => z.child_id === c.id).map(z => ({ ...z, kind: "gift" })),
-
-  ].sort((a, b) => a.created_at < b.created_at ? 1 : -1).slice(0, 20);
   const drift = c.price_rhythm && Math.abs(r - c.price_rhythm) / c.price_rhythm > .2;
   const P = isParent(), rnd = x => fmtNum(Math.round(x * 10) / 10);
   const row = w => { const cost = costFor(w, c.id); return `<li class="gift"><button class="gift-main" ${P ? `data-act="editReward" data-id="${w.id}"` : "disabled"}><span class="g-emo" aria-hidden="true">${esc(w.emoji)}</span><span><b>${esc(w.title)}</b><small>${w.child_id ? t("reward.for", { name: esc(c.name) }) : t("reward.forAll")}${t("sep")}${daysLabelFor(cost, c.id)}</small>${w.event_date || w.place ? `<small class="when">${w.event_date ? "📅 " + fmtLong(w.event_date) : ""}${w.event_date && w.place ? t("sep") : ""}${w.place ? "📍 " + esc(w.place) : ""}</small>` : ""}</span></button>
@@ -112,9 +108,7 @@ function pRewards() {
     ${drift && P ? `<div class="banner"><p>${t("reward.drift", { name: esc(c.name), old: rnd(c.price_rhythm), now: rnd(r) })}</p><button class="btn sm" data-act="repriceChild">${t("reward.reprice")}</button></div>` : ""}
     ${P ? `<div class="actions"><button class="btn" data-act="rewardTemplates">${t("reward.chooseTpl")}</button><button class="btn ghost" data-act="newReward">${t("reward.create")}</button></div>` : ""}
     ${groups || `<p class="empty">${t("reward.none", { name: esc(c.name) })}</p>`}
-    ${hist.length ? `<h3 class="grp">${t("reward.history")}</h3><ul class="hist">${hist.map(z => z.kind === "gift"
-      ? `<li><span>${esc(z.emoji)} ${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span><span class="num">−${fmtNum(z.cost)} ⭐</span><span class="muted">${t("common.by", { who: z.created_by ? esc(memberLabel(z.created_by)) : esc(c.name) })}</span>${P ? `<button class="link" data-act="cancelRedeem" data-id="${z.id}">${t("btn.cancel")}</button>` : ""}</li>`
-      : `<li>${brokenStar(20)}<span>${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span><span class="num">−${fmtNum(z.stars)} ⭐</span><span class="muted">${t("common.by", { who: esc(memberLabel(z.created_by)) })}</span>${P ? `<button class="link" data-act="cancelPenalty" data-id="${z.id}">${t("btn.cancel")}</button>` : ""}</li>`).join("")}</ul>` : ""}`;
+    <p class="center"><button class="btn ghost sm" data-act="tab" data-tab="history">📜 ${t("reward.seeHistory")}</button></p>`;
 }
 function pFamily() {
   const P = isParent(), me = S.session?.user.id;
@@ -136,6 +130,7 @@ function pFamily() {
     + fsec("push", "🔔 " + t("push.title"), `<p class="muted">${t("push.parentHelp")}</p>
       <div class="f two"><label>${t("push.morning")}<input type="time" id="t1" value="${esc(times[0] || "")}"></label><label>${t("push.evening")}<input type="time" id="t2" value="${esc(times[1] || "")}"></label></div>
       <div class="actions"><button class="btn" data-act="pushParent">${pushOn ? t("push.update") : t("push.enable")}</button>${pushOn ? `<button class="btn ghost" data-act="pushOff">${t("btn.disable")}</button>` : ""}</div>`)
+    + (P ? fsec("malus", "💔 " + t("family.malus"), malusSection()) : "")
     + fsec("settings", "⚙️ " + t("family.settings"), `<h3 class="grp">${t("week.title")}</h3><p class="muted">${esc(weekSummary(WEEK))}</p><p class="muted small">${t("week.help")}</p>${P ? `<div class="actions"><button class="btn ghost" data-act="editWeek" data-mode="family">${t("btn.edit")}</button></div>` : ""}
       ${P ? `<h3 class="grp">${t("validate.section")}</h3><p class="muted">${t("validate.sectionHelp")}</p>
       <label class="check"><input type="checkbox" data-act="toggleAuto" ${S.autoValidate ? "checked" : ""}> ${t("validate.autoLabel")}</label>` : ""}
@@ -144,6 +139,13 @@ function pFamily() {
     + fsec("account", "👤 " + t("family.account"), `<p class="muted">${esc(S.session?.user.email || "")}</p>${installBtn() || P ? `<div class="actions">${installBtn()}${P ? `<button class="btn ghost" data-act="renameFamily">${t("account.rename")}</button>` : ""}</div>` : ""}
       <h3 class="grp">${t("backup.title")}</h3><p class="muted">${t("backup.help")}</p><div class="actions"><button class="btn ghost" data-act="exportData">${t("backup.btn")}</button></div>
       <div class="actions"><button class="btn danger ghost" data-act="logout">${t("btn.logout")}</button></div>`);
+}
+// Malus prédéfinis de la famille (v28) : se préparent ici, se cassent depuis l'onglet Historique
+function malusSection() {
+  const prem = isPremium();
+  return `<p class="muted">${t("family.malusHelp")}</p>
+    ${S.penalties.length ? `<ul class="hist">${S.penalties.map(p => `<li><span>${esc(p.emoji)} ${esc(p.title)}</span><span class="num">${fmtNum(p.stars)} ⭐</span>${prem ? `<button class="link" data-act="delPenalty" data-from="page" data-id="${p.id}">${t("btn.delete")}</button>` : ""}</li>`).join("")}</ul>` : `<p class="muted small">${t("family.malusNone")}</p>`}
+    <div class="actions"><button class="btn ghost" data-act="penaltyCatalog" data-from="family">${t("family.malusAdd")}${ptag()}</button></div>`;
 }
 // Section repliable de Famille : titre touchable, état ouvert/replié retenu sur le téléphone
 function fsec(id, title, body, open = false) {
@@ -172,20 +174,28 @@ function nudge() {
   const key = k === "flower" ? "flower" : "year";
   return `<aside class="banner nudge"><p>${t("premium.nudge." + key)}</p><div class="btns"><button class="btn sm ghost" data-act="dismissNudge" data-k="${k}">${t("premium.later")}</button><a class="btn sm" href="${premiumHref("nudge-" + key)}" data-act="dismissNudge" data-k="${k}">${t("premium.see")}</a></div></aside>`;
 }
-function pMalus() {
-  if (!isPremium()) return `<section class="card center"><div class="up-emo" aria-hidden="true">${brokenStar(40)}</div><h1>${t("premium.malus.title")}</h1><p>${t("premium.malus.text")}</p><button class="btn" data-act="upsell" data-key="malus">${t("premium.discover")}</button></section>`;
-  const P = isParent(), f = S.mfilter || "all", now = Date.now();
-  const chipsM = `<div class="chips" role="tablist">${[["all", t("malus.all"), "#7A6A5F"], ...S.children.map(c => [c.id, c.emoji + " " + c.name, c.color])].map(([k, l, col]) =>
-    `<button role="tab" aria-selected="${f === k}" class="chip ${f === k ? "on" : ""}" style="--c:${esc(col)}" data-act="mFilter" data-id="${k}">${esc(l)}</button>`).join("")}</div>`;
-  const list = S.pevents.filter(e => f === "all" || e.child_id === f).sort((a, b) => a.created_at < b.created_at ? 1 : -1);
-  const sum = d => list.filter(e => now - new Date(e.created_at) < d * 864e5).reduce((a, e) => a + e.stars, 0);
-  const dayLbl = k => { const td = todayISO(); return k === td ? t("day.today") : k === addDays(td, -1) ? t("day.yesterday") : fmtLong(k); };
-  const byDay = []; list.forEach(e => { const k = isoInTz(new Date(e.created_at)); const g = byDay.find(x => x.k === k); g ? g.items.push(e) : byDay.push({ k, items: [e] }); });
-  const item = e => { const k = S.children.find(c => c.id === e.child_id) || { name: "", emoji: "" };
-    return `<li>${brokenStar(24)}<span class="grow"><b>${esc(e.emoji)} ${esc(e.title)}</b><small>${f === "all" ? esc(k.emoji + " " + k.name) + t("sep") : ""}${t("malus.byAt", { who: esc(memberLabel(e.created_by)), time: fmtTime(e.created_at) })}</small></span>
-      <span class="num">−${fmtNum(e.stars)} ⭐</span>${P ? `<button class="vbtn no" data-act="cancelPenalty" data-id="${e.id}" aria-label="${t("malus.cancelAria")}">↺</button>` : ""}</li>`; };
-  return chipsM + `<div class="balance"><span class="big">${brokenStar(28)} ${fmtNum(sum(7))}</span><span>${t("malus.week", { n: sum(7) })}</span><span class="muted">${t("malus.month", { n: sum(30), total: list.length })}</span></div>
-    ${P ? `<div class="actions"><button class="btn danger" data-act="breakStar">${brokenStar(18)} ${t("malus.break")}</button><button class="btn ghost" data-act="penaltyCatalog">${t("malus.catalog")}</button></div>` : ""}
-    ${byDay.length ? byDay.map(g => `<h3 class="grp">${dayLbl(g.k)}</h3><ul class="vlist">${g.items.map(item).join("")}</ul>`).join("")
-      : `<p class="empty">${f === "all" ? t("malus.none") : t("malus.noneChild")}</p>`}`;
+// Historique des étoiles (v28) : 30 jours, jour par jour ; gagnées (routines validées, au jour de la routine), échangées, cassées
+function pHistory() {
+  const c = curChild(), v = viewFor(c), P = isParent(), td = todayISO(), from = addDays(td, -29);
+  const days = {}, day = k => (days[k] = days[k] || { earn: 0, nv: 0, wait: 0, nw: 0, items: [] });
+  S.completions.filter(x => x.child_id === c.id && x.day >= from && x.day <= td).forEach(x => {
+    const d = day(x.day); if (x.validated_at) { d.earn += x.stars || 0; d.nv++; } else { d.wait += x.stars || 0; d.nw++; } });
+  S.redemptions.filter(z => z.child_id === c.id).forEach(z => { const k = isoInTz(new Date(z.created_at)); if (k >= from) day(k).items.push({ ...z, kind: "gift", n: z.cost }); });
+  S.pevents.filter(e => e.child_id === c.id).forEach(e => { const k = isoInTz(new Date(e.created_at)); if (k >= from) day(k).items.push({ ...e, kind: "broken", n: e.stars }); });
+  const dayLbl = k => k === td ? t("day.today") : k === addDays(td, -1) ? t("day.yesterday") : fmtLong(k);
+  const signed = n => (n > 0 ? "+" : n < 0 ? "−" : "") + fmtNum(Math.abs(n));
+  const item = z => { const who = z.created_by ? memberLabel(z.created_by) : c.name;
+    const undo = z.kind === "gift" ? (P ? `<button class="link" data-act="cancelRedeem" data-id="${z.id}">${t("btn.cancel")}</button>` : "")
+      : (P && isPremium() ? `<button class="link" data-act="cancelPenalty" data-id="${z.id}">${t("btn.cancel")}</button>` : "");
+    return `<li class="h-${z.kind}">${z.kind === "gift" ? `<span class="h-ic" aria-hidden="true">🎁</span>` : brokenStar(22)}<span class="grow"><b>${esc(z.emoji || "")} ${esc(z.title)}</b><small>${t("malus.byAt", { who: esc(who), time: fmtTime(z.created_at) })}</small></span><span class="num">−${fmtNum(z.n)} ⭐</span>${undo}</li>`; };
+  const list = Object.keys(days).sort().reverse().map(k => { const d = days[k];
+    d.items.sort((a, b) => a.created_at < b.created_at ? 1 : -1);
+    const net = d.earn - d.items.reduce((a, z) => a + z.n, 0);
+    return `<h3 class="grp day-h"><span>${dayLbl(k)}</span><span class="num net ${net < 0 ? "neg" : ""}" aria-label="${t("hist.netAria", { n: net })}">${signed(net)} ⭐</span></h3><ul class="hist">
+      ${d.nv ? `<li class="h-earn"><span class="h-ic" aria-hidden="true">✅</span><span class="grow"><b>${t("hist.validated", { n: d.nv })}</b></span><span class="num">+${fmtNum(d.earn)} ⭐</span></li>` : ""}
+      ${d.items.map(item).join("")}
+      ${d.nw ? `<li class="h-wait"><span class="h-ic" aria-hidden="true">⏳</span><span class="grow muted">${t("hist.pending", { n: d.nw })}</span><span class="num muted">+${fmtNum(d.wait)} ⭐</span></li>` : ""}</ul>`; }).join("");
+  return chips() + `<div class="balance"><span class="big">⭐ ${fmtNum(v.balance)}</span><span>${t("reward.balanceFor", { n: v.balance, name: esc(c.name) })}</span>${v.pendingStars ? `<span class="muted">${t("reward.pending", { n: v.pendingStars })}</span>` : ""}</div>
+    ${P ? `<div class="actions"><button class="btn danger" data-act="breakStar">${brokenStar(18)} ${t("malus.break")}${ptag()}</button></div>` : ""}
+    ${list || `<p class="empty">${t("hist.none")}</p>`}`;
 }
