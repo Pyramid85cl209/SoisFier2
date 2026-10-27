@@ -138,7 +138,8 @@ function pFamily() {
     + (P ? fsec("plan", "⭐ " + t("premium.myPlan"), planSection()) : "")
     + fsec("account", "👤 " + t("family.account"), `<p class="muted">${esc(S.session?.user.email || "")}</p>${installBtn() || P ? `<div class="actions">${installBtn()}${P ? `<button class="btn ghost" data-act="renameFamily">${t("account.rename")}</button>` : ""}</div>` : ""}
       <h3 class="grp">${t("backup.title")}</h3><p class="muted">${t("backup.help")}</p><div class="actions"><button class="btn ghost" data-act="exportData">${t("backup.btn")}</button></div>
-      <div class="actions"><button class="btn danger ghost" data-act="logout">${t("btn.logout")}</button></div>`);
+      <div class="actions"><button class="btn danger ghost" data-act="logout">${t("btn.logout")}</button></div>
+      ${S.version ? `<p class="muted small app-version">${t("account.version", { v: esc(S.version) })}</p>` : ""}`);
 }
 // Malus prédéfinis de la famille (v28) : se préparent ici, se cassent depuis l'onglet Historique
 function malusSection() {

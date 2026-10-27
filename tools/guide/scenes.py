@@ -322,7 +322,7 @@ async def main(only=None):
             await s.compose("i3", [(a, C("i3", 0)), (b, C("i3", 1))])
         if await scene("i4"):
             p = await s.page(h=900)
-            await s.act(p, "store.set('famOpen', { kids: false, vac: false, settings: true, account: true }); A.tab({ dataset: { tab: 'family' } }); scrollTo(0, $('[data-act=setPin]').getBoundingClientRect().top + scrollY - 110);")
+            await s.act(p, "S.version = 'v28c'; store.set('famOpen', { kids: false, vac: false, settings: true, account: true }); A.tab({ dataset: { tab: 'family' } }); scrollTo(0, $('[data-act=setPin]').getBoundingClientRect().top + scrollY - 110);")
             a = await s.shot(p, "i4a", [("button[data-act=setPin]", 1), ("button[data-act=exportData]", 2), ("button[data-act=renameFamily]", 3), ("button[data-act=logout]", 4, 0)])
             await s.act(p, "A.renameFamily();")
             b = await s.shot(p, "i4b")
