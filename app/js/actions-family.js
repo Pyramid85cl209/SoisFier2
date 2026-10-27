@@ -33,6 +33,15 @@ A.cTimer = el => {
 A.sound = el => store.set("sound", el.checked);
 
 // Rappels
+// Fenêtre « Mes rappels » de l'enfant (v28) ; ask : proposée une fois juste après la connexion du téléphone
+A.cReminders = el => {
+  const ask = el && el.ask, pushOn = store.get("cpushOn", false), ct = store.get("cpushTimes", ["07:30", "18:00"]);
+  openSheet(`<div id="rem-sheet"><h2>🔔 ${t("kid.reminders")}</h2><p class="muted">${ask ? t("kid.remindersAsk") : t("kid.remindersHelp")}</p>
+    <div class="f two"><label>${t("kid.remindMorning")}<input type="time" id="t1" value="${esc(ct[0] || "")}"></label><label>${t("kid.remindEvening")}<input type="time" id="t2" value="${esc(ct[1] || "")}"></label></div>
+    ${ask ? "" : `<label class="check"><input type="checkbox" id="snd" data-act="sound" ${store.get("sound", true) ? "checked" : ""}> ${t("kid.sound")}</label>`}
+    <div class="sheet-actions">${ask ? `<button class="btn ghost" data-act="closeSheet">${t("kid.later")}</button>` : pushOn ? `<button class="btn ghost" data-act="pushOff">${t("btn.disable")}</button>` : ""}<button class="btn" data-act="pushChild">${pushOn ? t("push.update") : t("push.enable")}</button></div></div>`);
+};
+
 A.pushParent = async () => {
   const times = readTimes(); if (!times.length) return toast(t("push.needTime"), true);
   const j = await getPushSub();
@@ -43,12 +52,12 @@ A.pushChild = async () => {
   const times = readTimes(); if (!times.length) return toast(t("push.needTime"), true);
   const j = await getPushSub();
   const { error } = await sb.rpc("child_push_subscribe", { p_token: store.get("childToken"), p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_times: times, p_locale: curLang() }); if (error) throw error;
-  store.set("cpushOn", true); store.set("cpushTimes", times); render(); toast(t("push.enabled"));
+  store.set("cpushOn", true); store.set("cpushTimes", times); render(); closeSheet(); toast(t("push.enabled"));
 };
 A.pushOff = async () => {
   const reg = await navigator.serviceWorker.ready; const sub = await reg.pushManager.getSubscription();
   if (sub) { await sb.rpc("push_unsubscribe", { p_endpoint: sub.endpoint }); await sub.unsubscribe(); }
-  store.set(S.screen === "child" ? "cpushOn" : "pushOn", false); render(); toast(t("push.disabled"));
+  store.set(S.screen === "child" ? "cpushOn" : "pushOn", false); render(); if ($("#rem-sheet")) A.cReminders(); toast(t("push.disabled"));
 };
 
 // Famille et réglages

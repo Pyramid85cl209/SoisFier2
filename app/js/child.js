@@ -37,9 +37,9 @@ function cToday(v, routines) {
       <div class="hero-txt">${gn && gn.waiting ? `<h1>${t("kid.potWaitsSeed")}</h1><p>${t("kid.firstFlowerStarts", { date: fmtLong(gn.start) })}</p>` : gn ? `<h1>${STAGE_NAME[gn.stage]}</h1>${dots14(v.garden)}
       <p>${gn.pausedToday ? t("kid.paused") : t("kid.dayOfOpens", { d: gn.dayIdx, len: gn.len, date: fmtLong(gn.end) })}</p>` : `<h1>${t("kid.potWaits")}</h1>`}
       ${v.pendingStars ? `<p class="wait-note">⏳ ${t("kid.pendingStars", { n: v.pendingStars })}</p>` : ""}</div></section>
-    ${pz ? `<div class="kid-pause"><p><span aria-hidden="true">⏸️</span> ${t("kid.pauseDay")}</p>${folded && due.length ? `<button class="btn ghost" data-act="cAnyway">${t("kid.anyway")}</button>` : ""}</div>`
+    ${pz ? `<div class="kid-pause"><p><span aria-hidden="true">⏸️</span> ${t("kid.pauseDay")}${folded ? bell() : ""}</p>${folded && due.length ? `<button class="btn ghost" data-act="cAnyway">${t("kid.anyway")}</button>` : ""}</div>`
       : hp ? `<p class="center"><span class="pill hol-pill">🏖️ ${esc(hp.name)}</span></p>` : ""}
-    ${folded ? "" : `<p class="today-count">${main.length ? (nd === main.length ? t("kid.allDone") : t("kid.doneOf", { n: nd, total: main.length })) : t("kid.noRoutine")}</p>
+    ${folded ? "" : `<p class="today-count"><span>${main.length ? (nd === main.length ? t("kid.allDone") : t("kid.doneOf", { n: nd, total: main.length })) : t("kid.noRoutine")}</span>${bell()}</p>
     ${groups}${bonus.filter(r => !isOneoff(r)).length ? `<h3 class="grp">💪 ${t("kid.bonus")}</h3><ul class="kcards">${bonus.filter(r => !isOneoff(r)).map(card).join("")}</ul>` : ""}`}`;
 }
 function cGifts(v, routines, cs) {
@@ -61,7 +61,7 @@ function miniHero(v) {
   return gn ? `<section class="hero mini"><div class="hero-plant">${stageSVG(gn.waiting ? 0 : gn.stage, gn.species, v.child.color)}</div><div class="hero-txt"><h2>${gn.waiting ? t("kid.potWaitsSeed") : STAGE_NAME[gn.stage]}</h2>${gn.waiting ? "" : dots14(v.garden)}<p class="small">${gn.waiting ? "" : t("kid.opens", { date: fmtLong(gn.end) })}</p></div></section>` : "";
 }
 function cGarden(v, routines) {
-  const gd = v.garden, pushOn = store.get("cpushOn", false), ct = store.get("cpushTimes", ["07:30", "18:00"]);
+  const gd = v.garden;
   let scenes = "";
   if (gd) {
     const se = seasonOfISO(gd.today), yr = gardenYearOfISO(gd.today), fl = gd.flowers || [];
@@ -72,12 +72,10 @@ function cGarden(v, routines) {
     if (past.length && isPremium()) scenes += `<h2 class="grp">${t("kid.oldGardens")}</h2><div class="yr">${past.map(y => `<button class="btn ghost sm" data-act="showYear" data-y="${y}">${y}</button>`).join("")}</div>`;
   }
   return miniHero(v) + scenes + `<p class="streak">${v.current > 0 ? `🔥 ${t("kid.streak", { n: v.current })}` : t("kid.startStreak")}</p>
-    <p class="center"><button class="btn ghost" data-act="ctab" data-tab="badges">🏅 ${t("kid.seeBadges")}</button></p>
-    <section class="sec" style="margin-top:18px"><h2>${t("kid.settings")}</h2>
-      <label class="check"><input type="checkbox" id="snd" data-act="sound" ${store.get("sound", true) ? "checked" : ""}> ${t("kid.sound")}</label>
-      <div class="f two"><label>${t("kid.remindMorning")}<input type="time" id="t1" value="${esc(ct[0] || "")}"></label><label>${t("kid.remindEvening")}<input type="time" id="t2" value="${esc(ct[1] || "")}"></label></div>
-      <div class="actions"><button class="btn ghost" data-act="pushChild">${pushOn ? t("push.update") : t("push.enable")}</button>${pushOn ? `<button class="btn ghost" data-act="pushOff">${t("btn.disable")}</button>` : ""}</div></section>`;
+    <p class="center"><button class="btn ghost" data-act="ctab" data-tab="badges">🏅 ${t("kid.seeBadges")}</button></p>`;
 }
+// Rappels de l'enfant (v28) : icône 🔔 en bout de ligne dans Aujourd'hui (fenêtre : A.cReminders)
+const bell = () => `<button class="bell" data-act="cReminders" aria-label="${t("kid.reminders")}"><span aria-hidden="true">🔔</span></button>`;
 
 function cBadges(v, routines, cs) {
   const BS = visibleBadges(), bs = badgeStats(v), dates = cs.badge_dates || {}, got = BS.filter(b => hasBadge(v, b)).length;

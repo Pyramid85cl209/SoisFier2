@@ -36,6 +36,49 @@
   "m4": [
    "Créer ou rejoindre une famille",
    "Le premier écran"
+  ],
+  "b1": [
+   "Haut de l'onglet",
+   "Bas de l'onglet"
+  ],
+  "e5": [
+   "Sur le téléphone du parent",
+   "Sur le téléphone de l'enfant",
+   "L'écran de l'enfant"
+  ],
+  "e6": [
+   "Code parent",
+   "Mode enfant",
+   "Sortie"
+  ],
+  "g1": [
+   "Avant de cocher",
+   "Après avoir coché"
+  ],
+  "g4": [
+   "Haut de l'onglet",
+   "Bas de l'onglet"
+  ],
+  "i1": [
+   "Activée",
+   "Désactivée"
+  ],
+  "i2": [
+   "Choisir les heures",
+   "Rappels actifs",
+   "Notifications bloquées"
+  ],
+  "i3": [
+   "Le bouton dans Routines",
+   "Aperçu du planning"
+  ],
+  "i4": [
+   "Réglages et compte",
+   "Renommer la famille"
+  ],
+  "g8": [
+   "Mes rappels",
+   "Après la connexion"
   ]
  },
  "lang": "fr",

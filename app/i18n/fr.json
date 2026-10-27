@@ -552,7 +552,8 @@
   "addedN": {
    "one": "{n} routine ajoutée.",
    "other": "{n} routines ajoutées."
-  }
+  },
+  "print": "Imprimer la semaine"
  },
  "validate": {
   "title": "À valider",
@@ -643,7 +644,9 @@
   "noChild": "Aucun enfant pour l'instant.",
   "members": "Membres de la famille",
   "rolesHelp": "Un parent gère tout. Un proche coche et valide les routines et échange les récompenses, mais ne casse pas d'étoile et ne modifie pas la configuration.",
-  "invite": "Inviter un membre"
+  "invite": "Inviter un membre",
+  "settings": "Réglages",
+  "account": "Compte et sauvegarde"
  },
  "pause": {
   "default": "Pause",
@@ -695,8 +698,6 @@
  },
  "print": {
   "title": "Planning à imprimer",
-  "help": "La semaine de chaque enfant sur une page A4, à cocher au crayon.",
-  "btn": "Imprimer le planning",
   "weekOf": "La semaine de {name}",
   "weekStart": "Semaine du {date}",
   "routine": "Routine",
@@ -818,7 +819,6 @@
   },
   "startStreak": "Fais une bonne journée pour lancer une série !",
   "seeBadges": "Voir mes badges",
-  "settings": "Réglages",
   "sound": "Son quand je coche une routine",
   "remindMorning": "Rappel matin",
   "remindEvening": "Rappel soir",
@@ -840,7 +840,11 @@
   "showParents": "Montre cet écran à tes parents : tu as gagné « {title} ».",
   "super": "Super !",
   "pauseDay": "Jour de pause : ta fleur ne bouge pas. Tu peux quand même gagner des étoiles.",
-  "anyway": "Faire quand même mes routines"
+  "anyway": "Faire quand même mes routines",
+  "reminders": "Mes rappels",
+  "remindersHelp": "Choisis à quelle heure ton téléphone te rappelle tes routines.",
+  "remindersAsk": "Veux-tu que ton téléphone te rappelle tes routines ?",
+  "later": "Plus tard"
  },
  "form": {
   "icon": "Icône",

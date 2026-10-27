@@ -124,16 +124,20 @@
    "Notifications blocked"
   ],
   "i3": [
-   "The button",
+   "The button in Routines",
    "Planner preview"
   ],
   "i4": [
-   "Settings",
+   "Settings and account",
    "Renaming the family"
   ],
   "w2": [
    "The Week section",
    "Editing"
+  ],
+  "g8": [
+   "My reminders",
+   "After connecting"
   ]
  },
  "lang": "en",

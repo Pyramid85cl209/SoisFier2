@@ -84,6 +84,7 @@ A.pair = async () => {
   const { data, error } = await sb.rpc("child_pair", { p_code: code, p_label: null }); if (error) throw error;
   store.set("childToken", data.token); store.del("queue"); store.del("pin"); store.del("lastEarned"); store.del("seenFlowers");
   S.screen = "child"; S.ctab = "today"; S.cs = null; render(); await loadChild(); celebrate(true);
+  setTimeout(() => { if (S.screen === "child" && !dlg.open) A.cReminders({ ask: true }); }, 1800);   // v28 : rappels proposés une fois, sur le téléphone de l'enfant seulement
 };
 
 // Aujourd'hui (parent)
