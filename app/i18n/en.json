@@ -561,7 +561,8 @@
   "addedN": {
    "one": "{n} routine added.",
    "other": "{n} routines added."
-  }
+  },
+  "print": "Print the week"
  },
  "validate": {
   "title": "To approve",
@@ -652,7 +653,9 @@
   "noChild": "No children yet.",
   "members": "Family members",
   "rolesHelp": "A parent manages everything. A helper ticks and approves routines and exchanges rewards, but doesn't break stars or change the settings.",
-  "invite": "Invite a member"
+  "invite": "Invite a member",
+  "settings": "Settings",
+  "account": "Account and backup"
  },
  "pause": {
   "default": "Break",
@@ -704,8 +707,6 @@
  },
  "print": {
   "title": "Printable planner",
-  "help": "Each child's week on an A4 page, to tick off in pencil.",
-  "btn": "Print the planner",
   "weekOf": "{name}'s week",
   "weekStart": "Week of {date}",
   "routine": "Routine",
@@ -827,7 +828,6 @@
   },
   "startStreak": "Have a good day to start a streak!",
   "seeBadges": "See my badges",
-  "settings": "Settings",
   "sound": "Sound when I tick a routine",
   "remindMorning": "Morning reminder",
   "remindEvening": "Evening reminder",
@@ -849,7 +849,11 @@
   "showParents": "Show this screen to your parents: you've won “{title}”.",
   "super": "Great!",
   "pauseDay": "Break day: your flower stays the same. You can still earn stars.",
-  "anyway": "Do my routines anyway"
+  "anyway": "Do my routines anyway",
+  "reminders": "My reminders",
+  "remindersHelp": "Choose when your phone reminds you of your routines.",
+  "remindersAsk": "Do you want your phone to remind you of your routines?",
+  "later": "Later"
  },
  "form": {
   "icon": "Icon",

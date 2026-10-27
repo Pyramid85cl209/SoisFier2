@@ -319,3 +319,21 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
 .kid-pause{background:var(--paper);border-radius:18px;padding:14px;margin:12px 0;text-align:center;box-shadow:var(--lift)}
 .kid-pause p{margin:0 0 10px;font-weight:700}
 .kid-pause p:last-child{margin:0}
+/* Famille : sections repliables (v28) */
+.fsec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;min-height:32px}
+.fsec>summary::-webkit-details-marker{display:none}
+.fsec>summary h2{margin:0;flex:1}
+.fsec>summary::after{content:"";flex:none;width:10px;height:10px;border-right:3px solid var(--leaf-d);border-bottom:3px solid var(--leaf-d);transform:rotate(45deg);margin-block-start:-6px;transition:transform .15s}
+.fsec:not([open])>summary::after{transform:rotate(-45deg);margin-block-start:0}
+[dir=rtl] .fsec:not([open])>summary::after{transform:rotate(135deg)}
+.fsec[open]>summary{margin-bottom:10px}
+.fsec>summary:focus-visible{outline:3px solid var(--leaf);outline-offset:4px;border-radius:8px}
+.fsec .grp:first-of-type{margin-top:0}
+/* Enfant : icône des rappels en bout de ligne (v28) */
+.today-count{display:flex;align-items:center;gap:8px}
+.today-count>span{flex:1}
+.bell{flex:none;width:40px;height:40px;border-radius:50%;border:0;background:var(--paper);box-shadow:var(--lift);font-size:1.15rem;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.kid-pause p .bell{margin-inline-start:8px;vertical-align:middle}
+.print-row{justify-content:flex-end;margin-top:0}
+.krow.kid-row{flex-wrap:wrap}
+.krow.kid-row .btns{flex-basis:100%;justify-content:flex-start}

@@ -16,9 +16,9 @@ function vacSection() {
     if (k === "h") return `<li><button class="pen hrow" data-act="holReview" data-id="${p.id}" aria-label="${t("hol.review")} ${esc(p.name)}"><span><b>🏖️ ${esc(p.name)}</b><small>${who}${t("sep")}${holLabel(p)}${t("sep")}${t("hol.state." + holState(p))}</small></span><span class="link">${t("hol.review")}</span></button></li>`;
     const wins = hols.some(h => h.child_id === p.child_id && h.active !== false && h.start_day <= p.end_day && p.start_day <= h.end_day);
     return `<li><button class="pen hrow" data-act="editPause" data-id="${p.id}" aria-label="${t("pause.edit")}"><span><b>⏸️ ${esc(pauseReason(p))}</b><small>${who}${t("sep")}${holLabel(p)}${t("sep")}${t("pause.state." + holState(p))}${wins ? `<br><span class="pz">${t("vac.pauseWins")}</span>` : ""}</small></span><span class="link">${t("btn.edit")}</span></button></li>`; };
-  return `<section class="sec" id="vac"><h2>${t("vac.title")}</h2><p class="muted">${t("vac.help")}</p>
+  return `<p class="muted">${t("vac.help")}</p>
     ${rows.length ? `<ul class="tpl">${rows.map(row).join("")}</ul>` : ""}
-    <div class="actions"><button class="btn" data-act="holNew">${t("hol.new")}${ptag()}</button><button class="btn ghost" data-act="newPause">${t("pause.new")}</button></div></section>`;
+    <div class="actions"><button class="btn" data-act="holNew">${t("hol.new")}${ptag()}</button><button class="btn ghost" data-act="newPause">${t("pause.new")}</button></div>`;
 }
 // Après une modification faite pendant des vacances : alerte, puis retour à la revue si elle était ouverte
 async function afterHolidayEdit(msg, holiday) {

@@ -55,8 +55,8 @@ async def main(only=None):
         if await scene("a1"):
             p = await s.page()
             await s.act(p, "A.tab({ dataset: { tab: 'family' } });")
-            secs = await p.evaluate("() => [...document.querySelectorAll('.sec h2')].map(h => h.textContent)")
-            marks = [(f".sec:nth-of-type({i + 1}) h2", i + 1) for i in range(len(secs))]
+            secs = await p.evaluate("() => [...document.querySelectorAll('details.fsec')].map(d => d.dataset.sec)")   # v28 : 7 sections repliables
+            marks = [(f"details[data-sec={k}] summary h2", i + 1) for i, k in enumerate(secs)]
             a = await s.shot(p, "a1", marks, full=True)
             await s.compose("a1", [(a, C("a1", 0))])
         if await scene("a2"):
@@ -81,9 +81,9 @@ async def main(only=None):
         if await scene("b1"):
             p = await s.page()
             await s.act(p, "A.tab({ dataset: { tab: 'routines' } });")
-            a = await s.shot(p, "b1a", [(".chip", 1), ("button[data-act=routineTemplates]", 2), ("button[data-act=newRoutine]", 3), (".rt", 4, 1)])
+            a = await s.shot(p, "b1a", [(".chip", 1), ("button[data-act=printPlan]", 2), ("button[data-act=routineTemplates]", 3), ("button[data-act=newRoutine]", 4), (".rt", 5, 1)])
             await s.act(p, "scrollTo(0, 99999);")
-            b = await s.shot(p, "b1b", [(".hist li", 5), ("button[data-act=newOneoff]", 6), ("button[data-act=manageOneoffTpl]", 7)])
+            b = await s.shot(p, "b1b", [(".hist li", 6), ("button[data-act=newOneoff]", 7), ("button[data-act=manageOneoffTpl]", 8)])
             await s.compose("b1", [(a, C("b1", 0)), (b, C("b1", 1))])
         if await scene("b2"):
             p = await s.page()
@@ -163,8 +163,8 @@ async def main(only=None):
         # ---------- Partie 2d ----------
         if await scene("e1"):
             p = await s.page()
-            await s.act(p, "A.tab({ dataset: { tab: 'family' } });")
-            a = await s.shot(p, "e1", [("button[data-act=editChild]", 1), ("button[data-act=deviceCode]", 2), ("button[data-act=childHere]", 3), ("button[data-act=editMember]", 4, 0), ("button[data-act=invite]", 5), ("button[data-act=revokeDevice]", 6)], full=True)
+            await s.act(p, "store.set('famOpen', { members: true }); A.tab({ dataset: { tab: 'family' } }); $$('.kid-row .btns').forEach(b => b.style.gap = '30px 30px');")
+            a = await s.shot(p, "e1", [("button[data-act=childHere]", 1), ("button[data-act=editChild]", 2), ("button[data-act=deviceCode]", 3), ("button[data-act=editMember]", 4, 0), ("button[data-act=invite]", 5), ("button[data-act=revokeDevice]", 6)], full=True)
             await s.compose("e1", [(a, C("e1", 0))])
         if await scene("e2"):
             p = await s.page()
@@ -242,9 +242,9 @@ async def main(only=None):
                 {"child_id": "C1", "routine_id": "R2", "day": d(0), "stars": 1, "source": "child", "validated_at": None}]
         if await scene("g1"):
             p = await s.page(child=True)
-            a = await s.shot(p, "g1a", [(".star-count", 1), (".lock", 2), (".hero", 3), (".kcard .k-pot", 4, 1)])
+            a = await s.shot(p, "g1a", [(".star-count", 1), (".lock", 2), (".hero", 3), (".kcard .k-pot", 4, 0), (".today-count .bell", 5)])
             p2 = await s.page(child=True, ovr={"completions": kidc, "child_stats": [{"child_id": "C1", "family_id": "F", "earned": 140, "done_count": 120, "pending_stars": 1, "pending_count": 1, "spent": 11, "redeemed_count": 1, "broken": 1}]})
-            b = await s.shot(p2, "g1b", [(".kcard.pending", 5, 0), (".wait-note", 6)])
+            b = await s.shot(p2, "g1b", [(".kcard.pending", 6, 0), (".wait-note", 7)])
             await s.compose("g1", [(a, C("g1", 0)), (b, C("g1", 1))])
         if await scene("g2"):
             p = await s.page(child=True)
@@ -273,9 +273,9 @@ async def main(only=None):
         if await scene("g4"):
             p = await s.page(child=True)
             await s.act(p, "A.ctab({ dataset: { tab: 'garden' } });")
-            a = await s.shot(p, "g4a", [(".scene", 1, 0), (".scene p", 2, 0), (".scene", 3, 1)])
+            a = await s.shot(p, "g4a", [(".scene", 1, 0), (".scene p", 2, 0), ("h2.grp", 3, 1)])
             await s.act(p, "scrollTo(0, 99999);")
-            b = await s.shot(p, "g4b", [(".streak", 4), ("#snd", 5), ("button[data-act=pushChild]", 6)])
+            b = await s.shot(p, "g4b", [(".streak", 4)])
             await s.compose("g4", [(a, C("g4", 0)), (b, C("g4", 1))])
         if await scene("g5"):
             p = await s.page(child=True)
@@ -286,14 +286,14 @@ async def main(only=None):
         # ---------- Partie 5 ----------
         if await scene("i1"):
             p = await s.page()
-            await s.act(p, "A.tab({ dataset: { tab: 'family' } }); const sec = $('[data-act=toggleAuto]').closest('.sec'); scrollTo(0, sec.offsetTop - 120);")
+            await s.act(p, "store.set('famOpen', { settings: true }); A.tab({ dataset: { tab: 'family' } }); scrollTo(0, $('[data-act=toggleAuto]').getBoundingClientRect().top + scrollY - 260);")
             a = await s.shot(p, "i1a", [("[data-act=toggleAuto]", 1)])
-            await s.act(p, "S.autoValidate = false; render(); const sec = $('[data-act=toggleAuto]').closest('.sec'); scrollTo(0, sec.offsetTop - 120); toast(t('validate.manualOnly'));")
+            await s.act(p, "S.autoValidate = false; render(); scrollTo(0, $('[data-act=toggleAuto]').getBoundingClientRect().top + scrollY - 260); toast(t('validate.manualOnly'));")
             b = await s.shot(p, "i1b")
             await s.compose("i1", [(a, C("i1", 0)), (b, C("i1", 1))])
         if await scene("i2"):
             p = await s.page()
-            await s.act(p, "A.tab({ dataset: { tab: 'family' } }); const sec = $('#t1').closest('.sec'); scrollTo(0, sec.offsetTop - 120);")
+            await s.act(p, "store.set('famOpen', { push: true }); A.tab({ dataset: { tab: 'family' } }); const sec = $('#t1').closest('.sec'); scrollTo(0, sec.offsetTop - 120);")
             a = await s.shot(p, "i2a", [("#t1", 1), ("#t2", 2), ("button[data-act=pushParent]", 3)])
             await s.act(p, "localStorage.setItem('sf:pushOn', 'true'); render(); const sec = $('#t1').closest('.sec'); scrollTo(0, sec.offsetTop - 120); toast(t('push.enabled'));")
             b = await s.shot(p, "i2b", [("button[data-act=pushParent]", 4), ("button[data-act=pushOff]", 5)])
@@ -302,7 +302,7 @@ async def main(only=None):
             await s.compose("i2", [(a, C("i2", 0)), (b, C("i2", 1)), (c, C("i2", 2))])
         if await scene("i3"):
             p = await s.page()
-            await s.act(p, "A.tab({ dataset: { tab: 'family' } }); const sec = $('[data-act=printPlan]').closest('.sec'); scrollTo(0, sec.offsetTop - 160);")
+            await s.act(p, "A.tab({ dataset: { tab: 'routines' } });")   # v28 : bouton dans l'onglet Routines
             a = await s.shot(p, "i3a", [("button[data-act=printPlan]", 1)])
             await s.act(p, "printPlanning(['C1']);", 300)
             await p.emulate_media(media="print")
@@ -311,15 +311,15 @@ async def main(only=None):
             await p.emulate_media(media="screen"); await p.set_viewport_size({"width": 360, "height": 740})
             await s.compose("i3", [(a, C("i3", 0)), (b, C("i3", 1))])
         if await scene("i4"):
-            p = await s.page()
-            await s.act(p, "A.tab({ dataset: { tab: 'family' } }); scrollTo(0, 99999);")
+            p = await s.page(h=900)
+            await s.act(p, "store.set('famOpen', { kids: false, vac: false, settings: true, account: true }); A.tab({ dataset: { tab: 'family' } }); scrollTo(0, $('[data-act=setPin]').getBoundingClientRect().top + scrollY - 110);")
             a = await s.shot(p, "i4a", [("button[data-act=setPin]", 1), ("button[data-act=exportData]", 2), ("button[data-act=renameFamily]", 3), ("button[data-act=logout]", 4, 0)])
             await s.act(p, "A.renameFamily();")
             b = await s.shot(p, "i4b")
             await s.compose("i4", [(a, C("i4", 0)), (b, C("i4", 1))])
         if await scene("w2"):
             p = await s.page()
-            await s.act(p, "A.tab({ dataset: { tab: 'family' } }); const h = [...$$('.sec h2')].find(x => x.textContent === t('week.title')); scrollTo(0, h.closest('.sec').offsetTop - 120);")
+            await s.act(p, "store.set('famOpen', { settings: true }); A.tab({ dataset: { tab: 'family' } }); scrollTo(0, $('[data-sec=settings]').offsetTop - 70);")
             a = await s.shot(p, "w2a", [("button[data-act=editWeek]", 1)])
             await s.act(p, "A.editWeek({ dataset: { mode: 'family' } });")
             b = await s.shot(p, "w2b", sheet=True)
@@ -336,16 +336,16 @@ async def main(only=None):
                   "S.gardens.C1.days.forEach(x => { if (x.day >= addDays(todayISO(), -2)) { x.paused = true; x.good = false; } });")
         if await scene("v1"):
             p = await s.page(ovr=VAC, h=1010)
-            await s.act(p, VAC_JS + "A.tab({ dataset: { tab: 'family' } }); scrollTo(0, $('#vac').offsetTop - 70);")
-            a = await s.shot(p, "v1a", [("#vac [data-act=holReview]", 1), ("#vac [data-act=holNew]", 2)])
+            await s.act(p, VAC_JS + "A.tab({ dataset: { tab: 'family' } }); scrollTo(0, $('[data-sec=vac]').offsetTop - 70);")
+            a = await s.shot(p, "v1a", [("[data-sec=vac] [data-act=holReview]", 1), ("[data-sec=vac] [data-act=holNew]", 2)])
             await s.act(p, "A.holReview({ dataset: { id: 'H1' } });")
             await p.set_viewport_size({"width": 360, "height": 740})
             b = await s.shot(p, "v1b", [("button[data-act=holDates]", 3), ("button[data-act=holEdit]", 4, 0), ("button[data-act=newRoutine]", 5)], sheet=True)
             await s.compose("v1", [(a, C("v1", 0)), (b, C("v1", 1))])
         if await scene("h1"):
             p = await s.page(ovr=VAC, h=1010)
-            await s.act(p, VAC_JS + "A.tab({ dataset: { tab: 'family' } }); scrollTo(0, $('#vac').offsetTop - 70);")
-            a = await s.shot(p, "h1a", [("#vac [data-act=editPause]", 1, 0), ("#vac .pz", 2), ("#vac [data-act=newPause]", 3)])
+            await s.act(p, VAC_JS + "A.tab({ dataset: { tab: 'family' } }); scrollTo(0, $('[data-sec=vac]').offsetTop - 70);")
+            a = await s.shot(p, "h1a", [("[data-sec=vac] [data-act=editPause]", 1, 0), ("[data-sec=vac] .pz", 2), ("[data-sec=vac] [data-act=newPause]", 3)])
             await p.set_viewport_size({"width": 360, "height": 740}); await s.act(p, "A.newPause();")
             b = await s.shot(p, "h1b", [(".tpl", 4), ("#pz-from", 5), ("#pz-why", 6), ("button[data-act=savePause]", 7)], sheet=True)
             await s.compose("h1", [(a, C("h1", 0)), (b, C("h1", 1))])
@@ -368,6 +368,14 @@ async def main(only=None):
             await s.act(p, "A.cAnyway();")
             b = await s.shot(p, "g7b", [(".kcard", 3, 0)])
             await s.compose("g7", [(a, C("g7", 0)), (b, C("g7", 1))])
+        # ---------- v28 : rappels de l'enfant ----------
+        if await scene("g8"):
+            p = await s.page(child=True)
+            await s.act(p, "A.cReminders(); document.activeElement.blur();")
+            a = await s.shot(p, "g8a", [("#t1", 1), ("#t2", 2), ("#snd", 3), ("button[data-act=pushChild]", 4)], sheet=True)
+            await s.act(p, "A.cReminders({ ask: true }); document.activeElement.blur();")
+            b = await s.shot(p, "g8b", [("dialog[open] [data-act=closeSheet]", 5), ("button[data-act=pushChild]", 6)], sheet=True)
+            await s.compose("g8", [(a, C("g8", 0)), (b, C("g8", 1))])
         print("erreurs:", s.errs)
 
 asyncio.run(main(set(sys.argv[1:]) or None))

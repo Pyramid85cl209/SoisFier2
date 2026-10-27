@@ -93,7 +93,7 @@ function pRoutines() {
       <span class="rt-txt"><b>${esc(r.title)}</b><small>${parts.join(t("sep"))}</small></span>
       <span class="rt-stars">${fmtNum(r.stars)} ⭐</span></button></li>`; }).join("")}</ul>`;
   }).join("");
-  return chips() + banner + `<div class="actions"><button class="btn" data-act="routineTemplates">${t("routine.chooseTpl")}</button><button class="btn ghost" data-act="newRoutine">${vac ? t("hol.newRoutine") : t("routine.create")}</button></div>`
+  return chips() + `<div class="actions print-row"><button class="btn sm ghost" data-act="printPlan">🖨️ ${t("routine.print")}</button></div>` + banner + `<div class="actions"><button class="btn" data-act="routineTemplates">${t("routine.chooseTpl")}</button><button class="btn ghost" data-act="newRoutine">${vac ? t("hol.newRoutine") : t("routine.create")}</button></div>`
     + (groups || `<p class="empty">${t("routine.none", { name: esc(c.name) })}</p>`) + extra;   // exceptionnelles en cours visibles aussi en vue vacances
 }
 function pRewards() {
@@ -117,39 +117,48 @@ function pRewards() {
       : `<li>${brokenStar(20)}<span>${esc(z.title)}</span><span class="muted">${fmtDate(z.created_at)}</span><span class="num">−${fmtNum(z.stars)} ⭐</span><span class="muted">${t("common.by", { who: esc(memberLabel(z.created_by)) })}</span>${P ? `<button class="link" data-act="cancelPenalty" data-id="${z.id}">${t("btn.cancel")}</button>` : ""}</li>`).join("")}</ul>` : ""}`;
 }
 function pFamily() {
+  const P = isParent(), me = S.session?.user.id;
   const kids = S.children.map(c => {
     const devs = S.devices.filter(d => d.child_id === c.id);
     const gn = gardenNow(S.gardens[c.id]);
-    return `<div class="krow">${gn ? stageSVG(gn.stage, gn.species, c.color) : plantSVG(0, c.color)}<div class="grow"><b>${esc(c.emoji)} ${esc(c.name)}</b>
-      ${devs.map(d => `<div class="dev">📱 ${esc(d.label || t("family.hisPhone"))}${t("sep")}${t("family.since", { date: fmtDate(d.created_at) })} ${isParent() ? `<button class="link" data-act="revokeDevice" data-id="${d.id}">${t("family.disconnect")}</button>` : ""}</div>`).join("")}</div>
-      ${isParent() ? `<div class="btns"><button class="btn sm ghost" data-act="editChild" data-id="${c.id}">${t("btn.edit")}</button><button class="btn sm ghost" data-act="deviceCode" data-id="${c.id}">${t("family.connectDevice")}</button><button class="btn sm ghost" data-act="childHere" data-id="${c.id}">${t("family.childHere")}</button></div>` : ""}</div>`;
+    return `<div class="krow kid-row">${gn ? stageSVG(gn.stage, gn.species, c.color) : plantSVG(0, c.color)}<div class="grow"><b>${esc(c.emoji)} ${esc(c.name)}</b>
+      ${devs.map(d => `<div class="dev">📱 ${esc(d.label || t("family.hisPhone"))}${t("sep")}${t("family.since", { date: fmtDate(d.created_at) })} ${P ? `<button class="link" data-act="revokeDevice" data-id="${d.id}">${t("family.disconnect")}</button>` : ""}</div>`).join("")}</div>
+      ${P ? `<div class="btns"><button class="btn sm" data-act="childHere" data-id="${c.id}">${t("family.childHere")}</button><button class="btn sm ghost" data-act="editChild" data-id="${c.id}">${t("btn.edit")}</button><button class="btn sm ghost" data-act="deviceCode" data-id="${c.id}">${t("family.connectDevice")}</button></div>` : ""}</div>`;
   }).join("");
   const pushOn = store.get("pushOn", false), times = store.get("pushTimes", ["07:30", "18:30"]);
-  const P = isParent(), me = S.session?.user.id;
   const members = S.members.map(m => `<div class="krow"><div class="grow"><b>${esc(m.relation || m.display_name || t("role.parent"))}</b>${m.user_id === me ? " " + t("family.you") : ""}
       <div class="dev">${m.relation && m.display_name ? esc(m.display_name) + t("sep") : ""}${m.role === "helper" ? t("role.helper") : t("role.parent")}</div></div>
       ${P || m.user_id === me ? `<div class="btns"><button class="btn sm ghost" data-act="editMember" data-id="${m.user_id}">${t("btn.edit")}</button></div>` : ""}</div>`).join("");
-  return `<section class="sec"><h2>${t("family.children")}</h2>${kids || `<p class="muted">${t("family.noChild")}</p>`}${P ? `<div class="actions"><button class="btn" data-act="newChild">${t("child.add")}${S.children.length >= 1 ? ptag() : ""}</button></div>` : ""}</section>
-    <section class="sec"><h2>${t("family.members")}</h2>${members}
-      ${P ? `<p class="muted small">${t("family.rolesHelp")}</p><div class="actions"><button class="btn ghost" data-act="invite">${t("family.invite")}</button></div>` : ""}</section>
-    <section class="sec"><h2>${t("week.title")}</h2><p class="muted">${esc(weekSummary(WEEK))}</p><p class="muted small">${t("week.help")}</p>${P ? `<div class="actions"><button class="btn ghost" data-act="editWeek" data-mode="family">${t("btn.edit")}</button></div>` : ""}</section>
-    ${P ? `${vacSection()}
-    <section class="sec"><h2>${t("validate.section")}</h2><p class="muted">${t("validate.sectionHelp")}</p>
-      <label class="check"><input type="checkbox" data-act="toggleAuto" ${S.autoValidate ? "checked" : ""}> ${t("validate.autoLabel")}</label></section>` : ""}
-    <section class="sec"><h2>${t("push.title")}</h2><p class="muted">${t("push.parentHelp")}</p>
+  // Ordre par fréquence d'usage (v28) ; sections repliables, Enfants et Vacances ouvertes par défaut, état retenu sur le téléphone
+  return fsec("kids", "🧒 " + t("family.children"), `${kids || `<p class="muted">${t("family.noChild")}</p>`}${P ? `<div class="actions"><button class="btn" data-act="newChild">${t("child.add")}${S.children.length >= 1 ? ptag() : ""}</button></div>` : ""}`, true)
+    + (P ? fsec("vac", "🏖️ " + t("vac.title"), vacSection(), true) : "")
+    + fsec("members", "👥 " + t("family.members"), `${members}${P ? `<p class="muted small">${t("family.rolesHelp")}</p><div class="actions"><button class="btn ghost" data-act="invite">${t("family.invite")}</button></div>` : ""}`)
+    + fsec("push", "🔔 " + t("push.title"), `<p class="muted">${t("push.parentHelp")}</p>
       <div class="f two"><label>${t("push.morning")}<input type="time" id="t1" value="${esc(times[0] || "")}"></label><label>${t("push.evening")}<input type="time" id="t2" value="${esc(times[1] || "")}"></label></div>
-      <div class="actions"><button class="btn" data-act="pushParent">${pushOn ? t("push.update") : t("push.enable")}</button>${pushOn ? `<button class="btn ghost" data-act="pushOff">${t("btn.disable")}</button>` : ""}</div></section>
-    <section class="sec"><h2>${t("print.title")}</h2><p class="muted">${t("print.help")}</p><div class="actions"><button class="btn ghost" data-act="printPlan">${t("print.btn")}</button></div></section>
-    <section class="sec"><h2>${t("pin.title")}</h2><p class="muted">${t("pin.help")}</p><div class="actions"><button class="btn ghost" data-act="setPin">${store.get("pin") ? t("pin.change") : t("pin.create")}</button></div></section>
-    <section class="sec"><h2>${t("backup.title")}</h2><p class="muted">${t("backup.help")}</p><div class="actions"><button class="btn ghost" data-act="exportData">${t("backup.btn")}</button></div></section>
-    ${P ? planSection() : ""}
-    <section class="sec"><h2>${t("account.title")}</h2><p class="muted">${esc(S.session?.user.email || "")}</p><div class="actions">${installBtn()}${P ? `<button class="btn ghost" data-act="renameFamily">${t("account.rename")}</button>` : ""}<button class="btn danger ghost" data-act="logout">${t("btn.logout")}</button></div></section>`;
+      <div class="actions"><button class="btn" data-act="pushParent">${pushOn ? t("push.update") : t("push.enable")}</button>${pushOn ? `<button class="btn ghost" data-act="pushOff">${t("btn.disable")}</button>` : ""}</div>`)
+    + fsec("settings", "⚙️ " + t("family.settings"), `<h3 class="grp">${t("week.title")}</h3><p class="muted">${esc(weekSummary(WEEK))}</p><p class="muted small">${t("week.help")}</p>${P ? `<div class="actions"><button class="btn ghost" data-act="editWeek" data-mode="family">${t("btn.edit")}</button></div>` : ""}
+      ${P ? `<h3 class="grp">${t("validate.section")}</h3><p class="muted">${t("validate.sectionHelp")}</p>
+      <label class="check"><input type="checkbox" data-act="toggleAuto" ${S.autoValidate ? "checked" : ""}> ${t("validate.autoLabel")}</label>` : ""}
+      <h3 class="grp">${t("pin.title")}</h3><p class="muted">${t("pin.help")}</p><div class="actions"><button class="btn ghost" data-act="setPin">${store.get("pin") ? t("pin.change") : t("pin.create")}</button></div>`)
+    + (P ? fsec("plan", "⭐ " + t("premium.myPlan"), planSection()) : "")
+    + fsec("account", "👤 " + t("family.account"), `<p class="muted">${esc(S.session?.user.email || "")}</p>${installBtn() || P ? `<div class="actions">${installBtn()}${P ? `<button class="btn ghost" data-act="renameFamily">${t("account.rename")}</button>` : ""}</div>` : ""}
+      <h3 class="grp">${t("backup.title")}</h3><p class="muted">${t("backup.help")}</p><div class="actions"><button class="btn ghost" data-act="exportData">${t("backup.btn")}</button></div>
+      <div class="actions"><button class="btn danger ghost" data-act="logout">${t("btn.logout")}</button></div>`);
 }
+// Section repliable de Famille : titre touchable, état ouvert/replié retenu sur le téléphone
+function fsec(id, title, body, open = false) {
+  const st = store.get("famOpen", {}), on = id in st ? st[id] : open;
+  return `<details class="sec fsec" data-sec="${id}" ${on ? "open" : ""}><summary><h2>${title}</h2></summary>${body}</details>`;
+}
+document.addEventListener("toggle", e => {
+  const d = e.target; if (!d.matches || !d.matches("details.fsec")) return;
+  const st = store.get("famOpen", {}); st[d.dataset.sec] = d.open; store.set("famOpen", st);
+}, true);
 
 function planSection() {
   const plan = S.plan || "founder";
-  return `<section class="sec"><h2>${t("premium.myPlan")}</h2><p><b>${t("premium.plan." + plan)}</b></p><p class="muted">${t("premium.planHelp." + plan)}</p>
-    ${plan === "free" ? `<div class="actions"><a class="btn" href="${premiumHref("plan")}">${t("premium.see")}</a></div>` : ""}</section>`;
+  return `<p><b>${t("premium.plan." + plan)}</b></p><p class="muted">${t("premium.planHelp." + plan)}</p>
+    ${plan === "free" ? `<div class="actions"><a class="btn" href="${premiumHref("plan")}">${t("premium.see")}</a></div>` : ""}`;
 }
 // Rappel discret, hors action : au plus une fois par semaine, parent d'une famille gratuite
 function nudge() {
