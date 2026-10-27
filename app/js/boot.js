@@ -22,8 +22,29 @@ A.savePass = async () => {
   closeSheet(); toast(t("auth.passwordChanged")); await enterParent();
 };
 
+// Mise à jour (v28c) : vérifiée à l'ouverture et à chaque retour dans l'app ; quand la nouvelle version prend la main,
+// l'app se recharge une fois (après la fermeture d'une fenêtre ouverte, pour ne rien perdre d'une saisie ou d'un défi chrono).
+function swSetup() {
+  if (!("serviceWorker" in navigator)) return;
+  const sw = navigator.serviceWorker, had = !!sw.controller;
+  let reloading = false;
+  const askVersion = () => { if (sw.controller) sw.controller.postMessage("version"); };
+  sw.addEventListener("message", e => { if (e.data && e.data.version) { S.version = e.data.version.replace(/^(apercu-)?soisfier-/, ""); if (S.screen === "parent" && S.tab === "family") render(); } });
+  sw.addEventListener("controllerchange", () => {
+    if (!had) return askVersion();   // première installation : rien à recharger
+    if (reloading) return; reloading = true;
+    const go = () => { if (dlg.open) return dlg.addEventListener("close", () => setTimeout(go, 50), { once: true }); location.reload(); };
+    go();
+  });
+  sw.register("sw.js", { updateViaCache: "none" }).then(reg => {
+    const check = () => reg.update().catch(() => {});
+    check();
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") check(); });
+  }).catch(() => {});
+  askVersion();
+}
 async function boot() {
-  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+  swSetup();
   await loadI18n();
   if (!sb) { S.screen = "error"; S.err = CFG_OK ? t("error.noService") : t("error.noConfig"); return render(); }
   if (store.get("childToken")) {

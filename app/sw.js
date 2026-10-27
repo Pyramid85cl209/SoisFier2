@@ -1,5 +1,5 @@
 /* SoisFier – service worker : hors ligne + notifications */
-const CACHE = "soisfier-v28b";
+const CACHE = "soisfier-v28c";
 // Vitrine provisoire : jamais mise en cache, toujours servie en direct (retours des bêta-testeurs sur la dernière version).
 const VITRINE = new URL("vitrine/", self.registration.scope).pathname;
 // Aperçu d'une branche (/preview/) : jamais servi par le service worker de la production (il a le sien).
@@ -11,7 +11,7 @@ const CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/
 self.addEventListener("install", e => {
   e.waitUntil((async () => {
     const c = await caches.open(CACHE);
-    await c.addAll(CORE);
+    await c.addAll(CORE.map(u => new Request(u, { cache: "reload" })));   // v28c : jamais depuis le cache HTTP du navigateur (fichiers de la livraison précédente)
     // Seul le français (langue de secours) est préchargé ; les autres langues déjà utilisées sur l'appareil sont reprises, à jour.
     const used = new Set();
     for (const k of await caches.keys()) if (k !== CACHE) for (const r of await (await caches.open(k)).keys()) if (/\/i18n\/\w+\.json$/.test(new URL(r.url).pathname)) used.add(r.url);
@@ -37,6 +37,20 @@ self.addEventListener("fetch", e => {
   if (url.origin === self.location.origin && url.pathname.startsWith(APERCU)) return; // aperçu : hors service worker de la production
   const cacheable = url.origin === self.location.origin || /(^|\.)(jsdelivr\.net|googleapis\.com|gstatic\.com)$/.test(url.hostname);
   if (!cacheable) return;
+  // v28c : la page (navigation) vient du réseau d'abord, pour annoncer tout de suite une nouvelle version ; cache en secours (hors ligne ou réseau lent)
+  if (req.mode === "navigate" && url.origin === self.location.origin) {
+    e.respondWith((async () => {
+      const c = await caches.open(CACHE);
+      const net = fetch(req, { cache: "no-store" }).then(res => { if (res && res.ok) c.put("./index.html", res.clone()); return res; }).catch(() => null);
+      const late = new Promise(r => setTimeout(() => r(null), 3000));
+      const res = await Promise.race([net, late]);
+      if (res) return res;
+      const hit = (await c.match(req, { ignoreSearch: true })) || (await c.match("./index.html"));
+      if (hit) { e.waitUntil(net); return hit; }
+      return (await net) || Response.error();
+    })());
+    return;
+  }
   e.respondWith((async () => {
     const c = await caches.open(CACHE);
     const hit = await c.match(req, { ignoreSearch: req.mode === "navigate" });
@@ -48,6 +62,9 @@ self.addEventListener("fetch", e => {
     return Response.error();
   })());
 });
+
+// v28c : l'app demande la version qui la sert (affichée dans Famille › Compte et sauvegarde)
+self.addEventListener("message", e => { if (e.data === "version" && e.source) e.source.postMessage({ version: CACHE }); });
 
 self.addEventListener("push", e => {
   let d = {};

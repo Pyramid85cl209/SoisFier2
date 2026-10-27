@@ -744,7 +744,8 @@
   "title": "Account",
   "rename": "Rename the family",
   "needName": "Enter a name.",
-  "nameSaved": "Name saved."
+  "nameSaved": "Name saved.",
+  "version": "App version: {v}"
  },
  "malus": {
   "byAt": "by {who}, at {time}",

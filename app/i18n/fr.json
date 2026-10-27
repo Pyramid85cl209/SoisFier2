@@ -735,7 +735,8 @@
   "title": "Compte",
   "rename": "Renommer la famille",
   "needName": "Saisis un nom.",
-  "nameSaved": "Nom enregistré."
+  "nameSaved": "Nom enregistré.",
+  "version": "Version de l'application : {v}"
  },
  "malus": {
   "byAt": "par {who}, à {time}",
