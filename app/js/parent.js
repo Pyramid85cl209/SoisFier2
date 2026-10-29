@@ -120,7 +120,7 @@ function pFamily() {
       ${P ? `<div class="btns"><button class="btn sm" data-act="childHere" data-id="${c.id}">${t("family.childHere")}</button><button class="btn sm ghost" data-act="editChild" data-id="${c.id}">${t("btn.edit")}</button><button class="btn sm ghost" data-act="deviceCode" data-id="${c.id}">${t("family.connectDevice")}</button></div>` : ""}</div>`;
   }).join("");
   const pushOn = store.get("pushOn", false), times = store.get("pushTimes", ["07:30", "18:30"]);
-  const members = S.members.map(m => `<div class="krow"><div class="grow"><b>${esc(m.relation || m.display_name || t("role.parent"))}</b>${m.user_id === me ? " " + t("family.you") : ""}
+  const members = S.members.map(m => `<div class="krow"><div class="grow"><b>${esc(relLabel(m) || m.display_name || t("role.parent"))}</b>${m.user_id === me ? " " + t("family.you") : ""}
       <div class="dev">${m.relation && m.display_name ? esc(m.display_name) + t("sep") : ""}${m.role === "helper" ? t("role.helper") : t("role.parent")}</div></div>
       ${P || m.user_id === me ? `<div class="btns"><button class="btn sm ghost" data-act="editMember" data-id="${m.user_id}">${t("btn.edit")}</button></div>` : ""}</div>`).join("");
   // Ordre par fréquence d'usage (v28) ; sections repliables, Enfants et Vacances ouvertes par défaut, état retenu sur le téléphone

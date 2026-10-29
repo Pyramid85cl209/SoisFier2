@@ -63,12 +63,12 @@ A.pushOff = async () => {
 // Famille et réglages
 A.invite = () => {
   if (!isPremium() && S.members.filter(m => m.role !== "helper").length >= 2) return upsell("adults");
-  openSheet(`<h2>${t("family.invite")}</h2>${relationField(RELATIONS()[1], "inv")}
+  openSheet(`<h2>${t("family.invite")}</h2>${relationField(null, "inv", RELATIONS()[1])}
     <div class="f"><span>${t("member.rights")}</span><div class="seg" role="radiogroup"><button type="button" role="radio" aria-checked="true" class="on" data-act="seg" data-group="role" data-v="parent">${t("role.parent")}</button><button type="button" role="radio" aria-checked="false" data-act="seg" data-group="role" data-v="helper">${t("role.helper")}${ptag()}</button></div></div>
     <div class="sheet-actions"><button class="btn" data-act="makeInvite">${t("member.makeCode")}</button></div>`, S.form = { role: "parent" });
 };
 A.makeInvite = async () => {
-  const rel = readRelation("inv"), role = S.form.role || "parent";
+  const rel = readRelation("inv", true).relation, role = S.form.role || "parent";
   if (role === "helper" && needPremium("helpers")) return;
   const { data, error } = await sb.rpc("create_invite", { p_family: S.family.id, p_relation: rel, p_role: role }); if (error) throw error;
   openSheet(`<h2>${t("member.inviteWho", { who: esc(rel || t("member.aMemberLower")) })}</h2><div class="code">${esc(data)}</div><p>${t("member.inviteHelp", { who: esc(rel || t("member.thePerson")), role: lower(role === "helper" ? t("role.helper") : t("role.parent")) })}</p>
@@ -77,21 +77,23 @@ A.makeInvite = async () => {
 A.editMember = el => {
   const m = S.members.find(x => x.user_id === el.dataset.id), self = m.user_id === S.session?.user.id;
   S.form = { role: m.role };
-  openSheet(`<h2>${esc(m.relation || m.display_name || t("member.member"))}</h2>${relationField(m.relation, "mem")}
+  openSheet(`<h2>${esc(relLabel(m) || m.display_name || t("member.member"))}</h2>${relationField(m, "mem")}
     ${isParent() && !self ? `<div class="f"><span>${t("member.rights")}</span><div class="seg" role="radiogroup">${[["parent", t("role.parent")], ["helper", t("role.helper")]].map(([k, l]) => `<button type="button" role="radio" aria-checked="${m.role === k}" class="${m.role === k ? "on" : ""}" data-act="seg" data-group="role" data-v="${k}">${l}</button>`).join("")}</div></div>` : ""}
     <div class="sheet-actions">${isParent() && !self ? `<button class="btn danger ghost" data-act="removeMember" data-id="${m.user_id}">${t("member.remove")}</button>` : ""}<button class="btn" data-act="saveMember" data-id="${m.user_id}">${t("btn.save")}</button></div>`);
 };
 A.saveMember = async el => {
-  const id = el.dataset.id, self = id === S.session?.user.id, row = { relation: readRelation("mem") };
+  const id = el.dataset.id, self = id === S.session?.user.id, rel = readRelation("mem"), row = rel ? { relation: rel.relation } : {};
   if (isParent() && !self) row.role = S.form.role;
+  if (!Object.keys(row).length) return closeSheet();
   await mutate(() => sb.from("family_members").update(row).eq("family_id", S.family.id).eq("user_id", id));
-  S.members = S.members.map(m => m.user_id === id ? { ...m, ...row } : m); if (self) S.me = { ...S.me, ...row };
+  const loc = rel ? { ...row, relation_key: rel.relation_key } : row;   // clé recalculée par la base, reprise localement en attendant
+  S.members = S.members.map(m => m.user_id === id ? { ...m, ...loc } : m); if (self) S.me = { ...S.me, ...loc };
   closeSheet(); saveParentCache(); render(); toast(t("member.saved"));
   refreshParts(["m"]).then(render).catch(() => {});
 };
 A.removeMember = async el => {
   const m = S.members.find(x => x.user_id === el.dataset.id);
-  if (!await confirmSheet(t("member.removeTitle", { who: m.relation || m.display_name || t("member.thisMember") }), t("member.removeText"), t("member.removeBtn"), true)) return;
+  if (!await confirmSheet(t("member.removeTitle", { who: relLabel(m) || m.display_name || t("member.thisMember") }), t("member.removeText"), t("member.removeBtn"), true)) return;
   await mutate(() => sb.from("family_members").delete().eq("family_id", S.family.id).eq("user_id", m.user_id));
   S.members = S.members.filter(x => x.user_id !== m.user_id); saveParentCache(); render(); toast(t("member.removed"));
   refreshParts(["m"]).then(render).catch(() => {});

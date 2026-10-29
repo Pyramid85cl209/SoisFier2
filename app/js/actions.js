@@ -67,7 +67,7 @@ A.logout = async () => {
 };
 A.createFamily = async () => {
   const name = $("#o-name").value.trim();
-  const rel = $("#o-rel").value;
+  const rel = t("rel." + $("#o-rel").value);
   const w = S.wk || detectWeek();
   const { data: fid, error } = await sb.rpc("create_family", { p_name: name || t("onboard.defaultName"), p_display_name: S.session.user.user_metadata?.display_name || "",
     p_week_start: w.start, p_weekend: w.weekend, p_timezone: w.tz }); if (error) throw error;
