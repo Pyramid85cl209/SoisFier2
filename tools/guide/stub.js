@@ -19,8 +19,8 @@
     flowers, pauses: [], streak: 2, best_streak: 9,
     counters: { timers: 3, bonus: 4, oneoff: 1, sortie: 0, grand: 0, last_redeem: null, matin: 6, soir: 5, full: 2, weeks: 1, weekends: 2 } };
   const F = window.__FIX = Object.assign({
-    family_members: [{ family_id: "F", display_name: L.member, role: "parent", created_at: "2026-10-01T10:00:00Z", families: { name: L.family }, user_id: "U", relation: L.rel_parent, locale: L.lang },
-      { family_id: "F", display_name: L.member, role: "helper", created_at: "2026-10-02T10:00:00Z", user_id: "U2", relation: L.rel_helper, locale: L.lang }],
+    family_members: [{ family_id: "F", display_name: L.member, role: "parent", created_at: "2026-10-01T10:00:00Z", families: { name: L.family }, user_id: "U", relation: L.rel_parent, relation_key: "dad", locale: L.lang },
+      { family_id: "F", display_name: L.member, role: "helper", created_at: "2026-10-02T10:00:00Z", user_id: "U2", relation: L.rel_helper, relation_key: "grandma", locale: L.lang }],
     children: [{ id: "C1", family_id: "F", name: L.child, emoji: "🧒", color: "#2E8B57", garden_start: day(-130), price_rhythm: 11.4, position: 0 }],
     routines, rewards,
     completions: [],

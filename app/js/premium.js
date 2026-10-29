@@ -23,11 +23,19 @@ function upsell(key, extra = {}) {
     <div class="sheet-actions"><button class="btn ghost" data-act="closeSheet">${t("premium.later")}</button><a class="btn" href="${premiumHref(key)}">${t("premium.see")}</a></div>`);
 }
 const needPremium = (key, extra) => { if (isPremium()) return false; upsell(key, extra); return true; };
-function memberLabel(uid) { const m = S.members.find(x => x.user_id === uid); return m ? (m.relation || m.display_name || t("member.aParent")) : t("member.aMember"); }
+function memberLabel(uid) { const m = S.members.find(x => x.user_id === uid); return m ? (relLabel(m) || m.display_name || t("member.aParent")) : t("member.aMember"); }
 function whoValidated(x) { if (!x.validated_at) return ""; return x.validated_by ? memberLabel(x.validated_by) : t("member.autoValidated"); }
-function relationField(cur, idp = "rel") {
-  const known = RELATIONS().includes(cur);
-  return `<label class="f">${t("member.relation")}<select id="${idp}-sel">${RELATIONS().map(r => `<option ${r === cur ? "selected" : ""}>${r}</option>`).join("")}<option value="__autre" ${cur && !known ? "selected" : ""}>${t("member.otherRel")}</option></select></label>
-    <label class="f">${t("member.customLabel")}<input id="${idp}-txt" maxlength="40" placeholder="${t("member.customPlaceholder")}" value="${cur && !known ? esc(cur) : ""}"></label>`;
+// m : membre existant (ou null). Le choix proposé suit la clé ; enregistrer sans rien changer garde le lien d'origine (un « خالو » ne devient pas « Tonton »).
+function relationField(m, idp = "rel", defKey = null) {
+  const keys = RELATIONS(), k = m ? m.relation_key : defKey, custom = m && m.relation && !m.relation_key ? m.relation : "";
+  const sel = k ? (keys.includes(k) ? k : keys.find(x => k.startsWith(x + "_") || x.startsWith(k + "_")) || "__autre") : custom ? "__autre" : "";
+  return `<label class="f">${t("member.relation")}<select id="${idp}-sel" data-init="${sel}">${sel ? "" : `<option value="" selected></option>`}${keys.map(r => `<option value="${r}" ${r === sel ? "selected" : ""}>${esc(t("rel." + r))}</option>`).join("")}<option value="__autre" ${sel === "__autre" ? "selected" : ""}>${t("member.otherRel")}</option></select></label>
+    <label class="f">${t("member.customLabel")}<input id="${idp}-txt" maxlength="40" placeholder="${t("member.customPlaceholder")}" value="${esc(custom)}" data-init="${esc(custom)}"></label>`;
 }
-const readRelation = (idp = "rel") => ($("#" + idp + "-txt").value.trim() || ($("#" + idp + "-sel").value === "__autre" ? "" : $("#" + idp + "-sel").value)) || null;
+// Renvoie { relation, relation_key } (libellé dans la langue de l'appareil, clé ou null), ou undefined si rien n'a changé (sauf force)
+const readRelation = (idp = "rel", force = false) => {
+  const s = $("#" + idp + "-sel"), x = $("#" + idp + "-txt"), txt = x.value.trim();
+  if (!force && s.value === s.dataset.init && txt === (x.dataset.init || "")) return undefined;
+  if (txt) return { relation: txt, relation_key: null };
+  return s.value === "__autre" || !s.value ? { relation: null, relation_key: null } : { relation: t("rel." + s.value), relation_key: s.value };
+};

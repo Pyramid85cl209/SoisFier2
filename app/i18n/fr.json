@@ -9,7 +9,7 @@
   "deletedM": "Supprimé.",
   "savedM": "Enregistré.",
   "starsReturned": "Les étoiles sont rendues à l'enfant.",
-  "undone": "Action annulée, réessaie."
+  "undone": "Action annulée, merci de réessayer."
  },
  "days": {
   "short": [
@@ -107,12 +107,12 @@
   "perks": "Petits privilèges"
  },
  "err": {
-  "network": "Pas de connexion internet. Réessaie dans un instant.",
+  "network": "Pas de connexion internet. Merci de réessayer dans un instant.",
   "badLogin": "E-mail ou mot de passe incorrect.",
-  "notConfirmed": "Confirme d'abord ton adresse e-mail avec le lien reçu, puis reconnecte-toi.",
-  "alreadyRegistered": "Un compte existe déjà avec cet e-mail. Connecte-toi.",
+  "notConfirmed": "Confirmez d'abord votre adresse e-mail avec le lien reçu, puis reconnectez-vous.",
+  "alreadyRegistered": "Un compte existe déjà avec cet e-mail. Connectez-vous.",
   "passwordShort": "Le mot de passe doit contenir au moins 6 caractères.",
-  "rateLimit": "Trop de tentatives. Patiente quelques minutes."
+  "rateLimit": "Trop de tentatives. Patientez quelques minutes."
  },
  "garden": {
   "species": {
@@ -191,14 +191,14 @@
   "mandatory": "Obligatoire",
   "typeHelp": "Bonus : elle rapporte des étoiles sans pouvoir gâcher la journée. Obligatoire : elle compte dans la bonne journée.",
   "keepTpl": "Garder comme modèle",
-  "needDate": "Choisis une date à partir d'aujourd'hui.",
+  "needDate": "Choisissez une date à partir d'aujourd'hui.",
   "added": "Routine exceptionnelle ajoutée.",
   "delTitle": "Supprimer cette routine exceptionnelle ?",
   "delText": "Les étoiles déjà gagnées sont conservées.",
   "tplTitle": "Modèles exceptionnels",
   "tplHelp": "Partagés par toute la famille. Classés du plus utilisé au moins utilisé.",
   "times": "{n} fois",
-  "noTpl": "Aucun modèle. Coche « Garder comme modèle » en créant une routine exceptionnelle.",
+  "noTpl": "Aucun modèle. Cochez « Garder comme modèle » en créant une routine exceptionnelle.",
   "tplDeleted": "Modèle supprimé."
  },
  "tpl": {
@@ -410,7 +410,7 @@
  },
  "error": {
   "title": "Impossible de charger",
-  "noService": "La connexion au service n'a pas pu démarrer. Vérifie ta connexion internet puis réessaie.",
+  "noService": "La connexion au service n'a pas pu démarrer. Merci de vérifier la connexion internet, puis de réessayer.",
   "noConfig": "Configuration manquante : l'app doit être publiée par la GitHub Action, qui injecte SUPABASE_URL et SUPABASE_KEY."
  },
  "auth": {
@@ -418,19 +418,19 @@
   "tagline": "Les routines des enfants, une étoile à la fois.",
   "login": "Connexion",
   "signup": "Créer un compte",
-  "firstName": "Ton prénom",
+  "firstName": "Votre prénom",
   "email": "E-mail",
   "password": "Mot de passe",
   "createAccount": "Créer mon compte",
   "connect": "Me connecter",
   "forgot": "Mot de passe oublié",
-  "childPhone": "Ce téléphone est celui de ton enfant ?",
+  "childPhone": "Ce téléphone est celui de votre enfant ?",
   "haveCode": "J'ai un code enfant",
-  "needBoth": "Saisis ton e-mail et ton mot de passe.",
-  "needSignup": "Saisis un e-mail et un mot de passe de 6 caractères minimum.",
-  "checkMail": "Vérifie ta boîte mail",
-  "checkMailText": "Un lien de confirmation a été envoyé à {email}. Ouvre-le, puis reviens ici pour te connecter.",
-  "emailFirst": "Saisis d'abord ton e-mail.",
+  "needBoth": "Saisissez votre e-mail et votre mot de passe.",
+  "needSignup": "Saisissez un e-mail et un mot de passe de 6 caractères minimum.",
+  "checkMail": "Vérifiez votre boîte mail",
+  "checkMailText": "Un lien de confirmation a été envoyé à {email}. Ouvrez-le, puis revenez ici pour vous connecter.",
+  "emailFirst": "Saisissez d'abord votre e-mail.",
   "resetSent": "E-mail de réinitialisation envoyé.",
   "newPassword": "Nouveau mot de passe",
   "passwordMin": "Mot de passe (6 caractères minimum)",
@@ -446,7 +446,7 @@
  },
  "onboard": {
   "welcome": "Bienvenue",
-  "intro": "Crée l'espace de ta famille, ou rejoins celui de l'autre parent.",
+  "intro": "Créez l'espace de votre famille, ou rejoignez celui de l'autre parent.",
   "create": "Créer ma famille",
   "familyName": "Nom de la famille",
   "familyPlaceholder": "Famille Martin",
@@ -455,7 +455,7 @@
   "inviteCode": "Code d'invitation",
   "joinBtn": "Rejoindre",
   "defaultName": "Ma famille",
-  "joined": "Tu as rejoint la famille."
+  "joined": "Vous avez rejoint la famille."
  },
  "relations": [
   "Papa",
@@ -468,6 +468,21 @@
   "Marraine",
   "Nounou"
  ],
+ "rel": {
+  "dad": "Papa",
+  "mom": "Maman",
+  "grandpa": "Papy",
+  "grandma": "Mamie",
+  "uncle": "Tonton",
+  "aunt": "Tata",
+  "uncle_p": "Tonton",
+  "uncle_m": "Tonton",
+  "aunt_p": "Tata",
+  "aunt_m": "Tata",
+  "godfather": "Parrain",
+  "godmother": "Marraine",
+  "nanny": "Nounou"
+ },
  "member": {
   "aParent": "Un parent",
   "aMember": "Un membre",
@@ -490,7 +505,7 @@
   "removeText": "Cette personne n'aura plus accès à la famille. L'historique de ses validations est conservé.",
   "removeBtn": "Retirer",
   "removed": "Membre retiré.",
-  "shareText": "Rejoins notre famille sur SoisFier avec le code {code} : {url}"
+  "shareText": "Rejoignez notre famille sur SoisFier avec le code {code} : {url}"
  },
  "sep": ", ",
  "offline": "Hors ligne",
@@ -504,7 +519,7 @@
  },
  "parent": {
   "startTitle": "On commence ?",
-  "startText": "Ajoute ton premier enfant. Tu pourras ensuite choisir ses routines parmi des modèles.",
+  "startText": "Ajoutez votre premier enfant. Vous pourrez ensuite choisir ses routines parmi des modèles.",
   "toSpend": "{n} à dépenser",
   "inARow": "{n} de suite",
   "doneOf": "{n} routines faites sur {total}",
@@ -519,7 +534,7 @@
   "potColor": "Couleur de son pot",
   "color": "Couleur {c}",
   "privacy": "Seul le prénom est enregistré. Pas de nom de famille ni de date de naissance.",
-  "needName": "Saisis un prénom.",
+  "needName": "Saisissez un prénom.",
   "joined": "{name} a rejoint la famille.",
   "delTitle": "Supprimer {name} ?",
   "delText": "Ses routines, ses étoiles et son historique seront effacés définitivement."
@@ -538,9 +553,9 @@
   "placeholder": "Se brosser les dents",
   "bonusHelp": "Routine bonus : facultative, elle rapporte des étoiles sans compter dans la journée",
   "unchecked": "Routine décochée.",
-  "alreadyValidated": "Routine déjà validée. Pour retirer des étoiles, utilise une étoile cassée (onglet Malus).",
-  "needName": "Donne un nom à la routine.",
-  "needDay": "Choisis au moins un jour.",
+  "alreadyValidated": "Routine déjà validée. Pour retirer des étoiles, cassez une étoile (onglet Historique).",
+  "needName": "Donnez un nom à la routine.",
+  "needDay": "Choisissez au moins un jour.",
   "saved": "Routine enregistrée.",
   "added": "Routine ajoutée.",
   "delTitle": "Supprimer cette routine ?",
@@ -548,7 +563,7 @@
   "deletedToast": "Routine supprimée.",
   "tplFor": "Modèles de routines pour {name}",
   "bonusTag": "(bonus)",
-  "needOne": "Coche au moins une routine.",
+  "needOne": "Cochez au moins une routine.",
   "addedN": {
    "one": "{n} routine ajoutée.",
    "other": "{n} routines ajoutées."
@@ -561,10 +576,10 @@
   "timer": "défi chrono réussi",
   "checkedBy": "cochée par {who}",
   "refuse": "Refuser",
-  "autoOn": "Sans action de ta part, elles seront validées automatiquement à minuit.",
-  "autoOff": "Validation automatique désactivée : elles attendent ta décision.",
+  "autoOn": "Sans action de votre part, elles seront validées automatiquement à minuit.",
+  "autoOff": "Validation automatique désactivée : elles attendent votre décision.",
   "section": "Validation des routines",
-  "sectionHelp": "Quand ton enfant coche une routine, ses étoiles attendent ta validation. Celles que tu coches toi-même sont validées directement.",
+  "sectionHelp": "Quand votre enfant coche une routine, ses étoiles attendent votre validation. Celles que vous cochez vous-même sont validées directement.",
   "autoLabel": "Valider automatiquement à minuit ce qui n'a pas été refusé",
   "done": "Routine validée.",
   "refused": "Refusée : la routine est à refaire, sans pénalité.",
@@ -583,7 +598,7 @@
   "reprice": "Recalculer ses prix",
   "chooseTpl": "Choisir dans le référentiel",
   "create": "Créer une récompense",
-  "none": "Aucune récompense pour l'instant. Commence par le référentiel : les prix s'adaptent au rythme de {name}.",
+  "none": "Aucune récompense pour l'instant. Commencez par le référentiel : les prix s'adaptent au rythme de {name}.",
   "newEvent": "Nouvel événement",
   "new": "Nouvelle récompense",
   "edit": "Modifier la récompense",
@@ -601,7 +616,7 @@
   "computed": "Prix calculé : {list}.",
   "priceOf": "{name} : {n} ⭐",
   "repriced": "Prix de {name} recalculés.",
-  "needName": "Donne un nom à la récompense.",
+  "needName": "Donnez un nom à la récompense.",
   "badPrice": "Le prix doit être entre 1 et 5000 étoiles.",
   "badDays": "La durée doit être entre 1 et 365 jours.",
   "saved": "Récompense enregistrée.",
@@ -612,10 +627,10 @@
   "tplTitle": "Référentiel de récompenses",
   "tplHelp": "Proposées à tous les enfants. Le prix est calculé selon le rythme de chacun (pour {name} : environ {n} ⭐ par jour).",
   "tplPrice": "({n} ⭐ pour {name})",
-  "eventHelp": "Un spectacle, un atelier, une fête de quartier : crée-le à partir du modèle et adapte-le.",
+  "eventHelp": "Un spectacle, un atelier, une fête de quartier : créez-le à partir du modèle et adaptez-le.",
   "createEvent": "Créer un événement",
   "eventDefault": "Spectacle",
-  "needOne": "Coche au moins une récompense.",
+  "needOne": "Cochez au moins une récompense.",
   "addedN": {
    "one": "{n} récompense ajoutée.",
    "other": "{n} récompenses ajoutées."
@@ -639,7 +654,7 @@
   "disconnect": "Déconnecter",
   "connectDevice": "Connecter son appareil",
   "childHere": "Mode enfant ici",
-  "you": "(toi)",
+  "you": "(vous)",
   "children": "Enfants",
   "noChild": "Aucun enfant pour l'instant.",
   "members": "Membres de la famille",
@@ -660,8 +675,8 @@
   "from": "Du",
   "to": "Au",
   "reason": "Motif",
-  "needChild": "Choisis au moins un enfant.",
-  "badDates": "Vérifie les dates : la fin doit être après le début.",
+  "needChild": "Choisissez au moins un enfant.",
+  "badDates": "Vérifiez les dates : la fin doit être après le début.",
   "saved": "Pause enregistrée.",
   "delTitle": "Supprimer cette pause ?",
   "delText": "Les jours concernés compteront à nouveau normalement.",
@@ -694,9 +709,9 @@
   "evening": "Soir",
   "update": "Mettre à jour les rappels",
   "enable": "Activer les rappels",
-  "unsupported": "Ce navigateur ne gère pas les notifications. Installe l'application depuis Chrome.",
-  "blocked": "Les notifications sont bloquées. Autorise-les dans les réglages de Chrome pour ce site.",
-  "needTime": "Choisis au moins une heure.",
+  "unsupported": "Ce navigateur ne gère pas les notifications. Pour les recevoir, installer l'application depuis Chrome.",
+  "blocked": "Les notifications sont bloquées. À autoriser dans les réglages de Chrome pour ce site.",
+  "needTime": "Choisir au moins une heure.",
   "enabled": "Rappels activés.",
   "disabled": "Rappels désactivés."
  },
@@ -714,27 +729,27 @@
   "change": "Changer le code",
   "create": "Créer un code",
   "code4": "Code à 4 chiffres",
-  "createTitle": "Crée un code parent",
+  "createTitle": "Créez un code parent",
   "createText": "Il sera demandé pour quitter le mode enfant sur ce téléphone.",
   "need4": "Le code doit contenir 4 chiffres.",
   "saved": "Code parent enregistré.",
-  "enter": "Saisis le code parent pour quitter le mode enfant.",
+  "enter": "Saisissez le code parent pour quitter le mode enfant.",
   "wrong": "Code incorrect.",
   "math": "Pour déconnecter ce téléphone, combien font {a} × {b} ?",
   "answer": "Réponse",
   "wrongAnswer": "Ce n'est pas la bonne réponse.",
-  "chooseText": "Choisis 4 chiffres. Ils protègent la sortie du mode enfant sur ce téléphone."
+  "chooseText": "Choisissez 4 chiffres. Ils protègent la sortie du mode enfant sur ce téléphone."
  },
  "backup": {
   "title": "Sauvegarde",
-  "help": "Tes données sont dans ton espace Supabase. Tu peux aussi en garder une copie.",
+  "help": "Vos données sont enregistrées en ligne. Vous pouvez aussi en garder une copie.",
   "btn": "Télécharger une copie (JSON)",
   "done": "Copie téléchargée."
  },
  "account": {
   "title": "Compte",
   "rename": "Renommer la famille",
-  "needName": "Saisis un nom.",
+  "needName": "Saisissez un nom.",
   "nameSaved": "Nom enregistré.",
   "version": "Version de l'application : {v}"
  },
@@ -745,13 +760,13 @@
   "child": "Enfant",
   "nothingToBreak": "{name} n'a aucune étoile à dépenser : rien à casser.",
   "breakHelp": "Pour un écart immédiat de {name} (solde : {n} ⭐). 3 étoiles au maximum, jamais en dessous de zéro. La plante et les badges ne bougent pas.",
-  "noPreset": "Aucun malus prédéfini. Crée-les pour rester cohérent d'un parent à l'autre.",
+  "noPreset": "Aucun malus prédéfini. Créez-les pour rester cohérents d'un parent à l'autre.",
   "otherReason": "Autre motif",
   "reason": "Motif",
   "reasonPlaceholder": "A jeté son assiette",
   "manage": "Gérer les malus prédéfinis",
   "breakBtn": "Casser",
-  "needReason": "Indique un motif.",
+  "needReason": "Indiquez un motif.",
   "broken": {
    "one": "{n} étoile cassée pour {name}.",
    "other": "{n} étoiles cassées pour {name}."
@@ -761,7 +776,7 @@
   "cancelled": "Malus annulé, étoiles rendues.",
   "catalogHelp": "Communs à tous les enfants, de 1 à 3 étoiles.",
   "createTitle": "Créer un malus",
-  "needOne": "Coche une suggestion ou saisis un motif.",
+  "needOne": "Cochez une suggestion ou saisissez un motif.",
   "added": {
    "one": "{n} malus ajouté.",
    "other": "{n} malus ajoutés."
@@ -845,7 +860,7 @@
  "form": {
   "icon": "Icône",
   "iconChosen": "Icône choisie",
-  "iconHint": "Choisis ci-dessous ou tape un emoji",
+  "iconHint": "Choisissez ci-dessous ou tapez un emoji",
   "name": "Nom",
   "moment": "Moment",
   "days": "Jours",
@@ -865,7 +880,7 @@
  "device": {
   "phoneOf": "Téléphone de {name}",
   "codeAria": "Code {code}",
-  "help": "Sur son téléphone, ouvre SoisFier, touche « J'ai un code enfant » et saisis ce code. Il expire dans 15 minutes.",
+  "help": "Sur son téléphone, ouvrez SoisFier, touchez « J'ai un code enfant » et saisissez ce code. Il expire dans 15 minutes.",
   "revokeTitle": "Déconnecter cet appareil ?",
   "revokeText": "Il faudra un nouveau code pour le reconnecter.",
   "revoked": "Appareil déconnecté.",
@@ -1007,7 +1022,7 @@
   "vacRoutine": "vacances",
   "tplHelp": "Ces routines n'existeront que pendant les vacances.",
   "fromSibling": "Copier d'un frère ou d'une sœur",
-  "fromSiblingHelp": "Copie les routines de vacances choisies. Les réglages des routines habituelles restent propres à chaque enfant.",
+  "fromSiblingHelp": "Copiez les routines de vacances choisies. Les réglages des routines habituelles restent propres à chaque enfant.",
   "routinesN": {
    "one": "{n} routine",
    "other": "{n} routines"
@@ -1032,7 +1047,7 @@
   "rights_parent_only": "Seul un parent peut changer les droits.",
   "penalty_parent_only": "Seul un parent peut casser une étoile.",
   "penalty_not_found": "Malus introuvable.",
-  "need_reason": "Indique un motif.",
+  "need_reason": "Indiquez un motif.",
   "balance_zero": "Le solde est déjà à zéro : aucune étoile à casser.",
   "bad_code": "Code invalide ou expiré.",
   "reward_not_found": "Récompense introuvable.",

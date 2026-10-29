@@ -477,6 +477,21 @@
   "Godmother",
   "Nanny"
  ],
+ "rel": {
+  "dad": "Dad",
+  "mom": "Mum",
+  "grandpa": "Grandad",
+  "grandma": "Grandma",
+  "uncle": "Uncle",
+  "aunt": "Auntie",
+  "uncle_p": "Uncle",
+  "uncle_m": "Uncle",
+  "aunt_p": "Auntie",
+  "aunt_m": "Auntie",
+  "godfather": "Godfather",
+  "godmother": "Godmother",
+  "nanny": "Nanny"
+ },
  "member": {
   "aParent": "A parent",
   "aMember": "A member",
@@ -547,7 +562,7 @@
   "placeholder": "Brush your teeth",
   "bonusHelp": "Bonus routine: optional, it earns stars without counting towards the day",
   "unchecked": "Routine unticked.",
-  "alreadyValidated": "Routine already approved. To take stars away, use a broken star (Penalties tab).",
+  "alreadyValidated": "Routine already approved. To take stars away, use a broken star (History tab).",
   "needName": "Give the routine a name.",
   "needDay": "Choose at least one day.",
   "saved": "Routine saved.",

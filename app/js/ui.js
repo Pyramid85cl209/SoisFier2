@@ -97,7 +97,7 @@ function renderPair() {
 function renderOnboard() {
   if (!S.wk) S.wk = detectWeek();
   app.innerHTML = `<main class="wrap auth">${topButtons()}<div class="auth-hero">${plantSVG(1)}<h1>${t("onboard.welcome")}</h1><p>${t("onboard.intro")}</p></div>
-    <form class="card" novalidate><h2>${t("onboard.create")}</h2><label class="f">${t("onboard.familyName")}<input id="o-name" placeholder="${t("onboard.familyPlaceholder")}" maxlength="40"></label><label class="f">${t("onboard.iAm")}<select id="o-rel">${RELATIONS().map(r => `<option>${r}</option>`).join("")}</select></label>
+    <form class="card" novalidate><h2>${t("onboard.create")}</h2><label class="f">${t("onboard.familyName")}<input id="o-name" placeholder="${t("onboard.familyPlaceholder")}" maxlength="40"></label><label class="f">${t("onboard.iAm")}<select id="o-rel">${RELATIONS().map(k => `<option value="${k}">${t("rel." + k)}</option>`).join("")}</select></label>
     <p class="muted small"><span id="o-week">${esc(weekSummary(S.wk))}</span> <button type="button" class="link" data-act="editWeek" data-mode="onboard">${t("btn.edit")}</button></p>
     <button class="btn wide" data-act="createFamily">${t("btn.create")}</button></form>
     <form class="card" novalidate><h2>${t("onboard.join")}</h2><label class="f">${t("onboard.inviteCode")}<input id="o-code" class="pin" maxlength="6" autocapitalize="characters" autocomplete="off"></label>
@@ -106,5 +106,10 @@ function renderOnboard() {
 }
 
 /* ---------- Membres ---------- */
-const RELATIONS = () => t("relations");
+// Liens de parenté (v29) : enregistrés en texte, la base en déduit une clé (family_members.relation_key) traduite à l'affichage.
+// Liste propre à chaque langue : l'arabe distingue oncle et tante côté père (عمّو, عمّتو) et côté mère (خالو, خالتو).
+const REL_KEYS = { ar: ["dad", "mom", "grandpa", "grandma", "uncle_p", "uncle_m", "aunt_p", "aunt_m", "godfather", "godmother", "nanny"],
+  def: ["dad", "mom", "grandpa", "grandma", "uncle", "aunt", "godfather", "godmother", "nanny"] };
+const RELATIONS = () => REL_KEYS[curLang()] || REL_KEYS.def;
+const relLabel = m => m ? (m.relation_key ? t("rel." + m.relation_key) : m.relation) : "";
 const isParent = () => !S.me || S.me.role !== "helper";
