@@ -93,7 +93,7 @@ function pRoutines() {
       <span class="rt-txt"><b>${esc(r.title)}</b><small>${parts.join(t("sep"))}</small></span>
       <span class="rt-stars">${fmtNum(r.stars)} ⭐</span></button></li>`; }).join("")}</ul>`;
   }).join("");
-  return chips() + `<div class="actions print-row"><button class="btn sm ghost" data-act="printPlan">🖨️ ${t("routine.print")}</button></div>` + banner + `<div class="actions"><button class="btn" data-act="routineTemplates">${t("routine.chooseTpl")}</button><button class="btn ghost" data-act="newRoutine">${vac ? t("hol.newRoutine") : t("routine.create")}</button></div>`
+  return chips() + `<div class="actions print-row"><button class="btn sm ghost" data-act="printPlan">🖨️ ${t("routine.print")}</button><button class="btn sm ghost" data-act="reportWeek">✍️ ${t("report.btn")}${ptag()}</button></div>` + banner + `<div class="actions"><button class="btn" data-act="routineTemplates">${t("routine.chooseTpl")}</button><button class="btn ghost" data-act="newRoutine">${vac ? t("hol.newRoutine") : t("routine.create")}</button></div>`
     + (groups || `<p class="empty">${t("routine.none", { name: esc(c.name) })}</p>`) + extra;   // exceptionnelles en cours visibles aussi en vue vacances
 }
 function pRewards() {

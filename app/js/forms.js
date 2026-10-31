@@ -1,26 +1,48 @@
 "use strict";
 /* SoisFier : Impression et formulaires */
 /* ================= Impression ================= */
-function printPlanning(ids) {
+/* Repère imprimé (EP-13, ADR-29, format 1) : un QR et 4 carrés d'angle par page, pour le report de la semaine (F04-09).
+   Le QR identifie la famille, l'enfant, la langue, le premier jour de la semaine et les lignes du tableau, jamais la semaine
+   (une feuille plastifiée se réutilise). Octets : format (1) ; famille (6, début du SHA-256 de son identifiant) ; enfant (4) ;
+   sens et langue (1 : bit 7 = droite à gauche, bits 0 à 6 = rang dans LANGS) ; premier jour (1) ; nombre de lignes (1) ;
+   chaque ligne (4, début du SHA-256 de l'identifiant de la routine), dans l'ordre du tableau. Aucun nom ni identifiant lisible.
+   Toute modification de la mise en page imprimée change ce contrat : augmenter SHEET_FORMAT. */
+const SHEET_FORMAT = 1;
+async function sheetHash(id, n) { return [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(id)))).slice(0, n)]; }
+async function sheetQR(childId, lineIds) {
+  if (!(window.crypto && crypto.subtle && typeof qrcode === "function")) return "";   // hors contexte sécurisé : la feuille s'imprime sans repère
+  try {
+    const lang = curLang(), flags = (RTL.includes(lang) ? 128 : 0) | Math.max(0, LANGS.indexOf(lang));
+    const bytes = [SHEET_FORMAT, ...await sheetHash(S.family.id, 6), ...await sheetHash(childId, 4), flags, WEEK.start, lineIds.length];
+    for (const h of await Promise.all(lineIds.map(id => sheetHash(id, 4)))) bytes.push(...h);
+    const qr = qrcode(0, "M"); qr.addData(String.fromCharCode(...bytes), "Byte"); qr.make();   // un caractère = un octet (codage par défaut de la bibliothèque)
+    return qr.createSvgTag({ cellSize: 4, margin: 16, scalable: true });
+  } catch (e) { console.error(e); return ""; }
+}
+async function printPlanning(ids) {
   const td = todayISO(), first = addDays(td, -((dowOf(td) - WEEK.start + 7) % 7)), order = weekOrder();
-  const pages = S.children.filter(c => ids.includes(c.id)).map(c => {
+  const pages = (await Promise.all(S.children.filter(c => ids.includes(c.id)).map(async c => {
     // Semaine imprimée : chaque jour suit le Mode vacances s'il s'applique (routines en pause, statut, jours, étoiles, routines de vacances)
     const dates = order.map((_, i) => addDays(first, i));
     const due = dates.map(d => new Map(dueOn(S.routines, c.id, d).filter(r => !isOneoff(r)).map(r => [r.id, r])));
     const rs = S.routines.filter(r => r.child_id === c.id && !isOneoff(r) && due.some(m => m.has(r.id)));
     const hols = holidaysOf(c.id).filter(p => p.start_day <= dates[6] && p.end_day >= dates[0]);
+    const lines = [];   // routines dans l'ordre des lignes du tableau (contenu du repère)
     const rows = MOMENTS().map(([k, l, , e]) => {
       const list = rs.filter(r => r.moment === k); if (!list.length) return "";
       return `<tr class="grp-row"><td colspan="8">${e} ${l}</td></tr>` + list.map(r => {
+        lines.push(r.id);
         const ef = due.map(m => m.get(r.id)).find(Boolean) || r;   // étoiles et statut du premier jour où elle est due
         return `<tr><td class="n">${isHolidayR(r) ? "🏖️ " : ""}${esc(r.emoji)} ${esc(r.title)} (${fmtNum(ef.stars)} ⭐)${ef.is_bonus ? t("sep") + t("routine.bonus") : ""}</td>${due.map(m => m.has(r.id) ? `<td><span class="circ"></span></td>` : `<td class="off"></td>`).join("")}</tr>`;
       }).join("");
     }).join("");
+    const qr = await sheetQR(c.id, lines);
     const gifts = S.rewards.filter(w => (!w.child_id || w.child_id === c.id) && (!w.event_date || w.event_date >= td));   // sans les événements passés
-    return `<section class="pp"><h1>${esc(c.emoji)} ${t("print.weekOf", { name: esc(c.name) })}</h1><p>${t("print.weekStart", { date: parseISO(first).toLocaleDateString(loc(), { day: "numeric", month: "long" }) })}</p>${hols.map(p => `<p>🏖️ ${esc(p.name)}${t("sep")}${holLabel(p)}</p>`).join("")}
-      <table><thead><tr><th class="n">${t("print.routine")}</th>${order.map(d => `<th>${t("days.abbr")[d - 1]}</th>`).join("")}</tr></thead><tbody>${rows || `<tr><td colspan="8">${t("print.none")}</td></tr>`}</tbody></table>
+    return `<section class="pp"><div class="pp-head"><div><h1>${esc(c.emoji)} ${t("print.weekOf", { name: esc(c.name) })}</h1><p>${t("print.weekStart", { date: parseISO(first).toLocaleDateString(loc(), { day: "numeric", month: "long" }) })}</p>${hols.map(p => `<p>🏖️ ${esc(p.name)}${t("sep")}${holLabel(p)}</p>`).join("")}</div>${qr ? `<div class="pp-qr" aria-hidden="true">${qr}</div>` : ""}</div>
+      <div class="frame"><i class="mk tl"></i><i class="mk tr"></i><i class="mk bl"></i><i class="mk br"></i>
+      <table><thead><tr><th class="n">${t("print.routine")}</th>${order.map(d => `<th>${t("days.abbr")[d - 1]}</th>`).join("")}</tr></thead><tbody>${rows || `<tr><td colspan="8">${t("print.none")}</td></tr>`}</tbody></table></div>
       ${gifts.length ? `<div class="gifts"><b>${t("print.myRewards")}</b> ${gifts.map(w => `${esc(w.emoji)} ${esc(w.title)} (${fmtNum(costFor(w, c.id))} ⭐)`).join(t("sep"))}</div>` : ""}</section>`;
-  }).join("");
+  }))).join("");
   $("#print").innerHTML = pages; setTimeout(() => window.print(), 50);
 }
 

@@ -296,6 +296,22 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
 @media (prefers-reduced-motion: reduce){ .bump,.hero-plant .sway{animation:none} }
 #confetti{position:fixed;inset:0;pointer-events:none;z-index:40}
 
+/* Report de la semaine (EP-13 V1) : grille à toucher */
+.vh{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.rp-weeks{margin:10px 0 4px}
+.rp-w{position:relative;display:inline-block;border-radius:999px;padding:8px 14px;background:var(--sky);cursor:pointer}
+.rp-w.on{background:var(--leaf);color:#fff;font-weight:700}
+.rp-w:focus-within{outline:3px solid var(--ink,#333);outline-offset:2px}
+.rp-row{margin:6px 0 12px}
+.rp-name{font-weight:700;font-size:.95rem;margin-bottom:4px}
+.rp-cells{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.rp-off{min-height:48px;border-radius:12px;background:#e6e6e6;opacity:.5}
+.rp-c{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:48px;padding:2px;border:0;border-radius:12px;background:var(--sky);font-size:.7rem}
+.rp-c .rp-dot{display:flex;align-items:center;justify-content:center;width:22px;height:22px;border:2px solid #8a8a8a;border-radius:50%;background:#fff;font-size:.8rem;font-weight:700;line-height:1;color:var(--leaf)}
+.rp-c.on{background:var(--leaf);color:#fff}
+.rp-c.on .rp-dot{border-color:#fff;background:#fff}
+.rp-c:disabled{opacity:.45}
+
 /* Impression */
 #print{display:none}
 @media print{
@@ -305,10 +321,18 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
   .pp{page-break-after:always;padding:8mm}
   .pp h1{font-family:var(--display);font-size:22pt;margin-bottom:4mm}
   .pp table{width:100%;border-collapse:collapse;font-size:12pt}
-  .pp th,.pp td{border:1.5px solid #444;padding:5px;text-align:center}
+  .pp th,.pp td{border:1.5px solid #444;padding:1mm 1.5mm;text-align:center}
   .pp td.n{text-align:start}
   .pp .grp-row td{background:#eef6ee;font-weight:700;text-align:start}
-  .pp .circ{display:inline-block;width:20px;height:20px;border:2px solid #333;border-radius:50%}
+  /* Repère de report (EP-13) : QR en tête de page, 4 carrés noirs aux angles du tableau (bordures : elles s'impriment sans l'option « arrière-plans ») ; ronds de 8 mm à contour gris clair */
+  .pp{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pp-head{display:flex;justify-content:space-between;align-items:flex-start;gap:6mm}
+  .pp-qr{flex:none;width:28mm}
+  .pp-qr svg{display:block;width:100%;height:auto}
+  .pp .frame{position:relative;padding:7mm 6mm;break-inside:avoid}
+  .pp .mk{position:absolute;box-sizing:border-box;width:5mm;height:5mm;border:2.5mm solid #000}
+  .pp .mk.tl{top:0;left:0}.pp .mk.tr{top:0;right:0}.pp .mk.bl{bottom:0;left:0}.pp .mk.br{bottom:0;right:0}
+  .pp .circ{display:inline-block;width:8mm;height:8mm;border:1.2px solid #aaa;border-radius:50%;vertical-align:middle}
   .pp .off{background:#e6e6e6}
   .pp .gifts{margin-top:6mm;font-size:12pt}
 }
