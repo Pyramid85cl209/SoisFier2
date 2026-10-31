@@ -732,6 +732,33 @@
   "none": "No routines.",
   "myRewards": "My rewards:"
  },
+ "report": {
+  "btn": "Transfer the week",
+  "pickChild": "Which child?",
+  "continue": "Continue",
+  "intro": "Tap the circles that are ticked on the paper sheet. Nothing is saved until you tap “Transfer”.",
+  "weekLabel": "Week to transfer",
+  "thisWeek": "This week",
+  "lastWeek": "Last week",
+  "none": "No regular routines this week.",
+  "cell": "{routine}, {day}, {state}",
+  "checked": "ticked",
+  "unchecked": "not ticked",
+  "future": "upcoming",
+  "futureNote": "Upcoming days can't be transferred.",
+  "go": {
+   "one": "Transfer {n} tick",
+   "other": "Transfer {n} ticks"
+  },
+  "goNone": "Transfer the ticks",
+  "offline": "Transferring needs an internet connection. Try again once you're online.",
+  "done": {
+   "one": "{n} tick transferred.",
+   "other": "{n} ticks transferred."
+  },
+  "sAlready": "already done",
+  "sNotDue": "not planned that day"
+ },
  "pin": {
   "title": "Parent code",
   "help": "It protects leaving child mode on this phone.",
@@ -981,6 +1008,11 @@
    "emoji": "🏖️",
    "title": "Holiday mode is part of Premium",
    "text": "During the holidays, pause routines, change their status, days or stars, and add holiday routines, without stopping the flower."
+  },
+  "report": {
+   "emoji": "✍️",
+   "title": "Transfer the whole week at once",
+   "text": "Instead of ticking day by day, tap the circles from the paper sheet and transfer the whole week in one go. This is part of Premium; printing the sheet stays free."
   }
  },
  "vac": {
@@ -1081,7 +1113,11 @@
   "holiday_overlap": "These dates overlap other holidays for this child.",
   "holiday_started": "These holidays have started: use \"Stop\".",
   "holiday_out_of_range": "This routine only exists during the holidays.",
-  "pause_started": "This break started more than 24 hours ago: it can no longer be deleted or moved earlier. You can stop it."
+  "pause_started": "This break started more than 24 hours ago: it can no longer be deleted or moved earlier. You can stop it.",
+  "premium_report": "Transferring the week is part of Premium.",
+  "scan_week": "This week can't be transferred: choose the current week or the previous one.",
+  "scan_day": "This day can't be transferred.",
+  "scan_too_many": "Too many ticks to transfer at once."
  },
  "hist": {
   "validated": {

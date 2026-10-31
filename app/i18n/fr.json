@@ -723,6 +723,33 @@
   "none": "Aucune routine.",
   "myRewards": "Mes récompenses :"
  },
+ "report": {
+  "btn": "Reporter la semaine",
+  "pickChild": "Pour quel enfant ?",
+  "continue": "Continuer",
+  "intro": "Touchez les ronds cochés sur la feuille papier. Rien n'est enregistré avant « Reporter ».",
+  "weekLabel": "Semaine à reporter",
+  "thisWeek": "Cette semaine",
+  "lastWeek": "La semaine dernière",
+  "none": "Aucune routine habituelle cette semaine.",
+  "cell": "{routine}, {day}, {state}",
+  "checked": "coché",
+  "unchecked": "non coché",
+  "future": "à venir",
+  "futureNote": "Les jours à venir ne peuvent pas être reportés.",
+  "go": {
+   "one": "Reporter {n} coche",
+   "other": "Reporter {n} coches"
+  },
+  "goNone": "Reporter les coches",
+  "offline": "Le report demande une connexion internet. Réessayez une fois en ligne.",
+  "done": {
+   "one": "{n} coche reportée.",
+   "other": "{n} coches reportées."
+  },
+  "sAlready": "déjà faite",
+  "sNotDue": "pas prévu ce jour-là"
+ },
  "pin": {
   "title": "Code parent",
   "help": "Il protège la sortie du mode enfant sur ce téléphone.",
@@ -972,6 +999,11 @@
    "emoji": "🏖️",
    "title": "Le mode vacances fait partie du Premium",
    "text": "Pendant les vacances, mettez des routines en pause, changez leur statut, leurs jours ou leurs étoiles, et ajoutez des routines de vacances, sans arrêter la fleur."
+  },
+  "report": {
+   "emoji": "✍️",
+   "title": "Reportez la semaine en une fois",
+   "text": "Au lieu de cocher jour par jour, touchez les ronds de la feuille papier et reportez toute la semaine d'un coup. Cela fait partie du Premium ; imprimer la feuille reste gratuit."
   }
  },
  "vac": {
@@ -1072,7 +1104,11 @@
   "holiday_overlap": "Ces dates chevauchent d'autres vacances de cet enfant.",
   "holiday_started": "Ces vacances ont commencé : utilisez « Arrêter ».",
   "holiday_out_of_range": "Cette routine n'existe que pendant les vacances.",
-  "pause_started": "Cette pause a commencé il y a plus de 24 h : elle ne peut plus être supprimée ni avancée. Vous pouvez l'arrêter."
+  "pause_started": "Cette pause a commencé il y a plus de 24 h : elle ne peut plus être supprimée ni avancée. Vous pouvez l'arrêter.",
+  "premium_report": "Le report de la semaine fait partie du Premium.",
+  "scan_week": "Cette semaine ne peut pas être reportée : choisissez la semaine en cours ou la précédente.",
+  "scan_day": "Ce jour ne peut pas être reporté.",
+  "scan_too_many": "Trop de coches à reporter d'un coup."
  },
  "hist": {
   "validated": {
