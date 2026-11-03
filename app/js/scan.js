@@ -10,6 +10,7 @@
    5. la grille de report.js s'ouvre pré-remplie ; la photo (image, canevas) est oubliée.
    Feuille sur deux pages, sans repère, d'une autre famille ou illisible : « Feuille non reconnue. » (CA8, DEC-15). */
 const SCAN = { stream: null, busy: false };
+const SHEET_QR_MM = 34;   // largeur du QR imprimé (app.css, .pp-qr), marge comprise
 
 /* ---------- Bibliothèque jsQR : chargée à la première lecture seulement (dans CORE, donc disponible hors ligne) ---------- */
 let jsqrLoad = null;
@@ -42,8 +43,8 @@ const sameBytes = (a, b) => a.length === b.length && a.every((v, i) => v === b[i
 
 /* ---------- Image ---------- */
 // Copie réduite de l'image dans un canevas (côté le plus long : 1600 px) ; renvoie le canevas et ses pixels
-function scanCanvas(src, w, h) {
-  const k = Math.min(1, 1600 / Math.max(w, h)), cw = Math.round(w * k), ch = Math.round(h * k);
+function scanCanvas(src, w, h, max = 1600) {
+  const k = Math.min(1, max / Math.max(w, h)), cw = Math.round(w * k), ch = Math.round(h * k);
   const cv = document.createElement("canvas"); cv.width = cw; cv.height = ch;
   const cx = cv.getContext("2d", { willReadFrequently: true }); cx.drawImage(src, 0, 0, cw, ch);
   return { cv, img: cx.getImageData(0, 0, cw, ch) };
@@ -92,7 +93,7 @@ async function scanQR(cv, img) {
 function scanSquares(L, w, h, qr) {
   const qc = qr.reduce((a, p) => ({ x: a.x + p.x / 4, y: a.y + p.y / 4 }), { x: 0, y: 0 });
   const qside = (Math.hypot(qr[1].x - qr[0].x, qr[1].y - qr[0].y) + Math.hypot(qr[2].x - qr[1].x, qr[2].y - qr[1].y)) / 2;
-  const sq = qside * 5 / 24.2, area = sq * sq;
+  const sq = qside * 5 / (SHEET_QR_MM * 0.86), area = sq * sq;   // QR sans sa marge : environ 86 % de sa largeur imprimée
   const B = binarize(L, w, h, Math.max(15, Math.round(sq * 3)), 0.7), lab = new Int32Array(w * h), out = [], stack = [];
   const qx0 = Math.min(...qr.map(p => p.x)) - qside * 0.05, qx1 = Math.max(...qr.map(p => p.x)) + qside * 0.05;   // motifs du QR seulement : un carré d'angle peut être juste sous le QR
   const qy0 = Math.min(...qr.map(p => p.y)) - qside * 0.05, qy1 = Math.max(...qr.map(p => p.y)) + qside * 0.05;
@@ -127,9 +128,13 @@ function scanSquares(L, w, h, qr) {
     if (A > bestA && scanConvex(q)) { bestA = A; best = q; }
   }
   if (!best || bestA < qside * qside * 4) return null;
-  // Le bord du haut est le plus proche du QR : on tourne l'ordre pour commencer en haut à gauche
-  let top = 0, dmin = Infinity;
-  for (let i = 0; i < 4; i++) { const p = best[i], q = best[(i + 1) % 4], d = Math.hypot((p.x + q.x) / 2 - qc.x, (p.y + q.y) / 2 - qc.y); if (d < dmin) { dmin = d; top = i; } }
+  // Le bord du haut est celui au-delà duquel le QR est le plus loin, côté extérieur du cadre (le QR est au-dessus du tableau,
+  // à droite en lecture de gauche à droite, à gauche en arabe) ; on tourne l'ordre pour commencer en haut à gauche
+  const c = best.reduce((a, p) => ({ x: a.x + p.x / 4, y: a.y + p.y / 4 }), { x: 0, y: 0 });
+  const side = (p, q, r) => ((q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x)) / Math.hypot(q.x - p.x, q.y - p.y);
+  let top = 0, dmax = -Infinity;
+  for (let i = 0; i < 4; i++) { const p = best[i], q = best[(i + 1) % 4], out = -Math.sign(side(p, q, c)) * side(p, q, qc); if (out > dmax) { dmax = out; top = i; } }
+  if (dmax <= 0) return null;   // QR à l'intérieur du cadre : ce ne sont pas les carrés d'angle
   return [0, 1, 2, 3].map(i => best[(top + i) % 4]);   // haut gauche, haut droite, bas droite, bas gauche (sens horaire à l'écran)
 }
 function scanOrder(ps) { const c = ps.reduce((a, p) => ({ x: a.x + p.x / 4, y: a.y + p.y / 4 }), { x: 0, y: 0 }); return ps.slice().sort((p, q) => Math.atan2(p.y - c.y, p.x - c.x) - Math.atan2(q.y - c.y, q.x - c.x)); }
@@ -159,10 +164,13 @@ function rectify(img, q) {
   if (H < 60 || H > 6000) return null;
   const f = homography(q, W, H), d = img.data, iw = img.width, ih = img.height;
   const R = new Uint8ClampedArray(W * H * 3), L = new Float32Array(W * H);
+  // Interpolation bilinéaire : un trait fin du tableau (moins de 2 pixels sur la photo) reste visible après redressement
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-    const [u, v] = f(x + 0.5, y + 0.5), ix = Math.min(iw - 1, Math.max(0, Math.round(u))), iy = Math.min(ih - 1, Math.max(0, Math.round(v))), s = (iy * iw + ix) * 4, o = y * W + x;
-    R[o * 3] = d[s]; R[o * 3 + 1] = d[s + 1]; R[o * 3 + 2] = d[s + 2];
-    L[o] = 0.299 * d[s] + 0.587 * d[s + 1] + 0.114 * d[s + 2];
+    let [u, v] = f(x + 0.5, y + 0.5); u = Math.min(iw - 1.001, Math.max(0, u - 0.5)); v = Math.min(ih - 1.001, Math.max(0, v - 0.5));
+    const x0 = Math.floor(u), y0 = Math.floor(v), ax = u - x0, ay = v - y0, o = y * W + x;
+    const s00 = (y0 * iw + x0) * 4, s01 = s00 + 4, s10 = s00 + iw * 4, s11 = s10 + 4;
+    for (let c = 0; c < 3; c++) R[o * 3 + c] = (d[s00 + c] * (1 - ax) + d[s01 + c] * ax) * (1 - ay) + (d[s10 + c] * (1 - ax) + d[s11 + c] * ax) * ay;
+    L[o] = 0.299 * R[o * 3] + 0.587 * R[o * 3 + 1] + 0.114 * R[o * 3 + 2];
   }
   return { W, H, R, L };
 }
@@ -250,7 +258,13 @@ function scanCells(R, G) {
 // Renvoie { childId, marks: Map(routine → Set(jour)), unsure: Set(« routine|jour »), stopped: [n° de ligne], glare } ou null (non reconnue)
 async function scanRead(src, w, h) {
   const { cv, img } = scanCanvas(src, w, h);
-  const q = await scanQR(cv, img); if (!q || !q.corners) return null;
+  let q = await scanQR(cv, img);
+  if (!q && Math.max(w, h) > 1700) {   // QR dense (beaucoup de lignes) : nouvelle lecture en pleine définition (3200 px au plus)
+    const big = scanCanvas(src, w, h, 3200), k = img.width / big.img.width;
+    q = await scanQR(big.cv, big.img);
+    if (q && q.corners) q.corners = q.corners.map(p => ({ x: p.x * k, y: p.y * k }));
+  }
+  if (!q || !q.corners) return null;
   const m = scanParse(q.bytes); if (!m || !(window.crypto && crypto.subtle)) return null;
   if (!sameBytes(m.family, await sheetHash(S.family.id, 6))) return null;
   let child = null;
@@ -304,7 +318,7 @@ async function scanCamera() {
   const none = () => { $(".sc-view", dlg).hidden = true; go.hidden = true; scanSay(t("scan.noCamera")); };   // secours : « Choisir une photo »
   if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) return none();
   try {
-    SCAN.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false });
+    SCAN.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 3840 }, height: { ideal: 2160 } }, audio: false });
     if (!dlg.open || !v.isConnected) return scanStop();
     v.srcObject = SCAN.stream; await v.play();
     go.disabled = false; scanSay(t("scan.aim"));

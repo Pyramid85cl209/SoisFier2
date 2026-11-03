@@ -329,26 +329,31 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
 /* Impression */
 #print{display:none}
 @media print{
+  /* v31 : feuille resserrée pour que le titre, le QR et le tableau tiennent sur une page A4 (QR et 4 carrés sur la même page,
+     sinon le scan échoue) ; les récompenses peuvent passer sur la page suivante */
+  @page{size:A4;margin:8mm}
   body{background:#fff;color:#000;padding:0}
   body>*:not(#print){display:none!important}
   #print{display:block;font-family:var(--body)}
-  .pp{page-break-after:always;padding:8mm}
-  .pp h1{font-family:var(--display);font-size:22pt;margin-bottom:4mm}
-  .pp table{width:100%;border-collapse:collapse;font-size:12pt}
-  .pp th,.pp td{border:1.5px solid #444;padding:1mm 1.5mm;text-align:center}
-  .pp td.n{text-align:start}
-  .pp .grp-row td{background:#eef6ee;font-weight:700;text-align:start}
+  .pp{page-break-after:always;padding:0}
+  .pp h1{font-family:var(--display);font-size:18pt;margin:0 0 2mm}
+  .pp-head p{margin:0 0 1mm}
+  .pp table{width:100%;border-collapse:collapse;font-size:11pt;table-layout:fixed}
+  .pp th,.pp td{border:1.5px solid #444;padding:.5mm 1mm;text-align:center;line-height:1.2}
+  .pp th:not(.n){width:10.5mm;padding:.5mm 0;font-size:9.5pt;overflow:hidden}
+  .pp td.n,.pp th.n{text-align:start}
+  .pp .grp-row td{background:#eef6ee;font-weight:700;text-align:start;font-size:10pt;padding:.3mm 1.5mm}
   /* Repère de report (EP-13) : QR en tête de page, 4 carrés noirs aux angles du tableau (bordures : elles s'impriment sans l'option « arrière-plans ») ; ronds de 8 mm à contour gris clair */
   .pp{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .pp-head{display:flex;justify-content:space-between;align-items:flex-start;gap:6mm}
-  .pp-qr{flex:none;width:28mm}
+  .pp-qr{flex:none;width:34mm}
   .pp-qr svg{display:block;width:100%;height:auto}
-  .pp .frame{position:relative;padding:7mm 6mm;break-inside:avoid}
+  .pp .frame{position:relative;padding:6mm 6mm;margin-top:2mm;break-inside:avoid}
   .pp .mk{position:absolute;box-sizing:border-box;width:5mm;height:5mm;border:2.5mm solid #000}
   .pp .mk.tl{top:0;left:0}.pp .mk.tr{top:0;right:0}.pp .mk.bl{bottom:0;left:0}.pp .mk.br{bottom:0;right:0}
   .pp .circ{display:inline-block;width:8mm;height:8mm;border:1.2px solid #aaa;border-radius:50%;vertical-align:middle}
   .pp .off{background:#e6e6e6}
-  .pp .gifts{margin-top:6mm;font-size:12pt}
+  .pp .gifts{margin-top:4mm;font-size:11pt}
 }
 
 /* Pause (v27) : jour neutre, la pause l'emporte sur le Mode vacances */
