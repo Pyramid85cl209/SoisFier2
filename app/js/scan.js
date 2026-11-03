@@ -205,10 +205,26 @@ function runs(B, W, H, horiz, a0, a1, b0, b1, minRun) {
 }
 function scanGrid(R, nLines) {
   const { W, H, L } = R, B = binarize(L, W, H, 31, 0.8);
+  // Les traits du tableau sont gris foncé : l'encre de couleur (coches au feutre) n'entre pas dans leur recherche
+  for (let o = 0; o < W * H; o++) if (B[o]) { const r = R.R[o * 3], g = R.R[o * 3 + 1], b = R.R[o * 3 + 2]; if (Math.max(r, g, b) - Math.min(r, g, b) > 60) B[o] = 0; }
   const hy = peaks(smooth(runs(B, W, H, true, 0, H, 0, W, 60)), W * 0.94 * 0.7);
   if (hy.length < 3) return null;
   const y0 = Math.round(hy[0]), y1 = Math.round(hy[hy.length - 1]);
-  const vx = peaks(smooth(runs(B, W, H, false, 0, W, y0, y1 + 1, 25)), (y1 - y0) * 0.45);
+  // Traits verticaux candidats, puis part des bandes (entre deux traits horizontaux) qu'ils traversent : un trait du tableau
+  // traverse l'en-tête et toutes les lignes de routine (plus de la moitié des bandes), un trait de feutre quelques-unes seulement
+  const cand = peaks(smooth(runs(B, W, H, false, 0, W, y0, y1 + 1, 25)), (y1 - y0) * 0.3);
+  const cover = x => {
+    let n = 0;
+    for (let i = 0; i < hy.length - 1; i++) {
+      const ya = Math.round(hy[i] + (hy[i + 1] - hy[i]) * 0.25), yb = Math.round(hy[i] + (hy[i + 1] - hy[i]) * 0.75);
+      let hit = 0; for (let y = ya; y <= yb; y++) for (let dx = -2; dx <= 2; dx++) if (B[y * W + Math.round(x) + dx]) { hit++; break; }
+      if (hit > (yb - ya + 1) * 0.8) n++;
+    }
+    return n / (hy.length - 1);
+  };
+  let vx = cand.map(x => ({ x, c: cover(x) })).filter(v => v.c >= 0.5);
+  while (vx.length > 9) { const w = vx.slice(1, -1).reduce((m, v) => (v.c < m.c ? v : m)); vx = vx.filter(v => v !== w); }   // bords gardés
+  vx = vx.map(v => v.x);
   if (vx.length !== 9) return null;
   const widths = vx.slice(1).map((x, i) => x - vx[i]), name = widths.indexOf(Math.max(...widths));
   if (name !== 0 && name !== 7) return null;
