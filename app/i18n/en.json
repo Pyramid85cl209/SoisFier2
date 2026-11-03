@@ -757,7 +757,25 @@
    "other": "{n} ticks transferred."
   },
   "sAlready": "already done",
-  "sNotDue": "not planned that day"
+  "sNotDue": "not planned that day",
+  "sStopped": "Routine stopped since printing"
+ },
+ "scan": {
+  "btn": "Scan a sheet",
+  "manual": "Enter without a photo",
+  "title": "Scan the sheet",
+  "help": "Lay the ticked sheet flat in good light, without flash. Frame the whole page, black squares included.",
+  "aim": "Frame the sheet, then tap “Take the photo”.",
+  "shoot": "Take the photo",
+  "choose": "Choose a photo",
+  "noCamera": "Camera unavailable. Choose a photo of the sheet or enter without a photo.",
+  "reading": "Reading the sheet…",
+  "unknown": "Sheet not recognised.",
+  "ok": "Sheet recognised",
+  "intro": "Ticks read from the sheet. Check them and tap a circle to correct it. Nothing is saved until you tap “Transfer”.",
+  "unsure": "to check",
+  "unsureNote": "Circles to check: tap them if they are ticked. Tip: tilt the sheet slightly, without flash.",
+  "line": "Line {n}"
  },
  "pin": {
   "title": "Parent code",
@@ -1010,9 +1028,9 @@
    "text": "During the holidays, pause routines, change their status, days or stars, and add holiday routines, without stopping the flower."
   },
   "report": {
-   "emoji": "✍️",
+   "emoji": "📷",
    "title": "Transfer the whole week at once",
-   "text": "Instead of ticking day by day, tap the circles from the paper sheet and transfer the whole week in one go. This is part of Premium; printing the sheet stays free."
+   "text": "Instead of ticking day by day, take a photo of the paper sheet (or tap its circles) and transfer the whole week in one go. This is part of Premium; printing the sheet stays free."
   }
  },
  "vac": {
