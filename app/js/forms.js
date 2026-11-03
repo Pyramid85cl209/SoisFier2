@@ -1,13 +1,21 @@
 "use strict";
 /* SoisFier : Impression et formulaires */
 /* ================= Impression ================= */
-/* Repère imprimé (EP-13, ADR-29, format 1) : un QR et 4 carrés d'angle par page, pour le report de la semaine (F04-09).
+/* Repère imprimé (EP-13, ADR-29, format 2 depuis la v31, DEC-14) : un QR et 4 carrés d'angle par page, pour le report de la semaine (F04-09).
    Le QR identifie la famille, l'enfant, la langue, le premier jour de la semaine et les lignes du tableau, jamais la semaine
    (une feuille plastifiée se réutilise). Octets : format (1) ; famille (6, début du SHA-256 de son identifiant) ; enfant (4) ;
    sens et langue (1 : bit 7 = droite à gauche, bits 0 à 6 = rang dans LANGS) ; premier jour (1) ; nombre de lignes (1) ;
    chaque ligne (4, début du SHA-256 de l'identifiant de la routine), dans l'ordre du tableau. Aucun nom ni identifiant lisible.
+   Format 1 (v30) : ces octets en mode octets du QR. Format 2 (v31) : les mêmes octets écrits en base 32 (0-9A-V) en mode
+   alphanumérique du QR, pour être lus sans perte par BarcodeDetector (qui rend un texte) comme par jsQR ; décodage : scan.js.
    Toute modification de la mise en page imprimée change ce contrat : augmenter SHEET_FORMAT. */
-const SHEET_FORMAT = 1;
+const SHEET_FORMAT = 2;
+// Octets → texte en base 32 (5 bits par caractère, 0-9A-V ; les bits manquants du dernier caractère valent 0)
+function sheetB32(bytes) {
+  const A = "0123456789ABCDEFGHIJKLMNOPQRSTUV"; let out = "", acc = 0, bits = 0;
+  for (const b of bytes) { acc = (acc << 8) | b; bits += 8; while (bits >= 5) { bits -= 5; out += A[(acc >> bits) & 31]; } acc &= (1 << bits) - 1; }
+  return bits ? out + A[(acc << (5 - bits)) & 31] : out;
+}
 async function sheetHash(id, n) { return [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(id)))).slice(0, n)]; }
 async function sheetQR(childId, lineIds) {
   if (!(window.crypto && crypto.subtle && typeof qrcode === "function")) return "";   // hors contexte sécurisé : la feuille s'imprime sans repère
@@ -15,7 +23,7 @@ async function sheetQR(childId, lineIds) {
     const lang = curLang(), flags = (RTL.includes(lang) ? 128 : 0) | Math.max(0, LANGS.indexOf(lang));
     const bytes = [SHEET_FORMAT, ...await sheetHash(S.family.id, 6), ...await sheetHash(childId, 4), flags, WEEK.start, lineIds.length];
     for (const h of await Promise.all(lineIds.map(id => sheetHash(id, 4)))) bytes.push(...h);
-    const qr = qrcode(0, "M"); qr.addData(String.fromCharCode(...bytes), "Byte"); qr.make();   // un caractère = un octet (codage par défaut de la bibliothèque)
+    const qr = qrcode(0, "M"); qr.addData(sheetB32(bytes), "Alphanumeric"); qr.make();   // format 2 : texte en base 32, mode alphanumérique
     return qr.createSvgTag({ cellSize: 4, margin: 16, scalable: true });
   } catch (e) { console.error(e); return ""; }
 }

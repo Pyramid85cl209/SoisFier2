@@ -748,7 +748,25 @@
    "other": "{n} coches reportées."
   },
   "sAlready": "déjà faite",
-  "sNotDue": "pas prévu ce jour-là"
+  "sNotDue": "pas prévu ce jour-là",
+  "sStopped": "Routine arrêtée depuis l'impression"
+ },
+ "scan": {
+  "btn": "Scanner une feuille",
+  "manual": "Saisir sans photo",
+  "title": "Scanner la feuille",
+  "help": "Posez la feuille cochée à plat, bien éclairée, sans flash. Cadrez toute la page, carrés noirs compris.",
+  "aim": "Cadrez la feuille, puis touchez « Prendre la photo ».",
+  "shoot": "Prendre la photo",
+  "choose": "Choisir une photo",
+  "noCamera": "Caméra indisponible. Choisissez une photo de la feuille ou saisissez sans photo.",
+  "reading": "Lecture de la feuille…",
+  "unknown": "Feuille non reconnue.",
+  "ok": "Feuille reconnue",
+  "intro": "Coches lues sur la feuille. Vérifiez, touchez un rond pour le corriger. Rien n'est enregistré avant « Reporter ».",
+  "unsure": "à vérifier",
+  "unsureNote": "Ronds à vérifier : touchez-les s'ils sont cochés. Astuce : inclinez un peu la feuille, sans flash.",
+  "line": "Ligne {n}"
  },
  "pin": {
   "title": "Code parent",
@@ -1001,9 +1019,9 @@
    "text": "Pendant les vacances, mettez des routines en pause, changez leur statut, leurs jours ou leurs étoiles, et ajoutez des routines de vacances, sans arrêter la fleur."
   },
   "report": {
-   "emoji": "✍️",
+   "emoji": "📷",
    "title": "Reportez la semaine en une fois",
-   "text": "Au lieu de cocher jour par jour, touchez les ronds de la feuille papier et reportez toute la semaine d'un coup. Cela fait partie du Premium ; imprimer la feuille reste gratuit."
+   "text": "Au lieu de cocher jour par jour, photographiez la feuille papier (ou touchez ses ronds) et reportez toute la semaine d'un coup. Cela fait partie du Premium ; imprimer la feuille reste gratuit."
   }
  },
  "vac": {
