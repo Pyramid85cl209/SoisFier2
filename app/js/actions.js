@@ -170,14 +170,14 @@ A.showYear = el => {
    Même règle côté serveur (déclencheur pauses_check, code SF:pause_started). */
 const pauseGrace = p => !p.created_at || Date.now() - Date.parse(p.created_at) < 864e5;
 const pauseLocked = p => p.start_day < todayISO() && !pauseGrace(p);
-const reasonSelect = cur => `<label class="f">${t("pause.reason")}<select id="pz-why">${PAUSE_REASONS.map(k => `<option value="${k}" ${k === cur ? "selected" : ""}>${t("pause.r." + k)}</option>`).join("")}${cur && !PAUSE_REASONS.includes(cur) ? `<option value="${esc(cur)}" selected>${esc(cur)}</option>` : ""}</select></label>`;
+const reasonSelect = cur0 => { const cur = cur0 === "sick" ? "rest" : cur0; return `<label class="f">${t("pause.reason")}<select id="pz-why">${PAUSE_REASONS.map(k => `<option value="${k}" ${k === cur ? "selected" : ""}>${t("pause.r." + k)}</option>`).join("")}${cur && !PAUSE_REASONS.includes(cur) ? `<option value="${esc(cur)}" selected>${esc(cur)}</option>` : ""}</select></label>`; };
 A.cAnyway = () => { S.kidAnyway = todayISO(); render(); };
 A.newPause = () => {
   const td = todayISO();
   openSheet(`<h2>⏸️ ${t("pause.new")}</h2><p class="muted">${t("pause.during")}</p>
     <div class="f"><span>${t("family.children")}</span><ul class="tpl">${S.children.map(c => `<li><label><input type="checkbox" value="${c.id}" checked> ${esc(c.emoji)} ${esc(c.name)}</label></li>`).join("")}</ul></div>
     <div class="f two"><label>${t("pause.from")}<input type="date" id="pz-from" value="${td}"></label><label>${t("pause.to")}<input type="date" id="pz-to" value="${addDays(td, 6)}"></label></div>
-    ${reasonSelect("sick")}
+    ${reasonSelect("rest")}
     <div class="sheet-actions"><button class="btn" data-act="savePause">${t("btn.save")}</button></div>`);
 };
 A.savePause = async () => {

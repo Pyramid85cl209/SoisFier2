@@ -1,6 +1,6 @@
 -- Test des migrations ep09a (thème A d'EP-09) : à lancer AVANT d'appliquer les migrations, dans l'éditeur SQL de Supabase (elle contient des drop et des revoke :
 -- le connecteur demande une confirmation). Tout se passe dans une transaction annulée : famille, enfant, utilisateurs, appareils fictifs, rien n'est conservé.
--- Contenu : migration 1 (20261111210000), cas 1 à 23, migration 2 (20261111210100), cas 24 à 29. Fichier composé : à régénérer si une migration ou un cas change
+-- Contenu : migration 1 (20261111210000), cas 1 à 23 (dont 20b, 20c), migration 2 (20261111210100), cas 24 à 29. Fichier composé : à régénérer si une migration ou un cas change
 --   cat migrations/20261111210000_ep09a_controles_serveur.sql tests/ep09a_cases.sql migrations/20261111210100_ep09a_droits_retraits.sql tests/ep09a_cases_2.sql
 -- Résultat attendu : une seule ligne d'erreur « RESULT: … » contenant, dans l'ordre :
 --  1.due=ok 2.j-7=SF:day_locked 2b.j-6=ok 3.futur=SF:day_locked 4.pas_due=SF:not_due 5.oneoff=ok 5b.autre_jour=SF:already_done 5c.hors_dates=SF:oneoff_out_of_range
@@ -9,7 +9,7 @@
 --  13.faux=5_nuls 13b=SF:code_locked:15 13c.apres_blocage=ok 14.deja_membre=SF:already_member 14b.code_non_consomme=oui
 --  15.faux=5_bad_code 15b=SF:code_locked:15 15c.meme_64=SF:code_locked:15 15d.autre_64=ok 15e.ipv4=SF:code_locked:15 15f=bad_code 15g.cf_prioritaire=bad_code 15h.sans_ip=bad_code
 --  16.perime=SF:device_expired 16b.2m29j=ok 17.unpair_perime=ok/0 17b=ok 17c.apres=SF:device_unknown 17d.jamais_rouvert=SF:device_expired 18.purge=0_vieux/0_echecs/1_recent 18b.cron=25 3 * * *
---  19.nom_autre=SF:not_your_name 19b=ok 19c=ok 20.lien=mom/member/prenom_present=false 21.rappels_avant=2_envois 21b=0_reste/1_parent 21c=1_envois 23.echange_direct_avant=ok
+--  19.nom_autre=SF:not_your_name 19b=ok 19c=ok 20.lien=mom/member/prenom_present=false 20b.libre=sans_cle/Nounou Test 20c.retire=null/null/null 21.rappels_avant=2_envois 21b=0_reste/1_parent 21c=1_envois 23.echange_direct_avant=ok
 --  24.echange_direct_apres=new row violates row-level security policy for table "redemptions" 24b.echange_serveur=ok 25.suppression_routine=1_reste_sur_1 25b.arret=ok
 --  28.coche=ok 28b.fuseau=ok 28c.lien=ok/aunt 28d.rls_lecture=true 28e=ok 28f=ok 28g=ok 28h=ok 28i=ok 28j.anon_routines=permission denied for table routines
 --  26.droits=rules_auth:false/is_member:true/valid_tz:true/relation_key:true/anon_toggle:true/anon_unpair:true/anon_redeem:false/auth_redeem:true/anon_pair_here:false/anon_routines:false/anon_tips:true/anon_tips_insert:false/sauvegarde_code_failures:true/fonctions_retirees:true
@@ -409,7 +409,7 @@ begin
 end $function$;
 
 -- DT03-03, DT02-02 : child_state ne renvoie plus le prénom d'un adulte, seulement la clé de son lien (validated_rel) ;
--- validated_label vaut 'auto' (validation automatique), 'member' (un membre actuel a validé) ou vide (membre retiré, affiché « Validée »).
+-- validated_custom : libellé libre du lien quand il n'a pas de clé ; validated_label vaut 'auto' (validation automatique), 'member' (un membre actuel a validé) ou vide (membre retiré, affiché « Validée »).
 -- Le reste est identique à la version actuelle.
 create or replace function public.child_state(p_token text)
 returns json
@@ -438,7 +438,10 @@ begin
            case when validated_at is null then null when validated_by is null then 'auto'
                 when exists (select 1 from public.family_members m where m.family_id = d.family_id and m.user_id = validated_by) then 'member' end as validated_label,
            case when validated_at is not null and validated_by is not null
-                then (select m.relation_key from public.family_members m where m.family_id = d.family_id and m.user_id = validated_by) end as validated_rel
+                then (select m.relation_key from public.family_members m where m.family_id = d.family_id and m.user_id = validated_by) end as validated_rel,
+           -- libellé personnalisé (« Autre… », sans clé) : affiché tel quel (F02-04 CA5)
+           case when validated_at is not null and validated_by is not null
+                then (select nullif(btrim(m.relation), '') from public.family_members m where m.family_id = d.family_id and m.user_id = validated_by and m.relation_key is null) end as validated_custom
          from public.completions where child_id = d.child_id and day >= today - 60) x), '[]'::json),
     'oneoff_done', (select count(*) from public.completions c join public.routines r on r.id = c.routine_id
                     where c.child_id = d.child_id and r.kind = 'oneoff' and c.validated_at is not null),
@@ -626,6 +629,14 @@ begin
   j := public.child_state(tok);
   res := res || ' 20.lien=' || coalesce((select (x ->> 'validated_rel') || '/' || (x ->> 'validated_label') from json_array_elements(j -> 'completions') x where (x ->> 'routine_id')::uuid = rReg limit 1), 'vide')
     || '/prenom_present=' || (j::text like '%Prenom Test%');
+  -- 20b : libellé personnalisé affiché tel quel (F02-04 CA5) ; 20c : validation par un membre retiré = « Validée » (F02-06 CA6)
+  perform pg_temp.supdo(format('update public.family_members set relation = ''Nounou Test'' where family_id = %L and user_id = %L', fid, u_par));
+  j := public.child_state(tok);
+  res := res || ' 20b.libre=' || coalesce((select coalesce(x ->> 'validated_rel', 'sans_cle') || '/' || coalesce(x ->> 'validated_custom', 'vide') from json_array_elements(j -> 'completions') x where (x ->> 'routine_id')::uuid = rReg limit 1), 'vide');
+  perform pg_temp.supdo(format('update public.family_members set relation = ''Maman'' where family_id = %L and user_id = %L', fid, u_par));
+  perform pg_temp.supdo(format('update public.completions set validated_by = gen_random_uuid() where child_id = (select child_id from public.completions where routine_id = %L limit 1) and routine_id = %L', rReg, rReg));
+  j := public.child_state(tok);
+  res := res || ' 20c.retire=' || coalesce((select coalesce(x ->> 'validated_label', 'null') || '/' || coalesce(x ->> 'validated_rel', 'null') || '/' || coalesce(x ->> 'validated_custom', 'null') from json_array_elements(j -> 'completions') x where (x ->> 'routine_id')::uuid = rReg limit 1), 'vide');
   -- rappels d'un membre parti
   perform pg_temp.supdo(format('insert into public.push_subscriptions(family_id, user_id, endpoint, p256dh, auth) values (%L, %L, ''https://example.invalid/proche'', ''k'', ''a''), (%L, %L, ''https://example.invalid/parent'', ''k'', ''a''), (%L, %L, ''https://example.invalid/hors'', ''k'', ''a'')', fid, u_help, fid, u_par, fid, u_par2));
   perform pg_temp.supdo(format('update public.push_subscriptions set reminder_times = array[to_char(date_trunc(''minute'', now() at time zone (select timezone from public.families where id = %L)), ''HH24:MI'')] where family_id = %L', fid, fid));

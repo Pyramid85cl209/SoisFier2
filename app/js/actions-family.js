@@ -83,7 +83,14 @@ A.editMember = el => {
 };
 A.saveMember = async el => {
   const id = el.dataset.id, self = id === S.session?.user.id, rel = readRelation("mem"), row = rel ? { relation: rel.relation } : {};
-  if (isParent() && !self) row.role = S.form.role;
+  if (isParent() && !self) {
+    const cur = S.members.find(x => x.user_id === id);
+    if (cur && S.form.role !== cur.role && !isPremium()) {   // EP-09 (DT02-03) : mêmes limites qu'à l'invitation
+      if (S.form.role === "helper") return upsell("helpers");
+      if (S.members.filter(x => x.role !== "helper").length >= 2) return upsell("adults");
+    }
+    row.role = S.form.role;
+  }
   if (!Object.keys(row).length) return closeSheet();
   await mutate(() => sb.from("family_members").update(row).eq("family_id", S.family.id).eq("user_id", id));
   const loc = rel ? { ...row, relation_key: rel.relation_key } : row;   // clé recalculée par la base, reprise localement en attendant

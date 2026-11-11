@@ -4,7 +4,7 @@
 // Adulte qui a validé, vu de l'enfant : lien traduit à partir de sa clé, « Un parent » à défaut (jamais un prénom, EP-09 DT03-03, DT02-02) ; ancien format (cache d'avant la mise à jour) : texte tel quel
 const validatorName = x => {
   if (!x || !x.validated_label || x.validated_label === "auto") return "";
-  if (x.validated_label === "member") return x.validated_rel ? t("rel." + x.validated_rel) : t("member.aParent");
+  if (x.validated_label === "member") return x.validated_rel ? t("rel." + x.validated_rel) : x.validated_custom || t("member.aParent");
   return x.validated_label;
 };
 function renderChild() {

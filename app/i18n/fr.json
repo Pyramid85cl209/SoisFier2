@@ -683,7 +683,7 @@
   "deleted": "Pause supprimée.",
   "r": {
    "trip": "Voyage",
-   "sick": "Maladie",
+   "rest": "Repos",
    "other": "Autre"
   },
   "state": {
@@ -1142,7 +1142,10 @@
   },
   "device_expired": "Ce téléphone n'a pas servi depuis 3 mois. Il faut un nouveau code enfant.",
   "already_member": "Vous êtes déjà membre de cette famille.",
-  "not_your_name": "Chacun ne modifie que son propre nom d'utilisateur."
+  "not_your_name": "Chacun ne modifie que son propre nom d'utilisateur.",
+  "holiday_past": "Ces vacances sont déjà terminées.",
+  "pause_overlap": "Cette pause chevauche une autre pause de cet enfant.",
+  "pause_closed": "Cette pause touche une quinzaine déjà terminée (fleur éclose)."
  },
  "hist": {
   "validated": {

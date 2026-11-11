@@ -126,7 +126,7 @@ function pFamily() {
   // Ordre par fréquence d'usage (v28) ; sections repliables, Enfants et Vacances ouvertes par défaut, état retenu sur le téléphone
   return fsec("kids", "🧒 " + t("family.children"), `${kids || `<p class="muted">${t("family.noChild")}</p>`}${P ? `<div class="actions"><button class="btn" data-act="newChild">${t("child.add")}${S.children.length >= 1 ? ptag() : ""}</button></div>` : ""}`, true)
     + (P ? fsec("vac", "🏖️ " + t("vac.title"), vacSection(), true) : "")
-    + fsec("members", "👥 " + t("family.members"), `${members}${P ? `<p class="muted small">${t("family.rolesHelp")}</p><div class="actions"><button class="btn ghost" data-act="invite">${t("family.invite")}</button></div>` : ""}`)
+    + fsec("members", "👥 " + t("family.members"), `${members}${P ? `<p class="muted small">${t("family.rolesHelp")}</p><div class="actions"><button class="btn ghost" data-act="invite">${t("family.invite")}${!isPremium() && S.members.filter(m => m.role !== "helper").length >= 2 ? ptag() : ""}</button></div>` : ""}`)
     + fsec("push", "🔔 " + t("push.title"), `<p class="muted">${t("push.parentHelp")}</p>
       <div class="f two"><label>${t("push.morning")}<input type="time" id="t1" value="${esc(times[0] || "")}"></label><label>${t("push.evening")}<input type="time" id="t2" value="${esc(times[1] || "")}"></label></div>
       <div class="actions"><button class="btn" data-act="pushParent">${pushOn ? t("push.update") : t("push.enable")}</button>${pushOn ? `<button class="btn ghost" data-act="pushOff">${t("btn.disable")}</button>` : ""}</div>`)
@@ -159,7 +159,7 @@ document.addEventListener("toggle", e => {
 }, true);
 
 function planSection() {
-  const plan = S.plan || "founder";
+  const plan = !S.plan ? "founder" : ["free", "premium", "founder"].includes(S.plan) ? S.plan : "premium";   // EP-09 (DT12-04) : offre inconnue = Premium
   return `<p><b>${t("premium.plan." + plan)}</b></p><p class="muted">${t("premium.planHelp." + plan)}</p>
     ${plan === "free" ? `<div class="actions"><a class="btn" href="${premiumHref("plan")}">${t("premium.see")}</a></div>` : ""}`;
 }

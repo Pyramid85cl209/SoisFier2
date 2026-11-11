@@ -692,7 +692,7 @@
   "deleted": "Break deleted.",
   "r": {
    "trip": "Trip",
-   "sick": "Illness",
+   "rest": "Rest",
    "other": "Other"
   },
   "state": {
@@ -1151,7 +1151,10 @@
   },
   "device_expired": "This phone hasn't been used for 3 months. A new child code is needed.",
   "already_member": "You're already a member of this family.",
-  "not_your_name": "Everyone can only change their own username."
+  "not_your_name": "Everyone can only change their own username.",
+  "holiday_past": "These holidays have already ended.",
+  "pause_overlap": "This break overlaps another break for this child.",
+  "pause_closed": "This break falls in a fortnight that has already ended (the flower has bloomed)."
  },
  "hist": {
   "validated": {

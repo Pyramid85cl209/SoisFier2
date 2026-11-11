@@ -391,7 +391,7 @@ begin
 end $function$;
 
 -- DT03-03, DT02-02 : child_state ne renvoie plus le prénom d'un adulte, seulement la clé de son lien (validated_rel) ;
--- validated_label vaut 'auto' (validation automatique), 'member' (un membre actuel a validé) ou vide (membre retiré, affiché « Validée »).
+-- validated_custom : libellé libre du lien quand il n'a pas de clé ; validated_label vaut 'auto' (validation automatique), 'member' (un membre actuel a validé) ou vide (membre retiré, affiché « Validée »).
 -- Le reste est identique à la version actuelle.
 create or replace function public.child_state(p_token text)
 returns json
@@ -420,7 +420,10 @@ begin
            case when validated_at is null then null when validated_by is null then 'auto'
                 when exists (select 1 from public.family_members m where m.family_id = d.family_id and m.user_id = validated_by) then 'member' end as validated_label,
            case when validated_at is not null and validated_by is not null
-                then (select m.relation_key from public.family_members m where m.family_id = d.family_id and m.user_id = validated_by) end as validated_rel
+                then (select m.relation_key from public.family_members m where m.family_id = d.family_id and m.user_id = validated_by) end as validated_rel,
+           -- libellé personnalisé (« Autre… », sans clé) : affiché tel quel (F02-04 CA5)
+           case when validated_at is not null and validated_by is not null
+                then (select nullif(btrim(m.relation), '') from public.family_members m where m.family_id = d.family_id and m.user_id = validated_by and m.relation_key is null) end as validated_custom
          from public.completions where child_id = d.child_id and day >= today - 60) x), '[]'::json),
     'oneoff_done', (select count(*) from public.completions c join public.routines r on r.id = c.routine_id
                     where c.child_id = d.child_id and r.kind = 'oneoff' and c.validated_at is not null),
