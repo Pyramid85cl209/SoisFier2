@@ -198,7 +198,7 @@ A.pRedeem = async el => {
   const id = newId(), row = { family_id: S.family.id, child_id: c.id, reward_id: w.id, title: w.title, emoji: w.emoji, cost, ...(id ? { id } : {}) };
   celebrate(true);
   return instant(() => { S.redemptions = [{ ...row, id: id || "tmp:" + Date.now(), tmp: !id, created_at: new Date().toISOString(), created_by: S.session?.user.id }, ...S.redemptions]; bumpStats(c.id, { spent: cost, redeemed_count: 1 }); },
-    () => sb.from("redemptions").insert(row), ["z", "s"], t("reward.exchanged"));
+    () => sb.rpc("redeem", { p_child: c.id, p_reward: w.id, ...(id ? { p_id: id } : {}) }), ["z", "s"], t("reward.exchanged"));   // EP-09 : le serveur relit le prix et le solde
 };
 A.cancelRedeem = async el => {
   const z = S.redemptions.find(x => x.id === el.dataset.id); if (!z || z.tmp) return;
@@ -258,21 +258,41 @@ A.childHere = async el => {
   let tok = map[cid];
   if (tok) {   // déjà connecté sur ce téléphone : on réutilise le même appareil
     const chk = await sb.rpc("child_state", { p_token: tok });
-    if (chk.error) { if (/Appareil non reconnu|SF:device_unknown/.test(chk.error.message || "")) tok = null; else throw chk.error; }
+    if (chk.error) { if (/Appareil non reconnu|SF:device_unknown|SF:device_expired/.test(chk.error.message || "")) tok = null; else throw chk.error; }
   }
-  if (!tok) {
-    const { data: code, error } = await sb.rpc("create_child_code", { p_child: cid }); if (error) throw error;
-    const r = await sb.rpc("child_pair", { p_code: code, p_label: t("device.sameLabel", { who: memberLabel(S.session.user.id) }) }); if (r.error) throw r.error;
+  if (!tok) {   // EP-09 (DT03-05) : appareil créé sans code enfant, le code en attente de l'enfant reste valable
+    const r = await sb.rpc("child_pair_here", { p_child: cid, p_label: t("device.sameLabel", { who: memberLabel(S.session.user.id) }) }); if (r.error) throw r.error;
     tok = r.data.token; map[cid] = tok; store.set("sameDevice", map);
   }
   store.set("childToken", tok); store.set("childFromParent", true); store.del("queue"); store.del("lastEarned"); store.del("seenFlowers");
   S.screen = "child"; S.ctab = "today"; S.cs = null; render(); await loadChild();
 };
+// « Code oublié ? » : le mot de passe du compte connecté sur ce téléphone remplace le code (DEC-28). Compteur propre, vérifié avant tout envoi (DEC-55).
+async function forgotPin(sess) {
+  const wait = guardLeft("pwdGuard"); if (wait) { toast(t("pin.locked", { n: wait }), true); return false; }
+  const pw = await passwordSheet(); if (pw === null) return false;
+  if (!navigator.onLine) { toast(t("pin.pwdNeedNet"), true); return false; }
+  const { error } = await sb.auth.signInWithPassword({ email: sess.user.email, password: pw });
+  if (error) {
+    if (isNetErr(error)) { toast(t("pin.pwdNeedNet"), true); return false; }
+    if (error.status === 429 || /rate limit|too many/i.test(error.message || "")) { toast(t("err.rateLimit"), true); return false; }
+    const n = guardFail("pwdGuard"); toast(n ? t("pin.locked", { n }) : t("pin.pwdWrong"), true); return false;
+  }
+  guardReset("pwdGuard"); guardReset("pinGuard"); store.del("pinH"); S.askPin = true;   // code effacé : un nouveau est proposé à l'arrivée dans l'espace parent
+  return true;
+}
 A.exitChild = async () => {
-  const pin = store.get("pin");
-  if (pin) {
-    const v = await pinSheet(t("kid.parentSpace"), t("pin.enter"));
-    if (v === null) return; if (v !== pin) return toast(t("pin.wrong"), true);
+  await pinMigrate();
+  if (hasPin()) {
+    const sess = (await sb.auth.getSession()).data.session;   // parent connecté (Mode enfant ici) : « Code oublié ? » possible
+    const wait = guardLeft("pinGuard");
+    const v = await pinSheet(t("kid.parentSpace"), wait ? t("pin.locked", { n: wait }) : t("pin.enter"), { forgot: !!sess, locked: !!wait });
+    if (v === null) return;
+    if (v.forgot) { if (!await forgotPin(sess)) return; }
+    else {
+      if (!await pinCheck(v)) { const n = guardFail("pinGuard"); return toast(n ? t("pin.locked", { n }) : t("pin.wrong"), true); }
+      guardReset("pinGuard");
+    }
   } else {
     const a = 6 + Math.floor(Math.random() * 4), b = 6 + Math.floor(Math.random() * 4);
     const v = await new Promise(res => {
@@ -290,8 +310,10 @@ A.exitChild = async () => {
       if (sub) { await sb.rpc("push_unsubscribe", { p_endpoint: sub.endpoint }); await sub.unsubscribe(); } } catch {}
     store.set("pushOn", false);
   }
+  // EP-09 (DT03-02, ADR-49) : sur le téléphone propre de l'enfant, la sortie retire l'appareil chez le parent (hors ligne : file locale, sinon purge de 3 mois)
+  if (!store.get("childFromParent")) await unpairDevice(store.get("childToken"));
   ["childToken", "childCache", "queue", "childFromParent", "cpushOn", "lastEarned", "seenFlowers"].forEach(k => store.del(k));
   S.cs = null;
   const { data } = await sb.auth.getSession();
-  if (data.session) { S.session = data.session; S.tab = "family"; await enterParent(); } else { S.screen = "auth"; render(); }
+  if (data.session) { S.session = data.session; S.tab = "family"; await enterParent(); if (S.askPin) { S.askPin = false; A.setPin(); } } else { S.screen = "auth"; render(); }
 };

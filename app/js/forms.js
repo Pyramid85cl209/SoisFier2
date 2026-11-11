@@ -116,20 +116,38 @@ function weekForm(mode) {
     ${mode === "family" ? `<p class="muted small">${t("week.changeNote")}</p>` : ""}
     <div class="sheet-actions"><button class="btn" data-act="saveWeek">${t("btn.save")}</button></div>`);
 }
-function pinSheet(title, text) {
+// Saisie du code parent. Options : forgot = lien « Code oublié ? » (résout {forgot:true}), locked = attente en cours (saisie désactivée)
+function pinSheet(title, text, opt = {}) {
   return new Promise(res => {
-    openSheet(`<h2>${esc(title)}</h2><p>${esc(text)}</p><label class="f">${t("pin.code4")}<input id="pin-in" class="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off"></label>
-      <div class="sheet-actions"><button class="btn ghost" id="pin-no">${t("btn.cancel")}</button><button class="btn" id="pin-ok">${t("btn.validate")}</button></div>`);
+    openSheet(`<h2>${esc(title)}</h2><p${opt.locked ? ` role="alert"` : ""}>${esc(text)}</p><label class="f">${t("pin.code4")}<input id="pin-in" class="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off"${opt.locked ? " disabled" : ""}></label>
+      <div class="sheet-actions"><button class="btn ghost" id="pin-no">${t("btn.cancel")}</button><button class="btn" id="pin-ok"${opt.locked ? " disabled" : ""}>${t("btn.validate")}</button></div>
+      ${opt.forgot ? `<p class="center"><button class="link" id="pin-forgot">${t("pin.forgot")}</button></p>` : ""}`);
     const inp = $("#pin-in"); setTimeout(() => inp.focus(), 50);
-    $("#pin-no").onclick = () => { closeSheet(); res(null); };
-    $("#pin-ok").onclick = () => { const v = inp.value.trim(); closeSheet(); res(v); };
-    dlg.addEventListener("close", () => res(null), { once: true });
+    // La réponse part à l'événement « close » : la fenêtre est vraiment fermée quand l'appelant en ouvre une autre (« Code oublié ? »)
+    let out = null; const done = v => { out = v; closeSheet(); };
+    dlg.addEventListener("close", () => res(out), { once: true });
+    $("#pin-no").onclick = () => done(null);
+    $("#pin-ok").onclick = () => done(inp.value.trim());
+    if (opt.forgot) $("#pin-forgot").onclick = () => done({ forgot: true });
+  });
+}
+// Mot de passe du compte connecté sur ce téléphone (« Code oublié ? », DEC-28)
+function passwordSheet() {
+  return new Promise(res => {
+    openSheet(`<h2>${t("pin.pwdTitle")}</h2><p>${t("pin.pwdText")}</p><label class="f">${t("auth.password")}<input id="pw-in" type="password" autocomplete="current-password"></label>
+      <div class="sheet-actions"><button class="btn ghost" id="pw-no">${t("btn.cancel")}</button><button class="btn" id="pw-ok">${t("btn.validate")}</button></div>`);
+    const inp = $("#pw-in"); setTimeout(() => inp.focus(), 50);
+    let out = null; const done = v => { out = v; closeSheet(); };
+    dlg.addEventListener("close", () => res(out), { once: true });
+    $("#pw-no").onclick = () => done(null);
+    $("#pw-ok").onclick = () => done(inp.value || null);
   });
 }
 async function ensurePin() {
-  if (store.get("pin")) return true;
+  await pinMigrate();
+  if (hasPin()) return true;
   const p = await pinSheet(t("pin.createTitle"), t("pin.createText"));
   if (!p) return false;
-  if (!/^\d{4}$/.test(p)) { toast(t("pin.need4"), true); return false; }
-  store.set("pin", p); toast(t("pin.saved")); return true;
+  if (!/^\d{4}$/.test(p.forgot ? "" : p)) { toast(t("pin.need4"), true); return false; }
+  await pinSave(p); toast(t("pin.saved")); return true;
 }

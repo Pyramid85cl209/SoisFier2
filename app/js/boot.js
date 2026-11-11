@@ -1,9 +1,10 @@
 "use strict";
 /* SoisFier : Démarrage */
 /* ================= Démarrage ================= */
-window.addEventListener("online", () => { flushQueue(); if (S.screen === "parent" && S.offline) enterParent(); });
+window.addEventListener("online", () => { flushQueue(); flushUnpair(); if (S.screen === "parent" && S.offline) enterParent(); });
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState !== "visible") return;
+  flushUnpair();
   if (S.screen === "child") { flushQueue().then(loadChild); }
   else if (S.screen === "parent" && S.family) { if (S.day > todayISO()) S.day = todayISO(); refreshParent().then(render).catch(() => {}); }
 });
@@ -46,6 +47,7 @@ function swSetup() {
 async function boot() {
   swSetup();
   await loadI18n();
+  pinMigrate(); flushUnpair();   // ancien code parent converti en empreinte ; retraits d'appareil restés en attente
   if (!sb) { S.screen = "error"; S.err = CFG_OK ? t("error.noService") : t("error.noConfig"); return render(); }
   if (store.get("childToken")) {
     S.screen = "child"; S.cs = store.get("childCache"); render();

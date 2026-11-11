@@ -783,7 +783,13 @@
   "math": "Pour déconnecter ce téléphone, combien font {a} × {b} ?",
   "answer": "Réponse",
   "wrongAnswer": "Ce n'est pas la bonne réponse.",
-  "chooseText": "Choisissez 4 chiffres. Ils protègent la sortie du mode enfant sur ce téléphone."
+  "chooseText": "Choisissez 4 chiffres. Ils protègent la sortie du mode enfant sur ce téléphone.",
+  "forgot": "Code oublié ?",
+  "locked": "Trop d'essais. Réessayez dans {n} min.",
+  "pwdTitle": "Mot de passe du compte",
+  "pwdText": "Saisissez le mot de passe du compte connecté sur ce téléphone. Il remplace le code et l'efface.",
+  "pwdWrong": "Mot de passe incorrect.",
+  "pwdNeedNet": "Il faut une connexion internet pour vérifier le mot de passe."
  },
  "backup": {
   "title": "Sauvegarde",
@@ -1126,7 +1132,17 @@
   "premium_report": "Le report de la semaine fait partie du Premium.",
   "scan_week": "Cette semaine ne peut pas être reportée : choisissez la semaine en cours ou la précédente.",
   "scan_day": "Ce jour ne peut pas être reporté.",
-  "scan_too_many": "Trop de coches à reporter d'un coup."
+  "scan_too_many": "Trop de coches à reporter d'un coup.",
+  "not_due": "Cette routine n'est pas prévue ce jour-là.",
+  "already_done": "Cette routine exceptionnelle est déjà faite un autre jour.",
+  "bad_price": "Prix invalide.",
+  "code_locked": {
+   "one": "Trop d'essais. Nouvel essai possible dans {n} minute au plus.",
+   "other": "Trop d'essais. Nouvel essai possible dans {n} minutes au plus."
+  },
+  "device_expired": "Ce téléphone n'a pas servi depuis 3 mois. Il faut un nouveau code enfant.",
+  "already_member": "Vous êtes déjà membre de cette famille.",
+  "not_your_name": "Chacun ne modifie que son propre nom d'utilisateur."
  },
  "hist": {
   "validated": {

@@ -792,7 +792,13 @@
   "math": "To disconnect this phone, what is {a} × {b}?",
   "answer": "Answer",
   "wrongAnswer": "That's not the right answer.",
-  "chooseText": "Choose 4 digits. They protect leaving child mode on this phone."
+  "chooseText": "Choose 4 digits. They protect leaving child mode on this phone.",
+  "forgot": "Forgot the code?",
+  "locked": "Too many attempts. Try again in {n} min.",
+  "pwdTitle": "Account password",
+  "pwdText": "Enter the password of the account signed in on this phone. It replaces the code and erases it.",
+  "pwdWrong": "Wrong password.",
+  "pwdNeedNet": "An internet connection is needed to check the password."
  },
  "backup": {
   "title": "Backup",
@@ -1135,7 +1141,17 @@
   "premium_report": "Transferring the week is part of Premium.",
   "scan_week": "This week can't be transferred: choose the current week or the previous one.",
   "scan_day": "This day can't be transferred.",
-  "scan_too_many": "Too many ticks to transfer at once."
+  "scan_too_many": "Too many ticks to transfer at once.",
+  "not_due": "This routine isn't scheduled that day.",
+  "already_done": "This one-off routine was already done on another day.",
+  "bad_price": "Invalid price.",
+  "code_locked": {
+   "one": "Too many attempts. You can try again in {n} minute at most.",
+   "other": "Too many attempts. You can try again in {n} minutes at most."
+  },
+  "device_expired": "This phone hasn't been used for 3 months. A new child code is needed.",
+  "already_member": "You're already a member of this family.",
+  "not_your_name": "Everyone can only change their own username."
  },
  "hist": {
   "validated": {

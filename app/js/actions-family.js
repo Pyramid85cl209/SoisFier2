@@ -102,7 +102,7 @@ A.shareInvite = async el => { try { await navigator.share({ title: "SoisFier", t
 A.setPin = async () => {
   const p = await pinSheet(t("pin.title"), t("pin.chooseText"));
   if (p === null) return; if (!/^\d{4}$/.test(p)) return toast(t("pin.need4"), true);
-  store.set("pin", p); render(); toast(t("pin.saved"));
+  await pinSave(p); render(); toast(t("pin.saved"));
 };
 A.renameFamily = async () => {
   openSheet(`<h2>${t("account.rename")}</h2><label class="f">${t("form.name")}<input id="fam-name" maxlength="40" value="${esc(S.family.name)}"></label><div class="sheet-actions"><button class="btn" data-act="saveFamilyName">${t("btn.save")}</button></div>`);

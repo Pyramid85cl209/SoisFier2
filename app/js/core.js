@@ -11,6 +11,39 @@ const store = {
 };
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const pad = n => String(n).padStart(2, "0");
+/* ================= Code parent (EP-09, ADR-40) =================
+   Empreinte PBKDF2 salée (100 000 itérations) gardée sur ce téléphone : le code n'est jamais gardé en clair.
+   Attentes après 5 échecs : 1, 5 puis 30 minutes (DEC-22). Deux compteurs indépendants : le code (« pinGuard ») et le mot de passe de « Code oublié ? » (« pwdGuard », DEC-55). */
+const b64 = u => btoa(String.fromCharCode(...u)), unb64 = x => Uint8Array.from(atob(x), c => c.charCodeAt(0));
+async function pinDerive(code, salt) {
+  const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(String(code)), "PBKDF2", false, ["deriveBits"]);
+  return new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt, iterations: 100000 }, k, 256));
+}
+const hasPin = () => !!store.get("pinH");
+async function pinSave(code) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  store.set("pinH", { s: b64(salt), h: b64(await pinDerive(code, salt)), i: 100000 });
+  store.del("pin"); store.del("pinGuard");
+}
+async function pinCheck(code) {
+  const o = store.get("pinH"); if (!o) return false;
+  const h = await pinDerive(code, unb64(o.s)), e = unb64(o.h);
+  return h.length === e.length && h.every((x, i) => x === e[i]);
+}
+// Ancien code (clé « pin », en clair) : converti en empreinte puis effacé à la première ouverture ; le même code continue de fonctionner (F03-07 CA5)
+async function pinMigrate() {
+  const old = store.get("pin"); if (old == null) return;
+  if (!hasPin()) { try { await pinSave(old); } catch { return; } }
+  store.del("pin");
+}
+const GUARD_SECONDS = [60, 300, 1800];
+const guardLeft = k => { const g = store.get(k); return g && g.until > Date.now() ? Math.ceil((g.until - Date.now()) / 60000) : 0; };   // minutes restantes, 0 = libre
+function guardFail(k) {
+  const g = store.get(k, { f: 0, until: 0 }); g.f++;
+  if (g.f >= 5) g.until = Date.now() + GUARD_SECONDS[Math.min(g.f - 5, 2)] * 1000;
+  store.set(k, g); return guardLeft(k);
+}
+const guardReset = k => store.del(k);
 /* ================= Langues ================= */
 // Textes dans i18n/<langue>.json ; « ?lang=qps » active une pseudo-langue de contrôle (textes déformés : tout texte resté en clair est un oubli).
 const LANGS = ["fr", "ar", "en"];        // langues proposées (fichier i18n/<code>.json + ligne dans public.languages)
@@ -139,6 +172,7 @@ function toast(msg, err = false) {
 const curLang = () => (I18N.lang === "qps" ? "fr" : I18N.lang);
 function errMsg(e) {
   const m = (e && (e.message || e.error_description || e.msg)) || String(e);
+  const lk = /SF:code_locked:(\d+)/.exec(m); if (lk) return t("srv.code_locked", { n: lk[1] });
   const code = /SF:(\w+)/.exec(m); if (code) return lget(I18N.fr, "srv." + code[1]) != null ? t("srv." + code[1]) : t("srv.unknown");
   if (/Failed to fetch|NetworkError|Load failed|fetch/i.test(m)) return t("err.network");
   if (/Invalid login credentials/i.test(m)) return t("err.badLogin");

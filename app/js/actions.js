@@ -76,13 +76,15 @@ A.createFamily = async () => {
 };
 A.joinFamily = async () => {
   const code = $("#o-code").value.trim(); if (code.length < 6) return toast(t("pair.need6"), true);
-  const { error } = await sb.rpc("join_family", { p_code: code, p_display_name: S.session.user.user_metadata?.display_name || "" }); if (error) throw error;
+  const { data, error } = await sb.rpc("join_family", { p_code: code, p_display_name: S.session.user.user_metadata?.display_name || "" }); if (error) throw error;
+  if (!data) throw new Error("SF:bad_code");   // EP-09 : le serveur répond « vide » pour un code faux (l'échec reste compté)
   await enterParent(); toast(t("onboard.joined"));
 };
 A.pair = async () => {
   const code = $("#p-code").value.trim(); if (code.length < 6) return toast(t("pair.need6"), true);
   const { data, error } = await sb.rpc("child_pair", { p_code: code, p_label: null }); if (error) throw error;
-  store.set("childToken", data.token); store.del("queue"); store.del("pin"); store.del("lastEarned"); store.del("seenFlowers");
+  if (!data || data.error) throw new Error("SF:bad_code");   // EP-09 : code faux = réponse « error », pour que l'échec reste compté
+  store.set("childToken", data.token); store.del("queue"); store.del("pin"); store.del("pinH"); store.del("pinGuard"); store.del("lastEarned"); store.del("seenFlowers");
   S.screen = "child"; S.ctab = "today"; S.cs = null; render(); await loadChild(); celebrate(true);
   setTimeout(() => { if (S.screen === "child" && !dlg.open) A.cReminders({ ask: true }); }, 1800);   // v28 : rappels proposés une fois, sur le téléphone de l'enfant seulement
 };

@@ -1,6 +1,12 @@
 "use strict";
 /* SoisFier : Écrans de l'enfant */
 /* ---------- Enfant ---------- */
+// Adulte qui a validé, vu de l'enfant : lien traduit à partir de sa clé, « Un parent » à défaut (jamais un prénom, EP-09 DT03-03, DT02-02) ; ancien format (cache d'avant la mise à jour) : texte tel quel
+const validatorName = x => {
+  if (!x || !x.validated_label || x.validated_label === "auto") return "";
+  if (x.validated_label === "member") return x.validated_rel ? t("rel." + x.validated_rel) : t("member.aParent");
+  return x.validated_label;
+};
 function renderChild() {
   const cs = S.cs;
   if (!cs) { app.innerHTML = `<div class="loading">${plantSVG(1)}</div>`; return; }
@@ -25,7 +31,7 @@ function cToday(v, routines) {
     const d = v.done.has(r.id + "|" + td), val = v.valid.has(r.id + "|" + td);
     return `<li><button class="kcard ${val ? "done" : d ? "pending" : ""}" data-act="cToggle" data-id="${r.id}" aria-pressed="${d}">
       <span class="k-emo" aria-hidden="true">${esc(r.emoji)}</span>
-      <span class="k-txt">${isOneoff(r) ? `<small>⭐ ${oneoffNote(r)}</small>` : ""}<b>${esc(r.title)}</b>${d && !val ? `<small>⏳ ${t("kid.parentsWillValidate")}</small>` : val ? (() => { const x = (S.cs.completions || []).find(y => y.routine_id === r.id && y.day === td); return x && x.validated_label && x.validated_label !== "auto" ? `<small>✓ ${t("kid.validatedBy", { who: esc(x.validated_label) })}</small>` : `<small>✓ ${t("kid.validated")}</small>`; })() : r.place ? `<small>📍 ${esc(r.place)}</small>` : ""}</span>
+      <span class="k-txt">${isOneoff(r) ? `<small>⭐ ${oneoffNote(r)}</small>` : ""}<b>${esc(r.title)}</b>${d && !val ? `<small>⏳ ${t("kid.parentsWillValidate")}</small>` : val ? (() => { const x = (S.cs.completions || []).find(y => y.routine_id === r.id && y.day === td); const who = validatorName(x); return who ? `<small>✓ ${t("kid.validatedBy", { who: esc(who) })}</small>` : `<small>✓ ${t("kid.validated")}</small>`; })() : r.place ? `<small>📍 ${esc(r.place)}</small>` : ""}</span>
       <span class="k-stars ${d && !val ? "wait" : ""}" aria-label="${t("kid.starsAria", { n: r.stars })}">${"⭐".repeat(Math.min(r.stars, 5))}</span><span class="k-pot" aria-hidden="true">${val ? "✓" : d ? "⏳" : ""}</span></button>
       ${r.timer_minutes && !d ? `<button class="k-timer" data-act="cTimer" data-id="${r.id}">⏱ ${t("kid.challenge", { n: r.timer_minutes })}</button>` : ""}</li>`;
   };

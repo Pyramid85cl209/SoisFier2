@@ -134,7 +134,7 @@ function pFamily() {
     + fsec("settings", "⚙️ " + t("family.settings"), `<h3 class="grp">${t("week.title")}</h3><p class="muted">${esc(weekSummary(WEEK))}</p><p class="muted small">${t("week.help")}</p>${P ? `<div class="actions"><button class="btn ghost" data-act="editWeek" data-mode="family">${t("btn.edit")}</button></div>` : ""}
       ${P ? `<h3 class="grp">${t("validate.section")}</h3><p class="muted">${t("validate.sectionHelp")}</p>
       <label class="check"><input type="checkbox" data-act="toggleAuto" ${S.autoValidate ? "checked" : ""}> ${t("validate.autoLabel")}</label>` : ""}
-      <h3 class="grp">${t("pin.title")}</h3><p class="muted">${t("pin.help")}</p><div class="actions"><button class="btn ghost" data-act="setPin">${store.get("pin") ? t("pin.change") : t("pin.create")}</button></div>`)
+      <h3 class="grp">${t("pin.title")}</h3><p class="muted">${t("pin.help")}</p><div class="actions"><button class="btn ghost" data-act="setPin">${hasPin() ? t("pin.change") : t("pin.create")}</button></div>`)
     + (P ? fsec("plan", "⭐ " + t("premium.myPlan"), planSection()) : "")
     + fsec("account", "👤 " + t("family.account"), `<p class="muted">${esc(S.session?.user.email || "")}</p>${installBtn() || P ? `<div class="actions">${installBtn()}${P ? `<button class="btn ghost" data-act="renameFamily">${t("account.rename")}</button>` : ""}</div>` : ""}
       <h3 class="grp">${t("backup.title")}</h3><p class="muted">${t("backup.help")}</p><div class="actions"><button class="btn ghost" data-act="exportData">${t("backup.btn")}</button></div>
@@ -187,7 +187,7 @@ function pHistory() {
   const signed = n => (n > 0 ? "+" : n < 0 ? "−" : "") + fmtNum(Math.abs(n));
   const item = z => { const who = z.created_by ? memberLabel(z.created_by) : c.name;
     const undo = z.kind === "gift" ? (P ? `<button class="link" data-act="cancelRedeem" data-id="${z.id}">${t("btn.cancel")}</button>` : "")
-      : (P && isPremium() ? `<button class="link" data-act="cancelPenalty" data-id="${z.id}">${t("btn.cancel")}</button>` : "");
+      : (P ? `<button class="link" data-act="cancelPenalty" data-id="${z.id}">${t("btn.cancel")}</button>` : "");
     return `<li class="h-${z.kind}">${z.kind === "gift" ? `<span class="h-ic" aria-hidden="true">🎁</span>` : brokenStar(22)}<span class="grow"><b>${esc(z.emoji || "")} ${esc(z.title)}</b><small>${t("malus.byAt", { who: esc(who), time: fmtTime(z.created_at) })}</small></span><span class="num">−${fmtNum(z.n)} ⭐</span>${undo}</li>`; };
   const list = Object.keys(days).sort().reverse().map(k => { const d = days[k];
     d.items.sort((a, b) => a.created_at < b.created_at ? 1 : -1);

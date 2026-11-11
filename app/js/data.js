@@ -182,9 +182,11 @@ async function loadChild() {
       if (gain && shown.length) setTimeout(() => toast(t("kid.newBadge", { names })), 3000);
     }, 400);
   } catch (e) {
-    if (/Appareil non reconnu|SF:device_unknown/.test(e.message || "")) {
+    if (/Appareil non reconnu|SF:device_unknown|SF:device_expired/.test(e.message || "")) {
+      const expired = /SF:device_expired/.test(e.message || "");   // 3 mois sans usage : message propre, appareil retiré du serveur (sinon par la purge quotidienne)
+      if (expired) await unpairDevice(tok);
       store.del("childToken"); store.del("childCache"); store.del("queue");
-      S.screen = "auth"; render(); toast(t("kid.disconnected"), true); return;
+      S.screen = "auth"; render(); toast(expired ? t("srv.device_expired") : t("kid.disconnected"), true); return;
     }
     S.cs = store.get("childCache"); S.offline = true; if (S.cs) setWeek(S.cs.family);
     if (!S.cs) { S.screen = "error"; S.err = errMsg(e); }
@@ -201,6 +203,25 @@ function applyQueueToState() {
   }
 }
 let flushing = false;
+// Retrait d'un appareil de l'enfant (sortie du mode enfant, jeton périmé). Sans réseau : jeton gardé dans une file locale, envoyé au retour du réseau.
+async function unpairDevice(tok) {
+  if (!tok) return;
+  try {
+    const { error } = await sb.rpc("child_unpair", { p_token: tok });
+    if (!error) return;
+    if (!isNetErr(error)) return;
+  } catch {}
+  const q = store.get("unpairQueue", []); if (!q.includes(tok)) { q.push(tok); store.set("unpairQueue", q); }
+}
+let unpairing = false;
+async function flushUnpair() {
+  const q = store.get("unpairQueue", []); if (unpairing || !q.length || !navigator.onLine) return; unpairing = true;
+  try {
+    const rest = [];
+    for (const tok of q) { try { const { error } = await sb.rpc("child_unpair", { p_token: tok }); if (error && isNetErr(error)) rest.push(tok); } catch { rest.push(tok); } }
+    if (rest.length) store.set("unpairQueue", rest); else store.del("unpairQueue");
+  } finally { unpairing = false; }
+}
 async function flushQueue() {
   if (flushing || !store.get("childToken")) return; flushing = true;
   try {
