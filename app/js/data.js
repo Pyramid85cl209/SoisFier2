@@ -12,7 +12,8 @@ async function loadParent() {
 /* Requêtes du parent, par partie : refreshParent recharge tout, refreshParts seulement ce qu'une action a changé */
 const PQ = {
   c: f => sb.from("children").select("*").eq("family_id", f).order("position").order("created_at"),
-  r: f => sb.from("routines").select("*").eq("family_id", f).eq("active", true).order("position").order("created_at"),
+  r: f => sb.from("routines").select("*").eq("family_id", f).or("active.eq.true,ended_at.gte." + new Date(Date.now() - 70 * 864e5).toISOString()).order("position").order("created_at"),   // actives + arrêtées depuis moins de 70 jours (jours passés à l'écran, DT05-03)
+  rs: f => sb.from("routine_settings").select("routine_id,valid_from,days,is_bonus,stars").eq("family_id", f).order("valid_from"),   // réglages historisés (EP-09, ADR-42)
   w: f => sb.from("rewards").select("*").eq("family_id", f).eq("active", true).order("cost"),
   x: f => sb.from("completions").select("child_id,routine_id,day,stars,source,validated_at,validated_by,created_by").eq("family_id", f).gte("day", addDays(todayISO(), -62)),
   z: f => sb.from("redemptions").select("*").eq("family_id", f).order("created_at", { ascending: false }).limit(100),
@@ -29,16 +30,25 @@ const PQ = {
   hp: f => sb.from("holiday_periods").select("*").eq("family_id", f).eq("active", true).order("start_day"),
   ho: f => sb.from("holiday_overrides").select("*").eq("family_id", f)
 };
-const OPTIONAL = ["hp", "ho"];   // Mode vacances : facultatif si la base n'est pas encore à jour
+const OPTIONAL = ["hp", "ho", "rs"];   // Mode vacances : facultatif si la base n'est pas encore à jour
 async function fetchParts(keys) {
+  if (keys.includes("r") && !keys.includes("rs")) keys = [...keys, "rs"];   // les réglages suivent les routines
   const fid = S.family.id, qs = await Promise.all(keys.map(k => PQ[k](fid))), o = {};
   keys.forEach((k, i) => { const q = qs[i]; if (q.error && !OPTIONAL.includes(k)) throw q.error; o[k] = q.error ? null : q.data; });
   return o;
 }
+// Réglages historisés rattachés à chaque routine ; S.routines = routines en cours, S.routinesAll = avec les arrêtées récentes (jours passés)
+function attachSettings() {
+  const by = {}; (S.rsets || []).forEach(x => (by[x.routine_id] = by[x.routine_id] || []).push(x));
+  S.routinesAll = (S.routinesAll || []).map(r => by[r.id] ? { ...r, settings: by[r.id] } : r.settings ? { ...r, settings: undefined } : r);
+  S.routines = S.routinesAll.filter(r => r.active !== false);
+}
 function applyParts(o) {
   const has = k => k in o;
   if (has("c")) S.children = o.c;
-  if (has("r")) S.routines = o.r;
+  if (has("r")) S.routinesAll = o.r;
+  if (has("rs")) S.rsets = o.rs || [];
+  if (has("r") || has("rs")) attachSettings();
   if (has("w")) S.rewards = o.w;
   if (has("x")) S.completions = o.x;
   if (has("z")) S.redemptions = o.z;
@@ -61,7 +71,7 @@ function applyParts(o) {
 }
 // Cache du parent, rattaché au compte : affiché dès l'ouverture, puis remplacé par les données fraîches
 function saveParentCache() {
-  store.set("parentCache", { uid: S.session?.user.id, family: S.family, me: S.me, children: S.children, routines: S.routines, rewards: S.rewards, completions: S.completions, redemptions: S.redemptions, stats: S.stats, members: S.members, devices: S.devices,
+  store.set("parentCache", { uid: S.session?.user.id, family: S.family, me: S.me, children: S.children, routines: S.routines, routinesAll: S.routinesAll, rsets: S.rsets, rewards: S.rewards, completions: S.completions, redemptions: S.redemptions, stats: S.stats, members: S.members, devices: S.devices,
     autoValidate: S.autoValidate, penalties: S.penalties, pevents: S.pevents, badges: S.badges, pauses: S.pauses, gardens: S.gardens, week: { ...WEEK }, plan: S.plan, holidays: S.holidays, hp: S.hp, ho: S.ho, oneoffTpl: S.oneoffTpl });
 }
 function parentCache() {
@@ -86,15 +96,10 @@ async function fresh(keys, tries = 1) {
   }
   return false;
 }
-// Badges obtenus : enregistrés une fois pour toutes
-function awardBadges() {
-  const rows = [], fid = S.family.id;
-  S.children.forEach(k => newBadges(viewFor(k)).forEach(key => { rows.push({ child_id: k.id, family_id: fid, badge_key: key }); (S.badges[k.id] = S.badges[k.id] || []).push(key); }));
-  if (rows.length) sb.from("child_badges").upsert(rows, { onConflict: "child_id,badge_key", ignoreDuplicates: true }).then(() => {}, () => {});
-}
+// Badges : mérités et enregistrés par le serveur (EP-09, ADR-44) ; l'espace parent affiche ce qui est enregistré, sans calculer
 async function refreshParent() {
   if (!await fresh(Object.keys(PQ), 6)) return;
-  awardBadges(); saveParentCache();
+  saveParentCache();
 }
 // Rechargement ciblé : seulement les parties qu'une action a changées ; compteurs, badges et jardins suivent en arrière-plan
 async function refreshParts(keys, tries = 3) { if (await fresh(keys, tries)) saveParentCache(); bgRefresh(keys); }
@@ -106,7 +111,7 @@ function bgRefresh(done = []) {
   clearTimeout(bgTimer);
   bgTimer = setTimeout(async () => {
     const keys = [...bgKeys]; bgKeys.clear();
-    try { if (await fresh(keys)) { awardBadges(); saveParentCache(); if (S.screen === "parent") render(); } } catch {}
+    try { if (await fresh(keys)) { saveParentCache(); if (S.screen === "parent") render(); } } catch {}
   }, 700);
 }
 // Action à affichage immédiat : l'écran change tout de suite ; si le serveur refuse, il revient en arrière avec un message
@@ -170,9 +175,8 @@ async function loadChild() {
     const fresh = seen == null ? [] : fls.slice(seen);
     store.set("seenFlowers", fls.length);
     if (fresh.length) setTimeout(() => bloomCeremony(fresh[fresh.length - 1]), 900);
-    const routines = S.cs.routines.map(r => ({ ...r, child_id: S.cs.child.id }));
-    const nb = newBadges(computeView({ child: S.cs.child, routines, completions: S.cs.completions, stats: S.cs.stats, badges: S.cs.badges, garden: S.cs.garden, penalties: S.cs.penalties, oneoffDone: S.cs.oneoff_done }));
-    if (nb.length) { sb.rpc("child_award_badges", { p_token: tok, p_keys: nb }).then(() => {}, () => {}); S.cs.badges.push(...nb); }
+    const nb = S.cs.badges_new || [];   // badges mérités et pas encore annoncés (le serveur décide, ADR-44)
+    if (nb.length) sb.rpc("child_badges_seen", { p_token: tok, p_keys: nb }).then(() => {}, () => {});
     store.set("childCache", S.cs);
     const shown = nb.map(k => visibleBadges().find(b => b.k === k)).filter(Boolean);
     if (gain || shown.length) setTimeout(() => {
@@ -251,7 +255,7 @@ function childToggle(rid, makeDone, source = "child") {
   if (makeDone) {
     S.bump = true; render(); S.bump = false;
     const routines = cs.routines.map(x => ({ ...x, child_id: cs.child.id }));
-    const main = dueOn(routines, cs.child.id, day, cs.completions).filter(x => !x.is_bonus);
+    const main = ringOf(dueOn(routines, cs.child.id, day, cs.completions).filter(x => !x.is_bonus), day, cs.completions);
     const all = main.length && main.every(x => cs.completions.some(c => c.routine_id === x.id && c.day === day));
     celebrate(all);
     toast(all ? t("kid.allDoneToast") : t("kid.bravoToast"));

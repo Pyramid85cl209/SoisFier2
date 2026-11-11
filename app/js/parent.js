@@ -35,7 +35,7 @@ function pendingBlock() {
   if (!pend.length) return "";
   return `<section class="validate"><div class="v-head"><h2>${t("validate.title")}</h2><button class="btn sm" data-act="validateAll">${t("validate.all", { n: pend.length })}</button></div>
     <ul class="vlist">${pend.map(x => {
-      const r = S.routines.find(y => y.id === x.routine_id) || { title: t("routine.deleted"), emoji: "⭐", stars: x.stars };
+      const r = (S.routinesAll || S.routines).find(y => y.id === x.routine_id) || { title: t("routine.deleted"), emoji: "⭐", stars: x.stars };
       const c = S.children.find(y => y.id === x.child_id) || { name: "" };
       const parts = [esc(c.name), lower(fmtDay(x.day)), `+${fmtNum(x.stars)} ⭐`];
       if (x.source === "timer") parts.push(t("validate.timer"));
@@ -51,16 +51,16 @@ function pToday() {
   const nav = `<div class="daynav"><button data-act="dayPrev" aria-label="${t("day.prev")}" ${day <= addDays(td, -6) ? "disabled" : ""}>‹</button><h1>${fmtDay(day)}</h1><button data-act="dayNext" aria-label="${t("day.next")}" ${day >= td ? "disabled" : ""}>›</button></div>`;
   const tip = S.tip && day === td ? `<aside class="tip"><span aria-hidden="true">💡</span><p>${esc(S.tip)}</p></aside>` : "";
   const blocks = S.children.map(c => {
-    const v = viewFor(c), due = dueOn(S.routines, c.id, day, S.completions);
-    const main = due.filter(r => !r.is_bonus), bonus = due.filter(r => r.is_bonus);
-    const nd = main.filter(r => v.done.has(r.id + "|" + day)).length;
+    const v = viewFor(c), due = dueOn(S.routinesAll || S.routines, c.id, day, S.completions);
+    const main = due.filter(r => !r.is_bonus), bonus = due.filter(r => r.is_bonus), ring = ringOf(main, day, S.completions);   // compteur : DEC-32
+    const nd = ring.filter(r => v.done.has(r.id + "|" + day)).length;
     const n = gardenNow(S.gardens[c.id]), pz = pauseOn(c.id, day), hp = periodOn(c.id, day);
     // Jour en pause : ⏸️ et motif à la place de 🏖️, « jour neutre » à la place de la fleur, anneau remplacé par ⏸️ ; les routines restent cochables
     const flower = !n ? "" : pz ? `<span>🌱 ${t("pause.neutral")}</span>` : n.waiting ? `<span>🌱 ${t("garden.firstFrom", { date: fmtLong(n.start) })}</span>` : `<span>🌱 ${t("garden.dayOf", { d: n.dayIdx, len: n.len })}${t("sep")}${t("garden.goodDays", { n: n.good })}</span>`;
     return `<section class="kid ${pz ? "paused" : ""}" style="--c:${esc(c.color)}">
       <div class="kid-head"><button class="kid-plant" data-act="showGarden" data-id="${c.id}" aria-label="${t("garden.see", { name: esc(c.name) })}" style="border:0;background:none;padding:0">${n ? stageSVG(n.stage, n.species, c.color) : plantSVG(0, c.color)}</button>
         <div><h2>${esc(c.emoji)} ${esc(c.name)}</h2><p class="meta">${pz ? `<span class="pz">⏸️ ${t("pause.on")}${pz.garden ? "" : t("sep") + esc(pauseReason(pz))}</span>` : ""}<span>⭐ ${t("parent.toSpend", { n: v.balance })}</span>${flower}${v.current > 1 ? `<span>🔥 ${t("parent.inARow", { n: v.current })}</span>` : ""}${hp && !pz ? `<span>🏖️ ${esc(hp.name)}</span>` : ""}</p></div>
-        ${pz ? `<div class="ring pz" aria-label="${t("pause.on")}"><span aria-hidden="true">⏸️</span></div>` : `<div class="ring" style="--p:${main.length ? Math.round(nd / main.length * 100) : 0}" aria-label="${t("parent.doneOf", { n: nd, total: main.length })}"><span>${fmtNum(nd)}/${fmtNum(main.length)}</span></div>`}</div>
+        ${pz ? `<div class="ring pz" aria-label="${t("pause.on")}"><span aria-hidden="true">⏸️</span></div>` : `<div class="ring" style="--p:${ring.length ? Math.round(nd / ring.length * 100) : 0}" aria-label="${t("parent.doneOf", { n: nd, total: ring.length })}"><span>${fmtNum(nd)}/${fmtNum(ring.length)}</span></div>`}</div>
       ${due.length ? `<ul class="rlist">${[...due.filter(isOneoff), ...main.filter(r => !isOneoff(r)), ...bonus.filter(r => !isOneoff(r))].map(r => rowP(c, r, day, v)).join("")}</ul>`
         : `<p class="empty">${t("parent.nothing")}${isParent() ? ` <button class="link" data-act="tab" data-tab="routines" data-child="${c.id}">${t("parent.addRoutines")}</button>` : ""}</p>`}
       ${day === td ? `<div class="actions" style="margin:10px 0 0"><button class="btn sm ghost" data-act="newOneoff" data-child="${c.id}">+ ${t("oneoff.btn")}${ptag()}</button></div>` : ""}

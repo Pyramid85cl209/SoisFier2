@@ -32,8 +32,8 @@ async function printPlanning(ids) {
   const pages = (await Promise.all(S.children.filter(c => ids.includes(c.id)).map(async c => {
     // Semaine imprimée : chaque jour suit le Mode vacances s'il s'applique (routines en pause, statut, jours, étoiles, routines de vacances)
     const dates = order.map((_, i) => addDays(first, i));
-    const due = dates.map(d => new Map(dueOn(S.routines, c.id, d).filter(r => !isOneoff(r)).map(r => [r.id, r])));
-    const rs = S.routines.filter(r => r.child_id === c.id && !isOneoff(r) && due.some(m => m.has(r.id)));
+    const due = dates.map(d => new Map(dueOn(S.routinesAll || S.routines, c.id, d).filter(r => !isOneoff(r)).map(r => [r.id, r])));
+    const rs = (S.routinesAll || S.routines).filter(r => r.child_id === c.id && !isOneoff(r) && due.some(m => m.has(r.id)));
     const hols = holidaysOf(c.id).filter(p => p.start_day <= dates[6] && p.end_day >= dates[0]);
     const lines = [];   // routines dans l'ordre des lignes du tableau (contenu du repère)
     const rows = MOMENTS().map(([k, l, , e]) => {

@@ -12,8 +12,8 @@ const repFirst = k => { const td = todayISO(), f = addDays(td, -((dowOf(td) - WE
 // Routines habituelles de la semaine et, pour chaque jour, celles qui sont dues : même calcul que printPlanning (Mode vacances compris)
 function repRows(childId, first) {
   const dates = weekOrder().map((_, i) => addDays(first, i));
-  const due = dates.map(d => new Map(dueOn(S.routines, childId, d).filter(r => !isOneoff(r)).map(r => [r.id, r])));
-  const rs = S.routines.filter(r => r.child_id === childId && !isOneoff(r) && due.some(m => m.has(r.id)));
+  const due = dates.map(d => new Map(dueOn(S.routinesAll || S.routines, childId, d).filter(r => !isOneoff(r)).map(r => [r.id, r])));
+  const rs = (S.routinesAll || S.routines).filter(r => r.child_id === childId && !isOneoff(r) && due.some(m => m.has(r.id)));
   return { dates, due, rs };
 }
 // Nom accessible d'un rond : « {routine}, {jour}, coché » (F04-09 CA10) ; « à venir » pour un jour pas encore passé

@@ -17,26 +17,40 @@ function pauseOn(childId, day) {
 }
 // Motif enregistré en clé (v27) ; un ancien texte libre s'affiche tel quel
 const pauseReason = p => { const k = p.reason === "sick" ? "rest" : p.reason; return PAUSE_REASONS.includes(k) ? t("pause.r." + k) : (p.reason || t("pause.default")); };
+/* Dates de la famille : un instant (création, arrêt d'une routine) se lit dans le fuseau de la famille, comme le serveur (EP-09, DT05-03) */
+const famTz = () => ((S.screen === "child" ? S.cs && S.cs.family : S.family) || {}).timezone || "Europe/Paris";
+const famDay = ts => new Intl.DateTimeFormat("en-CA", { timeZone: famTz(), year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(ts));
+// Réglages de la routine valables ce jour-là (jours passés figés, DEC-33) : dernière ligne dont le début est atteint, à défaut la plus ancienne ; sans historique, la routine elle-même
+function settingsOn(r, day) {
+  const s = r.settings; if (!s || !s.length) return r;
+  let cur = s[0]; for (const x of s) { if (x.valid_from <= day) cur = x; else break; }
+  return { ...r, days: cur.days, is_bonus: cur.is_bonus, stars: cur.stars };
+}
+// Routine encore en cours ce jour-là : arrêtée, elle reste due jusqu'à la veille de l'arrêt (le serveur lit ended_at)
+const activeOn = (r, day) => r.ended_at ? famDay(r.ended_at) > day : r.active !== false;
 // Routine telle qu'elle s'applique ce jour-là (null si elle n'est pas due du tout : en pause, ou routine de vacances hors période)
 function effective(r, day) {
   if (r.kind === "oneoff") return r;
-  const p = periodOn(r.child_id, day);
-  if (isHolidayR(r)) return p && p.id === r.holiday_period_id ? r : null;
-  const o = p && p.ov && p.ov[r.id]; if (!o) return r;
+  const base = settingsOn(r, day), p = periodOn(r.child_id, day);
+  if (isHolidayR(r)) return p && p.id === r.holiday_period_id ? base : null;
+  const o = p && p.ov && p.ov[r.id]; if (!o) return base;
   if (o.status === "off") return null;
-  return { ...r, is_bonus: o.status ? o.status === "bonus" : r.is_bonus, days: o.days || r.days, stars: o.stars || r.stars, adjusted: true };
+  return { ...base, is_bonus: o.status ? o.status === "bonus" : base.is_bonus, days: o.days || base.days, stars: o.stars || base.stars, adjusted: true };
 }
 function dueOn(routines, childId, day, comps) {
   const dw = dowOf(day);
-  return routines.filter(r => r.child_id === childId && r.active !== false).map(r => {
+  return routines.filter(r => r.child_id === childId && activeOn(r, day)).map(r => {
     if (r.kind === "oneoff") {
       if (!(r.start_day <= day && day <= r.end_day)) return null;
       return (comps || []).some(c => c.routine_id === r.id && c.day !== day) ? null : r;   // déjà faite un autre jour
     }
     const e = effective(r, day);
-    return e && (e.days || []).includes(dw) && String(r.created_at || "").slice(0, 10) <= day ? e : null;
+    return e && (e.days || []).includes(dw) && (!r.created_at || famDay(r.created_at) <= day) ? e : null;
   }).filter(Boolean);
 }
+// Compteur « faites / total » du jour (DEC-32, R05-07 CA3) : une exceptionnelle obligatoire compte le jour où elle est faite, sinon son dernier jour
+const ringOf = (main, day, comps) => main.filter(r => !isOneoff(r) || (comps || []).some(c => c.routine_id === r.id && c.day === day)
+  || (day === r.end_day && !(comps || []).some(c => c.routine_id === r.id)));
 const isOneoff = r => r.kind === "oneoff";
 const oneoffNote = r => r.start_day === r.end_day ? t("oneoff.note") : t("oneoff.noteBefore", { date: fmtLong(r.end_day) });
 // Modèles : le titre est lu dans la langue courante (propriété « t »)
@@ -131,8 +145,8 @@ const badgeStats = v => {
     balance: v.balance, sortie: cn.sortie || 0, grand: cn.grand || 0,
     patience: Math.max(0, Math.round((parseISO(t) - parseISO(from)) / 864e5)), calm: v.calm };
 };
-const hasBadge = (v, b) => v.stored.has(b.k) || b.ok(badgeStats(v));
-const newBadges = v => BADGES.filter(b => !v.stored.has(b.k) && b.ok(badgeStats(v))).map(b => b.k);
+// Badge gagné = enregistré par le serveur (EP-09, ADR-44) ; badgeStats ne sert plus qu'aux barres de progression
+const hasBadge = (v, b) => v.stored.has(b.k);
 function brokenStar(s = 20) {
   return `<svg class="bstar" width="${s}" height="${s}" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z" fill="#B9A89B"/><path d="M12.6 2.5 L10.8 7.6 L13.4 10.6 L10.6 13.8 L12 17" fill="none" stroke="var(--paper)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 }

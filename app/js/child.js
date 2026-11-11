@@ -21,8 +21,8 @@ function renderChild() {
 }
 function cToday(v, routines) {
   const td = todayISO(), due = dueOn(routines, v.child.id, td, S.cs.completions);
-  const main = due.filter(r => !r.is_bonus), bonus = due.filter(r => r.is_bonus);
-  const nd = main.filter(r => v.done.has(r.id + "|" + td)).length;
+  const main = due.filter(r => !r.is_bonus), bonus = due.filter(r => r.is_bonus), ring = ringOf(main, td, S.cs.completions);   // compteur : DEC-32
+  const nd = ring.filter(r => v.done.has(r.id + "|" + td)).length;
   // Jour en pause (la pause l'emporte sur le Mode vacances) : routines repliées derrière « Faire quand même »,
   // dépliées d'office si quelque chose est déjà coché aujourd'hui ; cocher rapporte toujours des étoiles
   const pz = pauseOn(v.child.id, td), hp = periodOn(v.child.id, td);
@@ -45,7 +45,7 @@ function cToday(v, routines) {
       ${v.pendingStars ? `<p class="wait-note">⏳ ${t("kid.pendingStars", { n: v.pendingStars })}</p>` : ""}</div></section>
     ${pz ? `<div class="kid-pause"><p><span aria-hidden="true">⏸️</span> ${t("kid.pauseDay")}${folded ? bell() : ""}</p>${folded && due.length ? `<button class="btn ghost" data-act="cAnyway">${t("kid.anyway")}</button>` : ""}</div>`
       : hp ? `<p class="center"><span class="pill hol-pill">🏖️ ${esc(hp.name)}</span></p>` : ""}
-    ${folded ? "" : `<p class="today-count"><span>${main.length ? (nd === main.length ? t("kid.allDone") : t("kid.doneOf", { n: nd, total: main.length })) : t("kid.noRoutine")}</span>${bell()}</p>
+    ${folded ? "" : `<p class="today-count"><span>${ring.length ? (nd === ring.length ? t("kid.allDone") : t("kid.doneOf", { n: nd, total: ring.length })) : t("kid.noRoutine")}</span>${bell()}</p>
     ${groups}${bonus.filter(r => !isOneoff(r)).length ? `<h3 class="grp">💪 ${t("kid.bonus")}</h3><ul class="kcards">${bonus.filter(r => !isOneoff(r)).map(card).join("")}</ul>` : ""}`}`;
 }
 function cGifts(v, routines, cs) {

@@ -142,6 +142,7 @@ A.exportData = async () => {
   const res = await Promise.all(names.map(t => sb.from(t).select("*").eq("family_id", fid)));
   for (const q of res) if (q.error) throw q.error;
   const out = { exported_at: new Date().toISOString(), family: S.family }; names.forEach((n, i) => out[n] = res[i].data);
+  const rs = await sb.from("routine_settings").select("*").eq("family_id", fid); if (!rs.error) out.routine_settings = rs.data;   // réglages historisés (EP-09) : absents tant que la base n'est pas à jour
   const blob = new Blob([JSON.stringify(out, null, 2)], { type: "application/json" });
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `soisfier-${todayISO()}.json`; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 5000); toast(t("backup.done"));
