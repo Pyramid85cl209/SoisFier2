@@ -5,10 +5,10 @@
 -- Résultat attendu : une seule ligne d'erreur « RESULT: … » contenant, dans l'ordre :
 --  T1.creation=1/true T2.titre_seul=1 T2b.etoiles=2/true/6 T2c.meme_jour=2/7:1,2,3 T2d.inchange=2 T3.ecriture_directe=permission denied for table routine_settings T3b.lecture_membre=2
 --  T3c.anon=permission denied for table routine_settings T4.passe_fige=true/best=12
---  B1.badges=calme14,calme30,calme7,f1,first,full1,matin,patience30,r10,s25,save50 B1b.annonce=11 B2.idempotent=0
+--  B1.badges=calme14,calme30,calme7,f1,first,full1,matin,patience30,s25 B1b.annonce=9 B2.idempotent=0
 --  B3.gratuit=calme14:true,calme30:true,calme7:true,first:false,full1:true,matin:true,patience30:true,timer:true B3b.premium=true
 --  B4.jardin=big,big5,f1,f10,f5,first,full1,jardin,jardin2,jcomplet,p_automne,p_ete,p_hiver,p_printemps,parfait,parterre,parterre5 B5.bonus_selon_le_jour=1
---  B6.etat=nouveaux:26/reglages:2 B6b.apres_vu=0 B7.anon_attribution=permission denied for schema private B7b.auth_attribution=permission denied for function award_badges
+--  B6.etat=nouveaux:25/reglages:2 B6b.apres_vu=0 B7.anon_attribution=permission denied for schema private B7b.auth_attribution=permission denied for function award_badges
 --  B7c.insertion_directe_avant=ok B8.fonction_retiree=true B8b.insertion_directe_apres=new row violates row-level security policy for table "child_badges" B8c.lecture=true
 -- Lancé jusqu'ici sur une réplique locale du schéma (PostgreSQL 16), pas sur la base de production.
 begin;

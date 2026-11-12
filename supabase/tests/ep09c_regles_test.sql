@@ -4,7 +4,8 @@
 -- Fichier composé : cat migrations/20261112120000_ep09c_reglages_historises.sql tests/ep09c_regles_cases.sql
 -- Les 30 cas de supabase/tests/regles_cas.json (79 vérifications) sont rejoués ici contre private.routine_rules et private.garden_days ; les mêmes cas sont joués contre rules.js :
 -- node supabase/tests/regles_cas.test.js (153 vérifications).
--- Résultat attendu : une seule ligne d'erreur « RESULT: 79 vérifications, 0 échec(s) ».
+-- Résultat attendu : une seule ligne d'erreur « RESULT: 79 vérifications, 0 échec(s) | … » avec, dans l'ordre, un contrôle nommé par cas du jeu partagé :
+--  R01=ok R02=ok R03=ok R04=ok R05=ok R06=ok R07=ok R08=ok R09=ok R10=ok R11=ok R12=ok R13=ok R14=ok R15=ok R16=ok R17=ok R18=ok R19=ok R20=ok R21=ok R22=ok O01=ok O02=ok O03=ok O04=ok O05=ok O06=ok O07=ok O08=ok
 begin;
 -- EP-09 thème C (1/3) : réglages des routines historisés (ADR-42, DEC-33, DT04-02, DT04-04, DT10-11).
 -- À appliquer SEULE, avant la publication de l'application, après répétition sur les données réelles dans une transaction annulée
@@ -163,6 +164,7 @@ end $function$;
 
 do $t$
 declare
+  b0 int; per text := '';
   doc jsonb := $json${
  "version": 1,
  "description": "Jeu de cas partagé (EP-09, DT10-01) : routines dues, réglages valables au jour demandé, vacances, exceptionnelles dans le compteur du jour. Joué en SQL (supabase/tests/ep09c_regles_test.sql) et sous Node (supabase/tests/regles_cas.test.js). Fuseau par défaut Europe/Paris ; jours 1 = lundi à 7 = dimanche.",
@@ -206,6 +208,7 @@ begin
   perform set_config('sf.via_report', 'on', true);   -- jours anciens : exemption de check_completion (report de feuille)
   execute 'alter table public.holiday_periods disable trigger holiday_periods_check';   -- périodes aux dates fixes, quelle que soit la date du jour
   for c in select * from jsonb_array_elements(doc -> 'cases') loop
+    b0 := bad;
     tz := coalesce(c ->> 'timezone', doc ->> 'timezone');
     insert into public.families(name, plan, timezone) values ('Famille cas ' || (c ->> 'id'), 'premium', tz) returning id into fid;
     insert into public.children(family_id, name) values (fid, 'Enfant') returning id into cid;
@@ -253,8 +256,9 @@ begin
         if (v > 0) is distinct from (k ->> 'counted')::boolean then bad := bad + 1; detail := detail || ' ' || (c ->> 'id') || '/' || (k ->> 'day') || ':compte=' || v; end if;
       end loop;
     end if;
+    per := per || ' ' || (c ->> 'id') || '=' || case when bad = b0 then 'ok' else 'KO' end;
   end loop;
   execute 'alter table public.holiday_periods enable trigger holiday_periods_check';
-  raise exception 'RESULT: % vérifications, % échec(s)%', n, bad, detail;
+  raise exception 'RESULT: % vérifications, % échec(s)% |%', n, bad, detail, per;
 end $t$;
 rollback;
