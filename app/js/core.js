@@ -139,6 +139,8 @@ const MOMENTS = () => MOMENTS_K.map(([k, e]) => [k, t(`moment.${k}.group`), t(`m
 const momentLabel = k => t(`moment.${(MOMENTS_K.find(m => m[0] === k) || MOMENTS_K[0])[0]}.short`);
 const PLACES = () => t("places");
 const COLORS = ["#2E8B57", "#E8484F", "#3D7BD9", "#F29E1F", "#8E5BD0", "#1FA5A0"];
+// Nom traduit d'une couleur de pot (DT00-24) ; une couleur hors liste garde son code
+const colorName = col => { const i = COLORS.indexOf(col), n = t("child.colorNames"); return i >= 0 && Array.isArray(n) && n[i] ? n[i] : col; };
 const EMO_R = [
   ["hygiene", ["🪥", "🧼", "🛁", "🚿", "🧴", "💇", "🚽", "🧻", "🤧", "✂️", "💅", "🦷"]],
   ["dressing", ["👕", "👖", "🧦", "👟", "🧥", "🧢", "🧤", "🩳", "👗", "🩴", "🥾", "🎽"]],
@@ -200,7 +202,7 @@ const isNetErr = e => /Failed to fetch|NetworkError|Load failed|fetch/i.test((e 
 
 /* ================= État ================= */
 const S = {
-  screen: "loading", tab: "today", day: todayISO(), authMode: "login",
+  screen: "loading", tab: "today", day: todayISO(), lastToday: todayISO(), authMode: "login",
   session: null, family: null, me: null, children: [], routines: [], rewards: [], completions: [], redemptions: [],
   stats: {}, members: [], devices: [], currentChild: null, tip: null, offline: false,
   penalties: [], pevents: [], badges: {}, autoValidate: true, pauses: [], gardens: {}, oneoffTpl: [],

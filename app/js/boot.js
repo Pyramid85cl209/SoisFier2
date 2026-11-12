@@ -6,7 +6,10 @@ document.addEventListener("visibilitychange", () => {
   if (document.visibilityState !== "visible") return;
   flushUnpair();
   if (S.screen === "child") { flushQueue().then(loadChild); }
-  else if (S.screen === "parent" && S.family) { if (S.day > todayISO()) S.day = todayISO(); refreshParent().then(render).catch(() => {}); }
+  else if (S.screen === "parent" && S.family) {
+    // DT15-01 : retour après minuit : on revient au jour en cours, sauf si l'adulte avait choisi un autre jour
+    const nt = todayISO(); if (S.lastToday && S.lastToday !== nt && S.day === S.lastToday) S.day = nt; S.lastToday = nt;
+    if (S.day > nt) S.day = nt; refreshParent().then(render).catch(() => {}); }
 });
 if (sb) sb.auth.onAuthStateChange((event, session) => {
   if (event === "PASSWORD_RECOVERY") {

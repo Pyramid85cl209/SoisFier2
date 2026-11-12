@@ -20,7 +20,7 @@ A.oneoffFrom = el => {
   openSheet(`<h2>${t("oneoff.for", { name: esc(c.name) })}</h2>
     <label class="f">${t("form.name")}<input id="x-title" maxlength="60" value="${esc(r.title)}" placeholder="${t("tpl.x.suitcase")}"></label>
     ${iconField("x-emoji", r.emoji, EMO_R)}
-    <div class="f"><span>${t("oneoff.when")}</span>${seg("when", [["le", t("oneoff.on")], ["avant", t("oneoff.before")]], "le")}<input id="x-date" type="date" min="${td}" value="${td}" style="margin-top:6px"></div>
+    <div class="f"><span>${t("oneoff.when")}</span>${seg("when", [["le", t("oneoff.on")], ["avant", t("oneoff.before")]], "le")}<input id="x-date" type="date" min="${td}" value="${td}" style="margin-top:6px" aria-label="${t("oneoff.dateAria")}"></div>
     <div class="f"><span>${t("oneoff.type")}</span>${seg("type", [["bonus", t("oneoff.bonus")], ["oblig", t("oneoff.mandatory")]], S.form.type)}<small class="muted" style="font-weight:400">${t("oneoff.typeHelp")}</small></div>
     <div class="f two"><label>${t("form.stars")}<select id="x-stars">${[1, 2, 3, 4, 5].map(n => `<option value="${n}" ${n === r.stars ? "selected" : ""}>${fmtNum(n)}</option>`).join("")}</select></label>
       <label>${t("form.moment")}<select id="x-moment">${MOMENTS().map(([k, , l]) => `<option value="${k}" ${k === r.moment ? "selected" : ""}>${l}</option>`).join("")}</select></label></div>
@@ -85,7 +85,7 @@ A.penaltyCatalog = el => {
   const have = new Set(S.penalties.map(p => p.title.toLowerCase()));
   const sugg = TPL_P.map((x, i) => ({ ...x, i })).filter(x => !have.has(x.t.toLowerCase()));
   openSheet(`<h2>${t("malus.catalog")}</h2><p class="muted">${t("malus.catalogHelp")}</p>
-    ${S.penalties.length ? `<ul class="hist">${S.penalties.map(p => `<li><span>${esc(p.emoji)} ${esc(p.title)}</span><span>${fmtNum(p.stars)} ⭐</span><button class="link" data-act="delPenalty" data-id="${p.id}">${t("btn.delete")}</button></li>`).join("")}</ul>` : ""}
+    ${S.penalties.length ? `<ul class="hist">${S.penalties.map(p => `<li><span>${esc(p.emoji)} ${esc(p.title)}</span><span>${fmtNum(p.stars)} ⭐</span><button class="link" data-act="delPenalty" data-id="${p.id}" aria-label="${t("a11y.delete", { name: p.title })}">${t("btn.delete")}</button></li>`).join("")}</ul>` : ""}
     ${sugg.length ? `<h3 class="grp">${t("common.suggestions")}</h3><ul class="tpl">${sugg.map(x => `<li><label><input type="checkbox" value="${x.i}"><span>${x.e} ${esc(x.t)} (${fmtNum(x.s)} ⭐)</span></label></li>`).join("")}</ul>` : ""}
     <h3 class="grp">${t("malus.createTitle")}</h3>
     <div class="f two"><label>${t("malus.reason")}<input id="np-title" maxlength="60"></label><label>${t("form.stars")}<select id="np-stars">${[1, 2, 3].map(n => `<option value="${n}">${fmtNum(n)}</option>`).join("")}</select></label></div>
@@ -149,17 +149,31 @@ A.addRoutineTpl = async () => {
 // Récompenses
 A.newReward = () => rewardForm(null);
 A.editReward = el => rewardForm(S.rewards.find(w => w.id === el.dataset.id));
+// DEC-47 : pas de récompense à prix calculé tant qu'aucun enfant concerné n'a de routine habituelle obligatoire
+function noRhythmSheet(ids) {
+  const c = S.children.find(k => ids.includes(k.id) && !hasRhythm(k.id)) || S.children.find(k => k.id === ids[0]);
+  openSheet(`<h2>${t("reward.noRhythmTitle")}</h2><p>${t("reward.noRhythm", { name: esc(c.name) })}</p>
+    <div class="sheet-actions"><button class="btn ghost" data-act="closeSheet">${t("btn.close")}</button><button class="btn" data-act="goRoutines" data-child="${c.id}">${t("reward.goRoutines")}</button></div>`);
+}
+A.goRoutines = el => { closeSheet(); S.tab = "routines"; S.currentChild = el.dataset.child; S.reviewing = null; render(); scrollTo(0, 0); };
 A.saveReward = async el => {
   const title = $("#w-title").value.trim(), fixed = $("#w-fixed").checked, days = parseInt($("#w-days").value, 10), cost = parseInt($("#w-cost").value, 10);
   if (!title) return toast(t("reward.needName"), true);
-  if (fixed && !(cost >= 1 && cost <= 5000)) return toast(t("reward.badPrice"), true);
+  if (fixed && !(cost >= 1 && cost <= PRICE_CAP)) return toast(t("reward.badPrice"), true);
   if (!fixed && !(days >= 1 && days <= 365)) return toast(t("reward.badDays"), true);
-  const who = $("#w-for").value || null, ids = who ? [who] : S.children.map(k => k.id);
-  const costs = fixed ? {} : pricesFor(days, ids);
-  const row = { title, emoji: $("#w-emoji").value.trim() || "🎁", tier: $("#w-tier").value, child_id: who, duration_days: fixed ? null : days, costs,
-    cost: fixed ? cost : (who ? costs[who] : roundPrice(days * 5)), event_date: $("#w-date").value || null, place: $("#w-place").value.trim() || null };
+  const who = $("#w-for").value || null, ids = who ? [who] : S.children.map(k => k.id), id = el.dataset.id, old = id ? S.rewards.find(w => w.id === id) : null, tier = $("#w-tier").value;
+  let costs = {}, base = cost;
+  if (!fixed) {
+    const res = pricesFor(days, ids, tier, id); if (!res) return noRhythmSheet(ids);   // DEC-47
+    costs = res.costs; base = who ? costs[who] : res.common;
+    // DT06-03 : à la modification, les prix ne sont recalculés que si la durée change ; ils restent figés sinon
+    if (old && old.duration_days === days && old.costs) ids.forEach(k => { if (old.costs[k] != null) costs[k] = +old.costs[k]; });
+    if (old && old.duration_days === days && who && old.costs && old.costs[who] != null) base = +old.costs[who];
+    else if (old && old.duration_days === days && !who) base = Math.min(...Object.values(costs));
+  }
+  const row = { title, emoji: $("#w-emoji").value.trim() || "🎁", tier, child_id: who, duration_days: fixed ? null : days, costs, cost: base,
+    event_date: $("#w-date").value || null, place: $("#w-place").value.trim() || null };
   if (!fixed) await markPriced(ids);
-  const id = el.dataset.id;
   const { error } = id ? await sb.from("rewards").update(row).eq("id", id) : await sb.from("rewards").insert({ ...row, family_id: S.family.id });
   if (error) throw error;
   closeSheet(); await reloadParent(id ? t("reward.saved") : t("reward.added"), ["w", "c"]);
@@ -170,9 +184,12 @@ A.delReward = async el => {
   await reloadParent(t("reward.deleted"), ["w"]);
 };
 A.rewardTemplates = () => {
-  const have = new Set(S.rewards.map(w => w.title.toLowerCase())), c = curChild();
-  openSheet(`<h2>${t("reward.tplTitle")}</h2><p class="muted">${t("reward.tplHelp", { name: esc(c.name), n: fmtNum(Math.round(rhythmOf(c.id) * 10) / 10) })}</p>
-    ${TIERS().filter(([k]) => k !== "event").map(([k, l, d]) => `<h3 class="tier-h">${l}<small>${d}</small></h3><ul class="tpl">${TPL_W.map((x, i) => ({ ...x, i })).filter(x => x.tier === k).map(x => { const had = have.has(x.t.toLowerCase()); return `<li><label class="${had ? "had" : ""}"><input type="checkbox" value="${x.i}" ${had ? "disabled" : ""}><span>${x.e} ${esc(x.t)} ${t("reward.tplPrice", { n: roundPrice(x.d * rhythmOf(c.id)), name: esc(c.name) })}${had ? t("sep") + t("common.alreadyAdded") : ""}</span></label></li>`; }).join("")}</ul>`).join("")}
+  const have = new Set(S.rewards.map(w => w.title.toLowerCase())), c = curChild(), ids = S.children.map(k => k.id);
+  if (!ids.some(hasRhythm)) return noRhythmSheet([c.id]);   // DEC-47 : message à la place de la liste
+  // prix relevé par paliers (R06-05, DT06-05) affiché : celui que l'on obtiendra ; sans rythme, prix commun (DEC-54)
+  const priceOf = x => { const r = pricesFor(x.d, ids, x.tier); return r ? (r.costs[c.id] ?? r.common) : 0; };
+  openSheet(`<h2>${t("reward.tplTitle")}</h2><p class="muted">${hasRhythm(c.id) ? t("reward.tplHelp", { name: esc(c.name), n: fmtNum(Math.round(rhythmOf(c.id) * 10) / 10) }) : t("reward.tplHelpNoRhythm", { name: esc(c.name) })}</p>
+    ${TIERS().filter(([k]) => k !== "event").map(([k, l, d]) => `<h3 class="tier-h">${l}<small>${d}</small></h3><ul class="tpl">${TPL_W.map((x, i) => ({ ...x, i })).filter(x => x.tier === k).map(x => { const had = have.has(x.t.toLowerCase()); return `<li><label class="${had ? "had" : ""}"><input type="checkbox" value="${x.i}" ${had ? "disabled" : ""}><span>${x.e} ${esc(x.t)} ${t("reward.tplPrice", { n: priceOf(x), name: esc(c.name) })}${had ? t("sep") + t("common.alreadyAdded") : ""}</span></label></li>`; }).join("")}</ul>`).join("")}
     <h3 class="tier-h">${t("tier.event.name")}<small>${t("tier.event.hint")}</small></h3><p class="muted">${t("reward.eventHelp")}</p>
     <div class="sheet-actions"><button class="btn ghost" data-act="newEvent">${t("reward.createEvent")}</button><button class="btn" data-act="addRewardTpl">${t("common.addSelection")}</button></div>`);
 };
@@ -181,13 +198,12 @@ A.addRewardTpl = async () => {
   const picks = $$(".tpl input:checked", dlg).map(i => TPL_W[+i.value]).sort((a, b) => TIER_RANK[a.tier] - TIER_RANK[b.tier] || a.d - b.d);
   if (!picks.length) return toast(t("reward.needOne"), true);
   const ids = S.children.map(k => k.id);
-  // Les niveaux restent dans l'ordre : un niveau supérieur ne peut pas coûter autant qu'un niveau inférieur
-  const maxBelow = {}; ids.forEach(id => maxBelow[id] = {});
-  S.rewards.filter(w => w.duration_days).forEach(w => ids.forEach(id => { const r = TIER_RANK[w.tier || "moment"], v = costFor(w, id); maxBelow[id][r] = Math.max(maxBelow[id][r] || 0, v); }));
-  const rows = picks.map(x => { const costs = pricesFor(x.d, ids);
-    ids.forEach(id => { const r = TIER_RANK[x.tier]; const lower = Math.max(0, ...Object.entries(maxBelow[id]).filter(([k]) => +k < r).map(([, v]) => v));
-      while (costs[id] <= lower) costs[id] += stepOf(costs[id]); maxBelow[id][r] = Math.max(maxBelow[id][r] || 0, costs[id]); });
-    return { family_id: S.family.id, title: x.t, emoji: x.e, tier: x.tier, duration_days: x.d, costs, cost: roundPrice(x.d * 5) }; });
+  if (!ids.some(hasRhythm)) return noRhythmSheet(ids);
+  // Les niveaux restent dans l'ordre, y compris entre les récompenses ajoutées ensemble
+  const extra = {}; ids.forEach(id => extra[id] = []);
+  const rows = picks.map(x => { const res = pricesFor(x.d, ids, x.tier, null, extra);
+    Object.entries(res.costs).forEach(([id, v]) => extra[id].push({ tier: x.tier, cost: v }));
+    return { family_id: S.family.id, title: x.t, emoji: x.e, tier: x.tier, duration_days: x.d, costs: res.costs, cost: res.common }; });
   const { error } = await sb.from("rewards").insert(rows); if (error) throw error;
   await markPriced(ids); closeSheet(); await reloadParent(t("reward.addedN", { n: rows.length }), ["w", "c"]);
 };
@@ -210,7 +226,7 @@ A.cancelRedeem = async el => {
 // Enfants
 A.newChild = () => { if (S.children.length >= 1 && needPremium("children")) return; childForm(null); };
 A.editChild = el => childForm(S.children.find(c => c.id === el.dataset.id));
-A.pickColor = el => { S.form.color = el.dataset.v; $$(".sw", dlg).forEach(b => b.classList.toggle("on", b === el)); };
+A.pickColor = el => { S.form.color = el.dataset.v; $$(".sw", dlg).forEach(b => { b.classList.toggle("on", b === el); b.setAttribute("aria-pressed", String(b === el)); }); };
 A.saveChild = async el => {
   const name = $("#k-name").value.trim(); if (!name) return toast(t("child.needName"), true);
   const row = { name, emoji: $("#k-emoji").value.trim() || "🧒", color: S.form.color };
@@ -228,7 +244,7 @@ A.saveChild = async el => {
 };
 A.delChild = async el => {
   const c = S.children.find(k => k.id === el.dataset.id);
-  if (!await confirmSheet(t("child.delTitle", { name: c.name }), t("child.delText"), t("btn.delete"), true)) return;
+  if (!await confirmSheet(t("child.delTitle", { name: c.name }), (nR => nR ? t("child.delTextRewards", { n: nR }) : t("child.delText"))(S.rewards.filter(w => w.child_id === c.id).length), t("btn.delete"), true)) return;   // DT03-06 : les récompenses réservées partent avec l'enfant
   await mutate(() => sb.from("children").delete().eq("id", c.id));
   const other = x => x.child_id !== c.id;
   S.children = S.children.filter(k => k.id !== c.id);
@@ -305,6 +321,9 @@ A.exitChild = async () => {
     if (v === null) return; if (+v !== a * b) return toast(t("pin.wrongAnswer"), true);
   }
   await flushQueue();
+  // DT03-04 : coches pas encore envoyées (hors ligne) : avertissement, la sortie peut être annulée
+  const pending = (store.get("queue", []) || []).length;
+  if (pending && !await confirmSheet(t("kid.exitOfflineTitle"), t("kid.exitOfflineText", { n: pending }), t("kid.exitAnyway"), true)) return;
   if (store.get("cpushOn")) {
     try { const reg = await navigator.serviceWorker.ready; const sub = await reg.pushManager.getSubscription();
       if (sub) { await sb.rpc("push_unsubscribe", { p_endpoint: sub.endpoint }); await sub.unsubscribe(); } } catch {}

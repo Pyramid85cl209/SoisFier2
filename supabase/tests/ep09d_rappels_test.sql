@@ -1,9 +1,10 @@
 -- Test de la migration ep09d (thème D d'EP-09 : rappels) : à lancer AVANT de l'appliquer, dans l'éditeur SQL de Supabase. Transaction annulée : famille, enfants, abonnements fictifs, rien n'est conservé.
 -- Suppose la migration ep09a_controles_serveur appliquée (ou lancée avant dans la même transaction). Un test ne dépend que de l'heure du jour : il est à relancer, pas à comparer à une heure précise (le cas se place dans le quart d'heure courant de la famille).
--- Contenu : migration 20261112130000 puis les cas D1 à D11.
+-- Contenu : migration 20261112130000 puis les cas D1 à D13. Ne pas lancer entre 23:59 et 00:01 (heure de la famille de test, Pacific/Auckland).
 -- Résultat attendu : une seule ligne d'erreur « RESULT: … » contenant, dans l'ordre :
 --  D1.defaut_base={07:30,18:00} D2.secret_faux=SF:access_denied D3.adulte_enfants=Enfant A:1/2,Enfant C:1/2 (Enfant B en pause : absent) D4.enfant_A_reste=1 D5.enfant_B_pause_reste=null
 --  D6.enfant_C_reste=1 D7.adulte_apres_O1=Enfant A:1/2,Enfant C:2/2 D8.enfant_C_tout_fait=0 D9.arretee_ignoree_B_revient=Enfant A:1/2,Enfant B:0/1,Enfant C:1/1 D10.enfant_B_hors_pause=1 D11.non_membre=0
+--  D12.soir_1830=e-x1:07:30/18:00,e-x2:08:00/19:00,e-x3:18:00/18:00 (requête de données DEC-59) D13.langue_defaut=en
 -- Lancé jusqu'ici sur une réplique locale du schéma (PostgreSQL 16), après A1 seule puis après A1, B, C1 et C2 (mêmes résultats), pas sur la base de production.
 begin;
 -- EP-09 thème D : rappels (DT11-01, DT11-03, DT11-08). Additions seulement : compatible avec l'ancienne version de l'application
@@ -13,10 +14,14 @@ begin;
 -- DT11-01  un enfant en pause ce jour-là ne reçoit rien et n'est plus cité dans le résumé des adultes (R11-03 CA5, R11-04 CA2)
 -- DT11-03  les exceptionnelles obligatoires sont comptées comme à l'écran (DEC-32, R05-07 CA3) : l'une compte le jour où elle est faite,
 --          sinon son dernier jour ; une exceptionnelle arrêtée est ignorée
--- DT11-08  heure du soir par défaut 18:00 en base (les abonnements existants ne changent pas)
+-- DT11-08, DEC-59  heure du soir par défaut 18:00 en base ; les abonnements dont le soir est à 18:30 passent à 18:00
 -- DT11-07  inchangé : les adultes ne reçoivent que s'ils sont membres actuels de la famille
 
 alter table public.push_subscriptions alter column reminder_times set default '{07:30,18:00}';
+-- DEC-36 : sans langue connue, anglais (le défaut était 'fr') ; les abonnements existants ne changent pas
+alter table public.push_subscriptions alter column locale set default 'en';
+-- DEC-59 : tous les abonnements dont le soir est à 18:30 passent à 18:00 (adultes et téléphones d'enfants) ; les autres heures ne changent pas
+update public.push_subscriptions set reminder_times = array_replace(reminder_times, '18:30', '18:00') where '18:30' = any(reminder_times);
 
 create or replace function public.reminders_due(p_secret text)
 returns json
@@ -144,5 +149,10 @@ begin
   insert into public.push_subscriptions(family_id, user_id, endpoint, p256dh, auth, reminder_times) values (fid, u_old, 'e-old', 'k', 'a', array[hm]);
   j := public.reminders_due(sec);
   res := res || ' D11.non_membre=' || (select count(*) from json_array_elements(j -> 'items') i where i ->> 'endpoint' = 'e-old');
+  insert into public.push_subscriptions(family_id, user_id, endpoint, p256dh, auth, reminder_times) values (fid, u_par, 'e-x1', 'k', 'a', '{07:30,18:30}'), (fid, u_par, 'e-x2', 'k', 'a', '{08:00,19:00}'), (fid, u_par, 'e-x3', 'k', 'a', '{18:30,18:30}');
+  update public.push_subscriptions set reminder_times = array_replace(reminder_times, '18:30', '18:00') where '18:30' = any(reminder_times);   -- requête de données de la migration
+  res := res || ' D12.soir_1830=' || (select string_agg(endpoint || ':' || array_to_string(reminder_times, '/'), ',' order by endpoint) from public.push_subscriptions where endpoint like 'e-x%');
+  insert into public.push_subscriptions(family_id, user_id, endpoint, p256dh, auth) values (fid, u_par, 'e-sans-langue', 'k', 'a');
+  res := res || ' D13.langue_defaut=' || (select locale from public.push_subscriptions where endpoint = 'e-sans-langue');
   raise exception 'RESULT:%', res;
 end $t$;

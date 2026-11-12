@@ -45,7 +45,7 @@ function cToday(v, routines) {
       ${v.pendingStars ? `<p class="wait-note">⏳ ${t("kid.pendingStars", { n: v.pendingStars })}</p>` : ""}</div></section>
     ${pz ? `<div class="kid-pause"><p><span aria-hidden="true">⏸️</span> ${t("kid.pauseDay")}${folded ? bell() : ""}</p>${folded && due.length ? `<button class="btn ghost" data-act="cAnyway">${t("kid.anyway")}</button>` : ""}</div>`
       : hp ? `<p class="center"><span class="pill hol-pill">🏖️ ${esc(hp.name)}</span></p>` : ""}
-    ${folded ? "" : `<p class="today-count"><span>${ring.length ? (nd === ring.length ? t("kid.allDone") : t("kid.doneOf", { n: nd, total: ring.length })) : t("kid.noRoutine")}</span>${bell()}</p>
+    ${folded ? "" : `<p class="today-count"><span>${ring.length ? (nd === ring.length ? t("kid.allDone") : t("kid.doneOf", { n: nd, total: ring.length })) : due.length ? (main.length ? "" : t("kid.onlyBonus")) : t("kid.noRoutine")}</span>${bell()}</p>
     ${groups}${bonus.filter(r => !isOneoff(r)).length ? `<h3 class="grp">💪 ${t("kid.bonus")}</h3><ul class="kcards">${bonus.filter(r => !isOneoff(r)).map(card).join("")}</ul>` : ""}`}`;
 }
 function cGifts(v, routines, cs) {

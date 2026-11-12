@@ -1,13 +1,13 @@
 :root{
-  --sky:#E3F1FB; --paper:#FFFFFF; --leaf:#2E8B57; --leaf-d:#1F6B41; --leaf-l:#DDF2E5;
-  --sun:#FFC233; --sun-l:#FFF1C9; --earth:#4A2E1F; --muted:#7A6A5F; --poppy:#E8484F;
+  --sky:#E3F1FB; --paper:#FFFFFF; --leaf:#237A49; --leaf-d:#1F6B41; --leaf-l:#DDF2E5;
+  --sun:#FFC233; --sun-l:#FFF1C9; --earth:#4A2E1F; --muted:#6B5C52; --poppy:#C8323A; --off-text:#6E625B;
   --line:#CFE2EF; --lift:0 2px 0 rgba(74,46,31,.10);
   --display:"Fredoka", ui-rounded, "Segoe UI", system-ui, sans-serif;
   --body:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 @media (prefers-color-scheme: dark){
   :root{ --sky:#0F2219; --paper:#18322A; --leaf:#5CC48A; --leaf-d:#3FA36D; --leaf-l:#1E4535;
-    --sun:#FFCB4D; --sun-l:#3A3318; --earth:#F1ECE4; --muted:#A9B8AF; --poppy:#FF6B70; --line:#24463A; --lift:none; }
+    --sun:#FFCB4D; --sun-l:#3A3318; --earth:#F1ECE4; --muted:#A9B8AF; --poppy:#FF6B70; --off-text:#A9B8AF; --line:#24463A; --lift:none; }
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
@@ -185,7 +185,7 @@ dialog#sheet::backdrop{background:rgba(20,30,25,.45)}
 /* ===== Mode enfant ===== */
 .kid-top .hello{font-family:var(--display);font-weight:600;font-size:1.2rem}
 .star-count{margin-inline-start:auto;font-family:var(--display);font-weight:600;font-size:1.25rem;background:var(--sun-l);padding:4px 14px;border-radius:999px}
-.lock{width:40px;height:40px;border-radius:50%;border:0;background:var(--paper);opacity:.7}
+.lock{width:44px;height:44px;border-radius:50%;border:0;background:var(--paper);opacity:.7}
 .hero{display:flex;align-items:center;gap:14px;background:var(--paper);border-radius:28px;padding:12px 16px;margin-bottom:12px;box-shadow:var(--lift)}
 .hero-plant svg{width:120px;height:auto;display:block}
 .hero-txt{flex:1}
@@ -220,7 +220,8 @@ dialog#sheet::backdrop{background:rgba(20,30,25,.45)}
 .badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
 .badge{background:var(--paper);border-radius:18px;padding:12px 6px;text-align:center;box-shadow:var(--lift);font-size:.82rem;line-height:1.25}
 .badge .be{font-size:2rem;display:block;margin-bottom:4px}
-.badge.off{opacity:.45;filter:grayscale(1)}
+.badge.off{color:var(--off-text)}   /* DT00-23 : l'opacité ne porte que sur l'image, le texte reste lisible */
+.badge.off .be{opacity:.45;filter:grayscale(1)}
 .badge .bdate{display:block;color:var(--muted);font-size:.72rem;margin-top:3px}
 .bprog{display:block;height:6px;border-radius:999px;background:var(--line);margin:6px 8px 0;overflow:hidden}
 .bprog i{display:block;height:100%;background:var(--leaf)}
@@ -376,7 +377,7 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
 /* Enfant : icône des rappels en bout de ligne (v28) */
 .today-count{display:flex;align-items:center;gap:8px}
 .today-count>span{flex:1}
-.bell{flex:none;width:40px;height:40px;border-radius:50%;border:0;background:var(--paper);box-shadow:var(--lift);font-size:1.15rem;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.bell{flex:none;width:44px;height:44px;border-radius:50%;border:0;background:var(--paper);box-shadow:var(--lift);font-size:1.15rem;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
 .kid-pause p .bell{margin-inline-start:8px;vertical-align:middle}
 .print-row{justify-content:flex-end;margin-top:0}
 .krow.kid-row{flex-wrap:wrap}
@@ -392,3 +393,8 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
 .hist li .grow small{color:var(--muted);font-size:.85rem}
 .hist li.h-earn .num{color:var(--leaf-d);font-weight:700}
 .hist li>svg{flex:none}
+
+/* DT00-24 : cibles d'au moins 44 px côté enfant */
+.kid-top .lang-btn{width:44px;height:44px}
+.k-timer{min-height:44px}
+[hidden]{display:none!important}

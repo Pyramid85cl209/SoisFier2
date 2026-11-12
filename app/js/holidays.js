@@ -57,7 +57,9 @@ A.holReview = el => {
   const habit = S.routines.filter(r => r.child_id === c.id && !isOneoff(r) && !isHolidayR(r)).sort((a, b) => MOMENTS_K.findIndex(m => m[0] === a.moment) - MOMENTS_K.findIndex(m => m[0] === b.moment));
   const vac = S.routines.filter(r => r.holiday_period_id === p.id);
   const sibs = (S.holidays || []).filter(x => x.child_id !== c.id && S.routines.some(r => r.holiday_period_id === x.id));
-  const setting = r => { const o = p.ov[r.id]; if (!o) return t("hol.same");
+  const setting = r => { const o0 = p.ov[r.id]; if (!o0) return t("hol.same");
+    const o = o0.status === (r.is_bonus ? "bonus" : "required") ? { ...o0, status: null } : o0;   // DT10-10 : un statut identique à l'habituel est « Comme d'habitude »
+    if (!o.status && !o.days && !o.stars) return t("hol.same");
     if (o.status === "off") return "⏸️ " + t("hol.off");
     const parts = [o.status ? t(o.status === "bonus" ? "routine.bonus" : "routine.mandatory") : null, o.days ? daysLabel(o.days) : null, o.stars ? t("hol.starsN", { n: o.stars }) : null].filter(Boolean);
     return "✏️ " + parts.join(t("sep")); };
@@ -90,7 +92,7 @@ A.holSave = async () => {
   const f = S.form, p = S.holidays.find(x => x.id === f.p), r = S.routines.find(x => x.id === f.r);
   if (!f.days.length) return toast(t("routine.needDay"), true);
   const days = [...f.days].sort((a, b) => a - b), stars = +$("#h-stars").value;
-  const row = { period_id: p.id, routine_id: r.id, child_id: r.child_id, family_id: S.family.id, status: f.st || null,
+  const row = { period_id: p.id, routine_id: r.id, child_id: r.child_id, family_id: S.family.id, status: f.st && f.st !== (r.is_bonus ? "bonus" : "required") ? f.st : null,   // DT10-10 : le statut habituel est « Comme d'habitude »
     days: days.join() === [...r.days].sort((a, b) => a - b).join() ? null : days, stars: stars === r.stars ? null : stars };
   await holWrite(p, r, (row.status || row.days || row.stars) ? row : null);
 };
@@ -143,10 +145,34 @@ A.holSibCopy = async el => {
   const { data: n, error } = await sb.rpc("holiday_copy", { p_from: el.dataset.from, p_to: el.dataset.id }); if (error) throw error;
   await refreshParts(["r"]); A.holReview(el); render(); toast(t("hol.copied", { n: n || 0 }));
 };
+// Recalcul des prix d'un enfant à son rythme actuel (F06-05) : les niveaux restent dans l'ordre (DT06-05), les prix fixes ne changent pas
 A.repriceChild = async () => {
-  const c = curChild(), r = rhythmOf(c.id), ws = S.rewards.filter(w => w.duration_days && (!w.child_id || w.child_id === c.id) && w.costs && w.costs[c.id] != null);
-  for (const w of ws) { const costs = { ...w.costs, [c.id]: roundPrice(w.duration_days * r) }; const { error } = await sb.from("rewards").update({ costs, ...(w.child_id ? { cost: costs[c.id] } : {}) }).eq("id", w.id); if (error) throw error; }
-  const { error } = await sb.from("children").update({ price_rhythm: r }).eq("id", c.id); if (error) throw error;
+  const c = curChild(); if (!hasRhythm(c.id)) return;
+  await repriceRewards(c.id, S.rewards.filter(w => w.duration_days && (!w.child_id || w.child_id === c.id) && w.costs && w.costs[c.id] != null));
   await reloadParent(t("reward.repriced", { name: c.name }), ["w", "c"]);
 };
-async function markPriced(ids) { for (const id of ids) { const c = S.children.find(k => k.id === id); if (c && !c.price_rhythm) await sb.from("children").update({ price_rhythm: rhythmOf(id) }).eq("id", id); } }
+async function repriceRewards(childId, ws) {
+  const r = rhythmOf(childId), done = [];
+  for (const w of [...ws].sort((a, b) => TIER_RANK[a.tier || "moment"] - TIER_RANK[b.tier || "moment"] || a.duration_days - b.duration_days)) {
+    const v = lifted(roundPrice(w.duration_days * r), w.tier, done); done.push({ tier: w.tier, cost: v });
+    const costs = { ...w.costs, [childId]: v }, base = w.child_id ? v : Math.min(...Object.values(costs).map(Number));
+    const { error } = await sb.from("rewards").update({ costs, cost: base }).eq("id", w.id); if (error) throw error;
+  }
+  const { error } = await sb.from("children").update({ price_rhythm: r }).eq("id", childId); if (error) throw error;
+}
+// DEC-51 : un enfant sans rythme qui reçoit sa première routine obligatoire voit ses prix recalculés à son rythme (récompenses communes sans prix à lui)
+let pricing = false;
+async function priceNewcomers() {
+  if (pricing || !isParent() || !S.rewards || !S.routines) return; pricing = true;
+  try {
+    let changed = false;
+    for (const c of S.children) {
+      if (!hasRhythm(c.id)) continue;
+      const ws = S.rewards.filter(w => w.duration_days && !w.child_id && (!w.costs || w.costs[c.id] == null));
+      if (!ws.length) continue;
+      await repriceRewards(c.id, [...S.rewards.filter(w => w.duration_days && (!w.child_id || w.child_id === c.id) && w.costs && w.costs[c.id] != null), ...ws.map(w => ({ ...w, costs: { ...(w.costs || {}), [c.id]: 0 } }))]); changed = true;
+    }
+    if (changed) { await refreshParts(["w", "c"]); render(); }
+  } catch {} finally { pricing = false; }
+}
+async function markPriced(ids) { for (const id of ids) { const c = S.children.find(k => k.id === id); if (c && !c.price_rhythm && hasRhythm(id)) await sb.from("children").update({ price_rhythm: rhythmOf(id) }).eq("id", id); } }

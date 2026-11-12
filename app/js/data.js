@@ -16,13 +16,13 @@ const PQ = {
   rs: f => sb.from("routine_settings").select("routine_id,valid_from,days,is_bonus,stars").eq("family_id", f).order("valid_from"),   // réglages historisés (EP-09, ADR-42)
   w: f => sb.from("rewards").select("*").eq("family_id", f).eq("active", true).order("cost"),
   x: f => sb.from("completions").select("child_id,routine_id,day,stars,source,validated_at,validated_by,created_by").eq("family_id", f).gte("day", addDays(todayISO(), -62)),
-  z: f => sb.from("redemptions").select("*").eq("family_id", f).order("created_at", { ascending: false }).limit(100),
+  z: f => sb.from("redemptions").select("*").eq("family_id", f).gte("created_at", addDays(todayISO(), -30)).order("created_at", { ascending: false }),   // DT07-02 : 30 jours, pas un nombre de lignes
   s: f => sb.from("child_stats").select("*").eq("family_id", f),
   m: f => sb.from("family_members").select("user_id,display_name,relation,relation_key,role").eq("family_id", f),
   d: f => sb.from("child_devices").select("id,child_id,created_at,last_seen,label").eq("family_id", f).order("created_at"),
   f: f => sb.from("families").select("name,auto_validate,week_start,weekend_days,timezone,plan").eq("id", f),
   pe: f => sb.from("penalties").select("*").eq("family_id", f).eq("active", true).order("stars").order("created_at"),
-  pv: f => sb.from("penalty_events").select("*").eq("family_id", f).order("created_at", { ascending: false }).limit(500),
+  pv: f => sb.from("penalty_events").select("*").eq("family_id", f).gte("created_at", addDays(todayISO(), -30)).order("created_at", { ascending: false }),
   b: f => sb.from("child_badges").select("child_id,badge_key").eq("family_id", f),
   pz: f => sb.from("pauses").select("*").eq("family_id", f).gte("end_day", todayISO()).order("start_day"),
   g: f => sb.rpc("family_gardens", { p_family: f }),
@@ -157,7 +157,7 @@ async function enterParent() {
   }
   render();
 }
-async function reloadParent(msg, parts) { if (parts) await refreshParts(parts); else await refreshParent(); render(); if (msg) toast(msg); }
+async function reloadParent(msg, parts) { if (parts) await refreshParts(parts); else await refreshParent(); render(); if (msg) toast(msg); if (!parts || parts.includes("r")) priceNewcomers(); }
 
 /* ================= Données enfant ================= */
 async function loadChild() {

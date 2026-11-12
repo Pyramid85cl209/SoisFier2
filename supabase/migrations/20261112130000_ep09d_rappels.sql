@@ -5,10 +5,14 @@
 -- DT11-01  un enfant en pause ce jour-là ne reçoit rien et n'est plus cité dans le résumé des adultes (R11-03 CA5, R11-04 CA2)
 -- DT11-03  les exceptionnelles obligatoires sont comptées comme à l'écran (DEC-32, R05-07 CA3) : l'une compte le jour où elle est faite,
 --          sinon son dernier jour ; une exceptionnelle arrêtée est ignorée
--- DT11-08  heure du soir par défaut 18:00 en base (les abonnements existants ne changent pas)
+-- DT11-08, DEC-59  heure du soir par défaut 18:00 en base ; les abonnements dont le soir est à 18:30 passent à 18:00
 -- DT11-07  inchangé : les adultes ne reçoivent que s'ils sont membres actuels de la famille
 
 alter table public.push_subscriptions alter column reminder_times set default '{07:30,18:00}';
+-- DEC-36 : sans langue connue, anglais (le défaut était 'fr') ; les abonnements existants ne changent pas
+alter table public.push_subscriptions alter column locale set default 'en';
+-- DEC-59 : tous les abonnements dont le soir est à 18:30 passent à 18:00 (adultes et téléphones d'enfants) ; les autres heures ne changent pas
+update public.push_subscriptions set reminder_times = array_replace(reminder_times, '18:30', '18:00') where '18:30' = any(reminder_times);
 
 create or replace function public.reminders_due(p_secret text)
 returns json

@@ -200,7 +200,8 @@
   "tplHelp": "Partagés par toute la famille. Classés du plus utilisé au moins utilisé.",
   "times": "{n} fois",
   "noTpl": "Aucun modèle. Cochez « Garder comme modèle » en créant une routine exceptionnelle.",
-  "tplDeleted": "Modèle supprimé."
+  "tplDeleted": "Modèle supprimé.",
+  "dateAria": "Date de l'exceptionnelle"
  },
  "tpl": {
   "x": {
@@ -490,8 +491,8 @@
   "autoValidated": "validée automatiquement",
   "relation": "Lien avec les enfants",
   "otherRel": "Autre…",
-  "customLabel": "Libellé personnalisé (facultatif)",
-  "customPlaceholder": "Mamie Josette, Tonton Karim…",
+  "customLabel": "Le lien, en toutes lettres",
+  "customPlaceholder": "Grand-mère, Marraine, Voisin…",
   "rights": "Droits",
   "makeCode": "Créer le code",
   "inviteWho": "Inviter {who}",
@@ -538,7 +539,19 @@
   "needName": "Saisissez un prénom.",
   "joined": "{name} a rejoint la famille.",
   "delTitle": "Supprimer {name} ?",
-  "delText": "Ses routines, ses étoiles et son historique seront effacés définitivement."
+  "delText": "Ses routines, ses étoiles et son historique seront effacés définitivement.",
+  "colorNames": [
+   "Vert",
+   "Rouge",
+   "Bleu",
+   "Orange",
+   "Violet",
+   "Turquoise"
+  ],
+  "delTextRewards": {
+   "one": "Ses routines, ses étoiles, son historique et la récompense qui lui est réservée seront effacés définitivement.",
+   "other": "Ses routines, ses étoiles, son historique et les {n} récompenses qui lui sont réservées seront effacés définitivement."
+  }
  },
  "routine": {
   "bonus": "bonus",
@@ -577,15 +590,15 @@
   "timer": "défi chrono réussi",
   "checkedBy": "cochée par {who}",
   "refuse": "Refuser",
-  "autoOn": "Sans action de votre part, elles seront validées automatiquement à minuit.",
+  "autoOn": "Sans action de votre part, elles seront validées automatiquement après minuit.",
   "autoOff": "Validation automatique désactivée : elles attendent votre décision.",
   "section": "Validation des routines",
   "sectionHelp": "Quand votre enfant coche une routine, ses étoiles attendent votre validation. Celles que vous cochez vous-même sont validées directement.",
-  "autoLabel": "Valider automatiquement à minuit ce qui n'a pas été refusé",
+  "autoLabel": "Valider automatiquement après minuit ce qui n'a pas été refusé",
   "done": "Routine validée.",
   "refused": "Refusée : la routine est à refaire, sans pénalité.",
   "allDone": "Tout est validé.",
-  "autoEnabled": "Validation automatique à minuit activée.",
+  "autoEnabled": "Validation automatique après minuit activée.",
   "manualOnly": "Validation manuelle uniquement."
  },
  "reward": {
@@ -643,7 +656,14 @@
   "cancelTitle": "Annuler cet échange ?",
   "cancelBtn": "Annuler l'échange",
   "cancelled": "Échange annulé, étoiles rendues.",
-  "seeHistory": "Voir l'historique"
+  "seeHistory": "Voir l'historique",
+  "noRhythmTitle": "Pas encore de routine",
+  "noRhythm": "Ajoutez d'abord une routine obligatoire à {name} : le prix des récompenses se calcule sur ses routines.",
+  "goRoutines": "Aller aux routines",
+  "tplHelpNoRhythm": "{name} n'a pas encore de routine obligatoire : ses prix sont les plus petits des prix des autres enfants, puis se calculeront sur ses routines.",
+  "rhythmNone": "Pas de rythme : aucune routine obligatoire",
+  "noRhythmShort": "Pas de prix calculé : ajoutez d'abord une routine obligatoire, ou cochez « Prix fixe ».",
+  "capped": "Prix limité à {n} ⭐."
  },
  "role": {
   "parent": "Parent",
@@ -909,7 +929,14 @@
   "reminders": "Mes rappels",
   "remindersHelp": "Choisis à quelle heure ton téléphone te rappelle tes routines.",
   "remindersAsk": "Veux-tu que ton téléphone te rappelle tes routines ?",
-  "later": "Plus tard"
+  "later": "Plus tard",
+  "onlyBonus": "Que des défis bonus aujourd'hui !",
+  "exitOfflineTitle": "Pas de connexion",
+  "exitOfflineText": {
+   "one": "Une coche n'a pas encore été envoyée : sans internet, elle sera perdue si vous sortez maintenant. Revenez quand le téléphone est connecté, ou sortez quand même.",
+   "other": "{n} coches n'ont pas encore été envoyées : sans internet, elles seront perdues si vous sortez maintenant. Revenez quand le téléphone est connecté, ou sortez quand même."
+  },
+  "exitAnyway": "Sortir quand même"
  },
  "form": {
   "icon": "Icône",
@@ -1149,7 +1176,8 @@
   "not_your_name": "Chacun ne modifie que son propre nom d'utilisateur.",
   "holiday_past": "Ces vacances sont déjà terminées.",
   "pause_overlap": "Cette pause chevauche une autre pause de cet enfant.",
-  "pause_closed": "Cette pause touche une quinzaine déjà terminée (fleur éclose)."
+  "pause_closed": "Cette pause touche une quinzaine déjà terminée (fleur éclose).",
+  "price_cap": "Le prix ne peut pas dépasser 5000 étoiles."
  },
  "hist": {
   "validated": {
@@ -1162,5 +1190,12 @@
   },
   "none": "Rien sur les 30 derniers jours.",
   "netAria": "Bilan du jour : {n} étoiles"
+ },
+ "a11y": {
+  "edit": "Modifier {name}",
+  "delete": "Supprimer {name}",
+  "cancel": "Annuler : {name}",
+  "childHere": "Mode enfant ici pour {name}",
+  "connectDevice": "Connecter l'appareil de {name}"
  }
 }

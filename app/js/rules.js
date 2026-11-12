@@ -192,16 +192,35 @@ const TPL_W = [
   L("tpl.w.toy", { e: "🚲", tier: "grand", d: 90 }), L("tpl.w.themePark", { e: "🎢", tier: "grand", d: 90 }), L("tpl.w.myDay", { e: "👑", tier: "grand", d: 90 })
 ];
 const TIER_RANK = { coup: 0, petit: 1, moment: 2, sortie: 3, grand: 4, event: 3 };
+// Rythme (R06-02, DEC-47) : étoiles des routines habituelles obligatoires sur une semaine ÷ 7 × 0,75 ; 0 = pas de rythme (aucune routine habituelle obligatoire, plus de valeur de secours)
 function rhythmOf(childId) {
-  const rs = S.routines.filter(r => r.child_id === childId && !r.is_bonus && !isHolidayR(r)); let tot = 0;
+  const rs = S.routines.filter(r => r.child_id === childId && !isOneoff(r) && !r.is_bonus && !isHolidayR(r)); let tot = 0;
   for (let d = 1; d <= 7; d++) tot += rs.filter(r => (r.days || []).includes(d)).reduce((a, r) => a + r.stars, 0);
-  const v = tot / 7 * .75; return v > 0 ? v : 5;
+  return tot / 7 * .75;
 }
-function roundPrice(x) { if (x < 20) return Math.max(1, Math.round(x)); if (x < 100) return Math.round(x / 5) * 5; if (x < 500) return Math.round(x / 10) * 10; return Math.round(x / 50) * 50; }
+const hasRhythm = childId => rhythmOf(childId) > 0;
+const PRICE_CAP = 5000;   // DT06-06
+function roundPrice(x) { const v = x < 20 ? Math.max(1, Math.round(x)) : x < 100 ? Math.round(x / 5) * 5 : x < 500 ? Math.round(x / 10) * 10 : Math.round(x / 50) * 50; return Math.min(PRICE_CAP, v); }
 const stepOf = p => p < 20 ? 1 : p < 100 ? 5 : p < 500 ? 10 : 50;
 const costFor = (w, childId) => (w.costs && w.costs[childId] != null) ? +w.costs[childId] : w.cost;
-const daysLabelFor = (cost, childId) => { const d = Math.max(1, Math.round(cost / rhythmOf(childId))); return d < 14 ? t("effort.days", { n: d }) : d < 60 ? t("effort.weeks", { n: Math.round(d / 7) }) : t("effort.months", { n: Math.round(d / 30) }); };
-function pricesFor(days, childIds) { const o = {}; childIds.forEach(id => o[id] = roundPrice(days * rhythmOf(id))); return o; }
+// Durée d'effort affichée : au rythme actuel, à défaut au dernier rythme ayant servi aux prix (prix gardés, DEC-52)
+const daysLabelFor = (cost, childId) => { const c = S.children.find(k => k.id === childId), r = rhythmOf(childId) || (c && c.price_rhythm) || 0; if (!r) return "—";
+  const d = Math.max(1, Math.round(cost / r)); return d < 14 ? t("effort.days", { n: d }) : d < 60 ? t("effort.weeks", { n: Math.round(d / 7) }) : t("effort.months", { n: Math.round(d / 30) }); };
+// Niveaux dans l'ordre (R06-05, DT06-05) : prix relevé par paliers au-dessus du plus cher des niveaux inférieurs (prix calculés du même enfant, hors récompense `exceptId`) ; `extra` : autres prix déjà prévus
+function lifted(raw, tier, others) {
+  const r = TIER_RANK[tier || "moment"]; let lower = 0;
+  for (const o of others) if (TIER_RANK[o.tier || "moment"] < r) lower = Math.max(lower, o.cost);
+  let c = raw; while (c <= lower && c < PRICE_CAP) c += stepOf(c);
+  return Math.min(PRICE_CAP, c);
+}
+const othersOf = (childId, exceptId) => S.rewards.filter(w => w.id !== exceptId && w.duration_days && (!w.child_id || w.child_id === childId) && w.costs && w.costs[childId] != null)
+  .map(w => ({ tier: w.tier, cost: +w.costs[childId] }));
+// Prix calculés d'une récompense de `days` jours pour les enfants `childIds` : { costs, common } ; `common` = le plus petit prix (DEC-54), pour un enfant sans rythme ;
+// null si aucun de ces enfants n'a de rythme (DEC-47) ; `extra` : { enfant: [{ tier, cost }] } prix déjà prévus pour d'autres récompenses de la même sélection
+function pricesFor(days, childIds, tier, exceptId, extra) {
+  const costs = {}; childIds.filter(hasRhythm).forEach(id => { costs[id] = lifted(roundPrice(days * rhythmOf(id)), tier, othersOf(id, exceptId).concat((extra && extra[id]) || [])); });
+  const v = Object.values(costs); return v.length ? { costs, common: Math.min(...v) } : null;
+}
 
 const TPL_P = [
   L("tpl.p.tidyRefusal", { e: "😤", s: 1 }),

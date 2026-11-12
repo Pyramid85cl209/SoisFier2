@@ -8,8 +8,10 @@ function nameSheet() {
   if (h) { h.id = "sheet-title"; dlg.setAttribute("aria-labelledby", "sheet-title"); dlg.removeAttribute("aria-label"); }
   else { dlg.removeAttribute("aria-labelledby"); dlg.setAttribute("aria-label", t("dialog")); }
 }
-function openSheet(html) { dlg.innerHTML = `<div class="sheet-in">${html}</div>`; nameSheet(); if (!dlg.open) dlg.showModal(); const f = dlg.querySelector("input:not([type=checkbox]),select"); if (f && f.dataset.autofocus !== undefined) f.focus(); }
+let opener = null;   // DT00-24 : le focus revient à l'élément qui a ouvert la fenêtre
+function openSheet(html) { if (!dlg.open) opener = document.activeElement; dlg.innerHTML = `<div class="sheet-in">${html}</div>`; nameSheet(); if (!dlg.open) dlg.showModal(); const f = dlg.querySelector("input:not([type=checkbox]),select"); if (f && f.dataset.autofocus !== undefined) f.focus(); }
 function closeSheet() { if (dlg.open) dlg.close(); }
+dlg.addEventListener("close", () => { const o = opener; opener = null; setTimeout(() => { if (dlg.open) return; if (o && o !== document.body && document.contains(o)) o.focus(); else { const a = $("#app"); a.setAttribute("tabindex", "-1"); a.focus({ preventScroll: true }); } }, 0); });
 dlg.addEventListener("click", e => { if (e.target === dlg) closeSheet(); });
 function confirmSheet(title, text, okLabel, danger = false) {
   return new Promise(res => {

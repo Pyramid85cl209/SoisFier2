@@ -83,12 +83,15 @@ function rewardForm(w, preset) {
       <label>${t("reward.forLabel")}<select id="w-for">${S.children.length > 1 ? `<option value="">${t("reward.allChildren")}</option>` : ""}${S.children.map(k => `<option value="${k.id}" ${w.child_id === k.id ? "selected" : ""}>${esc(k.name)}</option>`).join("")}</select></label></div>
     <label class="check"><input type="checkbox" id="w-fixed" ${fixed ? "checked" : ""} data-act="pricePreview"> ${t("reward.fixedHelp")}</label>
     <div class="f two"><label>${t("reward.effortDays")}<input id="w-days" type="number" inputmode="numeric" min="1" max="365" value="${w.duration_days || TIER_DAYS[w.tier] || 10}"></label>
-      <label>${t("reward.fixedPrice")}<input id="w-cost" type="number" inputmode="numeric" min="1" max="5000" value="${w.cost}"></label></div>
+      <label>${t("reward.fixedPrice")}<input id="w-cost" type="number" inputmode="numeric" min="1" max="${PRICE_CAP}" value="${w.cost}"></label></div>
     <p class="muted" id="w-preview"></p>
     <div class="f two"><label>${t("reward.date")}<input id="w-date" type="date" value="${esc(w.event_date || "")}"></label><label>${t("reward.place")}<input id="w-place" maxlength="80" value="${esc(w.place || "")}"></label></div>
     <div class="sheet-actions">${isNew ? "" : `<button class="btn danger ghost" data-act="delReward" data-id="${w.id}">${t("btn.delete")}</button>`}<button class="btn" data-act="saveReward" data-id="${w.id || ""}">${isNew ? t("btn.add") : t("btn.save")}</button></div>`);
-  const upd = () => { const d = +$("#w-days").value || 0, fx = $("#w-fixed").checked, who = $("#w-for").value;
-    $("#w-preview").textContent = fx ? t("reward.samePrice") : t("reward.computed", { list: (who ? [S.children.find(k => k.id === who)] : S.children).map(k => t("reward.priceOf", { name: k.name, n: fmtNum(roundPrice(d * rhythmOf(k.id))) })).join(t("sep")) }); };
+  const upd = () => { const d = +$("#w-days").value || 0, fx = $("#w-fixed").checked, who = $("#w-for").value, tier = $("#w-tier").value, ex = isNew ? null : w.id;
+    const kids = who ? [S.children.find(k => k.id === who)] : S.children, res = fx ? null : pricesFor(d, kids.map(k => k.id), tier, ex);
+    let txt = fx ? t("reward.samePrice") : !res ? t("reward.noRhythmShort") : t("reward.computed", { list: kids.map(k => t("reward.priceOf", { name: k.name, n: fmtNum(!isNew && w.duration_days === d && w.costs && w.costs[k.id] != null ? +w.costs[k.id] : (res.costs[k.id] ?? res.common)) })).join(t("sep")) });
+    if (!fx && d * Math.max(...kids.map(k => rhythmOf(k.id))) > PRICE_CAP) txt += " " + t("reward.capped", { n: fmtNum(PRICE_CAP) });
+    $("#w-preview").textContent = txt; };
   ["#w-days", "#w-for"].forEach(q => $(q).addEventListener("input", upd)); $("#w-fixed").addEventListener("change", upd); upd();
   $("#w-tier").addEventListener("change", e => { $("#w-days").value = TIER_DAYS[e.target.value]; upd(); });
   if (isNew && preset && preset.child_id === undefined && S.children.length > 1) $("#w-for").value = "";
@@ -100,7 +103,7 @@ function childForm(c) {
   openSheet(`<h2>${isNew ? t("child.add") : t("btn.edit")}</h2>
     <label class="f">${t("child.firstName")}<input id="k-name" maxlength="40" value="${esc(c.name)}" autocomplete="off"></label>
     <div class="f"><span>${t("child.avatar")}</span><div class="emo-row"><input id="k-emoji" class="emo-in" value="${esc(c.emoji)}" maxlength="8" aria-label="${t("child.avatarChosen")}">${EMO_K.map(e => `<button type="button" class="emo" data-act="pickEmoji" data-target="k-emoji" data-e="${e}" aria-label="${e}">${e}</button>`).join("")}</div></div>
-    <div class="f"><span>${t("child.potColor")}</span><div class="swatches">${COLORS.map(col => `<button type="button" class="sw ${col === c.color ? "on" : ""}" style="background:${col}" data-act="pickColor" data-v="${col}" aria-label="${t("child.color", { c: col })}"></button>`).join("")}</div></div>
+    <div class="f"><span>${t("child.potColor")}</span><div class="swatches">${COLORS.map(col => `<button type="button" class="sw ${col === c.color ? "on" : ""}" style="background:${col}" data-act="pickColor" data-v="${col}" aria-pressed="${col === c.color}" aria-label="${t("child.color", { c: colorName(col) })}"></button>`).join("")}</div></div>
     <p class="muted">${t("child.privacy")}</p>
     <div class="sheet-actions">${isNew ? "" : `<button class="btn danger ghost" data-act="delChild" data-id="${c.id}">${t("btn.delete")}</button>`}<button class="btn" data-act="saveChild" data-id="${c.id || ""}">${isNew ? t("btn.add") : t("btn.save")}</button></div>`);
 }

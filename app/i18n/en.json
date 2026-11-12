@@ -203,7 +203,8 @@
    "other": "{n} times"
   },
   "noTpl": "No templates. Tick “Keep as a template” when creating a one-off routine.",
-  "tplDeleted": "Template deleted."
+  "tplDeleted": "Template deleted.",
+  "dateAria": "One-off routine date"
  },
  "tpl": {
   "x": {
@@ -499,8 +500,8 @@
   "autoValidated": "approved automatically",
   "relation": "Relationship to the children",
   "otherRel": "Other…",
-  "customLabel": "Custom label (optional)",
-  "customPlaceholder": "Grandma Jo, Uncle Sam…",
+  "customLabel": "The relationship, in your own words",
+  "customPlaceholder": "Grandmother, Godmother, Neighbour…",
   "rights": "Rights",
   "makeCode": "Create the code",
   "inviteWho": "Invite {who}",
@@ -547,7 +548,19 @@
   "needName": "Enter a first name.",
   "joined": "{name} has joined the family.",
   "delTitle": "Delete {name}?",
-  "delText": "Their routines, stars and history will be permanently erased."
+  "delText": "Their routines, stars and history will be permanently erased.",
+  "colorNames": [
+   "Green",
+   "Red",
+   "Blue",
+   "Orange",
+   "Purple",
+   "Turquoise"
+  ],
+  "delTextRewards": {
+   "one": "Their routines, stars, history and the reward reserved for them will be permanently deleted.",
+   "other": "Their routines, stars, history and the {n} rewards reserved for them will be permanently deleted."
+  }
  },
  "routine": {
   "bonus": "bonus",
@@ -586,15 +599,15 @@
   "timer": "timer challenge won",
   "checkedBy": "ticked by {who}",
   "refuse": "Decline",
-  "autoOn": "If you do nothing, they will be approved automatically at midnight.",
+  "autoOn": "If you do nothing, they will be approved automatically after midnight.",
   "autoOff": "Automatic approval is off: they are waiting for your decision.",
   "section": "Approving routines",
   "sectionHelp": "When your child ticks a routine, the stars wait for your approval. The ones you tick yourself are approved straight away.",
-  "autoLabel": "Automatically approve at midnight anything not declined",
+  "autoLabel": "Automatically approve after midnight anything not declined",
   "done": "Routine approved.",
   "refused": "Declined: the routine needs doing again, with no penalty.",
   "allDone": "Everything is approved.",
-  "autoEnabled": "Automatic approval at midnight turned on.",
+  "autoEnabled": "Automatic approval after midnight turned on.",
   "manualOnly": "Manual approval only."
  },
  "reward": {
@@ -652,7 +665,14 @@
   "cancelTitle": "Cancel this exchange?",
   "cancelBtn": "Cancel the exchange",
   "cancelled": "Exchange cancelled, stars given back.",
-  "seeHistory": "See the history"
+  "seeHistory": "See the history",
+  "noRhythmTitle": "No routine yet",
+  "noRhythm": "First add a mandatory routine for {name}: reward prices are worked out from their routines.",
+  "goRoutines": "Go to routines",
+  "tplHelpNoRhythm": "{name} has no mandatory routine yet: their prices are the lowest of the other children's prices, then will be worked out from their routines.",
+  "rhythmNone": "No pace: no mandatory routine",
+  "noRhythmShort": "No calculated price: first add a mandatory routine, or tick “Fixed price”.",
+  "capped": "Price capped at {n} ⭐."
  },
  "role": {
   "parent": "Parent",
@@ -918,7 +938,14 @@
   "reminders": "My reminders",
   "remindersHelp": "Choose when your phone reminds you of your routines.",
   "remindersAsk": "Do you want your phone to remind you of your routines?",
-  "later": "Later"
+  "later": "Later",
+  "onlyBonus": "Only bonus challenges today!",
+  "exitOfflineTitle": "No connection",
+  "exitOfflineText": {
+   "one": "One tick has not been sent yet: without internet it will be lost if you leave now. Come back when the phone is connected, or leave anyway.",
+   "other": "{n} ticks have not been sent yet: without internet they will be lost if you leave now. Come back when the phone is connected, or leave anyway."
+  },
+  "exitAnyway": "Leave anyway"
  },
  "form": {
   "icon": "Icon",
@@ -1158,7 +1185,8 @@
   "not_your_name": "Everyone can only change their own username.",
   "holiday_past": "These holidays have already ended.",
   "pause_overlap": "This break overlaps another break for this child.",
-  "pause_closed": "This break falls in a fortnight that has already ended (the flower has bloomed)."
+  "pause_closed": "This break falls in a fortnight that has already ended (the flower has bloomed).",
+  "price_cap": "The price cannot be more than 5000 stars."
  },
  "hist": {
   "validated": {
@@ -1171,5 +1199,12 @@
   },
   "none": "Nothing in the last 30 days.",
   "netAria": "Day total: {n} stars"
+ },
+ "a11y": {
+  "edit": "Edit {name}",
+  "delete": "Delete {name}",
+  "cancel": "Cancel: {name}",
+  "childHere": "Child mode here for {name}",
+  "connectDevice": "Connect {name}'s device"
  }
 }
