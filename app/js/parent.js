@@ -6,7 +6,7 @@ function viewFor(c) {
   return computeView({ child: c, routines: S.routines, completions: S.completions.filter(x => x.child_id === c.id), stats: S.stats[c.id], badges: S.badges[c.id], garden: S.gardens[c.id], penalties: S.pevents.filter(e => e.child_id === c.id) });
 }
 function chips() {
-  return `<div class="chips" role="tablist">${S.children.map(c => `<button role="tab" aria-selected="${c.id === S.currentChild}" class="chip ${c.id === S.currentChild ? "on" : ""}" style="--c:${esc(c.color)}" data-act="pickChild" data-id="${c.id}">${esc(c.emoji)} ${esc(c.name)}</button>`).join("")}</div>`;
+  return `<div class="chips" role="tablist">${S.children.map(c => `<button role="tab" aria-selected="${c.id === S.currentChild}" class="chip ${c.id === S.currentChild ? "on" : ""}" style="--c:${esc(c.color)};--cc:${esc(chipColor(c.color))}" data-act="pickChild" data-id="${c.id}">${esc(c.emoji)} ${esc(c.name)}</button>`).join("")}</div>`;
 }
 function renderParent() {
   const tabs = [["today", t("tab.today"), "☀️"], ["routines", t("tab.routines"), "📋"], ["rewards", t("tab.rewards"), "🎁"], ["history", t("tab.history"), "📜"], ["family", t("tab.family"), "🏡"]].filter(x => isParent() || x[0] !== "routines");
@@ -116,7 +116,7 @@ function pFamily() {
     const devs = S.devices.filter(d => d.child_id === c.id);
     const gn = gardenNow(S.gardens[c.id]);
     return `<div class="krow kid-row">${gn ? stageSVG(gn.stage, gn.species, c.color) : plantSVG(0, c.color)}<div class="grow"><b>${esc(c.emoji)} ${esc(c.name)}</b>
-      ${devs.map(d => `<div class="dev">📱 ${esc(d.label || t("family.hisPhone"))}${t("sep")}${t("family.since", { date: fmtDate(d.created_at) })} ${P ? `<button class="link" data-act="revokeDevice" data-id="${d.id}">${t("family.disconnect")}</button>` : ""}</div>`).join("")}</div>
+      ${devs.map(d => `<div class="dev">📱 ${esc(d.label || t("family.hisPhone"))}${t("sep")}${t("family.since", { date: fmtDate(d.created_at) })} ${P ? `<button class="link" data-act="revokeDevice" data-id="${d.id}" aria-label="${esc(t("a11y.disconnectDevice", { name: d.label || t("family.hisPhone") }))}">${t("family.disconnect")}</button>` : ""}</div>`).join("")}</div>
       ${P ? `<div class="btns"><button class="btn sm" data-act="childHere" data-id="${c.id}" aria-label="${t("a11y.childHere", { name: c.name })}">${t("family.childHere")}</button><button class="btn sm ghost" data-act="editChild" data-id="${c.id}" aria-label="${t("a11y.edit", { name: c.name })}">${t("btn.edit")}</button><button class="btn sm ghost" data-act="deviceCode" data-id="${c.id}" aria-label="${t("a11y.connectDevice", { name: c.name })}">${t("family.connectDevice")}</button></div>` : ""}</div>`;
   }).join("");
   const pushOn = store.get("pushOn", false), times = store.get("pushTimes", ["07:30", "18:00"]);

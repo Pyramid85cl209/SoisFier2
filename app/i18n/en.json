@@ -500,7 +500,7 @@
   "autoValidated": "approved automatically",
   "relation": "Relationship to the children",
   "otherRel": "Other…",
-  "customLabel": "The relationship, in your own words",
+  "customLabel": "Specify the relationship",
   "customPlaceholder": "Grandmother, Godmother, Neighbour…",
   "rights": "Rights",
   "makeCode": "Create the code",
@@ -516,7 +516,8 @@
   "removeText": "This person will no longer have access to the family. The history of their approvals is kept.",
   "removeBtn": "Remove",
   "removed": "Member removed.",
-  "shareText": "Join our family on SoisFier with the code {code}: {url}"
+  "shareText": "Join our family on SoisFier with the code {code}: {url}",
+  "username": "Username"
  },
  "sep": ", ",
  "offline": "Offline",
@@ -977,7 +978,8 @@
   "revokeTitle": "Disconnect this device?",
   "revokeText": "A new code will be needed to reconnect it.",
   "revoked": "Device disconnected.",
-  "sameLabel": "{who}'s phone (child mode)"
+  "sameLabel": "{who}'s phone (child mode)",
+  "revokeLost": "Ticks not yet sent from this phone will be lost."
  },
  "timer": {
   "go": "Do it before time runs out!",
@@ -1075,7 +1077,7 @@
  },
  "vac": {
   "title": "Holidays and breaks",
-  "help": "Holiday mode: routines carry on, adapted to the holidays. Break: days count neither for nor against the flower, ideal for a trip or an illness.",
+  "help": "Holiday mode: routines carry on, adapted to the holidays. Break: days count neither for nor against the flower, ideal for a trip or some rest.",
   "pauseWins": "The break takes priority over holiday mode"
  },
  "hol": {
@@ -1208,7 +1210,8 @@
   "delete": "Delete {name}",
   "cancel": "Cancel: {name}",
   "childHere": "Child mode here for {name}",
-  "connectDevice": "Connect {name}'s device"
+  "connectDevice": "Connect {name}'s device",
+  "disconnectDevice": "Disconnect {name}"
  },
  "intro": {
   "step": "Screen {i} of {n}",

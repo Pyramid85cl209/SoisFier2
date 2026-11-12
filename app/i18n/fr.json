@@ -491,7 +491,7 @@
   "autoValidated": "validée automatiquement",
   "relation": "Lien avec les enfants",
   "otherRel": "Autre…",
-  "customLabel": "Le lien, en toutes lettres",
+  "customLabel": "Précisez le lien",
   "customPlaceholder": "Grand-mère, Marraine, Voisin…",
   "rights": "Droits",
   "makeCode": "Créer le code",
@@ -507,7 +507,8 @@
   "removeText": "Cette personne n'aura plus accès à la famille. L'historique de ses validations est conservé.",
   "removeBtn": "Retirer",
   "removed": "Membre retiré.",
-  "shareText": "Rejoignez notre famille sur SoisFier avec le code {code} : {url}"
+  "shareText": "Rejoignez notre famille sur SoisFier avec le code {code} : {url}",
+  "username": "Nom d'utilisateur"
  },
  "sep": ", ",
  "offline": "Hors ligne",
@@ -968,7 +969,8 @@
   "revokeTitle": "Déconnecter cet appareil ?",
   "revokeText": "Il faudra un nouveau code pour le reconnecter.",
   "revoked": "Appareil déconnecté.",
-  "sameLabel": "Téléphone de {who} (mode enfant)"
+  "sameLabel": "Téléphone de {who} (mode enfant)",
+  "revokeLost": "Les coches pas encore envoyées depuis ce téléphone seront perdues."
  },
  "timer": {
   "go": "Fais-le avant la fin du temps !",
@@ -1066,7 +1068,7 @@
  },
  "vac": {
   "title": "Vacances et absences",
-  "help": "Mode vacances : les routines continuent, adaptées aux vacances. Pause : les jours ne comptent ni pour ni contre la fleur, idéal pour un voyage ou une maladie.",
+  "help": "Mode vacances : les routines continuent, adaptées aux vacances. Pause : les jours ne comptent ni pour ni contre la fleur, idéal pour un voyage ou un temps de repos.",
   "pauseWins": "La pause l'emporte sur le mode vacances"
  },
  "hol": {
@@ -1199,7 +1201,8 @@
   "delete": "Supprimer {name}",
   "cancel": "Annuler : {name}",
   "childHere": "Mode enfant ici pour {name}",
-  "connectDevice": "Connecter l'appareil de {name}"
+  "connectDevice": "Connecter l'appareil de {name}",
+  "disconnectDevice": "Déconnecter {name}"
  },
  "intro": {
   "step": "Écran {i} sur {n}",

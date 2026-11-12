@@ -359,6 +359,26 @@ async function typeCode(p, c) { await p.fill("#pin-in", c); await p.click("#pin-
   ok("14.2 image avec texte de remplacement", !!it.alt, it.alt);
   ok("14.3 « vue » enregistrée dans les métadonnées du compte (auth.updateUser) ; ne se rouvre pas ensuite", it.calls === JSON.stringify([{ data: { intro_seen: true } }]) && it.seen && !it.again && !it.seenNoShow, it.calls);
   ok("14.4 lien du guide ?intro=1 : s'ouvre, n'enregistre rien, retire le paramètre ; pas de présentation hors ligne", it.link && !it.offline, JSON.stringify([it.link, it.offline]));
+  // 15. Campagne QA 1 : A1 à A5
+  const qa = await page.evaluate(async () => {
+    closeSheet(); S.session = { user: { id: "u1" } }; S.me = { user_id: "u1", role: "parent" };
+    S.members = [{ user_id: "u1", role: "parent", display_name: "Moi", relation: "Mère", relation_key: "mom" }, { user_id: "u2", role: "helper", display_name: "Autre", relation: "Tante", relation_key: null }];
+    const o = {}; A.editMember({ dataset: { id: "u1" } }); const n1 = document.getElementById("mem-name"); o.selfEditable = !!n1 && !n1.readOnly && n1.value === "Moi";
+    const upd = []; sb.from = () => ({ update: r => { upd.push(r); return { eq: () => ({ eq: () => Promise.resolve({ error: null }) }) }; } }); mutate = async fn => fn(); refreshParts = async () => {};
+    n1.value = "Nouveau nom"; await A.saveMember({ dataset: { id: "u1" } }); o.saved = JSON.stringify(upd); o.listed = S.members[0].display_name;
+    closeSheet(); A.editMember({ dataset: { id: "u2" } }); const n2 = document.getElementById("mem-name"); o.otherReadonly = !!n2 && n2.readOnly;
+    upd.length = 0; await A.saveMember({ dataset: { id: "u2" } }); o.otherNotSent = !upd.some(r => "display_name" in r);
+    closeSheet(); o.lost = t("device.revokeLost"); o.lab = t("child.customLabel", {}) !== undefined ? t("member.customLabel") : "";
+    const lin = v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); };
+    o.contrast = COLORS.map(c => { const h = chipColor(c), r = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)); return 1.05 / (.2126 * lin(r[0]) + .7152 * lin(r[1]) + .0722 * lin(r[2]) + .05); });
+    o.keepStored = COLORS.includes("#E8484F") && colorName("#E8484F") !== "#E8484F";
+    o.devName = t("a11y.disconnectDevice", { name: "Téléphone A" });
+    return o; });
+  ok("15.1 A1 : « Nom d'utilisateur » modifiable sur sa fiche, enregistré, affiché ; en lecture seule et jamais envoyé sur celle d'un autre", qa.selfEditable && /Nouveau nom/.test(qa.saved) && qa.listed === "Nouveau nom" && qa.otherReadonly && qa.otherNotSent, JSON.stringify(qa));
+  ok("15.2 A2 : la confirmation de déconnexion prévient que les coches non envoyées seront perdues", /perdues/.test(qa.lost), qa.lost);
+  ok("15.3 A3 : libellé du champ libre « Précisez le lien »", qa.lab === "Précisez le lien", qa.lab);
+  ok("15.4 A4 : chaque couleur d'enfant atteint 4,5:1 sous du texte blanc ; couleur enregistrée inchangée", qa.contrast.every(c => c >= 4.5) && qa.keepStored, JSON.stringify(qa.contrast.map(c => Math.round(c * 100) / 100)));
+  ok("15.5 A5 : bouton « Déconnecter » au nom distinct par appareil", /Téléphone A/.test(qa.devName), qa.devName);
   ok("12.7 aucune erreur de script", errs.length === 0, errs.join(";")); await ctx.close();
   await browser.close(); srv.close(); console.log(fails ? `\n${fails} KO` : "\nTout OK");
 })();

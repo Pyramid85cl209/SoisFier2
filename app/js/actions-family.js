@@ -80,6 +80,7 @@ A.editMember = el => {
   const m = S.members.find(x => x.user_id === el.dataset.id), self = m.user_id === S.session?.user.id;
   S.form = { role: m.role };
   openSheet(`<h2>${esc(relLabel(m) || m.display_name || t("member.member"))}</h2>${relationField(m, "mem")}
+    <label class="f">${t("member.username")}<input id="mem-name" maxlength="40" value="${esc(m.display_name || "")}" ${self ? "" : "readonly"}></label>
     ${isParent() && !self ? `<div class="f"><span>${t("member.rights")}</span><div class="seg" role="radiogroup">${[["parent", t("role.parent")], ["helper", t("role.helper")]].map(([k, l]) => `<button type="button" role="radio" aria-checked="${m.role === k}" class="${m.role === k ? "on" : ""}" data-act="seg" data-group="role" data-v="${k}">${l}</button>`).join("")}</div></div>` : ""}
     <div class="sheet-actions">${isParent() && !self ? `<button class="btn danger ghost" data-act="removeMember" data-id="${m.user_id}">${t("member.remove")}</button>` : ""}<button class="btn" data-act="saveMember" data-id="${m.user_id}">${t("btn.save")}</button></div>`);
 };
@@ -93,6 +94,7 @@ A.saveMember = async el => {
     }
     row.role = S.form.role;
   }
+  if (self) { const nm = ($("#mem-name")?.value || "").trim(), cur = S.members.find(x => x.user_id === id); if (nm && cur && nm !== (cur.display_name || "")) row.display_name = nm; }   // F02-04 CA11 : seulement sa propre fiche
   if (!Object.keys(row).length) return closeSheet();
   await mutate(() => sb.from("family_members").update(row).eq("family_id", S.family.id).eq("user_id", id));
   const loc = rel ? { ...row, relation_key: rel.relation_key } : row;   // clé recalculée par la base, reprise localement en attendant

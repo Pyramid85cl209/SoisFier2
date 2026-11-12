@@ -140,6 +140,14 @@ const momentLabel = k => t(`moment.${(MOMENTS_K.find(m => m[0] === k) || MOMENTS
 const PLACES = () => t("places");
 const COLORS = ["#2E8B57", "#E8484F", "#3D7BD9", "#F29E1F", "#8E5BD0", "#1FA5A0"];
 // Nom traduit d'une couleur de pot (DT00-24) ; une couleur hors liste garde son code
+// Couleur de fond sous du texte blanc : assombrie jusqu'à 4,5:1 au moins (X-ACC-05) ; les couleurs déjà enregistrées gardent leur valeur
+const chipColor = hex => {
+  const lin = v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); };
+  const m = /^#([0-9a-f]{6})$/i.exec(hex || ""); if (!m) return hex;
+  let rgb = [0, 2, 4].map(i => parseInt(m[1].slice(i, i + 2), 16));
+  for (let k = 0; k < 40; k++) { const L = .2126 * lin(rgb[0]) + .7152 * lin(rgb[1]) + .0722 * lin(rgb[2]); if (1.05 / (L + .05) >= 4.5) break; rgb = rgb.map(v => Math.round(v * .94)); }
+  return "#" + rgb.map(v => v.toString(16).padStart(2, "0")).join("");
+};
 const colorName = col => { const i = COLORS.indexOf(col), n = t("child.colorNames"); return i >= 0 && Array.isArray(n) && n[i] ? n[i] : col; };
 const EMO_R = [
   ["hygiene", ["🪥", "🧼", "🛁", "🚿", "🧴", "💇", "🚽", "🧻", "🤧", "✂️", "💅", "🦷"]],
