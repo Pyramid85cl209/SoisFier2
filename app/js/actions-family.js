@@ -35,21 +35,23 @@ A.sound = el => store.set("sound", el.checked);
 // Rappels
 // Fenêtre « Mes rappels » de l'enfant (v28) ; ask : proposée une fois juste après la connexion du téléphone
 A.cReminders = el => {
+  if (store.get("childFromParent")) return;   // Mode enfant ici : pas de rappels (DT11-08)
   const ask = el && el.ask, pushOn = store.get("cpushOn", false), ct = store.get("cpushTimes", ["07:30", "18:00"]);
   openSheet(`<div id="rem-sheet"><h2>🔔 ${t("kid.reminders")}</h2><p class="muted">${ask ? t("kid.remindersAsk") : t("kid.remindersHelp")}</p>
-    <div class="f two"><label>${t("kid.remindMorning")}<input type="time" id="t1" value="${esc(ct[0] || "")}"></label><label>${t("kid.remindEvening")}<input type="time" id="t2" value="${esc(ct[1] || "")}"></label></div>
+    <div class="f two"><label>${t("kid.remindMorning")}<input type="time" id="t1" max="23:45" value="${esc(ct[0] || "")}"></label><label>${t("kid.remindEvening")}<input type="time" id="t2" max="23:45" value="${esc(ct[1] || "")}"></label></div>
     ${ask ? "" : `<label class="check"><input type="checkbox" id="snd" data-act="sound" ${store.get("sound", true) ? "checked" : ""}> ${t("kid.sound")}</label>`}
     <div class="sheet-actions">${ask ? `<button class="btn ghost" data-act="closeSheet">${t("kid.later")}</button>` : pushOn ? `<button class="btn ghost" data-act="pushOff">${t("btn.disable")}</button>` : ""}<button class="btn" data-act="pushChild">${pushOn ? t("push.update") : t("push.enable")}</button></div></div>`);
 };
 
 A.pushParent = async () => {
-  const times = readTimes(); if (!times.length) return toast(t("push.needTime"), true);
+  const times = readTimes(); if (!times.length) return toast(t("push.needTime"), true); if (tooLate(times)) return toast(t("push.timeTooLate"), true);
   const j = await getPushSub();
   const { error } = await sb.rpc("parent_push_subscribe", { p_family: S.family.id, p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_times: times, p_locale: curLang() }); if (error) throw error;
   store.set("pushOn", true); store.set("pushTimes", times); render(); toast(t("push.enabled"));
 };
 A.pushChild = async () => {
-  const times = readTimes(); if (!times.length) return toast(t("push.needTime"), true);
+  if (store.get("childFromParent")) return;   // Mode enfant ici : jamais d'abonnement qui remplacerait celui du parent (DT11-08)
+  const times = readTimes(); if (!times.length) return toast(t("push.needTime"), true); if (tooLate(times)) return toast(t("push.timeTooLate"), true);
   const j = await getPushSub();
   const { error } = await sb.rpc("child_push_subscribe", { p_token: store.get("childToken"), p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_times: times, p_locale: curLang() }); if (error) throw error;
   store.set("cpushOn", true); store.set("cpushTimes", times); render(); closeSheet(); toast(t("push.enabled"));
@@ -78,12 +80,21 @@ A.editMember = el => {
   const m = S.members.find(x => x.user_id === el.dataset.id), self = m.user_id === S.session?.user.id;
   S.form = { role: m.role };
   openSheet(`<h2>${esc(relLabel(m) || m.display_name || t("member.member"))}</h2>${relationField(m, "mem")}
+    <label class="f">${t("member.username")}<input id="mem-name" maxlength="40" value="${esc(m.display_name || "")}" ${self ? "" : "readonly"}></label>
     ${isParent() && !self ? `<div class="f"><span>${t("member.rights")}</span><div class="seg" role="radiogroup">${[["parent", t("role.parent")], ["helper", t("role.helper")]].map(([k, l]) => `<button type="button" role="radio" aria-checked="${m.role === k}" class="${m.role === k ? "on" : ""}" data-act="seg" data-group="role" data-v="${k}">${l}</button>`).join("")}</div></div>` : ""}
     <div class="sheet-actions">${isParent() && !self ? `<button class="btn danger ghost" data-act="removeMember" data-id="${m.user_id}">${t("member.remove")}</button>` : ""}<button class="btn" data-act="saveMember" data-id="${m.user_id}">${t("btn.save")}</button></div>`);
 };
 A.saveMember = async el => {
   const id = el.dataset.id, self = id === S.session?.user.id, rel = readRelation("mem"), row = rel ? { relation: rel.relation } : {};
-  if (isParent() && !self) row.role = S.form.role;
+  if (isParent() && !self) {
+    const cur = S.members.find(x => x.user_id === id);
+    if (cur && S.form.role !== cur.role && !isPremium()) {   // EP-09 (DT02-03) : mêmes limites qu'à l'invitation
+      if (S.form.role === "helper") return upsell("helpers");
+      if (S.members.filter(x => x.role !== "helper").length >= 2) return upsell("adults");
+    }
+    row.role = S.form.role;
+  }
+  if (self) { const nm = ($("#mem-name")?.value || "").trim(), cur = S.members.find(x => x.user_id === id); if (nm && cur && nm !== (cur.display_name || "")) row.display_name = nm; }   // F02-04 CA11 : seulement sa propre fiche
   if (!Object.keys(row).length) return closeSheet();
   await mutate(() => sb.from("family_members").update(row).eq("family_id", S.family.id).eq("user_id", id));
   const loc = rel ? { ...row, relation_key: rel.relation_key } : row;   // clé recalculée par la base, reprise localement en attendant
@@ -102,10 +113,10 @@ A.shareInvite = async el => { try { await navigator.share({ title: "SoisFier", t
 A.setPin = async () => {
   const p = await pinSheet(t("pin.title"), t("pin.chooseText"));
   if (p === null) return; if (!/^\d{4}$/.test(p)) return toast(t("pin.need4"), true);
-  store.set("pin", p); render(); toast(t("pin.saved"));
+  await pinSave(p); render(); toast(t("pin.saved"));
 };
 A.renameFamily = async () => {
-  openSheet(`<h2>${t("account.rename")}</h2><label class="f">${t("form.name")}<input id="fam-name" maxlength="40" value="${esc(S.family.name)}"></label><div class="sheet-actions"><button class="btn" data-act="saveFamilyName">${t("btn.save")}</button></div>`);
+  openSheet(`<h2>${t("account.rename")}</h2><label class="f">${t("form.name")}<input id="fam-name" maxlength="40" value="${esc(famName(S.family))}"></label><div class="sheet-actions"><button class="btn" data-act="saveFamilyName">${t("btn.save")}</button></div>`);
 };
 A.saveFamilyName = async () => {
   const name = $("#fam-name").value.trim(); if (!name) return toast(t("account.needName"), true);
@@ -124,17 +135,19 @@ A.saveWeek = async () => {
   refreshParts(["f", "s", "g"]).then(render).catch(() => {});
 };
 A.printPlan = () => {
-  if (S.children.length === 1) return printPlanning([S.children[0].id]);
-  openSheet(`<h2>${t("print.title")}</h2><ul class="tpl">${S.children.map(c => `<li><label><input type="checkbox" value="${c.id}" checked> ${esc(c.emoji)} ${esc(c.name)}</label></li>`).join("")}</ul>
+  // DEC-48 : la fenêtre s'ouvre aussi pour un seul enfant (sans choix d'enfant), pour choisir d'imprimer ou non les récompenses
+  openSheet(`<h2>${t("print.title")}</h2>${S.children.length === 1 ? `<ul class="tpl" hidden><li><input type="checkbox" value="${S.children[0].id}" checked></li></ul>` : `<ul class="tpl">${S.children.map(c => `<li><label><input type="checkbox" value="${c.id}" checked> ${esc(c.emoji)} ${esc(c.name)}</label></li>`).join("")}</ul>`}
+    <label class="check"><input type="checkbox" id="pr-gifts" checked> ${t("print.printRewards")}</label>
     <div class="sheet-actions"><button class="btn" data-act="doPrint">${t("btn.print")}</button></div>`);
 };
-A.doPrint = () => { const ids = $$(".tpl input:checked", dlg).map(i => i.value); closeSheet(); if (ids.length) printPlanning(ids); };
+A.doPrint = () => { const ids = $$(".tpl input:checked", dlg).map(i => i.value), g = $("#pr-gifts", dlg).checked; closeSheet(); if (ids.length) printPlanning(ids, g); };
 A.exportData = async () => {
   const fid = S.family.id;
   const names = ["children", "routines", "rewards", "completions", "redemptions", "penalties", "penalty_events", "child_badges", "flowers", "pauses"];
   const res = await Promise.all(names.map(t => sb.from(t).select("*").eq("family_id", fid)));
   for (const q of res) if (q.error) throw q.error;
   const out = { exported_at: new Date().toISOString(), family: S.family }; names.forEach((n, i) => out[n] = res[i].data);
+  const rs = await sb.from("routine_settings").select("*").eq("family_id", fid); if (!rs.error) out.routine_settings = rs.data;   // réglages historisés (EP-09) : absents tant que la base n'est pas à jour
   const blob = new Blob([JSON.stringify(out, null, 2)], { type: "application/json" });
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `soisfier-${todayISO()}.json`; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 5000); toast(t("backup.done"));

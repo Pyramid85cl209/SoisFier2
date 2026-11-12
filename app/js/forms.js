@@ -27,13 +27,13 @@ async function sheetQR(childId, lineIds) {
     return qr.createSvgTag({ cellSize: 4, margin: 16, scalable: true });
   } catch (e) { console.error(e); return ""; }
 }
-async function printPlanning(ids) {
+async function printPlanning(ids, withGifts = true) {   // DEC-41, DEC-48 : les récompenses sont sur une page à part, au choix
   const td = todayISO(), first = addDays(td, -((dowOf(td) - WEEK.start + 7) % 7)), order = weekOrder();
   const pages = (await Promise.all(S.children.filter(c => ids.includes(c.id)).map(async c => {
     // Semaine imprimée : chaque jour suit le Mode vacances s'il s'applique (routines en pause, statut, jours, étoiles, routines de vacances)
     const dates = order.map((_, i) => addDays(first, i));
-    const due = dates.map(d => new Map(dueOn(S.routines, c.id, d).filter(r => !isOneoff(r)).map(r => [r.id, r])));
-    const rs = S.routines.filter(r => r.child_id === c.id && !isOneoff(r) && due.some(m => m.has(r.id)));
+    const due = dates.map(d => new Map(dueOn(S.routinesAll || S.routines, c.id, d).filter(r => !isOneoff(r)).map(r => [r.id, r])));
+    const rs = (S.routinesAll || S.routines).filter(r => r.child_id === c.id && !isOneoff(r) && due.some(m => m.has(r.id)));
     const hols = holidaysOf(c.id).filter(p => p.start_day <= dates[6] && p.end_day >= dates[0]);
     const lines = [];   // routines dans l'ordre des lignes du tableau (contenu du repère)
     const rows = MOMENTS().map(([k, l, , e]) => {
@@ -48,8 +48,8 @@ async function printPlanning(ids) {
     const gifts = S.rewards.filter(w => (!w.child_id || w.child_id === c.id) && (!w.event_date || w.event_date >= td));   // sans les événements passés
     return `<section class="pp"><div class="pp-head"><div><h1>${esc(c.emoji)} ${t("print.weekOf", { name: esc(c.name) })}</h1><p>${t("print.weekStart", { date: parseISO(first).toLocaleDateString(loc(), { day: "numeric", month: "long" }) })}</p>${hols.map(p => `<p>🏖️ ${esc(p.name)}${t("sep")}${holLabel(p)}</p>`).join("")}</div>${qr ? `<div class="pp-qr" aria-hidden="true">${qr}</div>` : ""}</div>
       <div class="frame"><i class="mk tl"></i><i class="mk tr"></i><i class="mk bl"></i><i class="mk br"></i>
-      <table><thead><tr><th class="n">${t("print.routine")}</th>${order.map(d => `<th>${t("days.abbr")[d - 1]}</th>`).join("")}</tr></thead><tbody>${rows || `<tr><td colspan="8">${t("print.none")}</td></tr>`}</tbody></table></div>
-      ${gifts.length ? `<div class="gifts"><b>${t("print.myRewards")}</b> ${gifts.map(w => `${esc(w.emoji)} ${esc(w.title)} (${fmtNum(costFor(w, c.id))} ⭐)`).join(t("sep"))}</div>` : ""}</section>`;
+      <table><thead><tr><th class="n">${t("print.routine")}</th>${order.map(d => `<th>${t("days.abbr")[d - 1]}</th>`).join("")}</tr></thead><tbody>${rows || `<tr><td colspan="8">${t("print.none")}</td></tr>`}</tbody></table></div></section>`
+      + (withGifts && gifts.length ? `<section class="pp pp-gifts"><h1>${esc(c.emoji)} ${esc(c.name)}</h1><div class="gifts"><b>${t("print.myRewards")}</b> ${gifts.map(w => `${esc(w.emoji)} ${esc(w.title)} (${fmtNum(costFor(w, c.id))} ⭐)`).join(t("sep"))}</div></section>` : "");
   }))).join("");
   $("#print").innerHTML = pages; setTimeout(() => window.print(), 50);
 }
@@ -83,12 +83,15 @@ function rewardForm(w, preset) {
       <label>${t("reward.forLabel")}<select id="w-for">${S.children.length > 1 ? `<option value="">${t("reward.allChildren")}</option>` : ""}${S.children.map(k => `<option value="${k.id}" ${w.child_id === k.id ? "selected" : ""}>${esc(k.name)}</option>`).join("")}</select></label></div>
     <label class="check"><input type="checkbox" id="w-fixed" ${fixed ? "checked" : ""} data-act="pricePreview"> ${t("reward.fixedHelp")}</label>
     <div class="f two"><label>${t("reward.effortDays")}<input id="w-days" type="number" inputmode="numeric" min="1" max="365" value="${w.duration_days || TIER_DAYS[w.tier] || 10}"></label>
-      <label>${t("reward.fixedPrice")}<input id="w-cost" type="number" inputmode="numeric" min="1" max="5000" value="${w.cost}"></label></div>
+      <label>${t("reward.fixedPrice")}<input id="w-cost" type="number" inputmode="numeric" min="1" max="${PRICE_CAP}" value="${w.cost}"></label></div>
     <p class="muted" id="w-preview"></p>
     <div class="f two"><label>${t("reward.date")}<input id="w-date" type="date" value="${esc(w.event_date || "")}"></label><label>${t("reward.place")}<input id="w-place" maxlength="80" value="${esc(w.place || "")}"></label></div>
     <div class="sheet-actions">${isNew ? "" : `<button class="btn danger ghost" data-act="delReward" data-id="${w.id}">${t("btn.delete")}</button>`}<button class="btn" data-act="saveReward" data-id="${w.id || ""}">${isNew ? t("btn.add") : t("btn.save")}</button></div>`);
-  const upd = () => { const d = +$("#w-days").value || 0, fx = $("#w-fixed").checked, who = $("#w-for").value;
-    $("#w-preview").textContent = fx ? t("reward.samePrice") : t("reward.computed", { list: (who ? [S.children.find(k => k.id === who)] : S.children).map(k => t("reward.priceOf", { name: k.name, n: fmtNum(roundPrice(d * rhythmOf(k.id))) })).join(t("sep")) }); };
+  const upd = () => { const d = +$("#w-days").value || 0, fx = $("#w-fixed").checked, who = $("#w-for").value, tier = $("#w-tier").value, ex = isNew ? null : w.id;
+    const kids = who ? [S.children.find(k => k.id === who)] : S.children, res = fx ? null : pricesFor(d, kids.map(k => k.id), tier, ex);
+    let txt = fx ? t("reward.samePrice") : !res ? t("reward.noRhythmShort") : t("reward.computed", { list: kids.map(k => t("reward.priceOf", { name: k.name, n: fmtNum(!isNew && w.duration_days === d && w.costs && w.costs[k.id] != null ? +w.costs[k.id] : (res.costs[k.id] ?? res.common)) })).join(t("sep")) });
+    if (!fx && d * Math.max(...kids.map(k => rhythmOf(k.id))) > PRICE_CAP) txt += " " + t("reward.capped", { n: fmtNum(PRICE_CAP) });
+    $("#w-preview").textContent = txt; };
   ["#w-days", "#w-for"].forEach(q => $(q).addEventListener("input", upd)); $("#w-fixed").addEventListener("change", upd); upd();
   $("#w-tier").addEventListener("change", e => { $("#w-days").value = TIER_DAYS[e.target.value]; upd(); });
   if (isNew && preset && preset.child_id === undefined && S.children.length > 1) $("#w-for").value = "";
@@ -100,7 +103,7 @@ function childForm(c) {
   openSheet(`<h2>${isNew ? t("child.add") : t("btn.edit")}</h2>
     <label class="f">${t("child.firstName")}<input id="k-name" maxlength="40" value="${esc(c.name)}" autocomplete="off"></label>
     <div class="f"><span>${t("child.avatar")}</span><div class="emo-row"><input id="k-emoji" class="emo-in" value="${esc(c.emoji)}" maxlength="8" aria-label="${t("child.avatarChosen")}">${EMO_K.map(e => `<button type="button" class="emo" data-act="pickEmoji" data-target="k-emoji" data-e="${e}" aria-label="${e}">${e}</button>`).join("")}</div></div>
-    <div class="f"><span>${t("child.potColor")}</span><div class="swatches">${COLORS.map(col => `<button type="button" class="sw ${col === c.color ? "on" : ""}" style="background:${col}" data-act="pickColor" data-v="${col}" aria-label="${t("child.color", { c: col })}"></button>`).join("")}</div></div>
+    <div class="f"><span>${t("child.potColor")}</span><div class="swatches">${COLORS.map(col => `<button type="button" class="sw ${col === c.color ? "on" : ""}" style="background:${col}" data-act="pickColor" data-v="${col}" aria-pressed="${col === c.color}" aria-label="${t("child.color", { c: colorName(col) })}"></button>`).join("")}</div></div>
     <p class="muted">${t("child.privacy")}</p>
     <div class="sheet-actions">${isNew ? "" : `<button class="btn danger ghost" data-act="delChild" data-id="${c.id}">${t("btn.delete")}</button>`}<button class="btn" data-act="saveChild" data-id="${c.id || ""}">${isNew ? t("btn.add") : t("btn.save")}</button></div>`);
 }
@@ -116,20 +119,38 @@ function weekForm(mode) {
     ${mode === "family" ? `<p class="muted small">${t("week.changeNote")}</p>` : ""}
     <div class="sheet-actions"><button class="btn" data-act="saveWeek">${t("btn.save")}</button></div>`);
 }
-function pinSheet(title, text) {
+// Saisie du code parent. Options : forgot = lien « Code oublié ? » (résout {forgot:true}), locked = attente en cours (saisie désactivée)
+function pinSheet(title, text, opt = {}) {
   return new Promise(res => {
-    openSheet(`<h2>${esc(title)}</h2><p>${esc(text)}</p><label class="f">${t("pin.code4")}<input id="pin-in" class="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off"></label>
-      <div class="sheet-actions"><button class="btn ghost" id="pin-no">${t("btn.cancel")}</button><button class="btn" id="pin-ok">${t("btn.validate")}</button></div>`);
+    openSheet(`<h2>${esc(title)}</h2><p${opt.locked ? ` role="alert"` : ""}>${esc(text)}</p><label class="f">${t("pin.code4")}<input id="pin-in" class="pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off"${opt.locked ? " disabled" : ""}></label>
+      <div class="sheet-actions"><button class="btn ghost" id="pin-no">${t("btn.cancel")}</button><button class="btn" id="pin-ok"${opt.locked ? " disabled" : ""}>${t("btn.validate")}</button></div>
+      ${opt.forgot ? `<p class="center"><button class="link" id="pin-forgot">${t("pin.forgot")}</button></p>` : ""}`);
     const inp = $("#pin-in"); setTimeout(() => inp.focus(), 50);
-    $("#pin-no").onclick = () => { closeSheet(); res(null); };
-    $("#pin-ok").onclick = () => { const v = inp.value.trim(); closeSheet(); res(v); };
-    dlg.addEventListener("close", () => res(null), { once: true });
+    // La réponse part à l'événement « close » : la fenêtre est vraiment fermée quand l'appelant en ouvre une autre (« Code oublié ? »)
+    let out = null; const done = v => { out = v; closeSheet(); };
+    dlg.addEventListener("close", () => res(out), { once: true });
+    $("#pin-no").onclick = () => done(null);
+    $("#pin-ok").onclick = () => done(inp.value.trim());
+    if (opt.forgot) $("#pin-forgot").onclick = () => done({ forgot: true });
+  });
+}
+// Mot de passe du compte connecté sur ce téléphone (« Code oublié ? », DEC-28)
+function passwordSheet() {
+  return new Promise(res => {
+    openSheet(`<h2>${t("pin.pwdTitle")}</h2><p>${t("pin.pwdText")}</p><label class="f">${t("auth.password")}<input id="pw-in" type="password" autocomplete="current-password"></label>
+      <div class="sheet-actions"><button class="btn ghost" id="pw-no">${t("btn.cancel")}</button><button class="btn" id="pw-ok">${t("btn.validate")}</button></div>`);
+    const inp = $("#pw-in"); setTimeout(() => inp.focus(), 50);
+    let out = null; const done = v => { out = v; closeSheet(); };
+    dlg.addEventListener("close", () => res(out), { once: true });
+    $("#pw-no").onclick = () => done(null);
+    $("#pw-ok").onclick = () => done(inp.value || null);
   });
 }
 async function ensurePin() {
-  if (store.get("pin")) return true;
+  await pinMigrate();
+  if (hasPin()) return true;
   const p = await pinSheet(t("pin.createTitle"), t("pin.createText"));
   if (!p) return false;
-  if (!/^\d{4}$/.test(p)) { toast(t("pin.need4"), true); return false; }
-  store.set("pin", p); toast(t("pin.saved")); return true;
+  if (!/^\d{4}$/.test(p.forgot ? "" : p)) { toast(t("pin.need4"), true); return false; }
+  await pinSave(p); toast(t("pin.saved")); return true;
 }

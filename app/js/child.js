@@ -1,6 +1,12 @@
 "use strict";
 /* SoisFier : Écrans de l'enfant */
 /* ---------- Enfant ---------- */
+// Adulte qui a validé, vu de l'enfant : lien traduit à partir de sa clé, « Un parent » à défaut (jamais un prénom, EP-09 DT03-03, DT02-02) ; ancien format (cache d'avant la mise à jour) : texte tel quel
+const validatorName = x => {
+  if (!x || !x.validated_label || x.validated_label === "auto") return "";
+  if (x.validated_label === "member") return x.validated_rel ? t("rel." + x.validated_rel) : x.validated_custom || t("member.aParent");
+  return x.validated_label;
+};
 function renderChild() {
   const cs = S.cs;
   if (!cs) { app.innerHTML = `<div class="loading">${plantSVG(1)}</div>`; return; }
@@ -15,8 +21,8 @@ function renderChild() {
 }
 function cToday(v, routines) {
   const td = todayISO(), due = dueOn(routines, v.child.id, td, S.cs.completions);
-  const main = due.filter(r => !r.is_bonus), bonus = due.filter(r => r.is_bonus);
-  const nd = main.filter(r => v.done.has(r.id + "|" + td)).length;
+  const main = due.filter(r => !r.is_bonus), bonus = due.filter(r => r.is_bonus), ring = ringOf(main, td, S.cs.completions);   // compteur : DEC-32
+  const nd = ring.filter(r => v.done.has(r.id + "|" + td)).length;
   // Jour en pause (la pause l'emporte sur le Mode vacances) : routines repliées derrière « Faire quand même »,
   // dépliées d'office si quelque chose est déjà coché aujourd'hui ; cocher rapporte toujours des étoiles
   const pz = pauseOn(v.child.id, td), hp = periodOn(v.child.id, td);
@@ -25,7 +31,7 @@ function cToday(v, routines) {
     const d = v.done.has(r.id + "|" + td), val = v.valid.has(r.id + "|" + td);
     return `<li><button class="kcard ${val ? "done" : d ? "pending" : ""}" data-act="cToggle" data-id="${r.id}" aria-pressed="${d}">
       <span class="k-emo" aria-hidden="true">${esc(r.emoji)}</span>
-      <span class="k-txt">${isOneoff(r) ? `<small>⭐ ${oneoffNote(r)}</small>` : ""}<b>${esc(r.title)}</b>${d && !val ? `<small>⏳ ${t("kid.parentsWillValidate")}</small>` : val ? (() => { const x = (S.cs.completions || []).find(y => y.routine_id === r.id && y.day === td); return x && x.validated_label && x.validated_label !== "auto" ? `<small>✓ ${t("kid.validatedBy", { who: esc(x.validated_label) })}</small>` : `<small>✓ ${t("kid.validated")}</small>`; })() : r.place ? `<small>📍 ${esc(r.place)}</small>` : ""}</span>
+      <span class="k-txt">${isOneoff(r) ? `<small>⭐ ${oneoffNote(r)}</small>` : ""}<b>${esc(r.title)}</b>${d && !val ? `<small>⏳ ${t("kid.parentsWillValidate")}</small>` : val ? (() => { const x = (S.cs.completions || []).find(y => y.routine_id === r.id && y.day === td); const who = validatorName(x); return who ? `<small>✓ ${t("kid.validatedBy", { who: esc(who) })}</small>` : `<small>✓ ${t("kid.validated")}</small>`; })() : r.place ? `<small>📍 ${esc(r.place)}</small>` : ""}</span>
       <span class="k-stars ${d && !val ? "wait" : ""}" aria-label="${t("kid.starsAria", { n: r.stars })}">${"⭐".repeat(Math.min(r.stars, 5))}</span><span class="k-pot" aria-hidden="true">${val ? "✓" : d ? "⏳" : ""}</span></button>
       ${r.timer_minutes && !d ? `<button class="k-timer" data-act="cTimer" data-id="${r.id}">⏱ ${t("kid.challenge", { n: r.timer_minutes })}</button>` : ""}</li>`;
   };
@@ -39,7 +45,7 @@ function cToday(v, routines) {
       ${v.pendingStars ? `<p class="wait-note">⏳ ${t("kid.pendingStars", { n: v.pendingStars })}</p>` : ""}</div></section>
     ${pz ? `<div class="kid-pause"><p><span aria-hidden="true">⏸️</span> ${t("kid.pauseDay")}${folded ? bell() : ""}</p>${folded && due.length ? `<button class="btn ghost" data-act="cAnyway">${t("kid.anyway")}</button>` : ""}</div>`
       : hp ? `<p class="center"><span class="pill hol-pill">🏖️ ${esc(hp.name)}</span></p>` : ""}
-    ${folded ? "" : `<p class="today-count"><span>${main.length ? (nd === main.length ? t("kid.allDone") : t("kid.doneOf", { n: nd, total: main.length })) : t("kid.noRoutine")}</span>${bell()}</p>
+    ${folded ? "" : `<p class="today-count"><span>${ring.length ? (nd === ring.length ? t("kid.allDone") : t("kid.doneOf", { n: nd, total: ring.length })) : due.length ? (main.length ? "" : t("kid.onlyBonus")) : t("kid.noRoutine")}</span>${bell()}</p>
     ${groups}${bonus.filter(r => !isOneoff(r)).length ? `<h3 class="grp">💪 ${t("kid.bonus")}</h3><ul class="kcards">${bonus.filter(r => !isOneoff(r)).map(card).join("")}</ul>` : ""}`}`;
 }
 function cGifts(v, routines, cs) {
@@ -75,7 +81,8 @@ function cGarden(v, routines) {
     <p class="center"><button class="btn ghost" data-act="ctab" data-tab="badges">🏅 ${t("kid.seeBadges")}</button></p>`;
 }
 // Rappels de l'enfant (v28) : icône 🔔 en bout de ligne dans Aujourd'hui (fenêtre : A.cReminders)
-const bell = () => `<button class="bell" data-act="cReminders" aria-label="${t("kid.reminders")}"><span aria-hidden="true">🔔</span></button>`;
+// Mode enfant ici (F03-06, DT11-08) : pas de rappels, pour ne jamais remplacer ceux du parent sur ce téléphone
+const bell = () => store.get("childFromParent") ? "" : `<button class="bell" data-act="cReminders" aria-label="${t("kid.reminders")}"><span aria-hidden="true">🔔</span></button>`;
 
 function cBadges(v, routines, cs) {
   const BS = visibleBadges(), bs = badgeStats(v), dates = cs.badge_dates || {}, got = BS.filter(b => hasBadge(v, b)).length;

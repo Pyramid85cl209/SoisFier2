@@ -112,7 +112,8 @@
   "notConfirmed": "First confirm your e-mail address with the link you received, then sign in again.",
   "alreadyRegistered": "An account already exists with this e-mail. Please sign in.",
   "passwordShort": "The password must be at least 6 characters long.",
-  "rateLimit": "Too many attempts. Please wait a few minutes."
+  "rateLimit": "Too many attempts. Please wait a few minutes.",
+  "generic": "Something went wrong. Please try again in a moment."
  },
  "garden": {
   "species": {
@@ -202,7 +203,8 @@
    "other": "{n} times"
   },
   "noTpl": "No templates. Tick “Keep as a template” when creating a one-off routine.",
-  "tplDeleted": "Template deleted."
+  "tplDeleted": "Template deleted.",
+  "dateAria": "One-off routine date"
  },
  "tpl": {
   "x": {
@@ -498,8 +500,8 @@
   "autoValidated": "approved automatically",
   "relation": "Relationship to the children",
   "otherRel": "Other…",
-  "customLabel": "Custom label (optional)",
-  "customPlaceholder": "Grandma Jo, Uncle Sam…",
+  "customLabel": "Specify the relationship",
+  "customPlaceholder": "Grandmother, Godmother, Neighbour…",
   "rights": "Rights",
   "makeCode": "Create the code",
   "inviteWho": "Invite {who}",
@@ -514,7 +516,8 @@
   "removeText": "This person will no longer have access to the family. The history of their approvals is kept.",
   "removeBtn": "Remove",
   "removed": "Member removed.",
-  "shareText": "Join our family on SoisFier with the code {code}: {url}"
+  "shareText": "Join our family on SoisFier with the code {code}: {url}",
+  "username": "Username"
  },
  "sep": ", ",
  "offline": "Offline",
@@ -546,7 +549,19 @@
   "needName": "Enter a first name.",
   "joined": "{name} has joined the family.",
   "delTitle": "Delete {name}?",
-  "delText": "Their routines, stars and history will be permanently erased."
+  "delText": "Their routines, stars and history will be permanently erased.",
+  "colorNames": [
+   "Green",
+   "Red",
+   "Blue",
+   "Orange",
+   "Purple",
+   "Turquoise"
+  ],
+  "delTextRewards": {
+   "one": "Their routines, stars, history and the reward reserved for them will be permanently deleted.",
+   "other": "Their routines, stars, history and the {n} rewards reserved for them will be permanently deleted."
+  }
  },
  "routine": {
   "bonus": "bonus",
@@ -585,15 +600,15 @@
   "timer": "timer challenge won",
   "checkedBy": "ticked by {who}",
   "refuse": "Decline",
-  "autoOn": "If you do nothing, they will be approved automatically at midnight.",
+  "autoOn": "If you do nothing, they will be approved automatically after midnight.",
   "autoOff": "Automatic approval is off: they are waiting for your decision.",
   "section": "Approving routines",
   "sectionHelp": "When your child ticks a routine, the stars wait for your approval. The ones you tick yourself are approved straight away.",
-  "autoLabel": "Automatically approve at midnight anything not declined",
+  "autoLabel": "Automatically approve after midnight anything not declined",
   "done": "Routine approved.",
   "refused": "Declined: the routine needs doing again, with no penalty.",
   "allDone": "Everything is approved.",
-  "autoEnabled": "Automatic approval at midnight turned on.",
+  "autoEnabled": "Automatic approval after midnight turned on.",
   "manualOnly": "Manual approval only."
  },
  "reward": {
@@ -651,7 +666,14 @@
   "cancelTitle": "Cancel this exchange?",
   "cancelBtn": "Cancel the exchange",
   "cancelled": "Exchange cancelled, stars given back.",
-  "seeHistory": "See the history"
+  "seeHistory": "See the history",
+  "noRhythmTitle": "No routine yet",
+  "noRhythm": "First add a mandatory routine for {name}: reward prices are worked out from their routines.",
+  "goRoutines": "Go to routines",
+  "tplHelpNoRhythm": "{name} has no mandatory routine yet: their prices are the lowest of the other children's prices, then will be worked out from their routines.",
+  "rhythmNone": "No pace: no mandatory routine",
+  "noRhythmShort": "No calculated price: first add a mandatory routine, or tick “Fixed price”.",
+  "capped": "Price capped at {n} ⭐."
  },
  "role": {
   "parent": "Parent",
@@ -692,7 +714,7 @@
   "deleted": "Break deleted.",
   "r": {
    "trip": "Trip",
-   "sick": "Illness",
+   "rest": "Rest",
    "other": "Other"
   },
   "state": {
@@ -722,7 +744,9 @@
   "blocked": "Notifications are blocked. Allow them in Chrome's settings for this site.",
   "needTime": "Choose at least one time.",
   "enabled": "Reminders turned on.",
-  "disabled": "Reminders turned off."
+  "disabled": "Reminders turned off.",
+  "fallback": "Today's routines 🌱",
+  "timeTooLate": "Choose a time no later than 23:45."
  },
  "print": {
   "title": "Printable planner",
@@ -730,7 +754,8 @@
   "weekStart": "Week of {date}",
   "routine": "Routine",
   "none": "No routines.",
-  "myRewards": "My rewards:"
+  "myRewards": "My rewards:",
+  "printRewards": "Print the rewards"
  },
  "report": {
   "btn": "Transfer the week",
@@ -758,13 +783,15 @@
   },
   "sAlready": "already done",
   "sNotDue": "not planned that day",
-  "sStopped": "Routine stopped since printing"
+  "sStopped": "Routine stopped since printing",
+  "pending": "waiting",
+  "sPending": "waiting"
  },
  "scan": {
   "btn": "Scan a sheet",
   "manual": "Enter without a photo",
   "title": "Scan the sheet",
-  "help": "Lay the ticked sheet flat in good light, without flash. Frame the whole page, black squares included.",
+  "help": "Lay the ticked sheet flat in good light, without flash. Frame the whole page, black squares included. Hold the phone still.",
   "aim": "Frame the sheet, then tap “Take the photo”.",
   "shoot": "Take the photo",
   "choose": "Choose a photo",
@@ -792,7 +819,13 @@
   "math": "To disconnect this phone, what is {a} × {b}?",
   "answer": "Answer",
   "wrongAnswer": "That's not the right answer.",
-  "chooseText": "Choose 4 digits. They protect leaving child mode on this phone."
+  "chooseText": "Choose 4 digits. They protect leaving child mode on this phone.",
+  "forgot": "Forgot the code?",
+  "locked": "Too many attempts. Try again in {n} min.",
+  "pwdTitle": "Account password",
+  "pwdText": "Enter the password of the account signed in on this phone. It replaces the code and erases it.",
+  "pwdWrong": "Wrong password.",
+  "pwdNeedNet": "An internet connection is needed to check the password."
  },
  "backup": {
   "title": "Backup",
@@ -909,7 +942,14 @@
   "reminders": "My reminders",
   "remindersHelp": "Choose when your phone reminds you of your routines.",
   "remindersAsk": "Do you want your phone to remind you of your routines?",
-  "later": "Later"
+  "later": "Later",
+  "onlyBonus": "Only bonus challenges today!",
+  "exitOfflineTitle": "No connection",
+  "exitOfflineText": {
+   "one": "One tick has not been sent yet: without internet it will be lost if you leave now. Come back when the phone is connected, or leave anyway.",
+   "other": "{n} ticks have not been sent yet: without internet they will be lost if you leave now. Come back when the phone is connected, or leave anyway."
+  },
+  "exitAnyway": "Leave anyway"
  },
  "form": {
   "icon": "Icon",
@@ -938,7 +978,8 @@
   "revokeTitle": "Disconnect this device?",
   "revokeText": "A new code will be needed to reconnect it.",
   "revoked": "Device disconnected.",
-  "sameLabel": "{who}'s phone (child mode)"
+  "sameLabel": "{who}'s phone (child mode)",
+  "revokeLost": "Ticks not yet sent from this phone will be lost."
  },
  "timer": {
   "go": "Do it before time runs out!",
@@ -949,6 +990,7 @@
   "success": "Challenge won! ⚡"
  },
  "meta": {
+  "title": "SoisFier",
   "description": "Routines, stars and rewards for children."
  },
  "dialog": "Dialog",
@@ -1035,7 +1077,7 @@
  },
  "vac": {
   "title": "Holidays and breaks",
-  "help": "Holiday mode: routines carry on, adapted to the holidays. Break: days count neither for nor against the flower, ideal for a trip or an illness.",
+  "help": "Holiday mode: routines carry on, adapted to the holidays. Break: days count neither for nor against the flower, ideal for a trip or some rest.",
   "pauseWins": "The break takes priority over holiday mode"
  },
  "hol": {
@@ -1135,7 +1177,21 @@
   "premium_report": "Transferring the week is part of Premium.",
   "scan_week": "This week can't be transferred: choose the current week or the previous one.",
   "scan_day": "This day can't be transferred.",
-  "scan_too_many": "Too many ticks to transfer at once."
+  "scan_too_many": "Too many ticks to transfer at once.",
+  "not_due": "This routine isn't scheduled that day.",
+  "already_done": "This one-off routine was already done on another day.",
+  "bad_price": "Invalid price.",
+  "code_locked": {
+   "one": "Too many attempts. You can try again in {n} minute at most.",
+   "other": "Too many attempts. You can try again in {n} minutes at most."
+  },
+  "device_expired": "This phone hasn't been used for 3 months. A new child code is needed.",
+  "already_member": "You're already a member of this family.",
+  "not_your_name": "Everyone can only change their own username.",
+  "holiday_past": "These holidays have already ended.",
+  "pause_overlap": "This break overlaps another break for this child.",
+  "pause_closed": "This break falls in a fortnight that has already ended (the flower has bloomed).",
+  "price_cap": "The price cannot be more than 5000 stars."
  },
  "hist": {
   "validated": {
@@ -1148,5 +1204,28 @@
   },
   "none": "Nothing in the last 30 days.",
   "netAria": "Day total: {n} stars"
+ },
+ "a11y": {
+  "edit": "Edit {name}",
+  "delete": "Delete {name}",
+  "cancel": "Cancel: {name}",
+  "childHere": "Child mode here for {name}",
+  "connectDevice": "Connect {name}'s device",
+  "disconnectDevice": "Disconnect {name}"
+ },
+ "intro": {
+  "step": "Screen {i} of {n}",
+  "next": "Next",
+  "back": "Back",
+  "done": "Close",
+  "t1": "Welcome to SoisFier",
+  "x1": "SoisFier helps your family build daily routines: brushing teeth, packing the school bag, going to bed on time. The child ticks what they have done, and an adult approves it.",
+  "a1": "A sunflower growing",
+  "t2": "Stars and a flower",
+  "x2": "Each approved routine earns stars. Every good day makes the child's flower grow, and it opens at the end of the fortnight.",
+  "a2": "The child's flower, well grown",
+  "t3": "Rewards that fit",
+  "x3": "Stars are exchanged for rewards chosen by the family. To find out more, tap “?” at the top of the screen: the guide has the answers.",
+  "a3": "A flower in full bloom"
  }
 }

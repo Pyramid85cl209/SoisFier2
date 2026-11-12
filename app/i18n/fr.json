@@ -112,7 +112,8 @@
   "notConfirmed": "Confirmez d'abord votre adresse e-mail avec le lien reçu, puis reconnectez-vous.",
   "alreadyRegistered": "Un compte existe déjà avec cet e-mail. Connectez-vous.",
   "passwordShort": "Le mot de passe doit contenir au moins 6 caractères.",
-  "rateLimit": "Trop de tentatives. Patientez quelques minutes."
+  "rateLimit": "Trop de tentatives. Patientez quelques minutes.",
+  "generic": "Quelque chose n'a pas fonctionné. Réessayez dans un instant."
  },
  "garden": {
   "species": {
@@ -199,7 +200,8 @@
   "tplHelp": "Partagés par toute la famille. Classés du plus utilisé au moins utilisé.",
   "times": "{n} fois",
   "noTpl": "Aucun modèle. Cochez « Garder comme modèle » en créant une routine exceptionnelle.",
-  "tplDeleted": "Modèle supprimé."
+  "tplDeleted": "Modèle supprimé.",
+  "dateAria": "Date de l'exceptionnelle"
  },
  "tpl": {
   "x": {
@@ -489,8 +491,8 @@
   "autoValidated": "validée automatiquement",
   "relation": "Lien avec les enfants",
   "otherRel": "Autre…",
-  "customLabel": "Libellé personnalisé (facultatif)",
-  "customPlaceholder": "Mamie Josette, Tonton Karim…",
+  "customLabel": "Précisez le lien",
+  "customPlaceholder": "Grand-mère, Marraine, Voisin…",
   "rights": "Droits",
   "makeCode": "Créer le code",
   "inviteWho": "Inviter {who}",
@@ -505,7 +507,8 @@
   "removeText": "Cette personne n'aura plus accès à la famille. L'historique de ses validations est conservé.",
   "removeBtn": "Retirer",
   "removed": "Membre retiré.",
-  "shareText": "Rejoignez notre famille sur SoisFier avec le code {code} : {url}"
+  "shareText": "Rejoignez notre famille sur SoisFier avec le code {code} : {url}",
+  "username": "Nom d'utilisateur"
  },
  "sep": ", ",
  "offline": "Hors ligne",
@@ -537,7 +540,19 @@
   "needName": "Saisissez un prénom.",
   "joined": "{name} a rejoint la famille.",
   "delTitle": "Supprimer {name} ?",
-  "delText": "Ses routines, ses étoiles et son historique seront effacés définitivement."
+  "delText": "Ses routines, ses étoiles et son historique seront effacés définitivement.",
+  "colorNames": [
+   "Vert",
+   "Rouge",
+   "Bleu",
+   "Orange",
+   "Violet",
+   "Turquoise"
+  ],
+  "delTextRewards": {
+   "one": "Ses routines, ses étoiles, son historique et la récompense qui lui est réservée seront effacés définitivement.",
+   "other": "Ses routines, ses étoiles, son historique et les {n} récompenses qui lui sont réservées seront effacés définitivement."
+  }
  },
  "routine": {
   "bonus": "bonus",
@@ -576,15 +591,15 @@
   "timer": "défi chrono réussi",
   "checkedBy": "cochée par {who}",
   "refuse": "Refuser",
-  "autoOn": "Sans action de votre part, elles seront validées automatiquement à minuit.",
+  "autoOn": "Sans action de votre part, elles seront validées automatiquement après minuit.",
   "autoOff": "Validation automatique désactivée : elles attendent votre décision.",
   "section": "Validation des routines",
   "sectionHelp": "Quand votre enfant coche une routine, ses étoiles attendent votre validation. Celles que vous cochez vous-même sont validées directement.",
-  "autoLabel": "Valider automatiquement à minuit ce qui n'a pas été refusé",
+  "autoLabel": "Valider automatiquement après minuit ce qui n'a pas été refusé",
   "done": "Routine validée.",
   "refused": "Refusée : la routine est à refaire, sans pénalité.",
   "allDone": "Tout est validé.",
-  "autoEnabled": "Validation automatique à minuit activée.",
+  "autoEnabled": "Validation automatique après minuit activée.",
   "manualOnly": "Validation manuelle uniquement."
  },
  "reward": {
@@ -642,7 +657,14 @@
   "cancelTitle": "Annuler cet échange ?",
   "cancelBtn": "Annuler l'échange",
   "cancelled": "Échange annulé, étoiles rendues.",
-  "seeHistory": "Voir l'historique"
+  "seeHistory": "Voir l'historique",
+  "noRhythmTitle": "Pas encore de routine",
+  "noRhythm": "Ajoutez d'abord une routine obligatoire à {name} : le prix des récompenses se calcule sur ses routines.",
+  "goRoutines": "Aller aux routines",
+  "tplHelpNoRhythm": "{name} n'a pas encore de routine obligatoire : ses prix sont les plus petits des prix des autres enfants, puis se calculeront sur ses routines.",
+  "rhythmNone": "Pas de rythme : aucune routine obligatoire",
+  "noRhythmShort": "Pas de prix calculé : ajoutez d'abord une routine obligatoire, ou cochez « Prix fixe ».",
+  "capped": "Prix limité à {n} ⭐."
  },
  "role": {
   "parent": "Parent",
@@ -683,7 +705,7 @@
   "deleted": "Pause supprimée.",
   "r": {
    "trip": "Voyage",
-   "sick": "Maladie",
+   "rest": "Repos",
    "other": "Autre"
   },
   "state": {
@@ -713,7 +735,9 @@
   "blocked": "Les notifications sont bloquées. À autoriser dans les réglages de Chrome pour ce site.",
   "needTime": "Choisir au moins une heure.",
   "enabled": "Rappels activés.",
-  "disabled": "Rappels désactivés."
+  "disabled": "Rappels désactivés.",
+  "fallback": "Routines du jour 🌱",
+  "timeTooLate": "Choisir une heure au plus tard à 23:45."
  },
  "print": {
   "title": "Planning à imprimer",
@@ -721,7 +745,8 @@
   "weekStart": "Semaine du {date}",
   "routine": "Routine",
   "none": "Aucune routine.",
-  "myRewards": "Mes récompenses :"
+  "myRewards": "Mes récompenses :",
+  "printRewards": "Imprimer les récompenses"
  },
  "report": {
   "btn": "Reporter la semaine",
@@ -749,13 +774,15 @@
   },
   "sAlready": "déjà faite",
   "sNotDue": "pas prévu ce jour-là",
-  "sStopped": "Routine arrêtée depuis l'impression"
+  "sStopped": "Routine arrêtée depuis l'impression",
+  "pending": "en attente",
+  "sPending": "en attente"
  },
  "scan": {
   "btn": "Scanner une feuille",
   "manual": "Saisir sans photo",
   "title": "Scanner la feuille",
-  "help": "Posez la feuille cochée à plat, bien éclairée, sans flash. Cadrez toute la page, carrés noirs compris.",
+  "help": "Posez la feuille cochée à plat, bien éclairée, sans flash. Cadrez toute la page, carrés noirs compris. Tenez le téléphone immobile.",
   "aim": "Cadrez la feuille, puis touchez « Prendre la photo ».",
   "shoot": "Prendre la photo",
   "choose": "Choisir une photo",
@@ -783,7 +810,13 @@
   "math": "Pour déconnecter ce téléphone, combien font {a} × {b} ?",
   "answer": "Réponse",
   "wrongAnswer": "Ce n'est pas la bonne réponse.",
-  "chooseText": "Choisissez 4 chiffres. Ils protègent la sortie du mode enfant sur ce téléphone."
+  "chooseText": "Choisissez 4 chiffres. Ils protègent la sortie du mode enfant sur ce téléphone.",
+  "forgot": "Code oublié ?",
+  "locked": "Trop d'essais. Réessayez dans {n} min.",
+  "pwdTitle": "Mot de passe du compte",
+  "pwdText": "Saisissez le mot de passe du compte connecté sur ce téléphone. Il remplace le code et l'efface.",
+  "pwdWrong": "Mot de passe incorrect.",
+  "pwdNeedNet": "Il faut une connexion internet pour vérifier le mot de passe."
  },
  "backup": {
   "title": "Sauvegarde",
@@ -900,7 +933,14 @@
   "reminders": "Mes rappels",
   "remindersHelp": "Choisis à quelle heure ton téléphone te rappelle tes routines.",
   "remindersAsk": "Veux-tu que ton téléphone te rappelle tes routines ?",
-  "later": "Plus tard"
+  "later": "Plus tard",
+  "onlyBonus": "Que des défis bonus aujourd'hui !",
+  "exitOfflineTitle": "Pas de connexion",
+  "exitOfflineText": {
+   "one": "Une coche n'a pas encore été envoyée : sans internet, elle sera perdue si vous sortez maintenant. Revenez quand le téléphone est connecté, ou sortez quand même.",
+   "other": "{n} coches n'ont pas encore été envoyées : sans internet, elles seront perdues si vous sortez maintenant. Revenez quand le téléphone est connecté, ou sortez quand même."
+  },
+  "exitAnyway": "Sortir quand même"
  },
  "form": {
   "icon": "Icône",
@@ -929,7 +969,8 @@
   "revokeTitle": "Déconnecter cet appareil ?",
   "revokeText": "Il faudra un nouveau code pour le reconnecter.",
   "revoked": "Appareil déconnecté.",
-  "sameLabel": "Téléphone de {who} (mode enfant)"
+  "sameLabel": "Téléphone de {who} (mode enfant)",
+  "revokeLost": "Les coches pas encore envoyées depuis ce téléphone seront perdues."
  },
  "timer": {
   "go": "Fais-le avant la fin du temps !",
@@ -940,6 +981,7 @@
   "success": "Défi réussi ! ⚡"
  },
  "meta": {
+  "title": "SoisFier",
   "description": "Routines, étoiles et récompenses pour les enfants."
  },
  "dialog": "Fenêtre",
@@ -1026,7 +1068,7 @@
  },
  "vac": {
   "title": "Vacances et absences",
-  "help": "Mode vacances : les routines continuent, adaptées aux vacances. Pause : les jours ne comptent ni pour ni contre la fleur, idéal pour un voyage ou une maladie.",
+  "help": "Mode vacances : les routines continuent, adaptées aux vacances. Pause : les jours ne comptent ni pour ni contre la fleur, idéal pour un voyage ou un temps de repos.",
   "pauseWins": "La pause l'emporte sur le mode vacances"
  },
  "hol": {
@@ -1126,7 +1168,21 @@
   "premium_report": "Le report de la semaine fait partie du Premium.",
   "scan_week": "Cette semaine ne peut pas être reportée : choisissez la semaine en cours ou la précédente.",
   "scan_day": "Ce jour ne peut pas être reporté.",
-  "scan_too_many": "Trop de coches à reporter d'un coup."
+  "scan_too_many": "Trop de coches à reporter d'un coup.",
+  "not_due": "Cette routine n'est pas prévue ce jour-là.",
+  "already_done": "Cette routine exceptionnelle est déjà faite un autre jour.",
+  "bad_price": "Prix invalide.",
+  "code_locked": {
+   "one": "Trop d'essais. Nouvel essai possible dans {n} minute au plus.",
+   "other": "Trop d'essais. Nouvel essai possible dans {n} minutes au plus."
+  },
+  "device_expired": "Ce téléphone n'a pas servi depuis 3 mois. Il faut un nouveau code enfant.",
+  "already_member": "Vous êtes déjà membre de cette famille.",
+  "not_your_name": "Chacun ne modifie que son propre nom d'utilisateur.",
+  "holiday_past": "Ces vacances sont déjà terminées.",
+  "pause_overlap": "Cette pause chevauche une autre pause de cet enfant.",
+  "pause_closed": "Cette pause touche une quinzaine déjà terminée (fleur éclose).",
+  "price_cap": "Le prix ne peut pas dépasser 5000 étoiles."
  },
  "hist": {
   "validated": {
@@ -1139,5 +1195,28 @@
   },
   "none": "Rien sur les 30 derniers jours.",
   "netAria": "Bilan du jour : {n} étoiles"
+ },
+ "a11y": {
+  "edit": "Modifier {name}",
+  "delete": "Supprimer {name}",
+  "cancel": "Annuler : {name}",
+  "childHere": "Mode enfant ici pour {name}",
+  "connectDevice": "Connecter l'appareil de {name}",
+  "disconnectDevice": "Déconnecter {name}"
+ },
+ "intro": {
+  "step": "Écran {i} sur {n}",
+  "next": "Suivant",
+  "back": "Retour",
+  "done": "Fermer",
+  "t1": "Bienvenue dans SoisFier",
+  "x1": "SoisFier aide votre famille à installer les routines du quotidien : se brosser les dents, préparer son cartable, se coucher à l'heure. L'enfant coche ce qu'il a fait, un adulte valide.",
+  "a1": "Un tournesol qui pousse",
+  "t2": "Des étoiles, une fleur",
+  "x2": "Chaque routine validée rapporte des étoiles. Chaque bonne journée fait grandir la fleur de l'enfant, qui s'ouvre à la fin de la quinzaine.",
+  "a2": "La fleur de l'enfant, bien développée",
+  "t3": "Des récompenses à sa mesure",
+  "x3": "Les étoiles s'échangent contre des récompenses choisies par la famille. Pour tout savoir, touchez « ? » en haut de l'écran : le mode d'emploi vous répond.",
+  "a3": "Une fleur épanouie"
  }
 }

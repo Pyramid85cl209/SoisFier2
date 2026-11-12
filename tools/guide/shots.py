@@ -12,7 +12,7 @@ RAW = f"/tmp/sf-guide-raw/{LG}"; os.makedirs(RAW, exist_ok=True)
 STUB = open(f"{HERE}/stub.js", encoding="utf-8").read()
 import glob
 CHROME = os.environ.get("SF_CHROME") or (sorted(glob.glob("/opt/pw-browsers/chromium-*/chrome-linux/chrome")) or [None])[-1]
-SESSION = {"user": {"id": "U", "email": "parent@example.com", "user_metadata": {"display_name": D["member"]}}}
+SESSION = {"user": {"id": "U", "email": "parent@example.com", "user_metadata": {"display_name": D["member"], "intro_seen": True}}}
 W, H = 360, 740
 
 def C(name, i):

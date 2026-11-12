@@ -210,43 +210,57 @@ function scanGrid(R, nLines) {
   const hy = peaks(smooth(runs(B, W, H, true, 0, H, 0, W, 60)), W * 0.94 * 0.7);
   if (hy.length < 3) return null;
   const y0 = Math.round(hy[0]), y1 = Math.round(hy[hy.length - 1]);
-  // Traits verticaux candidats, puis part des bandes (entre deux traits horizontaux) qu'ils traversent : un trait du tableau
-  // traverse l'en-tête et toutes les lignes de routine (plus de la moitié des bandes), un trait de feutre quelques-unes seulement
-  const cand = peaks(smooth(runs(B, W, H, false, 0, W, y0, y1 + 1, 25)), (y1 - y0) * 0.3);
-  const cover = x => {
-    let n = 0;
-    for (let i = 0; i < hy.length - 1; i++) {
-      const ya = Math.round(hy[i] + (hy[i + 1] - hy[i]) * 0.25), yb = Math.round(hy[i] + (hy[i + 1] - hy[i]) * 0.75);
-      let hit = 0; for (let y = ya; y <= yb; y++) for (let dx = -2; dx <= 2; dx++) if (B[y * W + Math.round(x) + dx]) { hit++; break; }
-      if (hit > (yb - ya + 1) * 0.8) n++;
-    }
-    return n / (hy.length - 1);
+  // Traits verticaux : une feuille plastifiée courbée dans sa pochette n'a plus de traits droits (DT04-11). On les cherche d'abord en haut du tableau,
+  // où l'écart de position reste faible, puis on les suit bande par bande : la position de chaque trait est recherchée autour de celle de la bande précédente.
+  const nb = hy.length - 1, band = i => { const a = hy[i], b = hy[i + 1]; return [Math.round(a + (b - a) * 0.25), Math.round(a + (b - a) * 0.75)]; };
+  const hitsAt = (x, ya, yb) => { let hit = 0; for (let y = ya; y <= yb; y++) for (let dx = -2; dx <= 2; dx++) if (B[y * W + Math.round(x) + dx]) { hit++; break; } return hit / (yb - ya + 1); };
+  const pick = (cand, covers) => {   // 9 traits : les bords et les mieux couverts
+    let v = cand.map(x => ({ x, c: covers(x) })).filter(q => q.c >= 0.5);
+    while (v.length > 9) { const w = v.slice(1, -1).reduce((m, q) => (q.c < m.c ? q : m)); v = v.filter(q => q !== w); }
+    return v.map(q => q.x);
   };
-  let vx = cand.map(x => ({ x, c: cover(x) })).filter(v => v.c >= 0.5);
-  while (vx.length > 9) { const w = vx.slice(1, -1).reduce((m, v) => (v.c < m.c ? v : m)); vx = vx.filter(v => v !== w); }   // bords gardés
-  vx = vx.map(v => v.x);
+  const top = Math.min(nb, 5), yt0 = Math.round(hy[0]), yt1 = Math.round(hy[top]);   // tête du tableau : en-tête et premières lignes
+  const seedCover = x => { let n = 0; for (let i = 0; i < top; i++) { const [ya, yb] = band(i); if (hitsAt(x, ya, yb) > 0.8) n++; } return n / top; };
+  let vx = pick(peaks(smooth(runs(B, W, H, false, 0, W, yt0, yt1 + 1, Math.min(25, Math.round((yt1 - yt0) * 0.5)))), (yt1 - yt0) * 0.3), seedCover);
+  if (vx.length !== 9) {   // secours : traits droits sur tout le tableau
+    const cover = x => { let n = 0; for (let i = 0; i < nb; i++) { const [ya, yb] = band(i); if (hitsAt(x, ya, yb) > 0.8) n++; } return n / nb; };
+    vx = pick(peaks(smooth(runs(B, W, H, false, 0, W, y0, y1 + 1, 25)), (y1 - y0) * 0.3), cover);
+  }
   if (vx.length !== 9) return null;
   const widths = vx.slice(1).map((x, i) => x - vx[i]), name = widths.indexOf(Math.max(...widths));
   if (name !== 0 && name !== 7) return null;
   const days = widths.filter((_, i) => i !== name), dw = days.reduce((a, b) => a + b, 0) / 7;
   if (days.some(x => Math.abs(x - dw) > dw * 0.35)) return null;
+  // Suivi : dans chaque bande, chaque trait est cherché à quelques pixels de sa position dans la bande précédente (la plus nette du palier)
+  const win = Math.max(4, Math.round(W * 0.006)), track = []; let prev = vx.slice();
+  for (let i = 0; i < nb; i++) {
+    const [ya, yb] = band(i), cur = prev.map(px => {
+      let bs = -1, xs = [];
+      for (let x = Math.max(2, Math.round(px) - win); x <= Math.min(W - 3, Math.round(px) + win); x++) {
+        const sc = hitsAt(x, ya, yb); if (sc > bs + 1e-9) { bs = sc; xs = [x]; } else if (Math.abs(sc - bs) < 1e-9) xs.push(x);
+      }
+      if (bs < 0.5) return px;   // la bande ne porte pas ce trait (ligne de moment) : on garde la position précédente
+      return xs.reduce((a, x) => a + x, 0) / xs.length;
+    });
+    track.push(cur); prev = cur;
+  }
   // Lignes de routine : celles où les traits verticaux des jours traversent la bande (les lignes de moment sont fusionnées)
-  const inner = vx.slice(1, 8), rows = [];
-  for (let i = 1; i < hy.length - 1; i++) {
-    const a = hy[i], b = hy[i + 1], ya = Math.round(a + (b - a) * 0.25), yb = Math.round(a + (b - a) * 0.75);
-    let hit = 0, tot = 0;
+  const rows = [];
+  for (let i = 1; i < nb; i++) {
+    const [ya, yb] = band(i), inner = track[i].slice(1, 8); let hit = 0, tot = 0;
     for (const x of inner) for (let y = ya; y <= yb; y++) { tot++; for (let dx = -2; dx <= 2; dx++) if (B[y * W + Math.round(x) + dx]) { hit++; break; } }
-    if (tot && hit / tot > 0.6) rows.push([a, b]);
+    if (tot && hit / tot > 0.6) rows.push([hy[i], hy[i + 1], i]);
   }
   if (rows.length !== nLines) return null;
-  return { vx, rows, rtl: name === 7 };
+  return { vx, track, rows, rtl: name === 7 };
 }
 // Part d'encre de chaque case (disque central du rond), seuil calibré sur la feuille ; « on », « off » ou « unsure »
 function scanCells(R, G) {
   const { W, L, R: px } = R, cells = [], all = [];
   const dayCols = G.rtl ? [6, 5, 4, 3, 2, 1, 0] : [1, 2, 3, 4, 5, 6, 7];   // colonne physique de chaque jour, dans l'ordre imprimé
-  for (const [a, b] of G.rows) for (const c of dayCols) {
-    const x0 = G.vx[c] + 3, x1 = G.vx[c + 1] - 3, y0 = a + 3, y1 = b - 3, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, r = 0.26 * Math.min(x1 - x0, y1 - y0);
+  for (const [a, b, bi] of G.rows) for (const c of dayCols) {
+    const vx = G.track ? G.track[bi] : G.vx;   // trait de chaque jour dans cette ligne (suivi, DT04-11)
+    const x0 = vx[c] + 3, x1 = vx[c + 1] - 3, y0 = a + 3, y1 = b - 3, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, r = 0.26 * Math.min(x1 - x0, y1 - y0);
     const lums = []; for (let y = Math.round(y0); y < y1; y += 2) for (let x = Math.round(x0); x < x1; x += 2) lums.push(L[y * W + x]);
     lums.sort((p, q) => p - q);
     const ref = Math.max(40, lums[Math.floor(lums.length * 0.9)] || 255), s = [];

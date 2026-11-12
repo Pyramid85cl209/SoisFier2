@@ -1,11 +1,15 @@
 "use strict";
 /* SoisFier : Démarrage */
 /* ================= Démarrage ================= */
-window.addEventListener("online", () => { flushQueue(); if (S.screen === "parent" && S.offline) enterParent(); });
+window.addEventListener("online", () => { flushQueue(); flushUnpair(); if (S.screen === "parent" && S.offline) enterParent(); });
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState !== "visible") return;
+  flushUnpair();
   if (S.screen === "child") { flushQueue().then(loadChild); }
-  else if (S.screen === "parent" && S.family) { if (S.day > todayISO()) S.day = todayISO(); refreshParent().then(render).catch(() => {}); }
+  else if (S.screen === "parent" && S.family) {
+    // DT15-01 : retour après minuit : on revient au jour en cours, sauf si l'adulte avait choisi un autre jour
+    const nt = todayISO(); if (S.lastToday && S.lastToday !== nt && S.day === S.lastToday) S.day = nt; S.lastToday = nt;
+    if (S.day > nt) S.day = nt; refreshParent().then(render).catch(() => {}); }
 });
 if (sb) sb.auth.onAuthStateChange((event, session) => {
   if (event === "PASSWORD_RECOVERY") {
@@ -46,6 +50,7 @@ function swSetup() {
 async function boot() {
   swSetup();
   await loadI18n();
+  pinMigrate(); flushUnpair();   // ancien code parent converti en empreinte ; retraits d'appareil restés en attente
   if (!sb) { S.screen = "error"; S.err = CFG_OK ? t("error.noService") : t("error.noConfig"); return render(); }
   if (store.get("childToken")) {
     S.screen = "child"; S.cs = store.get("childCache"); render();
@@ -53,7 +58,7 @@ async function boot() {
   }
   const { data } = await sb.auth.getSession();
   S.session = data.session;
-  if (!S.session) { S.screen = "auth"; return render(); }
-  await enterParent();
+  if (!S.session) { S.screen = "auth"; render(); introFromLink(); return; }
+  await enterParent(); introFromLink();
 }
 boot();

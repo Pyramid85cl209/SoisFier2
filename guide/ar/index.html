@@ -5,99 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>دليل استخدام SoisFier</title>
 <meta name="description" content="دليل استخدام SoisFier الكامل: التثبيت، الأنشطة، المكافآت، النجوم المكسورة، الأفراد، اليوميات، جهة الطفل والإعدادات.">
-<meta name="theme-color" content="#2E8B57">
+<meta name="theme-color" content="#237A49">
 <link rel="icon" href="../../icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
-<style>
-:root{
-  --sky:#E3F1FB; --paper:#FFFFFF; --leaf:#2E8B57; --leaf-d:#1F6B41; --leaf-l:#DDF2E5;
-  --sun:#FFC233; --sun-l:#FFF1C9; --earth:#4A2E1F; --muted:#6E5F55; --poppy:#E8484F;
-  --line:#CFE2EF; --shade:rgba(15,34,25,.45);
-  --display:"Fredoka", ui-rounded, "Segoe UI", system-ui, sans-serif;
-  --body:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --nav:300px;
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){ --sky:#0F2219; --paper:#18322A; --leaf:#5CC48A; --leaf-d:#7FD6A5; --leaf-l:#1E4535;
-    --sun:#FFCB4D; --sun-l:#3A3318; --earth:#F1ECE4; --muted:#A9B8AF; --poppy:#FF6B70; --line:#24463A; --shade:rgba(0,0,0,.6); }
-}
-:root[data-theme="dark"]{ --sky:#0F2219; --paper:#18322A; --leaf:#5CC48A; --leaf-d:#7FD6A5; --leaf-l:#1E4535;
-  --sun:#FFCB4D; --sun-l:#3A3318; --earth:#F1ECE4; --muted:#A9B8AF; --poppy:#FF6B70; --line:#24463A; --shade:rgba(0,0,0,.6); }
-*{box-sizing:border-box}
-html{scroll-behavior:smooth;scroll-padding-top:72px}
-body{margin:0;background:var(--sky);color:var(--earth);font:17px/1.6 var(--body);-webkit-tap-highlight-color:transparent}
-a{color:var(--leaf-d)}
-h2,h3,h4{font-family:var(--display);font-weight:600;line-height:1.2;color:var(--earth)}
-
-/* Barre du haut */
-.bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;padding:10px 16px;
-  padding-top:calc(10px + env(safe-area-inset-top,0px));background:var(--sky);border-bottom:2px solid var(--line)}
-.bar h1{font-family:var(--display);font-weight:600;font-size:1.15rem;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bar .logo{font-size:1.4rem}
-.btn{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:999px;background:var(--paper);color:var(--leaf-d);
-  font:700 .95rem var(--body);padding:8px 14px;box-shadow:inset 0 0 0 2px var(--leaf);text-decoration:none;cursor:pointer}
-.menu-btn{display:none}
-
-/* Mise en page */
-.layout{display:grid;grid-template-columns:var(--nav) minmax(0,1fr);max-width:1240px;margin:0 auto}
-nav.toc{position:sticky;top:62px;height:calc(100vh - 62px);overflow-y:auto;padding-block:18px 40px;padding-inline:16px 12px;border-inline-end:2px solid var(--line)}
-.toc ol,.toc ul{list-style:none;margin:0;padding:0}
-.toc > ol > li{margin-bottom:6px}
-.toc a{display:block;text-decoration:none;color:var(--earth);border-radius:12px;padding:6px 10px;font-size:.93rem;line-height:1.3}
-.toc a:hover{background:var(--paper)}
-.toc a.p{font-family:var(--display);font-weight:600;font-size:1rem;display:flex;gap:8px;align-items:baseline}
-.toc ul a{padding-inline-start:42px;color:var(--muted)}
-.toc a.on{background:var(--leaf-l);color:var(--leaf-d)}
-.num{display:inline-grid;place-items:center;min-width:30px;height:26px;padding:0 6px;border-radius:999px;background:var(--leaf);color:#fff;
-  font-family:var(--display);font-size:.85rem;font-weight:600;flex:none}
-main{padding:24px 28px 120px;max-width:860px;min-width:0}
-.lead{background:var(--paper);border-radius:20px;padding:18px 20px;margin:0 0 28px}
-.lead p{margin:.3em 0}
-.part{margin-bottom:48px}
-.part > h2{display:flex;align-items:center;gap:12px;font-size:1.7rem;margin:0 0 14px;padding-top:8px}
-.part > h2 .num{min-width:44px;height:36px;font-size:1.1rem}
-h3{font-size:1.3rem;margin:34px 0 10px}
-h4{font-size:1.1rem;margin:24px 0 8px}
-p,li{max-width:70ch}
-ol,ul{padding-inline-start:1.4em}
-li{margin:.25em 0}
-strong{color:var(--earth)}
-figure{margin:18px 0 20px;background:var(--paper);border-radius:20px;padding:10px}
-figure img{display:block;width:auto;max-width:100%;height:auto;max-height:78vh;margin:0 auto;border-radius:12px;cursor:zoom-in}
-figcaption{font-size:.85rem;color:var(--muted);padding:8px 6px 2px}
-.tbl{overflow-x:auto;margin:14px 0;border-radius:16px;background:var(--paper)}
-table{border-collapse:collapse;width:100%;font-size:.95rem}
-th,td{text-align:start;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
-th{font-family:var(--display);font-weight:600;background:var(--leaf-l)}
-tr:last-child td{border-bottom:0}
-.top-link{position:fixed;inset-inline-end:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:15;width:46px;height:46px;border-radius:50%;
-  display:grid;place-items:center;background:var(--leaf);color:#fff;text-decoration:none;font-size:1.3rem;box-shadow:0 2px 6px rgba(0,0,0,.2)}
-
-/* Visionneuse */
-.viewer{position:fixed;inset:0;z-index:40;background:var(--shade);display:none;overflow:auto;-webkit-overflow-scrolling:touch}
-.viewer.open{display:block}
-.viewer img{display:block;max-width:none;margin:64px auto 24px;border-radius:12px}
-.viewer button{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));inset-inline-end:12px;z-index:41}
-
-/* Téléphone */
-@media (max-width:900px){
-  .layout{display:block}
-  .menu-btn{display:inline-flex}
-  nav.toc{position:fixed;top:0;inset-inline-start:0;bottom:0;width:min(86vw,340px);height:auto;z-index:30;background:var(--sky);
-    padding-top:calc(18px + env(safe-area-inset-top,0px));transform:translateX(105%);transition:transform .2s ease;border-inline-end:2px solid var(--line)}
-  nav.toc.open{transform:none}
-  .scrim{position:fixed;inset:0;z-index:25;background:var(--shade);display:none}
-  .scrim.open{display:block}
-  main{padding:16px 16px 110px}
-  .part > h2{font-size:1.45rem}
-  .bar .back-txt{display:none}
-}
-@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto} nav.toc{transition:none}}
-.note{background:var(--sun-l);border-radius:16px;padding:12px 16px;font-size:.93rem}
-.lang-menu{position:relative}.lang-menu>summary{list-style:none;cursor:pointer}.lang-menu>summary::-webkit-details-marker{display:none}.lang-pop{position:absolute;inset-inline-end:0;top:calc(100% + 6px);z-index:40;min-width:150px;display:flex;flex-direction:column;gap:2px;background:var(--paper);border-radius:14px;padding:6px;box-shadow:0 4px 14px rgba(0,0,0,.18)}.lang-pop a{padding:8px 12px;border-radius:10px;text-decoration:none;color:var(--earth)}.lang-pop a:hover{background:var(--leaf-l)}.lang-pop a[aria-current]{font-weight:700;color:var(--leaf-d)}
-</style>
+<link rel="stylesheet" href="../guide.css">
 
 </head>
 <body>
@@ -110,7 +23,7 @@ tr:last-child td{border-bottom:0}
 </header>
 <div class="scrim" id="scrim"></div>
 <div class="layout">
-  <nav class="toc" id="toc" aria-label="المحتويات"><ol><li><a href="#p0" class="p"><span class="num">🌻</span>تقديم</a><ul><li><a href="#p0-why">لماذا ينجح ذلك</a></li><li><a href="#p0-principles">المبادئ</a></li></ul></li><li><a href="#p1" class="p"><span class="num">1</span>التثبيت والحساب</a><ul><li><a href="#p1-before">قبل البدء</a></li><li><a href="#p1-home">شاشة البداية</a></li><li><a href="#p1-lang">اختيار اللغة</a></li><li><a href="#p1-install">الخطوة 1: تثبيت التطبيق</a></li><li><a href="#p1-account">الخطوة 2: إنشاء الحساب</a></li><li><a href="#p1-family">الخطوة 3: إنشاء العائلة أو الانضمام إليها</a></li><li><a href="#p1-first">الخطوة 4: الإعدادات الأولى</a></li><li><a href="#p1-problems">عند حدوث مشكلة</a></li></ul></li><li><a href="#p2a" class="p"><span class="num">2أ</span>صفحة العائلة والطفل الأول</a><ul><li><a href="#p2a-page">صفحة العائلة</a></li><li><a href="#p2a-child">الخطوة 1: إضافة طفل</a></li><li><a href="#p2a-routines">الخطوة 2: اختيار أنشطته الأولى</a></li><li><a href="#p2a-next">وبعد ذلك</a></li></ul></li><li><a href="#p2b" class="p"><span class="num">2ب</span>الأنشطة</a><ul><li><a href="#p2b-tab">تبويب الأنشطة</a></li><li><a href="#p2b-more">إضافة نماذج أخرى</a></li><li><a href="#p2b-create">إنشاء نشاط</a></li><li><a href="#p2b-edit">تعديل نشاط أو حذفه</a></li><li><a href="#p2b-oneoff">إضافة نشاط استثنائي</a></li><li><a href="#p2b-print">طباعة الأسبوع</a></li><li><a href="#p2b-report">مسح الورقة أو ترحيل الأسبوع (بريميوم)</a></li><li><a href="#p2b-today">النتيجة في تبويب اليوم</a></li></ul></li><li><a href="#p2c" class="p"><span class="num">2ج</span>المكافآت والسجلّ</a><ul><li><a href="#p2c-tab">تبويب المكافآت</a></li><li><a href="#p2c-catalog">الاختيار من القائمة</a></li><li><a href="#p2c-create">إنشاء مكافأة أو مناسبة</a></li><li><a href="#p2c-history">تبويب السجلّ</a></li><li><a href="#p2c-malus">النجوم المكسورة</a></li></ul></li><li><a href="#p2d" class="p"><span class="num">2د</span>الأفراد وهاتف الطفل</a><ul><li><a href="#p2d-invite">دعوة فرد</a></li><li><a href="#p2d-join">من جهة المدعوّ: الانضمام إلى العائلة</a></li><li><a href="#p2d-members">تعديل فرد أو إزالته</a></li><li><a href="#p2d-device">ربط هاتف الطفل</a></li><li><a href="#p2d-childmode">وضع الطفل على هاتفكم</a></li><li><a href="#p2d-editchild">تعديل طفل</a></li></ul></li><li><a href="#p3" class="p"><span class="num">3</span>يوميات الوالدين</a><ul><li><a href="#p3-today">شاشة اليوم</a></li><li><a href="#p3-validate">تحديد الأنشطة وتأكيدها</a></li><li><a href="#p3-redeem">استبدال مكافأة</a></li><li><a href="#p3-pause-day">يوم توقّف</a></li></ul></li><li><a href="#p4" class="p"><span class="num">4</span>من جهة الطفل</a><ul><li><a href="#p4-routines">أنشطتنا</a></li><li><a href="#p4-pause-day">يوم توقّف</a></li><li><a href="#p4-timer">التحدّي المؤقّت</a></li><li><a href="#p4-gifts">المكافآت من جهة الطفل</a></li><li><a href="#p4-garden">حديقتنا</a></li><li><a href="#p4-reminders">تذكيراتنا</a></li><li><a href="#p4-badges">الأوسمة</a></li></ul></li><li><a href="#p5" class="p"><span class="num">5</span>الإعدادات</a><ul><li><a href="#p5-week">الأسبوع والمنطقة الزمنية</a></li><li><a href="#p5-auto">التأكيد التلقائي عند منتصف الليل</a></li><li><a href="#p5-push">التذكيرات</a></li><li><a href="#p5-account">رمز الوالدين والنسخ الاحتياطي والحساب</a></li></ul></li><li><a href="#p6" class="p"><span class="num">6</span>العطلات والغيابات</a><ul><li><a href="#p6-why">توقّف أم وضع العطلة؟</a></li><li><a href="#p6-pause">برمجة توقّف</a></li><li><a href="#p6-edit-pause">تعديل توقّف أو إيقافه</a></li><li><a href="#p6-schedule">برمجة وضع العطلة</a></li><li><a href="#p6-settings">ضبط الأنشطة</a></li><li><a href="#p6-during">خلال العطلة</a></li><li><a href="#p6-stop">تعديل العطلة أو إيقافها</a></li></ul></li><li><a href="#premium" class="p"><span class="num">7</span>المجاني وبريميوم</a><ul><li><a href="#p7-la-shay-yadi">لا شيء يضيع</a></li><li><a href="#p7-jihat-altifl">من جهة الطفل</a></li><li><a href="#p7-ishtiraki">اشتراكي</a></li></ul></li></ol></nav>
+  <nav class="toc" id="toc" aria-label="المحتويات" data-none="لا توجد نتائج." data-one="نتيجة واحدة" data-many="{n} نتيجة" data-open="توسيع" data-close="طيّ"><form class="gsearch" id="gsearch" role="search" onsubmit="return false"><label for="gq">ابحث في الدليل</label><input id="gq" type="search" autocomplete="off" enterkeyhint="search"><p class="gstat" id="gstat" role="status" aria-live="polite"></p><ul class="gres" id="gres"></ul></form><ol><li><a href="#p0" class="p"><span class="num">🌻</span>تقديم</a><ul><li><a href="#p0-why">لماذا ينجح ذلك</a></li><li><a href="#p0-principles">المبادئ</a></li></ul></li><li><a href="#p1" class="p"><span class="num">1</span>التثبيت والحساب</a><ul><li><a href="#p1-before">قبل البدء</a></li><li><a href="#p1-home">شاشة البداية</a></li><li><a href="#p1-lang">اختيار اللغة</a></li><li><a href="#p1-install">الخطوة 1: تثبيت التطبيق</a></li><li><a href="#p1-account">الخطوة 2: إنشاء الحساب</a></li><li><a href="#p1-family">الخطوة 3: إنشاء العائلة أو الانضمام إليها</a></li><li><a href="#p1-first">الخطوة 4: الإعدادات الأولى</a></li><li><a href="#p1-problems">عند حدوث مشكلة</a></li></ul></li><li><a href="#p2a" class="p"><span class="num">2أ</span>صفحة العائلة والطفل الأول</a><ul><li><a href="#p2a-page">صفحة العائلة</a></li><li><a href="#p2a-child">الخطوة 1: إضافة طفل</a></li><li><a href="#p2a-routines">الخطوة 2: اختيار أنشطته الأولى</a></li><li><a href="#p2a-next">وبعد ذلك</a></li></ul></li><li><a href="#p2b" class="p"><span class="num">2ب</span>الأنشطة</a><ul><li><a href="#p2b-tab">تبويب الأنشطة</a></li><li><a href="#p2b-more">إضافة نماذج أخرى</a></li><li><a href="#p2b-create">إنشاء نشاط</a></li><li><a href="#p2b-edit">تعديل نشاط أو حذفه</a></li><li><a href="#p2b-oneoff">إضافة نشاط استثنائي</a></li><li><a href="#p2b-print">طباعة الأسبوع</a></li><li><a href="#p2b-report">مسح الورقة أو ترحيل الأسبوع (بريميوم)</a></li><li><a href="#p2b-today">النتيجة في تبويب اليوم</a></li></ul></li><li><a href="#p2c" class="p"><span class="num">2ج</span>المكافآت والسجلّ</a><ul><li><a href="#p2c-tab">تبويب المكافآت</a></li><li><a href="#p2c-catalog">الاختيار من القائمة</a></li><li><a href="#p2c-create">إنشاء مكافأة أو مناسبة</a></li><li><a href="#p2c-history">تبويب السجلّ</a></li><li><a href="#p2c-malus">النجوم المكسورة</a></li></ul></li><li><a href="#p2d" class="p"><span class="num">2د</span>الأفراد وهاتف الطفل</a><ul><li><a href="#p2d-invite">دعوة فرد</a></li><li><a href="#p2d-join">من جهة المدعوّ: الانضمام إلى العائلة</a></li><li><a href="#p2d-members">تعديل فرد أو إزالته</a></li><li><a href="#p2d-device">ربط هاتف الطفل</a></li><li><a href="#p2d-childmode">وضع الطفل على هاتفكم</a></li><li><a href="#p2d-editchild">تعديل طفل</a></li></ul></li><li><a href="#p3" class="p"><span class="num">3</span>يوميات الوالدين</a><ul><li><a href="#p3-today">شاشة اليوم</a></li><li><a href="#p3-validate">تحديد الأنشطة وتأكيدها</a></li><li><a href="#p3-redeem">استبدال مكافأة</a></li><li><a href="#p3-pause-day">يوم توقّف</a></li></ul></li><li><a href="#p4" class="p"><span class="num">4</span>من جهة الطفل</a><ul><li><a href="#p4-routines">أنشطتنا</a></li><li><a href="#p4-pause-day">يوم توقّف</a></li><li><a href="#p4-timer">التحدّي المؤقّت</a></li><li><a href="#p4-gifts">المكافآت من جهة الطفل</a></li><li><a href="#p4-garden">حديقتنا</a></li><li><a href="#p4-reminders">تذكيراتنا</a></li><li><a href="#p4-badges">الأوسمة</a></li></ul></li><li><a href="#p5" class="p"><span class="num">5</span>الإعدادات</a><ul><li><a href="#p5-week">الأسبوع والمنطقة الزمنية</a></li><li><a href="#p5-auto">التأكيد التلقائي بعد منتصف الليل</a></li><li><a href="#p5-push">التذكيرات</a></li><li><a href="#p5-account">رمز الوالدين والنسخ الاحتياطي والحساب</a></li></ul></li><li><a href="#p6" class="p"><span class="num">6</span>العطلات والغيابات</a><ul><li><a href="#p6-why">توقّف أم وضع العطلة؟</a></li><li><a href="#p6-pause">برمجة توقّف</a></li><li><a href="#p6-edit-pause">تعديل توقّف أو إيقافه</a></li><li><a href="#p6-schedule">برمجة وضع العطلة</a></li><li><a href="#p6-settings">ضبط الأنشطة</a></li><li><a href="#p6-during">خلال العطلة</a></li><li><a href="#p6-stop">تعديل العطلة أو إيقافها</a></li></ul></li><li><a href="#premium" class="p"><span class="num">7</span>المجاني وبريميوم</a><ul><li><a href="#p7-nothing-is-lost">لا شيء يضيع</a></li><li><a href="#p7-on-the-childs-side">من جهة الطفل</a></li><li><a href="#p7-my-plan">اشتراكي</a></li></ul></li></ol></nav>
   <main id="haut">
 <section class="part" id="p0"><h2><span class="num">🌻</span> تقديم</h2>
 <div class="lead">
@@ -124,11 +37,11 @@ tr:last-child td{border-bottom:0}
 </ul>
 <h3 id="p0-principles">المبادئ</h3>
 <ol>
-<li><strong>أحد الكبار يؤكّد.</strong> لا تُحتسب النجمة إلا بعد تأكيدها. افتراضيًا، يُؤكَّد ما حدّده الطفل عند منتصف الليل إن لم يُرفض (<a href="#p3">الجزء 3</a>).</li>
+<li><strong>أحد الكبار يؤكّد.</strong> لا تُحتسب النجمة إلا بعد تأكيدها. افتراضيًا، يُؤكَّد ما حدّده الطفل بعد منتصف الليل إن لم يُرفض (<a href="#p3">الجزء 3</a>).</li>
 <li><strong>لا داعي للكمال.</strong> اليوم الجيد هو 75% على الأقل من نجوم اليوم.</li>
 <li><strong>زهرة لكل فترة من أسبوعين</strong>، أجمل كلما زادت الأيام الجيدة. تشكّل الزهور حوضًا في كل فصل وحديقة في كل سنة دراسية (<a href="#p4">الجزء 4</a>).</li>
 <li><strong>مكافآت على مقاسه.</strong> يتبع سعرها وتيرة كل طفل (<a href="#p2c">الجزء 2ج</a>).</li>
-<li><strong>الطوارئ لا تُعاقَب.</strong> عطلة أو مرض: نبرمج توقّفًا، فتكون تلك الأيام محايدة (<a href="#p6-pause">الجزء 6</a>).</li>
+<li><strong>الطوارئ لا تُعاقَب.</strong> عطلة أو راحة: نبرمج توقّفًا، فتكون تلك الأيام محايدة (<a href="#p6-pause">الجزء 6</a>).</li>
 <li><strong>النجوم المكسورة تبقى نادرة.</strong> خاصة بالوالدين، 3 نجوم كحدّ أقصى، دون أثر على الزهرة ولا على الأوسمة (<a href="#p2c-malus">الجزء 2ج</a>).</li>
 <li><strong>هاتف الطفل لا يحتاج إلى حساب.</strong> يكفي رمز يعطيه أحد الوالدين (<a href="#p2d-device">الجزء 2د</a>).</li>
 </ol>
@@ -145,6 +58,7 @@ tr:last-child td{border-bottom:0}
 <li>عنوان التطبيق: https://pyramid85cl209.github.io/SoisFier2/</li>
 <li>للانضمام إلى عائلة موجودة: رمز الدعوة المكوّن من 6 أحرف الذي يعطيه أحد الوالدين.</li>
 </ul>
+<p>لمشاهدة تقديم التطبيق من جديد: <a href="../../?intro=1">عرض التقديم</a>.</p>
 <h3 id="p1-home">شاشة البداية</h3>
 <p>تجمع شاشة البداية كل ما يلزم للبدء: تسجيل الدخول، إنشاء حساب، ربط هاتف طفل أو تثبيت التطبيق.</p>
 <figure><a href="img/m1.jpg" target="_blank" rel="noopener"><img src="img/m1.jpg" alt="شاشة البداية في SoisFier مع المناطق المرقّمة" width="660" height="1474" loading="lazy" decoding="async"></a><figcaption>شاشة البداية في SoisFier مع المناطق المرقّمة</figcaption></figure>
@@ -158,7 +72,7 @@ tr:last-child td{border-bottom:0}
 <li><strong>🌐 اللغة</strong>: لاختيار لغة التطبيق على هذا الجهاز (انظروا أدناه).</li>
 </ol>
 <h3 id="p1-lang">اختيار اللغة</h3>
-<p>يظهر الزر 🌐 أعلى كل شاشة، بجانب زر «?» (وبجانب القفل في وضع الطفل). تُطبَّق اللغة المختارة فورًا على هذا الجهاز فقط، وتُستعمل أيضًا للتذكيرات التي يتلقاها. يمكن لكل فرد من العائلة، ولهاتف الطفل، استعمال لغة مختلفة.</p>
+<p>في جهة الكبار، يظهر الزر 🌐 أعلى كل شاشة، بجانب زر «?». وفي شاشة إدخال رمز الطفل يظهر وحده؛ وفي وضع الطفل يكون بجانب القفل. تُطبَّق اللغة المختارة فورًا على هذا الجهاز فقط، وتُستعمل أيضًا للتذكيرات التي يتلقاها. يمكن لكل فرد من العائلة، ولهاتف الطفل، استعمال لغة مختلفة.</p>
 <figure><a href="img/l1.jpg" target="_blank" rel="noopener"><img src="img/l1.jpg" alt="زر اللغة واختيار اللغة" width="1270" height="1300" loading="lazy" decoding="async"></a><figcaption>زر اللغة واختيار اللغة</figcaption></figure>
 <h3 id="p1-install">الخطوة 1: تثبيت التطبيق</h3>
 <p>بعد التثبيت، يُفتح SoisFier كتطبيق، دون شريط العنوان.</p>
@@ -231,7 +145,7 @@ tr:last-child td{border-bottom:0}
 <tr><td>«أكّدوا بريدكم الإلكتروني أولًا»</td><td>افتحوا الرابط في بريد Supabase Auth، ثم سجّلوا الدخول من جديد.</td></tr>
 <tr><td>رمز الدعوة أو رمز الطفل مرفوض</td><td>انتهت صلاحية الرمز (48 ساعة للدعوة، 15 دقيقة للطفل): أنشئوا رمزًا جديدًا.</td></tr>
 <tr><td>زر التثبيت لا يظهر</td><td>قائمة ⋮ في Chrome، ثم <strong>إضافة إلى الشاشة الرئيسية</strong>.</td></tr>
-<tr><td>تبقى النسخة القديمة ظاهرة بعد التحديث</td><td>أغلقوا التطبيق تمامًا ثم أعيدوا فتحه، مرتين.</td></tr>
+<tr><td>تبقى النسخة القديمة ظاهرة بعد التحديث</td><td>لا شيء يلزم: التحديث تلقائي. وإن بقيت النسخة القديمة ظاهرة، أغلقوا التطبيق ثم أعيدوا فتحه.</td></tr>
 <tr><td>«الإعدادات ناقصة»</td><td>الموقع قيد النشر أو منشور بشكل خاطئ: حاولوا لاحقًا وأخبروا المسؤول.</td></tr>
 </tbody></table></div>
 </section>
@@ -248,7 +162,7 @@ tr:last-child td{border-bottom:0}
 <li><strong>أفراد العائلة</strong>: كل شخص بالغ مع صلته (بابا، ماما…)، معروضةً بلغة كل فرد، وصلاحياته. <strong>دعوة فرد</strong> ينشئ رمزًا للوالد الآخر أو لقريب.</li>
 <li><strong>التذكيرات</strong>: اختاروا وقتًا صباحًا ومساءً، ثم المسوا <strong>تفعيل التذكيرات</strong> واسمحوا بالإشعارات.</li>
 <li><strong>النجوم المكسورة</strong>: الأسباب الجاهزة للعائلة، المشتركة بين كل الأطفال (بريميوم، <a href="#p2c-malus">الجزء 2ج</a>).</li>
-<li><strong>الإعدادات</strong>: الأسبوع والمنطقة الزمنية، والتأكيد التلقائي عند منتصف الليل (اتركوه محدّدًا في البداية)، ورمز الوالدين (<a href="#p5">الجزء 5</a>).</li>
+<li><strong>الإعدادات</strong>: الأسبوع والمنطقة الزمنية، والتأكيد التلقائي بعد منتصف الليل (اتركوه محدّدًا في البداية)، ورمز الوالدين (<a href="#p5">الجزء 5</a>).</li>
 <li><strong>اشتراكي</strong>: مجاني أو بريميوم أو مؤسِّس (<a href="#premium">الجزء 7</a>).</li>
 <li><strong>الحساب والنسخ الاحتياطي</strong>: إعادة تسمية العائلة، وتنزيل نسخة من البيانات، وتسجيل الخروج.</li>
 </ol>
@@ -336,7 +250,7 @@ tr:last-child td{border-bottom:0}
 <p>حذف النشاط يزيله من الأيام القادمة. تبقى النجوم المكتسبة به، ولا تتراجع النبتة.</p>
 <h3 id="p2b-oneoff">إضافة نشاط استثنائي</h3>
 <p class="small"><strong>Premium.</strong> الأنشطة الاستثنائية ونماذجها جزء من بريميوم (<a href="#premium">الجزء 7</a>).</p>
-<p>النشاط الاستثنائي مهمة لمرة واحدة: في يوم محدّد، أو قبل تاريخ معيّن. يمكن للوالدين والأقارب إضافته، من تبويب الأنشطة أو من بطاقة الطفل في تبويب اليوم.</p>
+<p>النشاط الاستثنائي مهمة لمرة واحدة: في يوم محدّد، أو قبل تاريخ معيّن. يمكن للوالدين والأقارب إضافته، من بطاقة الطفل في تبويب اليوم.</p>
 <ol>
 <li>المسوا <strong>+ نشاط استثنائي</strong>.</li>
 <li>اختاروا أحد نماذجكم (1)، أو أحد الاقتراحات العشرة، أو المسوا <strong>إنشاء نشاط جديد</strong> أسفل القائمة.</li>
@@ -356,17 +270,17 @@ tr:last-child td{border-bottom:0}
 <p>للثلاجة أو لطفل بلا هاتف: الأسبوع الحالي على صفحة A4، يُعلَّم بالقلم.</p>
 <figure><a href="img/i3.jpg" target="_blank" rel="noopener"><img src="img/i3.jpg" alt="الزر ومعاينة الجدول" width="1270" height="1300" loading="lazy" decoding="async"></a><figcaption>الزر ومعاينة الجدول</figcaption></figure>
 <ol>
-<li>في تبويب <strong>الأنشطة</strong>، المسوا <strong>طباعة الأسبوع</strong> (1). مع عدة أطفال، اختاروا من تريدون طباعة جدوله.</li>
+<li>في تبويب <strong>الأنشطة</strong>، المسوا <strong>طباعة الأسبوع</strong> (1). تفتح نافذة: اختاروا الأطفال الذين تريدون طباعة جداولهم (مع طفل واحد لا شيء للاختيار)، واتركوا <strong>طباعة المكافآت</strong> محدّدة للحصول على صفحة المكافآت أيضًا، ثم المسوا <strong>طباعة</strong>.</li>
 <li>يفتح أندرويد معاينة الطباعة: اختاروا طابعتكم، أو <strong>الحفظ بتنسيق PDF</strong> لإرساله.</li>
 </ol>
-<p>تعرض الصفحة الأنشطة حسب الوقت، مع دائرة لكل يوم مبرمج (الخانات الرمادية أيام بلا هذا النشاط)، بدءًا من أول يوم في أسبوع العائلة، وتسرد المكافآت بأسعارها في الأسفل. خلال وضع العطلة، تتبع إعدادات العطلة. العلامات على الورق لا تنتقل إلى التطبيق من تلقاء نفسها: حدّدوها من شاشة اليوم (حتى 6 أيام إلى الوراء)، أو رحِّلوا الأسبوع كله دفعة واحدة (<a href="#p2b-report">ترحيل الأسبوع</a>، بريميوم). تحمل كل صفحة رمز QR صغيرًا وأربعة مربعات سوداء في زوايا الجدول: لا تغطّوها.</p>
+<p>تعرض الصفحة الأنشطة حسب الوقت، مع دائرة لكل يوم مبرمج (الخانات الرمادية أيام بلا هذا النشاط)، بدءًا من أول يوم في أسبوع العائلة؛ أما المكافآت وأسعارها فتُطبع في صفحة مستقلة تلي أسبوع الطفل مباشرة (بلا رمز QR، لا شيء للمسح). خلال وضع العطلة، تتبع إعدادات العطلة. العلامات على الورق لا تنتقل إلى التطبيق من تلقاء نفسها: حدّدوها من شاشة اليوم (حتى 6 أيام إلى الوراء)، أو رحِّلوا الأسبوع كله دفعة واحدة (<a href="#p2b-report">ترحيل الأسبوع</a>، بريميوم). تحمل كل صفحة أسبوع رمز QR صغيرًا وأربعة مربعات سوداء في زوايا الجدول: لا تغطّوها.</p>
 <h3 id="p2b-report">مسح الورقة أو ترحيل الأسبوع (بريميوم)</h3>
 <p>بدل التحديد يومًا بيوم في شاشة اليوم، رحِّلوا دفعة واحدة التحديدات المسجَّلة على الورقة، مثلًا ورقة مغلَّفة تُستعمل كل أسبوع.</p>
 <ol>
-<li>في تبويب <strong>الأنشطة</strong>، المسوا <strong>📷 مسح ورقة</strong>. ضعوا الورقة مسطَّحة في إضاءة جيدة وبدون فلاش، وأدخِلوا الصفحة كلها في الإطار مع المربعات السوداء، ثم المسوا <strong>التقاط الصورة</strong>. يمكنكم أيضًا <strong>اختيار صورة</strong> ملتقطة من قبل. يتعرّف التطبيق على طفل الورقة.</li>
+<li>في تبويب <strong>الأنشطة</strong>، المسوا <strong>📷 مسح ورقة</strong>. ضعوا الورقة مسطَّحة في إضاءة جيدة وبدون فلاش، وأدخِلوا الصفحة كلها في الإطار مع المربعات السوداء، مع إبقاء الهاتف ثابتًا، ثم المسوا <strong>التقاط الصورة</strong>. يمكنكم أيضًا <strong>اختيار صورة</strong> ملتقطة من قبل. يتعرّف التطبيق على طفل الورقة.</li>
 <li>بدون صورة: المسوا <strong>الإدخال بدون صورة</strong>، ثم اختاروا الطفل إن كان لديكم أكثر من طفل.</li>
 <li>اختاروا الأسبوع: <strong>هذا الأسبوع</strong> أو <strong>الأسبوع الماضي</strong>. لا يمكن تحديد الأيام القادمة.</li>
-<li>تحقّقوا من الشبكة: الدوائر المقروءة محدَّدة مسبقًا؛ والدائرة الموسومة ⚠️ <strong>يحتاج إلى تحقّق</strong> لم تُقرأ بيقين. المسوا دائرة لتصحيحها. النشاط المؤكَّد مسبقًا في ذلك اليوم موسوم <strong>تم مسبقًا</strong>. تتبع الشبكة الأنشطة المقرَّرة في ذلك الأسبوع، بما فيها العطلات.</li>
+<li>تحقّقوا من الشبكة: الدوائر المقروءة محدَّدة مسبقًا؛ والدائرة الموسومة ⚠️ <strong>يحتاج إلى تحقّق</strong> لم تُقرأ بيقين. المسوا دائرة لتصحيحها. النشاط المؤكَّد مسبقًا في ذلك اليوم موسوم <strong>تم مسبقًا</strong>. والدائرة ⏳ <strong>بانتظار التأكيد</strong> علامة وضعها الطفل ولم يؤكّدها أحد بعد: لا يزال بإمكانكم تحديدها. تتبع الشبكة الأنشطة المقرَّرة في ذلك الأسبوع، بما فيها العطلات.</li>
 <li>المسوا <strong>ترحيل</strong>: لا يُحفَظ شيء قبل ذلك.</li>
 </ol>
 <p>تُقرأ الصورة على هاتفكم: لا تُرسَل ولا تُحفَظ. لقراءة جيدة، حدّدوا بقلم لبّاد داكن (قابل للمسح على الورقة المغلَّفة)، وأميلوا الورقة قليلًا إن عكست الضوء. إذا لم يُتعرَّف على الورقة (رمز QR أو المربعات خارج الإطار، أو ورقة عائلة أخرى)، أعيدوا التصوير أو أدخِلوا بدون صورة. النشاط الذي أُوقِف منذ الطباعة يُشار إليه ولا يُرحَّل.</p>
@@ -380,6 +294,7 @@ tr:last-child td{border-bottom:0}
 <section class="part" id="p2c"><h2><span class="num">2ج</span> المكافآت والسجلّ</h2>
 <p>يحدّد تبويب <strong>المكافآت</strong> ما يمكن للطفل الحصول عليه بنجومه. تُحسب الأسعار تلقائيًا حسب وتيرته. يلي هذا الجزء <a href="#p2a">الجزأين 2أ</a> (إنشاء الطفل) و<a href="#p2b">2ب</a> (إنشاء الأنشطة): بلا أنشطة تكون الوتيرة صفرًا ولا يمكن حساب أي سعر. ثم يعرض تبويب <strong>السجلّ</strong>، يومًا بيوم، النجوم المكتسبة والمستبدلة والمكسورة.</p>
 <p>مبدأ السعر: <strong>مدة الجهد × الوتيرة</strong>. الوتيرة هي متوسط النجوم التي يكسبها الطفل يوميًا، أي 75% من النجوم المبرمجة في الأسبوع مقسومة على 7. مع وتيرة 11.4 ⭐ يوميًا، تكلّف مكافأة ليوم واحد تقريبًا 11 ⭐ ومكافأة لشهر تقريبًا 340 ⭐. يُقرَّب السعر ثم يُثبَّت عند الإنشاء؛ ولا يتغيّر إذا تغيّرت الأنشطة بعد ذلك.</p>
+<p>السعر المعروض هو السعر المحفوظ: في المرجع يُعاد حسابه عند كل تحديد أو إلغاء تحديد. ولا يتجاوز 5000 ⭐ أبدًا. وإذا لم يكن للطفل نشاط إلزامي فلا وتيرة له: يُبلغ التطبيق بذلك ويقترح الذهاب إلى الأنشطة، أو تفعيل «سعر ثابت».</p>
 <h3 id="p2c-tab">تبويب المكافآت</h3>
 <p>افتحوا تبويب <strong>المكافآت</strong> في الشريط السفلي. يعرض رصيد النجوم القابلة للإنفاق لدى الطفل المختار ووتيرته.</p>
 <figure><a href="img/c1.jpg" target="_blank" rel="noopener"><img src="img/c1.jpg" alt="تبويب المكافآت فارغًا ثم معبّأً" width="1270" height="1300" loading="lazy" decoding="async"></a><figcaption>تبويب المكافآت فارغًا ثم معبّأً</figcaption></figure>
@@ -537,7 +452,7 @@ tr:last-child td{border-bottom:0}
 <li>على هاتفكم: <strong>العائلة</strong>، ثم <strong>ربط جهازه</strong> تحت الطفل. يظهر رمز من 6 أحرف.</li>
 <li>على هاتف الطفل: افتحوا SoisFier والمسوا <strong>لدي رمز الطفل</strong> في شاشة الدخول (انظروا <a href="#p1">الجزء 1</a>).</li>
 <li>أدخلوا الرمز ثم المسوا <strong>ربط هذا الهاتف</strong>.</li>
-<li>يصل الطفل إلى شاشته: اسمه ونجومه وأصيصه وأنشطة اليوم. يتيح <strong>القفل</strong> (1) لأحد الوالدين فصل هذا الهاتف. ويتيح الزر 🌐 (2) اختيار لغة هذا الهاتف. بعد ذلك مباشرة، يقترح SoisFier تفعيل تذكيراته (<a href="#p4-reminders">الجزء 4</a>).</li>
+<li>يصل الطفل إلى شاشته: اسمه ونجومه وأصيصه وأنشطة اليوم. يتيح <strong>القفل</strong> (1) لأحد الوالدين فصل هذا الهاتف. وإذا نُسي الرمز، يطلب رابط <strong>نسيتم الرمز؟</strong> كلمة مرور الحساب؛ وبعد محاولات كثيرة عليكم الانتظار. وعند انقطاع الاتصال، إن وُجدت علامات لم تُرسَل بعد، تحذّر رسالة تأكيد من ضياعها. ويتيح الزر 🌐 (2) اختيار لغة هذا الهاتف. بعد ذلك مباشرة، يقترح SoisFier تفعيل تذكيراته (<a href="#p4-reminders">الجزء 4</a>).</li>
 <li>على هاتفكم، المسوا <strong>تم</strong>. يظهر الهاتف تحت الطفل في صفحة العائلة.</li>
 </ol>
 <p>لإزالة هاتف (ضائع، مستبدل، تجربة قديمة): <strong>فصل</strong> في سطره، ثم أكّدوا. سيلزم رمز جديد لإعادة ربطه.</p>
@@ -560,7 +475,7 @@ tr:last-child td{border-bottom:0}
 
 <section class="part" id="p3"><h2><span class="num">3</span> يوميات الوالدين</h2>
 <p>يوميًا، يقوم الوالد بثلاث حركات: تحديد الأنشطة أو تأكيدها، واستبدال المكافآت، وعند الحاجة برمجة توقّف. كل ذلك من تبويبي <strong>اليوم</strong> و<strong>المكافآت</strong>؛ والنجوم المكسورة في <a href="#p2c">الجزء 2ج</a>. تُبرمَج التوقّفات من <strong>العائلة</strong> (<a href="#p6-pause">الجزء 6</a>).</p>
-<p>القاعدة التي يجب تذكّرها: لا تُحتسب النجمة إلا بعد <strong>تأكيدها</strong> من أحد الكبار. ما لم يُرفض يُؤكَّد تلقائيًا عند منتصف الليل، حسب المنطقة الزمنية للعائلة.</p>
+<p>القاعدة التي يجب تذكّرها: لا تُحتسب النجمة إلا بعد <strong>تأكيدها</strong> من أحد الكبار. ما لم يُرفض يُؤكَّد تلقائيًا بعد منتصف الليل، حسب المنطقة الزمنية للعائلة.</p>
 <h3 id="p3-today">شاشة اليوم</h3>
 <p>هي شاشة الافتتاح. تعرض لكل طفل الأنشطة المبرمجة في ذلك اليوم.</p>
 <figure><a href="img/f1.jpg" target="_blank" rel="noopener"><img src="img/f1.jpg" alt="شاشة اليوم، أعلاها وأسفلها" width="1270" height="1300" loading="lazy" decoding="async"></a><figcaption>شاشة اليوم، أعلاها وأسفلها</figcaption></figure>
@@ -587,7 +502,7 @@ tr:last-child td{border-bottom:0}
 <li><strong>رفض</strong> (علامة ✕): يُعاد النشاط دون عقوبة. لا تُمنح النجوم.</li>
 <li><strong>تأكيد</strong> (علامة ✓): تُضاف النجوم إلى الرصيد وتُحتسب للزهرة.</li>
 </ol>
-<p>يشير كل سطر إلى الطفل واليوم والنجوم ومن حدّد النشاط. إن لم تفعلوا شيئًا، يُؤكَّد كل ما تبقّى تلقائيًا عند منتصف الليل.</p>
+<p>يشير كل سطر إلى الطفل واليوم والنجوم ومن حدّد النشاط. إن لم تفعلوا شيئًا، يُؤكَّد كل ما تبقّى تلقائيًا بعد منتصف الليل.</p>
 <p>حدّدتم بالخطأ؟ المسوا الخانة من جديد خلال 5 دقائق لإلغاء التحديد. بعد ذلك يصبح النشاط مؤكَّدًا نهائيًا؛ ولسحب نجوم يجب استعمال نجمة مكسورة.</p>
 <h3 id="p3-redeem">استبدال مكافأة</h3>
 <p>حين يملك الطفل ما يكفي من النجوم، يتمّ الاستبدال من تبويب <strong>المكافآت</strong>، مع اختيار الطفل في الأعلى إن كان هناك أكثر من طفل.</p>
@@ -603,7 +518,7 @@ tr:last-child td{border-bottom:0}
 <p>لمس بطاقة مكافأة (خارج السعر) يفتح بطاقتها لتعديلها أو حذفها.</p>
 <p>إن تغيّرت وتيرة الطفل بأكثر من 20% (إضافة أنشطة أو حذفها)، يقترح شريط إعادة حساب الأسعار.</p>
 <h3 id="p3-pause-day">يوم توقّف</h3>
-<p>يجعل التوقّف الأيام محايدة: لا تُحتسب للزهرة ولا ضدّها. لا شيء يضيع خلال سفر أو مرض أو عطلة نهاية أسبوع عند الجدّين. تُبرمَج التوقّفات من <strong>العائلة</strong>، قسم <strong>العطلات والغيابات</strong> (<a href="#p6-pause">الجزء 6</a>).</p>
+<p>يجعل التوقّف الأيام محايدة: لا تُحتسب للزهرة ولا ضدّها. لا شيء يضيع خلال سفر أو راحة أو عطلة نهاية أسبوع عند الجدّين. تُبرمَج التوقّفات من <strong>العائلة</strong>، قسم <strong>العطلات والغيابات</strong> (<a href="#p6-pause">الجزء 6</a>).</p>
 <figure><a href="img/f4.jpg" target="_blank" rel="noopener"><img src="img/f4.jpg" alt="بطاقة الطفل في يوم توقّف" width="660" height="1247" loading="lazy" decoding="async"></a><figcaption>بطاقة الطفل في يوم توقّف</figcaption></figure>
 <ol>
 <li><strong>⏸️ في توقّف</strong> والسبب، تحت اسم الطفل. يشير سطر الزهرة إلى «يوم محايد».</li>
@@ -624,7 +539,7 @@ tr:last-child td{border-bottom:0}
 </tbody></table></div>
 <p>لا يمكن للطفل تعديل أي شيء: لا الأنشطة ولا الأسعار ولا النجوم المكسورة. القفل في الأعلى خاص بالوالدين.</p>
 <h3 id="p4-routines">أنشطتنا</h3>
-<p>تعرض شاشة الافتتاح أنشطة اليوم مرتّبة حسب الوقت: الاستثنائية، الصباح، النهار، المساء.</p>
+<p>تعرض شاشة الافتتاح أنشطة اليوم مرتّبة حسب الوقت: الاستثنائية، الصباح، النهار، المساء. إذا لم يبق سوى التحديات الإضافية، تُبلغ الشاشة بذلك: «اليوم تحديات إضافية فقط!».</p>
 <figure><a href="img/g1.jpg" target="_blank" rel="noopener"><img src="img/g1.jpg" alt="أنشطتنا، قبل التحديد وبعده" width="1270" height="1300" loading="lazy" decoding="async"></a><figcaption>أنشطتنا، قبل التحديد وبعده</figcaption></figure>
 <ol>
 <li><strong>النجوم</strong> القابلة للإنفاق.</li>
@@ -655,7 +570,7 @@ tr:last-child td{border-bottom:0}
 </ol>
 <p><strong>إيقاف</strong> يوقف المؤقّت دون تحديد. التحدّي الناجح لا يمنح نجمة إضافية، لكنه يُحتسب لأوسمة «التحديات»، ويراه الوالد في قسم «بانتظار التأكيد» («تحدٍّ مؤقّت ناجح»).</p>
 <h3 id="p4-gifts">المكافآت من جهة الطفل</h3>
-<figure><a href="img/g3.jpg" target="_blank" rel="noopener"><img src="img/g3.jpg" alt="تبويب المكافآت لدى الطفل" width="660" height="1831" loading="lazy" decoding="async"></a><figcaption>تبويب المكافآت لدى الطفل</figcaption></figure>
+<figure><a href="img/g3.jpg" target="_blank" rel="noopener"><img src="img/g3.jpg" alt="تبويب المكافآت لدى الطفل" width="660" height="1865" loading="lazy" decoding="async"></a><figcaption>تبويب المكافآت لدى الطفل</figcaption></figure>
 <ol>
 <li><strong>النجوم القابلة للإنفاق</strong> في الأعلى.</li>
 <li><strong>ينقصنا X ⭐</strong>: ما ينقص لكل مكافأة. حين تكفي النجوم، يصبح النص زرّ <strong>نختارها</strong>.</li>
@@ -727,11 +642,11 @@ tr:last-child td{border-bottom:0}
 <li><strong>تعديل</strong> يفتح النافذة نفسها كما عند الإنشاء (<a href="#p1-week">الجزء 1</a>).</li>
 </ol>
 <p>تبقى الأوسمة المكتسبة. إن غيّرتم أول يوم في الأسبوع، تمتد الفترة الحالية حتى آخر يوم جديد في الأسبوع (20 يومًا كحدّ أقصى)، ثم تدوم الفترات التالية 14 يومًا.</p>
-<h3 id="p5-auto">التأكيد التلقائي عند منتصف الليل</h3>
+<h3 id="p5-auto">التأكيد التلقائي بعد منتصف الليل</h3>
 <p>حين يحدّد الطفل نشاطًا، تنتظر نجومه تأكيدكم. يحدّد هذا الإعداد ما يحدث إن لم يؤكّد أحد خلال اليوم.</p>
 <figure><a href="img/i1.jpg" target="_blank" rel="noopener"><img src="img/i1.jpg" alt="التأكيد التلقائي مفعّلًا ثم متوقّفًا" width="1270" height="1300" loading="lazy" decoding="async"></a><figcaption>التأكيد التلقائي مفعّلًا ثم متوقّفًا</figcaption></figure>
 <div class="tbl"><table>
-<thead><tr><th>الخانة (1)</th><th>عند منتصف الليل، ما بقي بانتظار التأكيد…</th></tr></thead>
+<thead><tr><th>الخانة (1)</th><th>بعد منتصف الليل، ما بقي بانتظار التأكيد…</th></tr></thead>
 <tbody>
 <tr><td>محدّدة (افتراضيًا)</td><td>يُؤكَّد تلقائيًا. لا يُعاقَب الطفل على نسيان الوالدين.</td></tr>
 <tr><td>غير محدّدة</td><td>يبقى منتظرًا حتى قراركم. الرسالة: «تأكيد يدوي فقط».</td></tr>
@@ -764,7 +679,7 @@ tr:last-child td{border-bottom:0}
 <p>يجمع قسم <strong>العطلات والغيابات</strong> في صفحة <strong>العائلة</strong> طريقتي التعامل مع فترة خاصّة: <strong>وضع العطلة</strong> (بريميوم) و<strong>التوقّف</strong> (مجاني). قائمة واحدة تعرض، حسب ترتيب التواريخ، العطل 🏖️ والتوقّفات ⏸️ الجارية والقادمة.</p>
 <h3 id="p6-why">توقّف أم وضع العطلة؟</h3>
 <ul>
-<li><strong>التوقّف</strong>: لا تُحتسب الأيام للزهرة ولا ضدّها. مناسب للسفر أو المرض.</li>
+<li><strong>التوقّف</strong>: لا تُحتسب الأيام للزهرة ولا ضدّها. مناسب للسفر أو الراحة.</li>
 <li><strong>وضع العطلة</strong>: تستمرّ الأنشطة لكن معدّلة. مثلًا، تتوقّف الحقيبة المدرسية، وتصبح القراءة إلزامية، ويُضاف «سقي النباتات». تُحتسب الأيام للزهرة بشكل عادي.</li>
 </ul>
 <p>إذا وقع توقّف خلال عطلة معدّلة، فالأولوية للتوقّف: يبقى اليوم محايدًا، ويشير سطر التوقّف إلى ذلك في القائمة.</p>
@@ -776,21 +691,21 @@ tr:last-child td{border-bottom:0}
 <li><strong>برمجة توقّف</strong>.</li>
 <li><strong>الأطفال</strong>: حدّدوا الطفل أو الأطفال المعنيّين.</li>
 <li><strong>من</strong> و<strong>إلى</strong>: اليوم الأول والأخير مشمولان. يجب أن تكون النهاية بعد البداية.</li>
-<li><strong>السبب</strong>: سفر أو مرض أو أخرى.</li>
+<li><strong>السبب</strong>: سفر أو راحة أو أخرى.</li>
 <li><strong>حفظ</strong>.</li>
 </ol>
-<p>يمكن برمجة التوقّف مسبقًا أو تسجيله لاحقًا، مثلًا بعد التعافي من مرض. خلال التوقّف، تشير إليه شاشة اليوم (<a href="#p3-pause-day">الجزء 3</a>)، وكذلك هاتف الطفل (<a href="#p4-pause-day">الجزء 4</a>).</p>
+<p>يمكن برمجة التوقّف مسبقًا أو تسجيله لاحقًا، مثلًا بعد العودة من سفر. خلال التوقّف، تشير إليه شاشة اليوم (<a href="#p3-pause-day">الجزء 3</a>)، وكذلك هاتف الطفل (<a href="#p4-pause-day">الجزء 4</a>).</p>
 <h3 id="p6-edit-pause">تعديل توقّف أو إيقافه</h3>
 <figure><a href="img/h3.jpg" target="_blank" rel="noopener"><img src="img/h3.jpg" alt="تعديل توقّف بدأ، ثم إيقافه" width="1270" height="1243" loading="lazy" decoding="async"></a><figcaption>تعديل توقّف بدأ، ثم إيقافه</figcaption></figure>
 <p>المسوا توقّفًا في القائمة لتغيير تواريخه أو سببه. ما دام لم يبدأ، يمكن تغيير كلّ شيء و<strong>حذف</strong> يلغيه.</p>
 <ol>
 <li>بعد بدء التوقّف، لا يتغيّر <strong>يومه الأول</strong>: تبقى الأيام المحايدة محايدة.</li>
-<li>يمكن تغيير <strong>النهاية</strong>: لتمديد مرض، أخّروها.</li>
+<li>يمكن تغيير <strong>النهاية</strong>: لتمديد راحة، أخّروها.</li>
 <li><strong>إيقاف</strong> ينهي التوقّف: تؤكّد رسالة أنّ آخر يوم يصبح أمس وأنّ الأيام تُحتسب من جديد ابتداءً من اليوم.</li>
 </ol>
 <p>خطأ في الإدخال؟ خلال 24 ساعة من إنشائه، يمكن تصحيح توقّف بدأ أو حذفه.</p>
 <h3 id="p6-schedule">برمجة وضع العطلة</h3>
-<figure><a href="img/v1.jpg" target="_blank" rel="noopener"><img src="img/v1.jpg" alt="وضع العطلة في القائمة، ثم مراجعة الأنشطة" width="1270" height="1967" loading="lazy" decoding="async"></a><figcaption>وضع العطلة في القائمة، ثم مراجعة الأنشطة</figcaption></figure>
+<figure><a href="img/v1.jpg" target="_blank" rel="noopener"><img src="img/v1.jpg" alt="وضع العطلة في القائمة، ثم مراجعة الأنشطة" width="1270" height="2006" loading="lazy" decoding="async"></a><figcaption>وضع العطلة في القائمة، ثم مراجعة الأنشطة</figcaption></figure>
 <ol>
 <li><strong>العائلة</strong>، قسم <strong>العطلات والغيابات</strong>: <strong>مراجعة</strong>، على سطر العطلة 🏖️، تفتح إعداداتها.</li>
 <li><strong>برمجة وضع العطلة</strong>: اختاروا الطفل، وأعطوا اسمًا («عطلة الشتاء») والتواريخ. قائمة <strong>استعادة إعدادات</strong> تنسخ فترة سابقة للطفل نفسه. ثم <strong>متابعة</strong>.</li>
@@ -813,12 +728,12 @@ tr:last-child td{border-bottom:0}
 <li><strong>عرض الأنشطة المعتادة</strong> ينتقل إلى الأنشطة التي تعود بعد العطلة، مثلًا للتحضير للعودة إلى المدرسة.</li>
 <li>في نسخة العطلة، كلّ تعديل يخصّ العطلة الجارية فقط، وتذكّر رسالة بذلك عند كلّ حفظ. النشاط الذي تنشئونه يصبح نشاط عطلة.</li>
 </ol>
-<figure><a href="img/v3.jpg" target="_blank" rel="noopener"><img src="img/v3.jpg" alt="برمجة وضع العطلة، ثم هاتف الطفل" width="1270" height="1272" loading="lazy" decoding="async"></a><figcaption>برمجة وضع العطلة، ثم هاتف الطفل</figcaption></figure>
+<figure><a href="img/v3.jpg" target="_blank" rel="noopener"><img src="img/v3.jpg" alt="برمجة وضع العطلة، ثم هاتف الطفل" width="1270" height="1300" loading="lazy" decoding="async"></a><figcaption>برمجة وضع العطلة، ثم هاتف الطفل</figcaption></figure>
 <p>على هاتف الطفل، تشرح 🏖️ صغيرة مع اسم العطلة سبب تغيّر قائمته (العلامة 5). ويتبع الجدول المطبوع العطلة أيضًا: تُميَّز أنشطة العطلة بـ 🏖️.</p>
 <p>تبقى أسعار المكافآت محسوبة على الأنشطة المعتادة: لا تتغيّر خلال العطلة.</p>
 <h3 id="p6-stop">تعديل العطلة أو إيقافها</h3>
 <p><strong>الاسم والتواريخ</strong> يغيّر الاسم والنهاية (والبداية ما دامت العطلة لم تبدأ). <strong>إيقاف</strong> ينهي عطلة جارية: تؤكّد رسالة أنّ آخر يوم يصبح أمس وأنّ الأنشطة المعتادة تعود ابتداءً من اليوم. تُحفظ النجوم المكتسبة.</p></section>
-<section class="part" id="premium"><h2><span class="num">7</span> المجاني وبريميوم</h2>
+<section class="part" id="premium"><a id="p7"></a><h2><span class="num">7</span> المجاني وبريميوم</h2>
 <p class="lead"><em>ما يبقى مجانيًا وما يضيفه بريميوم</em></p>
 <p>SoisFier مجاني وبلا إعلانات. كلّ ما يساعد طفلكم على التقدّم يوميًا يبقى مجانيًا: الأنشطة والنجوم والتأكيد والزهرة والمكافآت والتذكيرات والتوقّفات والجدول المطبوع. بريميوم، المرتبط بالعائلة، يتيح متابعة جميع الإخوة ويضيف أدوات متقدّمة لأولياء الأمور.</p>
 <div class="tbl"><table>
@@ -838,55 +753,17 @@ tr:last-child td{border-bottom:0}
 <tr><td>وضع العطلة</td><td>لا</td><td>نعم</td></tr><tr><td>مسح الورقة أو ترحيل الأسبوع</td><td>لا</td><td>نعم</td></tr>
 <tr><td>الأوسمة</td><td>الأنشطة والنجوم والانتظام والزهور</td><td>جميعها</td></tr>
 </tbody></table></div>
-<h3 id="p7-la-shay-yadi">لا شيء يضيع</h3>
+<h3 id="p7-nothing-is-lost">لا شيء يضيع</h3>
 <p>الزهور والإحصاءات والأوسمة محفوظة دائمًا. في النسخة المجانية، حديقة السنة وأوسمة بريميوم مخفية فقط: يظهر كلّ شيء فور الانتقال إلى بريميوم.</p>
-<h3 id="p7-jihat-altifl">من جهة الطفل</h3>
+<h3 id="p7-on-the-childs-side">من جهة الطفل</h3>
 <p>لا يرى الطفل أيّ عرض ولا أيّ وسام مقفل: على هاتفه، لا يرى إلا ما لدى العائلة.</p>
-<h3 id="p7-ishtiraki">اشتراكي</h3>
+<h3 id="p7-my-plan">اشتراكي</h3>
 <p>في <strong>العائلة</strong>، يبيّن قسم <strong>اشتراكي</strong> ما إذا كانت العائلة في المجاني أو بريميوم أو مؤسِّسة. العائلات التي رافقت النسخة التجريبية <strong>مؤسِّسة</strong>: بريميوم مدى الحياة.</p>
 <p>سيُتاح اشتراك بريميوم قريبًا. وحتى ذلك الحين، تستفيد جميع العائلات من جميع الميزات.</p></section>
   </main>
 </div>
 <a class="top-link" href="#haut" aria-label="العودة إلى الأعلى">↑</a>
 <div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-label="لقطة مكبّرة"><button class="btn" id="vclose">✕ إغلاق</button><img alt=""></div>
-<script>
-(() => {
-  const toc = document.getElementById("toc"), menu = document.getElementById("menu"), scrim = document.getElementById("scrim");
-  const setOpen = o => { toc.classList.toggle("open", o); scrim.classList.toggle("open", o); menu.setAttribute("aria-expanded", o); };
-  menu.addEventListener("click", () => setOpen(!toc.classList.contains("open")));
-  scrim.addEventListener("click", () => setOpen(false));
-  toc.addEventListener("click", e => { if (e.target.closest("a")) setOpen(false); });
-
-  // Sommaire actif
-  const links = [...toc.querySelectorAll("a")], byId = new Map(links.map(a => [a.hash.slice(1), a]));
-  const targets = [...document.querySelectorAll("section.part, main h3[id]")];
-  let current = null;
-  const mark = id => {
-    if (id === current) return; current = id;
-    links.forEach(a => a.classList.remove("on"));
-    const a = byId.get(id); if (!a) return; a.classList.add("on");
-    const part = a.closest("ol > li"); if (part) part.querySelector("a.p").classList.add("on");
-    if (!toc.classList.contains("open")) a.scrollIntoView({ block: "nearest" });
-  };
-  const io = new IntersectionObserver(es => {
-    const vis = targets.filter(t => t.getBoundingClientRect().top < window.innerHeight * 0.35);
-    if (vis.length) mark(vis[vis.length - 1].id);
-  }, { rootMargin: "0px 0px -60% 0px", threshold: [0, 1] });
-  targets.forEach(t => io.observe(t));
-  addEventListener("scroll", () => { const vis = targets.filter(t => t.getBoundingClientRect().top < 120); if (vis.length) mark(vis[vis.length - 1].id); }, { passive: true });
-
-  // Visionneuse
-  const v = document.getElementById("viewer"), vi = v.querySelector("img");
-  document.querySelectorAll("figure a").forEach(a => a.addEventListener("click", e => {
-    e.preventDefault(); const t = a.querySelector("img"), r = t.naturalWidth / t.naturalHeight || 1;
-    const w = Math.min(t.naturalWidth || 1400, Math.max(innerWidth - 24, (innerHeight - 90) * r));
-    vi.style.width = w + "px"; vi.src = a.href; vi.alt = t.alt; v.classList.add("open"); v.scrollTo(0, 0);
-  }));
-  const close = () => v.classList.remove("open");
-  document.getElementById("vclose").addEventListener("click", close);
-  v.addEventListener("click", e => { if (e.target === v) close(); });
-  addEventListener("keydown", e => { if (e.key === "Escape") { close(); setOpen(false); } });
-})();
-</script>
+<script src="../guide.js" defer></script>
 </body>
 </html>

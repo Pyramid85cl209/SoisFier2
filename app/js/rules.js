@@ -7,7 +7,7 @@ const periodOn = (childId, day) => holidaysOf(childId).find(p => p.start_day <= 
 const isHolidayR = r => !!r.holiday_period_id;
 /* Pauses : la pause l'emporte sur le Mode vacances à l'affichage (⏸️ au lieu de 🏖️, jour neutre pour la fleur).
    Les réglages de vacances restent appliqués aux routines, comme côté serveur (étoiles d'une routine cochée). */
-const PAUSE_REASONS = ["trip", "sick", "other"];
+const PAUSE_REASONS = ["trip", "rest", "other"];   // EP-09 (DT10-13) : « Repos » remplace « Maladie » (clé sick)
 const pausesOf = childId => S.screen === "child" ? ((S.cs && S.cs.garden && S.cs.garden.pauses) || []) : (S.pauses || []).filter(p => p.child_id === childId);
 function pauseOn(childId, day) {
   const p = pausesOf(childId).find(x => x.start_day <= day && day <= x.end_day); if (p) return p;
@@ -16,27 +16,41 @@ function pauseOn(childId, day) {
   return d && d.paused ? { garden: true } : null;
 }
 // Motif enregistré en clé (v27) ; un ancien texte libre s'affiche tel quel
-const pauseReason = p => PAUSE_REASONS.includes(p.reason) ? t("pause.r." + p.reason) : (p.reason || t("pause.default"));
+const pauseReason = p => { const k = p.reason === "sick" ? "rest" : p.reason; return PAUSE_REASONS.includes(k) ? t("pause.r." + k) : (p.reason || t("pause.default")); };
+/* Dates de la famille : un instant (création, arrêt d'une routine) se lit dans le fuseau de la famille, comme le serveur (EP-09, DT05-03) */
+const famTz = () => ((S.screen === "child" ? S.cs && S.cs.family : S.family) || {}).timezone || "Europe/Paris";
+const famDay = ts => new Intl.DateTimeFormat("en-CA", { timeZone: famTz(), year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(ts));
+// Réglages de la routine valables ce jour-là (jours passés figés, DEC-33) : dernière ligne dont le début est atteint, à défaut la plus ancienne ; sans historique, la routine elle-même
+function settingsOn(r, day) {
+  const s = r.settings; if (!s || !s.length) return r;
+  let cur = s[0]; for (const x of s) { if (x.valid_from <= day) cur = x; else break; }
+  return { ...r, days: cur.days, is_bonus: cur.is_bonus, stars: cur.stars };
+}
+// Routine encore en cours ce jour-là : arrêtée, elle reste due jusqu'à la veille de l'arrêt (le serveur lit ended_at)
+const activeOn = (r, day) => r.ended_at ? famDay(r.ended_at) > day : r.active !== false;
 // Routine telle qu'elle s'applique ce jour-là (null si elle n'est pas due du tout : en pause, ou routine de vacances hors période)
 function effective(r, day) {
   if (r.kind === "oneoff") return r;
-  const p = periodOn(r.child_id, day);
-  if (isHolidayR(r)) return p && p.id === r.holiday_period_id ? r : null;
-  const o = p && p.ov && p.ov[r.id]; if (!o) return r;
+  const base = settingsOn(r, day), p = periodOn(r.child_id, day);
+  if (isHolidayR(r)) return p && p.id === r.holiday_period_id ? base : null;
+  const o = p && p.ov && p.ov[r.id]; if (!o) return base;
   if (o.status === "off") return null;
-  return { ...r, is_bonus: o.status ? o.status === "bonus" : r.is_bonus, days: o.days || r.days, stars: o.stars || r.stars, adjusted: true };
+  return { ...base, is_bonus: o.status ? o.status === "bonus" : base.is_bonus, days: o.days || base.days, stars: o.stars || base.stars, adjusted: true };
 }
 function dueOn(routines, childId, day, comps) {
   const dw = dowOf(day);
-  return routines.filter(r => r.child_id === childId && r.active !== false).map(r => {
+  return routines.filter(r => r.child_id === childId && activeOn(r, day)).map(r => {
     if (r.kind === "oneoff") {
       if (!(r.start_day <= day && day <= r.end_day)) return null;
       return (comps || []).some(c => c.routine_id === r.id && c.day !== day) ? null : r;   // déjà faite un autre jour
     }
     const e = effective(r, day);
-    return e && (e.days || []).includes(dw) && String(r.created_at || "").slice(0, 10) <= day ? e : null;
+    return e && (e.days || []).includes(dw) && (!r.created_at || famDay(r.created_at) <= day) ? e : null;
   }).filter(Boolean);
 }
+// Compteur « faites / total » du jour (DEC-32, R05-07 CA3) : une exceptionnelle obligatoire compte le jour où elle est faite, sinon son dernier jour
+const ringOf = (main, day, comps) => main.filter(r => !isOneoff(r) || (comps || []).some(c => c.routine_id === r.id && c.day === day)
+  || (day === r.end_day && !(comps || []).some(c => c.routine_id === r.id)));
 const isOneoff = r => r.kind === "oneoff";
 const oneoffNote = r => r.start_day === r.end_day ? t("oneoff.note") : t("oneoff.noteBefore", { date: fmtLong(r.end_day) });
 // Modèles : le titre est lu dans la langue courante (propriété « t »)
@@ -51,7 +65,7 @@ const TPL_X = [
 const B = (k, e, n, c, field, target) => ({ k, e, n, c, ok: s => (typeof target === "number" ? (s[field] || 0) >= target : !!s[field]), p: typeof target === "number" ? s => [Math.min(s[field] || 0, target), target] : null });
 const SERIES = (c, field, key, name, list) => list.map(([n, e], i) => B(i === 0 && key.first ? key.first : key.p + n, e, name(n), c, field, n));
 // Badges : 1 ou n (le premier palier a souvent un nom à part)
-const bn = (k, n) => n === 1 && lget(I18N.fr, `badge.${k}.first`) != null ? t(`badge.${k}.first`) : t(`badge.${k}.n`, { n });
+const bn = (k, n) => n === 1 && lget(I18N.en, `badge.${k}.first`) != null ? t(`badge.${k}.first`) : t(`badge.${k}.n`, { n });
 let BADGES = [];
 const buildBadges = () => [
   ...SERIES("routines", "done", { p: "r", first: "first" }, n => bn("routines", n),
@@ -131,8 +145,8 @@ const badgeStats = v => {
     balance: v.balance, sortie: cn.sortie || 0, grand: cn.grand || 0,
     patience: Math.max(0, Math.round((parseISO(t) - parseISO(from)) / 864e5)), calm: v.calm };
 };
-const hasBadge = (v, b) => v.stored.has(b.k) || b.ok(badgeStats(v));
-const newBadges = v => BADGES.filter(b => !v.stored.has(b.k) && b.ok(badgeStats(v))).map(b => b.k);
+// Badge gagné = enregistré par le serveur (EP-09, ADR-44) ; badgeStats ne sert plus qu'aux barres de progression
+const hasBadge = (v, b) => v.stored.has(b.k);
 function brokenStar(s = 20) {
   return `<svg class="bstar" width="${s}" height="${s}" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z" fill="#B9A89B"/><path d="M12.6 2.5 L10.8 7.6 L13.4 10.6 L10.6 13.8 L12 17" fill="none" stroke="var(--paper)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 }
@@ -178,16 +192,35 @@ const TPL_W = [
   L("tpl.w.toy", { e: "🚲", tier: "grand", d: 90 }), L("tpl.w.themePark", { e: "🎢", tier: "grand", d: 90 }), L("tpl.w.myDay", { e: "👑", tier: "grand", d: 90 })
 ];
 const TIER_RANK = { coup: 0, petit: 1, moment: 2, sortie: 3, grand: 4, event: 3 };
+// Rythme (R06-02, DEC-47) : étoiles des routines habituelles obligatoires sur une semaine ÷ 7 × 0,75 ; 0 = pas de rythme (aucune routine habituelle obligatoire, plus de valeur de secours)
 function rhythmOf(childId) {
-  const rs = S.routines.filter(r => r.child_id === childId && !r.is_bonus && !isHolidayR(r)); let tot = 0;
+  const rs = S.routines.filter(r => r.child_id === childId && !isOneoff(r) && !r.is_bonus && !isHolidayR(r)); let tot = 0;
   for (let d = 1; d <= 7; d++) tot += rs.filter(r => (r.days || []).includes(d)).reduce((a, r) => a + r.stars, 0);
-  const v = tot / 7 * .75; return v > 0 ? v : 5;
+  return tot / 7 * .75;
 }
-function roundPrice(x) { if (x < 20) return Math.max(1, Math.round(x)); if (x < 100) return Math.round(x / 5) * 5; if (x < 500) return Math.round(x / 10) * 10; return Math.round(x / 50) * 50; }
+const hasRhythm = childId => rhythmOf(childId) > 0;
+const PRICE_CAP = 5000;   // DT06-06
+function roundPrice(x) { const v = x < 20 ? Math.max(1, Math.round(x)) : x < 100 ? Math.round(x / 5) * 5 : x < 500 ? Math.round(x / 10) * 10 : Math.round(x / 50) * 50; return Math.min(PRICE_CAP, v); }
 const stepOf = p => p < 20 ? 1 : p < 100 ? 5 : p < 500 ? 10 : 50;
 const costFor = (w, childId) => (w.costs && w.costs[childId] != null) ? +w.costs[childId] : w.cost;
-const daysLabelFor = (cost, childId) => { const d = Math.max(1, Math.round(cost / rhythmOf(childId))); return d < 14 ? t("effort.days", { n: d }) : d < 60 ? t("effort.weeks", { n: Math.round(d / 7) }) : t("effort.months", { n: Math.round(d / 30) }); };
-function pricesFor(days, childIds) { const o = {}; childIds.forEach(id => o[id] = roundPrice(days * rhythmOf(id))); return o; }
+// Durée d'effort affichée : au rythme actuel, à défaut au dernier rythme ayant servi aux prix (prix gardés, DEC-52)
+const daysLabelFor = (cost, childId) => { const c = S.children.find(k => k.id === childId), r = rhythmOf(childId) || (c && c.price_rhythm) || 0; if (!r) return "—";
+  const d = Math.max(1, Math.round(cost / r)); return d < 14 ? t("effort.days", { n: d }) : d < 60 ? t("effort.weeks", { n: Math.round(d / 7) }) : t("effort.months", { n: Math.round(d / 30) }); };
+// Niveaux dans l'ordre (R06-05, DT06-05) : prix relevé par paliers au-dessus du plus cher des niveaux inférieurs (prix calculés du même enfant, hors récompense `exceptId`) ; `extra` : autres prix déjà prévus
+function lifted(raw, tier, others) {
+  const r = TIER_RANK[tier || "moment"]; let lower = 0;
+  for (const o of others) if (TIER_RANK[o.tier || "moment"] < r) lower = Math.max(lower, o.cost);
+  let c = raw; while (c <= lower && c < PRICE_CAP) c += stepOf(c);
+  return Math.min(PRICE_CAP, c);
+}
+const othersOf = (childId, exceptId) => S.rewards.filter(w => w.id !== exceptId && w.duration_days && (!w.child_id || w.child_id === childId) && w.costs && w.costs[childId] != null)
+  .map(w => ({ tier: w.tier, cost: +w.costs[childId] }));
+// Prix calculés d'une récompense de `days` jours pour les enfants `childIds` : { costs, common } ; `common` = le plus petit prix (DEC-54), pour un enfant sans rythme ;
+// null si aucun de ces enfants n'a de rythme (DEC-47) ; `extra` : { enfant: [{ tier, cost }] } prix déjà prévus pour d'autres récompenses de la même sélection
+function pricesFor(days, childIds, tier, exceptId, extra) {
+  const costs = {}; childIds.filter(hasRhythm).forEach(id => { costs[id] = lifted(roundPrice(days * rhythmOf(id)), tier, othersOf(id, exceptId).concat((extra && extra[id]) || [])); });
+  const v = Object.values(costs); return v.length ? { costs, common: Math.min(...v) } : null;
+}
 
 const TPL_P = [
   L("tpl.p.tidyRefusal", { e: "😤", s: 1 }),

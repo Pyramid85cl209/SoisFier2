@@ -12,16 +12,17 @@ async function loadParent() {
 /* Requêtes du parent, par partie : refreshParent recharge tout, refreshParts seulement ce qu'une action a changé */
 const PQ = {
   c: f => sb.from("children").select("*").eq("family_id", f).order("position").order("created_at"),
-  r: f => sb.from("routines").select("*").eq("family_id", f).eq("active", true).order("position").order("created_at"),
+  r: f => sb.from("routines").select("*").eq("family_id", f).or("active.eq.true,ended_at.gte." + new Date(Date.now() - 70 * 864e5).toISOString()).order("position").order("created_at"),   // actives + arrêtées depuis moins de 70 jours (jours passés à l'écran, DT05-03)
+  rs: f => sb.from("routine_settings").select("routine_id,valid_from,days,is_bonus,stars").eq("family_id", f).order("valid_from"),   // réglages historisés (EP-09, ADR-42)
   w: f => sb.from("rewards").select("*").eq("family_id", f).eq("active", true).order("cost"),
   x: f => sb.from("completions").select("child_id,routine_id,day,stars,source,validated_at,validated_by,created_by").eq("family_id", f).gte("day", addDays(todayISO(), -62)),
-  z: f => sb.from("redemptions").select("*").eq("family_id", f).order("created_at", { ascending: false }).limit(100),
+  z: f => sb.from("redemptions").select("*").eq("family_id", f).gte("created_at", addDays(todayISO(), -30)).order("created_at", { ascending: false }),   // DT07-02 : 30 jours, pas un nombre de lignes
   s: f => sb.from("child_stats").select("*").eq("family_id", f),
   m: f => sb.from("family_members").select("user_id,display_name,relation,relation_key,role").eq("family_id", f),
   d: f => sb.from("child_devices").select("id,child_id,created_at,last_seen,label").eq("family_id", f).order("created_at"),
   f: f => sb.from("families").select("name,auto_validate,week_start,weekend_days,timezone,plan").eq("id", f),
   pe: f => sb.from("penalties").select("*").eq("family_id", f).eq("active", true).order("stars").order("created_at"),
-  pv: f => sb.from("penalty_events").select("*").eq("family_id", f).order("created_at", { ascending: false }).limit(500),
+  pv: f => sb.from("penalty_events").select("*").eq("family_id", f).gte("created_at", addDays(todayISO(), -30)).order("created_at", { ascending: false }),
   b: f => sb.from("child_badges").select("child_id,badge_key").eq("family_id", f),
   pz: f => sb.from("pauses").select("*").eq("family_id", f).gte("end_day", todayISO()).order("start_day"),
   g: f => sb.rpc("family_gardens", { p_family: f }),
@@ -29,16 +30,25 @@ const PQ = {
   hp: f => sb.from("holiday_periods").select("*").eq("family_id", f).eq("active", true).order("start_day"),
   ho: f => sb.from("holiday_overrides").select("*").eq("family_id", f)
 };
-const OPTIONAL = ["hp", "ho"];   // Mode vacances : facultatif si la base n'est pas encore à jour
+const OPTIONAL = ["hp", "ho", "rs"];   // Mode vacances : facultatif si la base n'est pas encore à jour
 async function fetchParts(keys) {
+  if (keys.includes("r") && !keys.includes("rs")) keys = [...keys, "rs"];   // les réglages suivent les routines
   const fid = S.family.id, qs = await Promise.all(keys.map(k => PQ[k](fid))), o = {};
   keys.forEach((k, i) => { const q = qs[i]; if (q.error && !OPTIONAL.includes(k)) throw q.error; o[k] = q.error ? null : q.data; });
   return o;
 }
+// Réglages historisés rattachés à chaque routine ; S.routines = routines en cours, S.routinesAll = avec les arrêtées récentes (jours passés)
+function attachSettings() {
+  const by = {}; (S.rsets || []).forEach(x => (by[x.routine_id] = by[x.routine_id] || []).push(x));
+  S.routinesAll = (S.routinesAll || []).map(r => by[r.id] ? { ...r, settings: by[r.id] } : r.settings ? { ...r, settings: undefined } : r);
+  S.routines = S.routinesAll.filter(r => r.active !== false);
+}
 function applyParts(o) {
   const has = k => k in o;
   if (has("c")) S.children = o.c;
-  if (has("r")) S.routines = o.r;
+  if (has("r")) S.routinesAll = o.r;
+  if (has("rs")) S.rsets = o.rs || [];
+  if (has("r") || has("rs")) attachSettings();
   if (has("w")) S.rewards = o.w;
   if (has("x")) S.completions = o.x;
   if (has("z")) S.redemptions = o.z;
@@ -61,7 +71,7 @@ function applyParts(o) {
 }
 // Cache du parent, rattaché au compte : affiché dès l'ouverture, puis remplacé par les données fraîches
 function saveParentCache() {
-  store.set("parentCache", { uid: S.session?.user.id, family: S.family, me: S.me, children: S.children, routines: S.routines, rewards: S.rewards, completions: S.completions, redemptions: S.redemptions, stats: S.stats, members: S.members, devices: S.devices,
+  store.set("parentCache", { uid: S.session?.user.id, family: S.family, me: S.me, children: S.children, routines: S.routines, routinesAll: S.routinesAll, rsets: S.rsets, rewards: S.rewards, completions: S.completions, redemptions: S.redemptions, stats: S.stats, members: S.members, devices: S.devices,
     autoValidate: S.autoValidate, penalties: S.penalties, pevents: S.pevents, badges: S.badges, pauses: S.pauses, gardens: S.gardens, week: { ...WEEK }, plan: S.plan, holidays: S.holidays, hp: S.hp, ho: S.ho, oneoffTpl: S.oneoffTpl });
 }
 function parentCache() {
@@ -86,15 +96,10 @@ async function fresh(keys, tries = 1) {
   }
   return false;
 }
-// Badges obtenus : enregistrés une fois pour toutes
-function awardBadges() {
-  const rows = [], fid = S.family.id;
-  S.children.forEach(k => newBadges(viewFor(k)).forEach(key => { rows.push({ child_id: k.id, family_id: fid, badge_key: key }); (S.badges[k.id] = S.badges[k.id] || []).push(key); }));
-  if (rows.length) sb.from("child_badges").upsert(rows, { onConflict: "child_id,badge_key", ignoreDuplicates: true }).then(() => {}, () => {});
-}
+// Badges : mérités et enregistrés par le serveur (EP-09, ADR-44) ; l'espace parent affiche ce qui est enregistré, sans calculer
 async function refreshParent() {
   if (!await fresh(Object.keys(PQ), 6)) return;
-  awardBadges(); saveParentCache();
+  saveParentCache();
 }
 // Rechargement ciblé : seulement les parties qu'une action a changées ; compteurs, badges et jardins suivent en arrière-plan
 async function refreshParts(keys, tries = 3) { if (await fresh(keys, tries)) saveParentCache(); bgRefresh(keys); }
@@ -106,7 +111,7 @@ function bgRefresh(done = []) {
   clearTimeout(bgTimer);
   bgTimer = setTimeout(async () => {
     const keys = [...bgKeys]; bgKeys.clear();
-    try { if (await fresh(keys)) { awardBadges(); saveParentCache(); if (S.screen === "parent") render(); } } catch {}
+    try { if (await fresh(keys)) { saveParentCache(); if (S.screen === "parent") render(); } } catch {}
   }, 700);
 }
 // Action à affichage immédiat : l'écran change tout de suite ; si le serveur refuse, il revient en arrière avec un message
@@ -133,8 +138,10 @@ function bumpStats(childId, d) {
 const newId = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : null;
 async function loadTip() {
   try {
-    let { data } = await sb.from("tips").select("text").eq("locale", curLang()).order("id");
-    if (!data || !data.length) ({ data } = await sb.from("tips").select("text").eq("locale", "fr").order("id"));
+    const lg = curLang();   // DT05-07 : astuces dans la langue en cours, anglais à défaut
+    let { data } = await sb.from("tips").select("text").eq("locale", lg).order("id");
+    if (!data || !data.length) ({ data } = await sb.from("tips").select("text").eq("locale", FALLBACK).order("id"));
+    if (lg !== curLang()) return;   // la langue a changé pendant la lecture : la lecture suivante fait foi
     if (data && data.length) { const n = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 864e5); S.tip = data[n % data.length].text; if (S.screen === "parent") render(); }
   } catch {}
 }
@@ -149,8 +156,9 @@ async function enterParent() {
     else { S.screen = "error"; S.err = errMsg(e); }
   }
   render();
+  if (typeof maybeIntro === "function") maybeIntro();
 }
-async function reloadParent(msg, parts) { if (parts) await refreshParts(parts); else await refreshParent(); render(); if (msg) toast(msg); }
+async function reloadParent(msg, parts) { if (parts) await refreshParts(parts); else await refreshParent(); render(); if (msg) toast(msg); if (!parts || parts.includes("r")) priceNewcomers(); }
 
 /* ================= Données enfant ================= */
 async function loadChild() {
@@ -170,9 +178,8 @@ async function loadChild() {
     const fresh = seen == null ? [] : fls.slice(seen);
     store.set("seenFlowers", fls.length);
     if (fresh.length) setTimeout(() => bloomCeremony(fresh[fresh.length - 1]), 900);
-    const routines = S.cs.routines.map(r => ({ ...r, child_id: S.cs.child.id }));
-    const nb = newBadges(computeView({ child: S.cs.child, routines, completions: S.cs.completions, stats: S.cs.stats, badges: S.cs.badges, garden: S.cs.garden, penalties: S.cs.penalties, oneoffDone: S.cs.oneoff_done }));
-    if (nb.length) { sb.rpc("child_award_badges", { p_token: tok, p_keys: nb }).then(() => {}, () => {}); S.cs.badges.push(...nb); }
+    const nb = S.cs.badges_new || [];   // badges mérités et pas encore annoncés (le serveur décide, ADR-44)
+    if (nb.length) sb.rpc("child_badges_seen", { p_token: tok, p_keys: nb }).then(() => {}, () => {});
     store.set("childCache", S.cs);
     const shown = nb.map(k => visibleBadges().find(b => b.k === k)).filter(Boolean);
     if (gain || shown.length) setTimeout(() => {
@@ -182,9 +189,11 @@ async function loadChild() {
       if (gain && shown.length) setTimeout(() => toast(t("kid.newBadge", { names })), 3000);
     }, 400);
   } catch (e) {
-    if (/Appareil non reconnu|SF:device_unknown/.test(e.message || "")) {
+    if (/Appareil non reconnu|SF:device_unknown|SF:device_expired/.test(e.message || "")) {
+      const expired = /SF:device_expired/.test(e.message || "");   // 3 mois sans usage : message propre, appareil retiré du serveur (sinon par la purge quotidienne)
+      if (expired) await unpairDevice(tok);
       store.del("childToken"); store.del("childCache"); store.del("queue");
-      S.screen = "auth"; render(); toast(t("kid.disconnected"), true); return;
+      S.screen = "auth"; render(); toast(expired ? t("srv.device_expired") : t("kid.disconnected"), true); return;
     }
     S.cs = store.get("childCache"); S.offline = true; if (S.cs) setWeek(S.cs.family);
     if (!S.cs) { S.screen = "error"; S.err = errMsg(e); }
@@ -201,6 +210,25 @@ function applyQueueToState() {
   }
 }
 let flushing = false;
+// Retrait d'un appareil de l'enfant (sortie du mode enfant, jeton périmé). Sans réseau : jeton gardé dans une file locale, envoyé au retour du réseau.
+async function unpairDevice(tok) {
+  if (!tok) return;
+  try {
+    const { error } = await sb.rpc("child_unpair", { p_token: tok });
+    if (!error) return;
+    if (!isNetErr(error)) return;
+  } catch {}
+  const q = store.get("unpairQueue", []); if (!q.includes(tok)) { q.push(tok); store.set("unpairQueue", q); }
+}
+let unpairing = false;
+async function flushUnpair() {
+  const q = store.get("unpairQueue", []); if (unpairing || !q.length || !navigator.onLine) return; unpairing = true;
+  try {
+    const rest = [];
+    for (const tok of q) { try { const { error } = await sb.rpc("child_unpair", { p_token: tok }); if (error && isNetErr(error)) rest.push(tok); } catch { rest.push(tok); } }
+    if (rest.length) store.set("unpairQueue", rest); else store.del("unpairQueue");
+  } finally { unpairing = false; }
+}
 async function flushQueue() {
   if (flushing || !store.get("childToken")) return; flushing = true;
   try {
@@ -230,7 +258,7 @@ function childToggle(rid, makeDone, source = "child") {
   if (makeDone) {
     S.bump = true; render(); S.bump = false;
     const routines = cs.routines.map(x => ({ ...x, child_id: cs.child.id }));
-    const main = dueOn(routines, cs.child.id, day, cs.completions).filter(x => !x.is_bonus);
+    const main = ringOf(dueOn(routines, cs.child.id, day, cs.completions).filter(x => !x.is_bonus), day, cs.completions);
     const all = main.length && main.every(x => cs.completions.some(c => c.routine_id === x.id && c.day === day));
     celebrate(all);
     toast(all ? t("kid.allDoneToast") : t("kid.bravoToast"));
@@ -255,4 +283,6 @@ async function getPushSub() {
   }
   return sub.toJSON();
 }
+const LAST_TIME = "23:45";   // DT11-04 : un rappel après 23:45 ne serait jamais envoyé (le quart d'heure passe minuit)
+const tooLate = times => times.some(v => v > LAST_TIME);
 const readTimes = () => [$("#t1")?.value, $("#t2")?.value].filter(v => /^\d{2}:\d{2}$/.test(v || ""));

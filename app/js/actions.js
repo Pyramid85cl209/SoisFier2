@@ -31,14 +31,14 @@ A.login = async () => {
   const email = $("#a-email").value.trim(), password = $("#a-pass").value;
   if (!email || !password) return toast(t("auth.needBoth"), true);
   const { data, error } = await sb.auth.signInWithPassword({ email, password }); if (error) throw error;
-  S.session = data.session; await enterParent();
+  S.session = data.session; await enterParent(); saveLang();   // DT13-03
 };
 A.signup = async () => {
   const email = $("#a-email").value.trim(), password = $("#a-pass").value, name = ($("#a-name")?.value || "").trim();
   if (!email || password.length < 6) return toast(t("auth.needSignup"), true);
   const { data, error } = await sb.auth.signUp({ email, password, options: { data: { display_name: name, locale: curLang() }, emailRedirectTo: location.origin + location.pathname } });
   if (error) throw error;
-  if (data.session) { S.session = data.session; await enterParent(); }
+  if (data.session) { S.session = data.session; await enterParent(); saveLang(); }
   else { S.authMode = "login"; render(); openSheet(`<h2>${t("auth.checkMail")}</h2><p>${t("auth.checkMailText", { email: `<b>${esc(email)}</b>` })}</p><div class="sheet-actions"><button class="btn" data-act="closeSheet">${t("btn.gotIt")}</button></div>`); }
 };
 A.forgot = async () => {
@@ -50,21 +50,59 @@ A.closeSheet = () => closeSheet();
 // Langue : choisie sur l'appareil ; enregistrée aussi pour le membre connecté et pour les rappels de cet appareil
 A.pickLang = () => openSheet(`<h2>${t("lang.title")}</h2><ul class="tpl">${LANGS.map(l => `<li><button class="pen" data-act="setLang" data-v="${l}" lang="${l}"><span>${t("lang." + l)}${REVIEW.includes(l) ? ` <small class="muted">(${t("lang.toReview")})</small>` : ""}</span><span>${l === curLang() ? "✓" : ""}</span></button></li>`).join("")}</ul>
   <div class="sheet-actions"><button class="btn ghost" data-act="closeSheet">${t("btn.close")}</button></div>`);
+// Enregistre la langue de l'appareil pour le membre connecté et pour les rappels de ce téléphone (DT13-03 : avec 🌐 et à la connexion) ; un échec est sans suite
+async function saveLang() {
+  const l = I18N.lang; if (!LANGS.includes(l)) return;   // « ?lang=qps » n'est jamais enregistré
+  try {
+    if (S.screen === "parent" && S.family && S.session) await sb.from("family_members").update({ locale: l }).eq("family_id", S.family.id).eq("user_id", S.session.user.id);
+    if ("serviceWorker" in navigator) { const reg = await navigator.serviceWorker.getRegistration(); const sub = reg && await reg.pushManager.getSubscription(); if (sub) await sb.rpc("push_set_locale", { p_endpoint: sub.endpoint, p_locale: l }); }   // sans service worker (aperçu, hors ligne au premier lancement), on n'attend pas
+  } catch {}
+}
 A.setLang = async el => {
   const l = el.dataset.v; if (!LANGS.includes(l)) return;
   store.set("lang", l);
   if (new URLSearchParams(location.search).has("lang")) history.replaceState(null, "", location.pathname);
   await loadI18n(); closeSheet(); render();
-  try {
-    if (S.screen === "parent" && S.family && S.session) await sb.from("family_members").update({ locale: l }).eq("family_id", S.family.id).eq("user_id", S.session.user.id);
-    if ("serviceWorker" in navigator) { const reg = await navigator.serviceWorker.ready; const sub = await reg.pushManager.getSubscription(); if (sub) await sb.rpc("push_set_locale", { p_endpoint: sub.endpoint, p_locale: l }); }
-  } catch {}
+  S.tip = null; if (S.screen === "parent") loadTip();   // DT05-07 : l'astuce suit la langue
+  await saveLang();
 };
 A.logout = async () => {
   if (sb) await sb.auth.signOut().catch(() => {});
   ["parentCache", "pushOn"].forEach(k => store.del(k));
   Object.assign(S, { session: null, family: null, children: [], routines: [], screen: "auth", tab: "today", wk: null }); render();
 };
+/* Présentation (EP-09, F14-04, ADR-48) : fenêtre de trois écrans, montrée une fois par compte (indication « vue » dans les métadonnées du compte) ; rouvrable depuis le guide (?intro=1) */
+const INTRO_N = 3;
+let introShown = false;
+const introSeen = () => !!(S.session && S.session.user && S.session.user.user_metadata && S.session.user.user_metadata.intro_seen);
+function introView(i) {
+  const n = i + 1;
+  openSheet(`<div class="intro"><div class="intro-art">${plantSVG([1, 3, 5][i], "#E58358", t("intro.a" + n))}</div>
+    <h2>${t("intro.t" + n)}</h2><p>${t("intro.x" + n)}</p><p class="muted small">${t("intro.step", { i: n, n: INTRO_N })}</p>
+    <div class="sheet-actions">${i > 0 ? `<button class="btn ghost" data-act="introBack">${t("intro.back")}</button>` : ""}${i < INTRO_N - 1 ? `<button class="btn" data-act="introNext" data-autofocus>${t("intro.next")}</button>` : ""}<button class="btn ${i < INTRO_N - 1 ? "ghost" : ""}" data-act="closeSheet" ${i === INTRO_N - 1 ? "data-autofocus" : ""}>${t("intro.done")}</button></div></div>`);
+  const f = dlg.querySelector("[data-autofocus]"); if (f) f.focus();
+  dlg.dataset.intro = String(i);
+}
+A.introNext = () => introView(Math.min(INTRO_N - 1, +dlg.dataset.intro + 1));
+A.introBack = () => introView(Math.max(0, +dlg.dataset.intro - 1));
+function showIntro() { introView(0); }
+async function markIntroSeen() {
+  if (introSeen() || !sb) return;
+  try {
+    const { error } = await sb.auth.updateUser({ data: { intro_seen: true } });
+    if (!error && S.session && S.session.user) S.session.user.user_metadata = { ...(S.session.user.user_metadata || {}), intro_seen: true };
+  } catch (_) {}   // hors ligne : sera retentée à la prochaine ouverture
+}
+// Après la création ou l'adhésion à une famille (ou à la première ouverture d'un compte qui ne l'a pas vue) : une seule fois par compte
+function maybeIntro() {
+  if (introShown || S.screen !== "parent" || S.offline || !S.session || introSeen() || dlg.open) return;
+  introShown = true; showIntro(); markIntroSeen();
+}
+// ?intro=1 (lien du guide) : rouvre la présentation, sans rien enregistrer
+function introFromLink() {
+  let on = false; try { const u = new URL(location.href); on = u.searchParams.get("intro") === "1"; if (on) { u.searchParams.delete("intro"); history.replaceState(null, "", u.pathname + u.search + u.hash); } } catch (_) {}
+  if (on) { introShown = true; showIntro(); }
+}
 A.createFamily = async () => {
   const name = $("#o-name").value.trim();
   const rel = t("rel." + $("#o-rel").value);
@@ -76,13 +114,15 @@ A.createFamily = async () => {
 };
 A.joinFamily = async () => {
   const code = $("#o-code").value.trim(); if (code.length < 6) return toast(t("pair.need6"), true);
-  const { error } = await sb.rpc("join_family", { p_code: code, p_display_name: S.session.user.user_metadata?.display_name || "" }); if (error) throw error;
+  const { data, error } = await sb.rpc("join_family", { p_code: code, p_display_name: S.session.user.user_metadata?.display_name || "" }); if (error) throw error;
+  if (!data) throw new Error("SF:bad_code");   // EP-09 : le serveur répond « vide » pour un code faux (l'échec reste compté)
   await enterParent(); toast(t("onboard.joined"));
 };
 A.pair = async () => {
   const code = $("#p-code").value.trim(); if (code.length < 6) return toast(t("pair.need6"), true);
   const { data, error } = await sb.rpc("child_pair", { p_code: code, p_label: null }); if (error) throw error;
-  store.set("childToken", data.token); store.del("queue"); store.del("pin"); store.del("lastEarned"); store.del("seenFlowers");
+  if (!data || data.error) throw new Error("SF:bad_code");   // EP-09 : code faux = réponse « error », pour que l'échec reste compté
+  store.set("childToken", data.token); store.del("queue"); store.del("pin"); store.del("pinH"); store.del("pinGuard"); store.del("lastEarned"); store.del("seenFlowers");
   S.screen = "child"; S.ctab = "today"; S.cs = null; render(); await loadChild(); celebrate(true);
   setTimeout(() => { if (S.screen === "child" && !dlg.open) A.cReminders({ ask: true }); }, 1800);   // v28 : rappels proposés une fois, sur le téléphone de l'enfant seulement
 };
@@ -168,14 +208,14 @@ A.showYear = el => {
    Même règle côté serveur (déclencheur pauses_check, code SF:pause_started). */
 const pauseGrace = p => !p.created_at || Date.now() - Date.parse(p.created_at) < 864e5;
 const pauseLocked = p => p.start_day < todayISO() && !pauseGrace(p);
-const reasonSelect = cur => `<label class="f">${t("pause.reason")}<select id="pz-why">${PAUSE_REASONS.map(k => `<option value="${k}" ${k === cur ? "selected" : ""}>${t("pause.r." + k)}</option>`).join("")}${cur && !PAUSE_REASONS.includes(cur) ? `<option value="${esc(cur)}" selected>${esc(cur)}</option>` : ""}</select></label>`;
+const reasonSelect = cur0 => { const cur = cur0 === "sick" ? "rest" : cur0; return `<label class="f">${t("pause.reason")}<select id="pz-why">${PAUSE_REASONS.map(k => `<option value="${k}" ${k === cur ? "selected" : ""}>${t("pause.r." + k)}</option>`).join("")}${cur && !PAUSE_REASONS.includes(cur) ? `<option value="${esc(cur)}" selected>${esc(cur)}</option>` : ""}</select></label>`; };
 A.cAnyway = () => { S.kidAnyway = todayISO(); render(); };
 A.newPause = () => {
   const td = todayISO();
   openSheet(`<h2>⏸️ ${t("pause.new")}</h2><p class="muted">${t("pause.during")}</p>
     <div class="f"><span>${t("family.children")}</span><ul class="tpl">${S.children.map(c => `<li><label><input type="checkbox" value="${c.id}" checked> ${esc(c.emoji)} ${esc(c.name)}</label></li>`).join("")}</ul></div>
     <div class="f two"><label>${t("pause.from")}<input type="date" id="pz-from" value="${td}"></label><label>${t("pause.to")}<input type="date" id="pz-to" value="${addDays(td, 6)}"></label></div>
-    ${reasonSelect("sick")}
+    ${reasonSelect("rest")}
     <div class="sheet-actions"><button class="btn" data-act="savePause">${t("btn.save")}</button></div>`);
 };
 A.savePause = async () => {
