@@ -217,7 +217,7 @@ async function typeCode(p, c) { await p.fill("#pin-in", c); await p.click("#pin-
     vm.runInNewContext(swSrc, ctxv); let pr; L.push({ data: data, waitUntil: p => { pr = p; } }); await pr; return shown[0];
   };
   const dict = l => JSON.stringify(JSON.parse(fs.readFileSync(ROOT + "/i18n/" + l + ".json", "utf8")));
-  const C = "soisfier-v32-ep09g";
+  const C = "soisfier-v32-ep09h";
   const sw1 = await runSw({ "soisfier-lang": { "./sf-lang": "ar" }, [C]: { "./i18n/ar.json": dict("ar"), "./i18n/en.json": dict("en") } }, null);
   ok("10.15 notification sans texte, téléphone en arabe : texte de secours arabe", sw1[1] === JSON.parse(dict("ar")).push.fallback && /[؀-ۿ]/.test(sw1[1]), sw1.join(" | "));
   const sw2 = await runSw({ [C]: { "./i18n/en.json": dict("en") } }, null);
