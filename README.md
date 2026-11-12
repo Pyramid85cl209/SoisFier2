@@ -1,6 +1,6 @@
 # SoisFier
 
-Application familiale de routines pour enfants : étoiles validées par les parents, récompenses calibrées, jardin (une fleur par quinzaine, un parterre par saison, un jardin par an), sorties près de chez soi, rappels sur Android.
+Application familiale de routines pour enfants : étoiles validées par les parents, récompenses calibrées, jardin (une fleur par quinzaine, un parterre par saison, un jardin par an), rappels sur Android.
 
 - Interface : PWA dans `app/` publiée sur GitHub Pages par la GitHub Action `deploy.yml`, avec le guide (`guide/`) et la vitrine (`vitrine/`).
 - Organisation de `app/` :

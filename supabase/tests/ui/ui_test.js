@@ -217,7 +217,7 @@ async function typeCode(p, c) { await p.fill("#pin-in", c); await p.click("#pin-
     vm.runInNewContext(swSrc, ctxv); let pr; L.push({ data: data, waitUntil: p => { pr = p; } }); await pr; return shown[0];
   };
   const dict = l => JSON.stringify(JSON.parse(fs.readFileSync(ROOT + "/i18n/" + l + ".json", "utf8")));
-  const C = "soisfier-v32-ep09f";
+  const C = "soisfier-v32-ep09g";
   const sw1 = await runSw({ "soisfier-lang": { "./sf-lang": "ar" }, [C]: { "./i18n/ar.json": dict("ar"), "./i18n/en.json": dict("en") } }, null);
   ok("10.15 notification sans texte, téléphone en arabe : texte de secours arabe", sw1[1] === JSON.parse(dict("ar")).push.fallback && /[؀-ۿ]/.test(sw1[1]), sw1.join(" | "));
   const sw2 = await runSw({ [C]: { "./i18n/en.json": dict("en") } }, null);
@@ -334,6 +334,31 @@ async function typeCode(p, c) { await p.fill("#pin-in", c); await p.click("#pin-
     const changed = checked.every(i => checked.every(j => TIER_RANK[TPL_W[+i].tier] >= TIER_RANK[TPL_W[+j].tier] || after[j] > after[i])) && Object.keys(after).some(i => after[i] !== before[i]);
     return { same, changed, n: cap.length, checked: checked.length, sample: checked.map(i => [TPL_W[+i].tier, TPL_W[+i].d, before[i], after[i]]) }; });
   ok("12.6 référentiel : les prix affichés changent à chaque case cochée et le prix enregistré est celui affiché (F06-02 CA9)", tp.same && tp.changed && tp.n === tp.checked && tp.n > 3, JSON.stringify(tp));
+  // 13. F04-08 CA1 (BA, DEC-48) : un seul enfant = pas de choix, case récompenses cochée, bouton Imprimer
+  const sp = await page.evaluate(() => { S.children = [{ id: "A", name: "Enfant A" }]; closeSheet(); A.printPlan();
+    const hid = document.querySelector("dialog#sheet .tpl[hidden] input:checked"); const g = document.getElementById("pr-gifts");
+    return { open: dlg.open, hid: !!hid, gifts: !!g && g.checked, btn: !!document.querySelector("[data-act=doPrint]"), visibleChildChoice: [...document.querySelectorAll("dialog#sheet .tpl:not([hidden]) input")].length }; });
+  ok("13.1 un seul enfant : « Planning à imprimer » s'ouvre sans choix d'enfant, récompenses cochées, bouton Imprimer", sp.open && sp.hid && sp.gifts && sp.btn && sp.visibleChildChoice === 0, JSON.stringify(sp));
+  // 14. Présentation (F14-04, ADR-48)
+  const it = await page.evaluate(async () => {
+    closeSheet(); const calls = []; sb.auth.updateUser = async a => { calls.push(a); return { error: null }; };
+    S.screen = "parent"; S.offline = false; S.session = { user: { id: "u1", user_metadata: { display_name: "X" } } };
+    const out = {}; introShown = false; maybeIntro();
+    out.open1 = dlg.open; out.t1 = dlg.querySelector("h2").textContent; out.step1 = dlg.querySelector(".muted").textContent;
+    A.introNext(); out.t2 = dlg.querySelector("h2").textContent; A.introNext(); out.t3 = dlg.querySelector("h2").textContent; out.alt = dlg.querySelector(".intro-art svg").getAttribute("aria-label");
+    out.last = [...dlg.querySelectorAll("button")].map(b => b.dataset.act).join(","); A.introBack(); out.back = dlg.querySelector("h2").textContent === out.t2;
+    closeSheet(); await new Promise(r => setTimeout(r, 50));
+    out.calls = JSON.stringify(calls); out.seen = introSeen();
+    introShown = false; maybeIntro(); out.again = dlg.open;           // déjà vue : ne se rouvre pas
+    S.session.user.user_metadata = { intro_seen: true }; introShown = false; maybeIntro(); out.seenNoShow = dlg.open;
+    history.pushState(null, "", location.pathname + "?intro=1"); calls.length = 0; introFromLink();   // lien du guide : s'ouvre, n'enregistre rien, retire le paramètre
+    out.link = dlg.open && calls.length === 0 && !/intro=1/.test(location.search); closeSheet();
+    S.session.user.user_metadata = {}; S.offline = true; introShown = false; maybeIntro(); out.offline = dlg.open; S.offline = false;   // hors ligne : pas de présentation
+    return out; });
+  ok("14.1 présentation : s'ouvre pour un compte qui ne l'a pas vue, trois écrans, Retour/Suivant/Fermer", it.open1 && it.t1 && it.t2 && it.t3 && it.t1 !== it.t2 && it.t2 !== it.t3 && it.back && /3/.test(it.step1) && it.last === "introBack,closeSheet", JSON.stringify(it));
+  ok("14.2 image avec texte de remplacement", !!it.alt, it.alt);
+  ok("14.3 « vue » enregistrée dans les métadonnées du compte (auth.updateUser) ; ne se rouvre pas ensuite", it.calls === JSON.stringify([{ data: { intro_seen: true } }]) && it.seen && !it.again && !it.seenNoShow, it.calls);
+  ok("14.4 lien du guide ?intro=1 : s'ouvre, n'enregistre rien, retire le paramètre ; pas de présentation hors ligne", it.link && !it.offline, JSON.stringify([it.link, it.offline]));
   ok("12.7 aucune erreur de script", errs.length === 0, errs.join(";")); await ctx.close();
   await browser.close(); srv.close(); console.log(fails ? `\n${fails} KO` : "\nTout OK");
 })();

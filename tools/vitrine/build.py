@@ -26,11 +26,11 @@ T = {
   why=[("🌻", "Il voit ses progrès", "Chaque bonne journée fait grandir sa fleur."),
        ("🐷", "Il apprend à patienter", "Ses étoiles s'épargnent pour des récompenses, petites ou grandes."),
        ("🤝", "Une seule voix", "Parents, grands-parents ou nounou suivent et valident les mêmes routines.")],
-  rules=[("✔️", "Un adulte valide", "Une étoile ne compte qu'une fois validée. Par défaut, ce que l'enfant coche est validé à minuit s'il n'a pas été refusé."),
+  rules=[("✔️", "Un adulte valide", "Une étoile ne compte qu'une fois validée. Par défaut, ce que l'enfant coche est validé après minuit s'il n'a pas été refusé."),
          ("💪", "Pas besoin d'être parfait", "Une bonne journée, c'est au moins 75 % des étoiles du jour."),
          ("🌷", "Une fleur par quinzaine", "Plus belle selon le nombre de bonnes journées. Les fleurs forment un parterre chaque saison et un jardin chaque année scolaire."),
          ("⚖️", "Des récompenses à sa mesure", "Leur prix suit le rythme de chaque enfant."),
-         ("🏖️", "Les imprévus ne pénalisent pas", "Vacances ou maladie : on met en pause, ces jours sont neutres."),
+         ("🏖️", "Les imprévus ne pénalisent pas", "Vacances ou repos : on met en pause, ces jours sont neutres."),
          ("📱", "Pas de compte pour l'enfant", "Un code donné par un parent suffit pour connecter son téléphone.")],
   guide_h="Mode d'emploi", guide_p="Installation, routines, récompenses, côté enfant et réglages, pas à pas et en images.", guide_btn="Lire le mode d'emploi",
   contact_h="Contact", contact_p="Une adresse de contact arrive bientôt.", soon="À venir",
@@ -54,11 +54,11 @@ T = {
   why=[("🌻", "يرى تقدّمه", "كل يوم جيد يُنمّي زهرته."),
        ("🐷", "يتعلّم الصبر والادّخار", "يدّخر نجومه لمكافآت صغيرة أو كبيرة."),
        ("🤝", "صوت واحد", "الوالدان والأجداد والمربّية يتابعون الأنشطة نفسها ويؤكّدونها.")],
-  rules=[("✔️", "أحد الكبار يؤكّد", "لا تُحتسب النجمة إلا بعد تأكيدها. افتراضيًا، يُؤكَّد ما حدّده الطفل عند منتصف الليل إن لم يُرفض."),
+  rules=[("✔️", "أحد الكبار يؤكّد", "لا تُحتسب النجمة إلا بعد تأكيدها. افتراضيًا، يُؤكَّد ما حدّده الطفل بعد منتصف الليل إن لم يُرفض."),
          ("💪", "لا داعي للكمال", "اليوم الجيد هو 75% على الأقل من نجوم اليوم."),
          ("🌷", "زهرة لكل فترة من أسبوعين", "أجمل كلما زادت الأيام الجيدة. تشكّل الزهور حوضًا في كل فصل وحديقة في كل سنة دراسية."),
          ("⚖️", "مكافآت على مقاسه", "يتبع سعرها وتيرة كل طفل."),
-         ("🏖️", "الطوارئ لا تُعاقَب", "عطلة أو مرض: نبرمج توقّفًا، فتكون تلك الأيام محايدة."),
+         ("🏖️", "الطوارئ لا تُعاقَب", "عطلة أو راحة: نبرمج توقّفًا، فتكون تلك الأيام محايدة."),
          ("📱", "لا حساب للطفل", "يكفي رمز يعطيه أحد الوالدين لربط هاتفه.")],
   guide_h="دليل الاستخدام", guide_p="التثبيت، والأنشطة، والمكافآت، وجهة الطفل، والإعدادات، خطوة بخطوة وبالصور.", guide_btn="قراءة الدليل",
   contact_h="التواصل", contact_p="عنوان للتواصل قريبًا.", soon="قريبًا",
@@ -82,11 +82,11 @@ T = {
   why=[("🌻", "They see their progress", "Every good day makes their flower grow."),
        ("🐷", "They learn patience", "They save their stars for rewards, big or small."),
        ("🤝", "One voice", "Parents, grandparents or a nanny follow and approve the same routines.")],
-  rules=[("✔️", "An adult approves", "A star only counts once it is approved. By default, what the child ticks is approved at midnight unless it has been declined."),
+  rules=[("✔️", "An adult approves", "A star only counts once it is approved. By default, what the child ticks is approved after midnight unless it has been declined."),
          ("💪", "No need to be perfect", "A good day means at least 75% of the day's stars."),
          ("🌷", "One flower per fortnight", "More beautiful with each good day. The flowers make a flower bed each season and a garden each school year."),
          ("⚖️", "Rewards that fit the child", "Their price follows each child's pace."),
-         ("🏖️", "The unexpected isn't penalised", "Holiday or illness: schedule a break, and those days are neutral."),
+         ("🏖️", "The unexpected isn't penalised", "Holiday or rest: schedule a break, and those days are neutral."),
          ("📱", "No account for the child", "A code given by a parent is enough to connect their phone.")],
   guide_h="User guide", guide_p="Installation, routines, rewards, the child's side and settings, step by step with screenshots.", guide_btn="Read the user guide",
   contact_h="Contact", contact_p="A contact address is coming soon.", soon="Coming soon",
@@ -117,7 +117,7 @@ def page(lg):
 <title>{html.escape(t["title"])}</title>
 <meta name="description" content="{html.escape(t["desc"])}">
 <meta name="robots" content="noindex, nofollow"><!-- vitrine provisoire : à retirer au passage au domaine -->
-<meta name="theme-color" content="#2E8B57">
+<meta name="theme-color" content="#237A49">
 <link rel="icon" href="{up}icon-192.png">
 {alt}
 <link rel="preconnect" href="https://fonts.googleapis.com">

@@ -1200,5 +1200,20 @@
   "cancel": "Annuler : {name}",
   "childHere": "Mode enfant ici pour {name}",
   "connectDevice": "Connecter l'appareil de {name}"
+ },
+ "intro": {
+  "step": "Écran {i} sur {n}",
+  "next": "Suivant",
+  "back": "Retour",
+  "done": "Fermer",
+  "t1": "Bienvenue dans SoisFier",
+  "x1": "SoisFier aide votre famille à installer les routines du quotidien : se brosser les dents, préparer son cartable, se coucher à l'heure. L'enfant coche ce qu'il a fait, un adulte valide.",
+  "a1": "Un tournesol qui pousse",
+  "t2": "Des étoiles, une fleur",
+  "x2": "Chaque routine validée rapporte des étoiles. Chaque bonne journée fait grandir la fleur de l'enfant, qui s'ouvre à la fin de la quinzaine.",
+  "a2": "La fleur de l'enfant, bien développée",
+  "t3": "Des récompenses à sa mesure",
+  "x3": "Les étoiles s'échangent contre des récompenses choisies par la famille. Pour tout savoir, touchez « ? » en haut de l'écran : le mode d'emploi vous répond.",
+  "a3": "Une fleur épanouie"
  }
 }

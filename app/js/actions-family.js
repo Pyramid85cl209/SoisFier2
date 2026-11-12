@@ -133,8 +133,8 @@ A.saveWeek = async () => {
   refreshParts(["f", "s", "g"]).then(render).catch(() => {});
 };
 A.printPlan = () => {
-  if (S.children.length === 1) return printPlanning([S.children[0].id]);
-  openSheet(`<h2>${t("print.title")}</h2><ul class="tpl">${S.children.map(c => `<li><label><input type="checkbox" value="${c.id}" checked> ${esc(c.emoji)} ${esc(c.name)}</label></li>`).join("")}</ul>
+  // DEC-48 : la fenêtre s'ouvre aussi pour un seul enfant (sans choix d'enfant), pour choisir d'imprimer ou non les récompenses
+  openSheet(`<h2>${t("print.title")}</h2>${S.children.length === 1 ? `<ul class="tpl" hidden><li><input type="checkbox" value="${S.children[0].id}" checked></li></ul>` : `<ul class="tpl">${S.children.map(c => `<li><label><input type="checkbox" value="${c.id}" checked> ${esc(c.emoji)} ${esc(c.name)}</label></li>`).join("")}</ul>`}
     <label class="check"><input type="checkbox" id="pr-gifts" checked> ${t("print.printRewards")}</label>
     <div class="sheet-actions"><button class="btn" data-act="doPrint">${t("btn.print")}</button></div>`);
 };

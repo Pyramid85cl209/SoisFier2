@@ -58,7 +58,7 @@ async function boot() {
   }
   const { data } = await sb.auth.getSession();
   S.session = data.session;
-  if (!S.session) { S.screen = "auth"; return render(); }
-  await enterParent();
+  if (!S.session) { S.screen = "auth"; render(); introFromLink(); return; }
+  await enterParent(); introFromLink();
 }
 boot();

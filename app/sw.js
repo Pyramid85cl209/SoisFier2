@@ -1,9 +1,12 @@
 /* SoisFier – service worker : hors ligne + notifications */
-const CACHE = "soisfier-v32-ep09f";
+const CACHE = "soisfier-v32-ep09g";
 // Vitrine provisoire : jamais mise en cache, toujours servie en direct (retours des bêta-testeurs sur la dernière version).
 const VITRINE = new URL("vitrine/", self.registration.scope).pathname;
 // Aperçu d'une branche (/preview/) : jamais servi par le service worker de la production (il a le sien).
 const APERCU = new URL("preview/", self.registration.scope).pathname;
+// Mode d'emploi (EP-09, DT14-09) : les 3 pages, le script et la feuille de style sont gardés pour le hors ligne ; réseau d'abord, copie seulement si le réseau manque.
+const GUIDE = new URL("guide/", self.registration.scope).pathname;
+const GUIDE_FILES = ["./guide/", "./guide/en/", "./guide/ar/", "./guide/guide.js", "./guide/guide.css"];
 const LANGCACHE = "soisfier-lang";   // langue de l'appareil (écrite par l'application, entrée ./sf-lang) : survit aux changements de version
 const CORE = ["./", "./index.html", "./css/app.css", "./js/config.js", "./js/core.js", "./js/garden.js", "./js/rules.js", "./js/ui.js", "./js/premium.js", "./js/parent.js", "./js/child.js", "./js/data.js", "./js/forms.js", "./js/report.js", "./js/scan.js", "./vendor/qrcode.min.js", "./vendor/jsqr.min.js", "./js/actions.js", "./js/holidays.js", "./js/actions-parent.js", "./js/actions-family.js", "./js/boot.js",
   "./i18n/fr.json", "./i18n/en.json", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
@@ -17,6 +20,7 @@ self.addEventListener("install", e => {
     const used = new Set();
     for (const k of await caches.keys()) if (k !== CACHE) for (const r of await (await caches.open(k)).keys()) if (/\/i18n\/\w+\.json$/.test(new URL(r.url).pathname)) used.add(r.url);
     for (const u of used) try { await c.add(u); } catch (_) {}
+    for (const u of GUIDE_FILES) try { await c.add(new Request(u, { cache: "reload" })); } catch (_) {}   // hors de la portée (domaine futur) ou absent : sans effet sur l'installation
     try { await c.add(new Request(CDN, { mode: "cors" })); } catch (_) {}
     self.skipWaiting();
   })());
@@ -38,6 +42,20 @@ self.addEventListener("fetch", e => {
   if (url.origin === self.location.origin && url.pathname.startsWith(APERCU)) return; // aperçu : hors service worker de la production
   const cacheable = url.origin === self.location.origin || /(^|\.)(jsdelivr\.net|googleapis\.com|gstatic\.com)$/.test(url.hostname);
   if (!cacheable) return;
+  // Mode d'emploi : réseau d'abord (jamais une version périmée en ligne), copie gardée seulement hors ligne
+  if (url.origin === self.location.origin && url.pathname.startsWith(GUIDE) && (req.mode === "navigate" || /\.(js|css)$/.test(url.pathname))) {
+    e.respondWith((async () => {
+      const c = await caches.open(CACHE), key = url.origin + url.pathname;
+      const net = fetch(req).then(res => { if (res && res.ok) c.put(key, res.clone()); return res; }).catch(() => null);
+      const late = new Promise(r => setTimeout(() => r(null), 4000));
+      const res = await Promise.race([net, late]);
+      if (res) return res;
+      const hit = await c.match(key);
+      if (hit) { e.waitUntil(net); return hit; }
+      return (await net) || Response.error();
+    })());
+    return;
+  }
   // v28c : la page (navigation) vient du réseau d'abord, pour annoncer tout de suite une nouvelle version ; cache en secours (hors ligne ou réseau lent)
   if (req.mode === "navigate" && url.origin === self.location.origin) {
     e.respondWith((async () => {

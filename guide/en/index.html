@@ -5,99 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SoisFier user guide</title>
 <meta name="description" content="The complete SoisFier user guide: installation, routines, rewards, broken stars, members, daily use, the child&#x27;s side and settings.">
-<meta name="theme-color" content="#2E8B57">
+<meta name="theme-color" content="#237A49">
 <link rel="icon" href="../../icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
-<style>
-:root{
-  --sky:#E3F1FB; --paper:#FFFFFF; --leaf:#2E8B57; --leaf-d:#1F6B41; --leaf-l:#DDF2E5;
-  --sun:#FFC233; --sun-l:#FFF1C9; --earth:#4A2E1F; --muted:#6E5F55; --poppy:#E8484F;
-  --line:#CFE2EF; --shade:rgba(15,34,25,.45);
-  --display:"Fredoka", ui-rounded, "Segoe UI", system-ui, sans-serif;
-  --body:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --nav:300px;
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){ --sky:#0F2219; --paper:#18322A; --leaf:#5CC48A; --leaf-d:#7FD6A5; --leaf-l:#1E4535;
-    --sun:#FFCB4D; --sun-l:#3A3318; --earth:#F1ECE4; --muted:#A9B8AF; --poppy:#FF6B70; --line:#24463A; --shade:rgba(0,0,0,.6); }
-}
-:root[data-theme="dark"]{ --sky:#0F2219; --paper:#18322A; --leaf:#5CC48A; --leaf-d:#7FD6A5; --leaf-l:#1E4535;
-  --sun:#FFCB4D; --sun-l:#3A3318; --earth:#F1ECE4; --muted:#A9B8AF; --poppy:#FF6B70; --line:#24463A; --shade:rgba(0,0,0,.6); }
-*{box-sizing:border-box}
-html{scroll-behavior:smooth;scroll-padding-top:72px}
-body{margin:0;background:var(--sky);color:var(--earth);font:17px/1.6 var(--body);-webkit-tap-highlight-color:transparent}
-a{color:var(--leaf-d)}
-h2,h3,h4{font-family:var(--display);font-weight:600;line-height:1.2;color:var(--earth)}
-
-/* Barre du haut */
-.bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;padding:10px 16px;
-  padding-top:calc(10px + env(safe-area-inset-top,0px));background:var(--sky);border-bottom:2px solid var(--line)}
-.bar h1{font-family:var(--display);font-weight:600;font-size:1.15rem;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bar .logo{font-size:1.4rem}
-.btn{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:999px;background:var(--paper);color:var(--leaf-d);
-  font:700 .95rem var(--body);padding:8px 14px;box-shadow:inset 0 0 0 2px var(--leaf);text-decoration:none;cursor:pointer}
-.menu-btn{display:none}
-
-/* Mise en page */
-.layout{display:grid;grid-template-columns:var(--nav) minmax(0,1fr);max-width:1240px;margin:0 auto}
-nav.toc{position:sticky;top:62px;height:calc(100vh - 62px);overflow-y:auto;padding-block:18px 40px;padding-inline:16px 12px;border-inline-end:2px solid var(--line)}
-.toc ol,.toc ul{list-style:none;margin:0;padding:0}
-.toc > ol > li{margin-bottom:6px}
-.toc a{display:block;text-decoration:none;color:var(--earth);border-radius:12px;padding:6px 10px;font-size:.93rem;line-height:1.3}
-.toc a:hover{background:var(--paper)}
-.toc a.p{font-family:var(--display);font-weight:600;font-size:1rem;display:flex;gap:8px;align-items:baseline}
-.toc ul a{padding-inline-start:42px;color:var(--muted)}
-.toc a.on{background:var(--leaf-l);color:var(--leaf-d)}
-.num{display:inline-grid;place-items:center;min-width:30px;height:26px;padding:0 6px;border-radius:999px;background:var(--leaf);color:#fff;
-  font-family:var(--display);font-size:.85rem;font-weight:600;flex:none}
-main{padding:24px 28px 120px;max-width:860px;min-width:0}
-.lead{background:var(--paper);border-radius:20px;padding:18px 20px;margin:0 0 28px}
-.lead p{margin:.3em 0}
-.part{margin-bottom:48px}
-.part > h2{display:flex;align-items:center;gap:12px;font-size:1.7rem;margin:0 0 14px;padding-top:8px}
-.part > h2 .num{min-width:44px;height:36px;font-size:1.1rem}
-h3{font-size:1.3rem;margin:34px 0 10px}
-h4{font-size:1.1rem;margin:24px 0 8px}
-p,li{max-width:70ch}
-ol,ul{padding-inline-start:1.4em}
-li{margin:.25em 0}
-strong{color:var(--earth)}
-figure{margin:18px 0 20px;background:var(--paper);border-radius:20px;padding:10px}
-figure img{display:block;width:auto;max-width:100%;height:auto;max-height:78vh;margin:0 auto;border-radius:12px;cursor:zoom-in}
-figcaption{font-size:.85rem;color:var(--muted);padding:8px 6px 2px}
-.tbl{overflow-x:auto;margin:14px 0;border-radius:16px;background:var(--paper)}
-table{border-collapse:collapse;width:100%;font-size:.95rem}
-th,td{text-align:start;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
-th{font-family:var(--display);font-weight:600;background:var(--leaf-l)}
-tr:last-child td{border-bottom:0}
-.top-link{position:fixed;inset-inline-end:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:15;width:46px;height:46px;border-radius:50%;
-  display:grid;place-items:center;background:var(--leaf);color:#fff;text-decoration:none;font-size:1.3rem;box-shadow:0 2px 6px rgba(0,0,0,.2)}
-
-/* Visionneuse */
-.viewer{position:fixed;inset:0;z-index:40;background:var(--shade);display:none;overflow:auto;-webkit-overflow-scrolling:touch}
-.viewer.open{display:block}
-.viewer img{display:block;max-width:none;margin:64px auto 24px;border-radius:12px}
-.viewer button{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));inset-inline-end:12px;z-index:41}
-
-/* Téléphone */
-@media (max-width:900px){
-  .layout{display:block}
-  .menu-btn{display:inline-flex}
-  nav.toc{position:fixed;top:0;inset-inline-start:0;bottom:0;width:min(86vw,340px);height:auto;z-index:30;background:var(--sky);
-    padding-top:calc(18px + env(safe-area-inset-top,0px));transform:translateX(-105%);transition:transform .2s ease;border-inline-end:2px solid var(--line)}
-  nav.toc.open{transform:none}
-  .scrim{position:fixed;inset:0;z-index:25;background:var(--shade);display:none}
-  .scrim.open{display:block}
-  main{padding:16px 16px 110px}
-  .part > h2{font-size:1.45rem}
-  .bar .back-txt{display:none}
-}
-@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto} nav.toc{transition:none}}
-.note{background:var(--sun-l);border-radius:16px;padding:12px 16px;font-size:.93rem}
-.lang-menu{position:relative}.lang-menu>summary{list-style:none;cursor:pointer}.lang-menu>summary::-webkit-details-marker{display:none}.lang-pop{position:absolute;inset-inline-end:0;top:calc(100% + 6px);z-index:40;min-width:150px;display:flex;flex-direction:column;gap:2px;background:var(--paper);border-radius:14px;padding:6px;box-shadow:0 4px 14px rgba(0,0,0,.18)}.lang-pop a{padding:8px 12px;border-radius:10px;text-decoration:none;color:var(--earth)}.lang-pop a:hover{background:var(--leaf-l)}.lang-pop a[aria-current]{font-weight:700;color:var(--leaf-d)}
-</style>
+<link rel="stylesheet" href="../guide.css">
 
 </head>
 <body>
@@ -110,7 +23,7 @@ tr:last-child td{border-bottom:0}
 </header>
 <div class="scrim" id="scrim"></div>
 <div class="layout">
-  <nav class="toc" id="toc" aria-label="Contents"><ol><li><a href="#p0" class="p"><span class="num">🌻</span>Introduction</a><ul><li><a href="#p0-why">Why it works</a></li><li><a href="#p0-principles">The principles</a></li></ul></li><li><a href="#p1" class="p"><span class="num">1</span>Installation and account</a><ul><li><a href="#p1-before">Before you start</a></li><li><a href="#p1-home">The home screen</a></li><li><a href="#p1-lang">Choosing the language</a></li><li><a href="#p1-install">Step 1: install the app</a></li><li><a href="#p1-account">Step 2: create your account</a></li><li><a href="#p1-family">Step 3: create or join your family</a></li><li><a href="#p1-first">Step 4: first settings</a></li><li><a href="#p1-problems">If something goes wrong</a></li></ul></li><li><a href="#p2a" class="p"><span class="num">2a</span>The Family page and the first child</a><ul><li><a href="#p2a-page">The Family page</a></li><li><a href="#p2a-child">Step 1: add a child</a></li><li><a href="#p2a-routines">Step 2: choose their first routines</a></li><li><a href="#p2a-next">What next</a></li></ul></li><li><a href="#p2b" class="p"><span class="num">2b</span>Routines</a><ul><li><a href="#p2b-tab">The Routines tab</a></li><li><a href="#p2b-more">Adding more templates</a></li><li><a href="#p2b-create">Creating a routine</a></li><li><a href="#p2b-edit">Editing or deleting a routine</a></li><li><a href="#p2b-oneoff">Adding a one-off routine</a></li><li><a href="#p2b-print">Printing the week</a></li><li><a href="#p2b-report">Scanning the sheet or transferring the week (Premium)</a></li><li><a href="#p2b-today">The result in the Today tab</a></li></ul></li><li><a href="#p2c" class="p"><span class="num">2c</span>Rewards and history</a><ul><li><a href="#p2c-tab">The Rewards tab</a></li><li><a href="#p2c-catalog">Choosing from the catalogue</a></li><li><a href="#p2c-create">Creating a reward or an event</a></li><li><a href="#p2c-history">The History tab</a></li><li><a href="#p2c-malus">Broken stars</a></li></ul></li><li><a href="#p2d" class="p"><span class="num">2d</span>Members and the child's phone</a><ul><li><a href="#p2d-invite">Inviting a member</a></li><li><a href="#p2d-join">For the invited person: joining the family</a></li><li><a href="#p2d-members">Editing or removing a member</a></li><li><a href="#p2d-device">Connecting the child's phone</a></li><li><a href="#p2d-childmode">Child mode on your phone</a></li><li><a href="#p2d-editchild">Editing a child</a></li></ul></li><li><a href="#p3" class="p"><span class="num">3</span>A parent's daily routine</a><ul><li><a href="#p3-today">The Today screen</a></li><li><a href="#p3-validate">Ticking and approving routines</a></li><li><a href="#p3-redeem">Exchanging a reward</a></li><li><a href="#p3-pause-day">A day on a break</a></li></ul></li><li><a href="#p4" class="p"><span class="num">4</span>The child's side</a><ul><li><a href="#p4-routines">My routines</a></li><li><a href="#p4-pause-day">A break day</a></li><li><a href="#p4-timer">The timer challenge</a></li><li><a href="#p4-gifts">Rewards on the child's side</a></li><li><a href="#p4-garden">My garden</a></li><li><a href="#p4-reminders">My reminders</a></li><li><a href="#p4-badges">Badges</a></li></ul></li><li><a href="#p5" class="p"><span class="num">5</span>Settings</a><ul><li><a href="#p5-week">Week and time zone</a></li><li><a href="#p5-auto">Automatic approval at midnight</a></li><li><a href="#p5-push">Reminders</a></li><li><a href="#p5-account">Parent code, backup and account</a></li></ul></li><li><a href="#p6" class="p"><span class="num">6</span>Holidays and breaks</a><ul><li><a href="#p6-why">Break or holiday mode?</a></li><li><a href="#p6-pause">Scheduling a break</a></li><li><a href="#p6-edit-pause">Editing or stopping a break</a></li><li><a href="#p6-schedule">Scheduling holiday mode</a></li><li><a href="#p6-settings">Setting the routines</a></li><li><a href="#p6-during">During the holidays</a></li><li><a href="#p6-stop">Editing or stopping holidays</a></li></ul></li><li><a href="#premium" class="p"><span class="num">7</span>Free and Premium</a><ul><li><a href="#p7-nothing-is-lost">Nothing is lost</a></li><li><a href="#p7-on-the-childs-side">On the child's side</a></li><li><a href="#p7-my-plan">My plan</a></li></ul></li></ol></nav>
+  <nav class="toc" id="toc" aria-label="Contents" data-none="No results." data-one="1 result" data-many="{n} results" data-open="Expand" data-close="Collapse"><form class="gsearch" id="gsearch" role="search" onsubmit="return false"><label for="gq">Search the guide</label><input id="gq" type="search" autocomplete="off" enterkeyhint="search"><p class="gstat" id="gstat" role="status" aria-live="polite"></p><ul class="gres" id="gres"></ul></form><ol><li><a href="#p0" class="p"><span class="num">🌻</span>Introduction</a><ul><li><a href="#p0-why">Why it works</a></li><li><a href="#p0-principles">The principles</a></li></ul></li><li><a href="#p1" class="p"><span class="num">1</span>Installation and account</a><ul><li><a href="#p1-before">Before you start</a></li><li><a href="#p1-home">The home screen</a></li><li><a href="#p1-lang">Choosing the language</a></li><li><a href="#p1-install">Step 1: install the app</a></li><li><a href="#p1-account">Step 2: create your account</a></li><li><a href="#p1-family">Step 3: create or join your family</a></li><li><a href="#p1-first">Step 4: first settings</a></li><li><a href="#p1-problems">If something goes wrong</a></li></ul></li><li><a href="#p2a" class="p"><span class="num">2a</span>The Family page and the first child</a><ul><li><a href="#p2a-page">The Family page</a></li><li><a href="#p2a-child">Step 1: add a child</a></li><li><a href="#p2a-routines">Step 2: choose their first routines</a></li><li><a href="#p2a-next">What next</a></li></ul></li><li><a href="#p2b" class="p"><span class="num">2b</span>Routines</a><ul><li><a href="#p2b-tab">The Routines tab</a></li><li><a href="#p2b-more">Adding more templates</a></li><li><a href="#p2b-create">Creating a routine</a></li><li><a href="#p2b-edit">Editing or deleting a routine</a></li><li><a href="#p2b-oneoff">Adding a one-off routine</a></li><li><a href="#p2b-print">Printing the week</a></li><li><a href="#p2b-report">Scanning the sheet or transferring the week (Premium)</a></li><li><a href="#p2b-today">The result in the Today tab</a></li></ul></li><li><a href="#p2c" class="p"><span class="num">2c</span>Rewards and history</a><ul><li><a href="#p2c-tab">The Rewards tab</a></li><li><a href="#p2c-catalog">Choosing from the catalogue</a></li><li><a href="#p2c-create">Creating a reward or an event</a></li><li><a href="#p2c-history">The History tab</a></li><li><a href="#p2c-malus">Broken stars</a></li></ul></li><li><a href="#p2d" class="p"><span class="num">2d</span>Members and the child's phone</a><ul><li><a href="#p2d-invite">Inviting a member</a></li><li><a href="#p2d-join">For the invited person: joining the family</a></li><li><a href="#p2d-members">Editing or removing a member</a></li><li><a href="#p2d-device">Connecting the child's phone</a></li><li><a href="#p2d-childmode">Child mode on your phone</a></li><li><a href="#p2d-editchild">Editing a child</a></li></ul></li><li><a href="#p3" class="p"><span class="num">3</span>A parent's daily routine</a><ul><li><a href="#p3-today">The Today screen</a></li><li><a href="#p3-validate">Ticking and approving routines</a></li><li><a href="#p3-redeem">Exchanging a reward</a></li><li><a href="#p3-pause-day">A day on a break</a></li></ul></li><li><a href="#p4" class="p"><span class="num">4</span>The child's side</a><ul><li><a href="#p4-routines">My routines</a></li><li><a href="#p4-pause-day">A break day</a></li><li><a href="#p4-timer">The timer challenge</a></li><li><a href="#p4-gifts">Rewards on the child's side</a></li><li><a href="#p4-garden">My garden</a></li><li><a href="#p4-reminders">My reminders</a></li><li><a href="#p4-badges">Badges</a></li></ul></li><li><a href="#p5" class="p"><span class="num">5</span>Settings</a><ul><li><a href="#p5-week">Week and time zone</a></li><li><a href="#p5-auto">Automatic approval after midnight</a></li><li><a href="#p5-push">Reminders</a></li><li><a href="#p5-account">Parent code, backup and account</a></li></ul></li><li><a href="#p6" class="p"><span class="num">6</span>Holidays and breaks</a><ul><li><a href="#p6-why">Break or holiday mode?</a></li><li><a href="#p6-pause">Scheduling a break</a></li><li><a href="#p6-edit-pause">Editing or stopping a break</a></li><li><a href="#p6-schedule">Scheduling holiday mode</a></li><li><a href="#p6-settings">Setting the routines</a></li><li><a href="#p6-during">During the holidays</a></li><li><a href="#p6-stop">Editing or stopping holidays</a></li></ul></li><li><a href="#premium" class="p"><span class="num">7</span>Free and Premium</a><ul><li><a href="#p7-nothing-is-lost">Nothing is lost</a></li><li><a href="#p7-on-the-childs-side">On the child's side</a></li><li><a href="#p7-my-plan">My plan</a></li></ul></li></ol></nav>
   <main id="haut">
 <section class="part" id="p0"><h2><span class="num">🌻</span> Introduction</h2>
 <div class="lead">
@@ -124,11 +37,11 @@ tr:last-child td{border-bottom:0}
 </ul>
 <h3 id="p0-principles">The principles</h3>
 <ol>
-<li><strong>An adult approves.</strong> A star only counts once it is approved. By default, what the child ticks is approved at midnight unless it has been declined (<a href="#p3">part 3</a>).</li>
+<li><strong>An adult approves.</strong> A star only counts once it is approved. By default, what the child ticks is approved after midnight unless it has been declined (<a href="#p3">part 3</a>).</li>
 <li><strong>No need to be perfect.</strong> A good day means at least 75% of the day's stars.</li>
 <li><strong>One flower per fortnight</strong>, more beautiful with each good day. The flowers make a flower bed each season and a garden each school year (<a href="#p4">part 4</a>).</li>
 <li><strong>Rewards that fit the child.</strong> Their price follows each child's pace (<a href="#p2c">part 2c</a>).</li>
-<li><strong>The unexpected isn't penalised.</strong> Holiday or illness: schedule a break, and those days are neutral (<a href="#p6-pause">part 6</a>).</li>
+<li><strong>The unexpected isn't penalised.</strong> Holiday or rest: schedule a break, and those days are neutral (<a href="#p6-pause">part 6</a>).</li>
 <li><strong>Broken stars stay rare.</strong> For parents only, 3 stars at most, with no effect on the flower or the badges (<a href="#p2c-malus">part 2c</a>).</li>
 <li><strong>The child's phone doesn't need an account.</strong> A code given by a parent is enough (<a href="#p2d-device">part 2d</a>).</li>
 </ol>
@@ -145,6 +58,7 @@ tr:last-child td{border-bottom:0}
 <li>The app's address: https://pyramid85cl209.github.io/SoisFier2/</li>
 <li>To join an existing family: the 6-character invitation code given by a parent.</li>
 </ul>
+<p>To see the app's introduction again: <a href="../../?intro=1">Show the introduction</a>.</p>
 <h3 id="p1-home">The home screen</h3>
 <p>The home screen has everything you need to get started: sign in, create an account, connect a child's phone or install the app.</p>
 <figure><a href="img/m1.jpg" target="_blank" rel="noopener"><img src="img/m1.jpg" alt="SoisFier&#x27;s home screen, with numbered areas" width="660" height="1513" loading="lazy" decoding="async"></a><figcaption>SoisFier&#x27;s home screen, with numbered areas</figcaption></figure>
@@ -158,7 +72,7 @@ tr:last-child td{border-bottom:0}
 <li><strong>🌐 Language</strong>: chooses the app's language on this device (see below).</li>
 </ol>
 <h3 id="p1-lang">Choosing the language</h3>
-<p>The 🌐 button is at the top of every screen, next to the “?” (and next to the padlock in child mode). The chosen language applies immediately, on this device only, and is also used for the reminders it receives. Each family member, and the child's phone, can use a different language.</p>
+<p>On the adult side, the 🌐 button is at the top of every screen, next to the “?”. On the screen where the child code is entered it stands alone; in child mode it is next to the padlock. The chosen language applies immediately, on this device only, and is also used for the reminders it receives. Each family member, and the child's phone, can use a different language.</p>
 <figure><a href="img/l1.jpg" target="_blank" rel="noopener"><img src="img/l1.jpg" alt="The language button, then choosing the language" width="1270" height="1300" loading="lazy" decoding="async"></a><figcaption>The language button, then choosing the language</figcaption></figure>
 <h3 id="p1-install">Step 1: install the app</h3>
 <p>Once installed, SoisFier opens like an app, without an address bar.</p>
@@ -231,7 +145,7 @@ tr:last-child td{border-bottom:0}
 <tr><td>“First confirm your e-mail address”</td><td>Open the link in the Supabase Auth e-mail, then sign in again.</td></tr>
 <tr><td>Invitation code or child code rejected</td><td>The code has expired (48 hours for an invitation, 15 minutes for a child): create a new one.</td></tr>
 <tr><td>The install button doesn't appear</td><td>Chrome's ⋮ menu, then <strong>Add to home screen</strong>.</td></tr>
-<tr><td>The old version still shows after an update</td><td>Close the app completely and reopen it, twice.</td></tr>
+<tr><td>The old version still shows after an update</td><td>Nothing to do: updates are automatic. If the old version still shows, close the app and reopen it.</td></tr>
 <tr><td>“Missing configuration”</td><td>The site is being deployed or was published incorrectly: try again later and tell the administrator.</td></tr>
 </tbody></table></div>
 </section>
@@ -248,7 +162,7 @@ tr:last-child td{border-bottom:0}
 <li><strong>Family members</strong>: each adult with their relationship (Dad, Mum…), shown in each member's language, and rights. <strong>Invite a member</strong> creates a code for the other parent or a relative.</li>
 <li><strong>Reminders</strong>: choose a morning and an evening time, then tap <strong>Turn on reminders</strong> and allow notifications.</li>
 <li><strong>Penalties</strong>: the family's preset penalties, shared by all children (Premium, <a href="#p2c-malus">part 2c</a>).</li>
-<li><strong>Settings</strong>: the week and time zone, automatic approval at midnight (leave it ticked to begin with) and the parent code (<a href="#p5">part 5</a>).</li>
+<li><strong>Settings</strong>: the week and time zone, automatic approval after midnight (leave it ticked to begin with) and the parent code (<a href="#p5">part 5</a>).</li>
 <li><strong>My plan</strong>: Free, Premium or Founder (<a href="#premium">part 7</a>).</li>
 <li><strong>Account and backup</strong>: rename the family, download a copy of the data, sign out.</li>
 </ol>
@@ -336,7 +250,7 @@ tr:last-child td{border-bottom:0}
 <p>Deleting a routine removes it from upcoming days. The stars it earned are kept, and the plant doesn't go backwards.</p>
 <h3 id="p2b-oneoff">Adding a one-off routine</h3>
 <p class="small"><strong>Premium.</strong> One-off routines and their templates are part of Premium (<a href="#premium">part 7</a>).</p>
-<p>A one-off routine is a one-time task: on a given day, or before a certain date. Parents and helpers can add one, from the Routines tab or from the child's card in the Today tab.</p>
+<p>A one-off routine is a one-time task: on a given day, or before a certain date. Parents and helpers can add one, from the child's card in the Today tab.</p>
 <ol>
 <li>Tap <strong>+ One-off routine</strong>.</li>
 <li>Choose one of your templates (1), one of the ten suggestions, or tap <strong>Create a new one</strong> at the bottom of the list.</li>
@@ -356,17 +270,17 @@ tr:last-child td{border-bottom:0}
 <p>For the fridge or for a child without a phone: the current week on an A4 page, to tick off in pencil.</p>
 <figure><a href="img/i3.jpg" target="_blank" rel="noopener"><img src="img/i3.jpg" alt="The button and the planner preview" width="1270" height="1300" loading="lazy" decoding="async"></a><figcaption>The button and the planner preview</figcaption></figure>
 <ol>
-<li>In the <strong>Routines</strong> tab, tap <strong>Print the week</strong> (1). With several children, choose whose planner to print.</li>
+<li>In the <strong>Routines</strong> tab, tap <strong>Print the week</strong> (1). A window opens: choose whose planner to print (with a single child there is nothing to choose), leave <strong>Print the rewards</strong> ticked to get the rewards page too, then tap <strong>Print</strong>.</li>
 <li>Android opens the print preview: choose your printer, or <strong>Save as PDF</strong> to send it.</li>
 </ol>
-<p>The page shows the routines by time of day, with a circle for each scheduled day (grey boxes are days without that routine), starting from the first day of the family's week, and lists the rewards with their prices at the bottom. During holiday mode, it follows the holiday settings. Ticks on paper don't reach the app by themselves: enter them from the Today screen (up to 6 days back), or transfer the whole week in one go (<a href="#p2b-report">Scanning the sheet or transferring the week</a>, Premium). Each page carries a small QR code and four black squares at the corners of the table: don't cover them.</p>
+<p>The page shows the routines by time of day, with a circle for each scheduled day (grey boxes are days without that routine), starting from the first day of the family's week; the rewards and their prices are on a separate page right after the child's week (no QR code, nothing to scan). During holiday mode, it follows the holiday settings. Ticks on paper don't reach the app by themselves: enter them from the Today screen (up to 6 days back), or transfer the whole week in one go (<a href="#p2b-report">Scanning the sheet or transferring the week</a>, Premium). Each week page carries a small QR code and four black squares at the corners of the table: don't cover them.</p>
 <h3 id="p2b-report">Scanning the sheet or transferring the week (Premium)</h3>
 <p>Instead of ticking day by day in Today, transfer the ticks made on the paper sheet in one go, for example from a laminated sheet you reuse every week.</p>
 <ol>
-<li>In the <strong>Routines</strong> tab, tap <strong>📷 Scan a sheet</strong>. Lay the sheet flat in good light, without flash, frame the whole page, black squares included, then tap <strong>Take the photo</strong>. You can also <strong>Choose a photo</strong> you already took. The app recognises the child on the sheet.</li>
+<li>In the <strong>Routines</strong> tab, tap <strong>📷 Scan a sheet</strong>. Lay the sheet flat in good light, without flash, frame the whole page, black squares included, holding the phone still, then tap <strong>Take the photo</strong>. You can also <strong>Choose a photo</strong> you already took. The app recognises the child on the sheet.</li>
 <li>Without a photo: tap <strong>Enter without a photo</strong>, then choose the child if you have several.</li>
 <li>Choose the week: <strong>This week</strong> or <strong>Last week</strong>. Upcoming days can't be ticked.</li>
-<li>Check the grid: circles read as ticked are already ticked; a circle marked ⚠️ <strong>to check</strong> couldn't be read for sure. Tap a circle to correct it. A routine already approved that day is marked <strong>already done</strong>.</li>
+<li>Check the grid: circles read as ticked are already ticked; a circle marked ⚠️ <strong>to check</strong> couldn't be read for sure. Tap a circle to correct it. A routine already approved that day is marked <strong>already done</strong>. A ⏳ <strong>waiting</strong> circle is a tick by the child that nobody has approved yet: you can still tick it.</li>
 <li>Tap <strong>Transfer</strong>: nothing is saved before.</li>
 </ol>
 <p>The photo is read on your phone: it is never sent or kept. For a good reading, tick with a dark felt pen (dry-erase on a laminated sheet) and tilt the sheet slightly if it reflects light. If the sheet isn't recognised (QR code or squares out of frame, another family's sheet), take the photo again or enter without a photo. A routine stopped since printing is flagged and not transferred.</p>
@@ -380,6 +294,7 @@ tr:last-child td{border-bottom:0}
 <section class="part" id="p2c"><h2><span class="num">2c</span> Rewards and history</h2>
 <p>The <strong>Rewards</strong> tab sets what the child can get with their stars. Prices are calculated automatically from their pace. This part follows <a href="#p2a">parts 2a</a> (creating the child) and <a href="#p2b">2b</a> (creating the routines): without routines, the pace is zero and no price can be calculated. The <strong>History</strong> tab then shows, day by day, the stars earned, exchanged and broken.</p>
 <p>How prices work: <strong>effort time × pace</strong>. The pace is the average number of stars the child earns per day, that is 75% of the stars scheduled over the week divided by 7. With a pace of 11.4 ⭐ a day, a 1-day reward costs about 11 ⭐ and a 1-month reward about 340 ⭐. The price is rounded, then fixed when the reward is created; it doesn't change if the routines change afterwards.</p>
+<p>The price shown is the price saved: in the catalogue it is recalculated each time a box is ticked or unticked. It never exceeds 5000 ⭐. For a child with no mandatory routine there is no pace: the app says so and offers to go to the routines, or to tick “Fixed price”.</p>
 <h3 id="p2c-tab">The Rewards tab</h3>
 <p>Open the <strong>Rewards</strong> tab in the bottom bar. It shows the selected child's balance of stars to spend and their pace.</p>
 <figure><a href="img/c1.jpg" target="_blank" rel="noopener"><img src="img/c1.jpg" alt="The Rewards tab, empty then filled" width="1270" height="1300" loading="lazy" decoding="async"></a><figcaption>The Rewards tab, empty then filled</figcaption></figure>
@@ -537,7 +452,7 @@ tr:last-child td{border-bottom:0}
 <li>On your phone: <strong>Family</strong>, then <strong>Connect their device</strong> under the child. A 6-character code appears.</li>
 <li>On the child's phone: open SoisFier and tap <strong>I have a child code</strong> on the sign-in screen (see <a href="#p1">part 1</a>).</li>
 <li>Enter the code, then tap <strong>Connect this phone</strong>.</li>
-<li>The child arrives on their screen: their name, stars, pot and the day's routines. The <strong>padlock</strong> (1) lets a parent disconnect this phone. The 🌐 button (2) chooses this phone's language. Right after, SoisFier offers to turn on their reminders (<a href="#p4-reminders">part 4</a>).</li>
+<li>The child arrives on their screen: their name, stars, pot and the day's routines. The <strong>padlock</strong> (1) lets a parent disconnect this phone. If the code is forgotten, the <strong>Forgot the code?</strong> link asks for the account password; after too many attempts you have to wait. Offline, if some ticks have not been sent yet, a confirmation warns that they would be lost. The 🌐 button (2) chooses this phone's language. Right after, SoisFier offers to turn on their reminders (<a href="#p4-reminders">part 4</a>).</li>
 <li>On your phone, tap <strong>Done</strong>. The phone appears under the child on the Family page.</li>
 </ol>
 <p>To remove a phone (lost, replaced, an old test): <strong>Disconnect</strong> on its line, then confirm. A new code will be needed to reconnect it.</p>
@@ -560,7 +475,7 @@ tr:last-child td{border-bottom:0}
 
 <section class="part" id="p3"><h2><span class="num">3</span> A parent's daily routine</h2>
 <p>Every day, a parent does three things: tick or approve routines, exchange rewards and, when needed, schedule a break. Everything happens in the <strong>Today</strong> and <strong>Rewards</strong> tabs; broken stars are in <a href="#p2c">part 2c</a>. Breaks are scheduled in <strong>Family</strong> (<a href="#p6-pause">part 6</a>).</p>
-<p>The rule to remember: a star only counts once it is <strong>approved</strong> by an adult. Anything not declined is approved automatically at midnight, in the family's time zone.</p>
+<p>The rule to remember: a star only counts once it is <strong>approved</strong> by an adult. Anything not declined is approved automatically after midnight, in the family's time zone.</p>
 <h3 id="p3-today">The Today screen</h3>
 <p>This is the opening screen. For each child it shows the routines scheduled that day.</p>
 <figure><a href="img/f1.jpg" target="_blank" rel="noopener"><img src="img/f1.jpg" alt="The Today screen, top and bottom" width="1270" height="1300" loading="lazy" decoding="async"></a><figcaption>The Today screen, top and bottom</figcaption></figure>
@@ -587,7 +502,7 @@ tr:last-child td{border-bottom:0}
 <li><strong>Decline</strong> (✕): the routine needs doing again, with no penalty. No stars are given.</li>
 <li><strong>Approve</strong> (✓): the stars are added to the balance and count towards the flower.</li>
 </ol>
-<p>Each line shows the child, the day, the stars and who ticked the routine. If you do nothing, everything left is approved automatically at midnight.</p>
+<p>Each line shows the child, the day, the stars and who ticked the routine. If you do nothing, everything left is approved automatically after midnight.</p>
 <p>Ticked by mistake? Tap the box again within 5 minutes to untick it. After that the routine is approved for good; to take stars away, use a broken star.</p>
 <h3 id="p3-redeem">Exchanging a reward</h3>
 <p>When the child has enough stars, the exchange is done in the <strong>Rewards</strong> tab, choosing the child at the top if there are several.</p>
@@ -624,7 +539,7 @@ tr:last-child td{border-bottom:0}
 </tbody></table></div>
 <p>The child can't change anything: not the routines, the prices or the broken stars. The padlock at the top is for parents.</p>
 <h3 id="p4-routines">My routines</h3>
-<p>The opening screen shows the day's routines sorted by time of day: one-offs, morning, day, evening.</p>
+<p>The opening screen shows the day's routines sorted by time of day: one-offs, morning, day, evening. If only bonus challenges are left, the screen says so: “Only bonus challenges today!”.</p>
 <figure><a href="img/g1.jpg" target="_blank" rel="noopener"><img src="img/g1.jpg" alt="My routines, before and after ticking" width="1270" height="1300" loading="lazy" decoding="async"></a><figcaption>My routines, before and after ticking</figcaption></figure>
 <ol>
 <li>The <strong>stars</strong> to spend.</li>
@@ -655,7 +570,7 @@ tr:last-child td{border-bottom:0}
 </ol>
 <p><strong>Stop</strong> stops the timer without ticking. A won challenge doesn't give an extra star, but it counts towards the “Challenges” badges, and the parent sees it in the “To approve” section (“timer challenge won”).</p>
 <h3 id="p4-gifts">Rewards on the child's side</h3>
-<figure><a href="img/g3.jpg" target="_blank" rel="noopener"><img src="img/g3.jpg" alt="The child&#x27;s Rewards tab" width="660" height="2070" loading="lazy" decoding="async"></a><figcaption>The child&#x27;s Rewards tab</figcaption></figure>
+<figure><a href="img/g3.jpg" target="_blank" rel="noopener"><img src="img/g3.jpg" alt="The child&#x27;s Rewards tab" width="660" height="2069" loading="lazy" decoding="async"></a><figcaption>The child&#x27;s Rewards tab</figcaption></figure>
 <ol>
 <li>The <strong>stars to spend</strong> at the top.</li>
 <li><strong>X ⭐ to go</strong>: what's still needed for each reward. When there are enough stars, the text becomes an <strong>I choose this</strong> button.</li>
@@ -727,11 +642,11 @@ tr:last-child td{border-bottom:0}
 <li><strong>Edit</strong> opens the same window as when the family was created (<a href="#p1-week">part 1</a>).</li>
 </ol>
 <p>Badges already earned are kept. If you change the first day of the week, the current fortnight is extended to the new last day of the week (20 days at most), then the following fortnights last 14 days.</p>
-<h3 id="p5-auto">Automatic approval at midnight</h3>
+<h3 id="p5-auto">Automatic approval after midnight</h3>
 <p>When the child ticks a routine, their stars wait for your approval. This setting decides what happens if nobody approves during the day.</p>
 <figure><a href="img/i1.jpg" target="_blank" rel="noopener"><img src="img/i1.jpg" alt="Automatic approval on, then off" width="1270" height="1300" loading="lazy" decoding="async"></a><figcaption>Automatic approval on, then off</figcaption></figure>
 <div class="tbl"><table>
-<thead><tr><th>The box (1)</th><th>At midnight, anything still awaiting approval…</th></tr></thead>
+<thead><tr><th>The box (1)</th><th>After midnight, anything still awaiting approval…</th></tr></thead>
 <tbody>
 <tr><td>Ticked (default)</td><td>is approved automatically. The child isn't penalised when parents forget.</td></tr>
 <tr><td>Unticked</td><td>keeps waiting for your decision. Message: “Manual approval only”.</td></tr>
@@ -764,7 +679,7 @@ tr:last-child td{border-bottom:0}
 <p>The <strong>Holidays and breaks</strong> section of the <strong>Family</strong> page brings together the two ways of handling a special period: <strong>holiday mode</strong> (Premium) and the <strong>break</strong> (free). A single list shows, in date order, current and upcoming holidays 🏖️ and breaks ⏸️.</p>
 <h3 id="p6-why">Break or holiday mode?</h3>
 <ul>
-<li><strong>Break</strong>: the days count neither for nor against the flower. Ideal for a trip or an illness.</li>
+<li><strong>Break</strong>: the days count neither for nor against the flower. Ideal for a trip or some rest.</li>
 <li><strong>Holiday mode</strong>: routines continue, but adapted. For example, the school bag is paused, reading becomes required and "Water the plants" is added. The days count normally for the flower.</li>
 </ul>
 <p>If a break falls during adapted holidays, the break takes priority: the day stays neutral, and the break's line says so in the list.</p>
@@ -776,7 +691,7 @@ tr:last-child td{border-bottom:0}
 <li><strong>Schedule a break</strong>.</li>
 <li><strong>Children</strong>: tick the child or children concerned.</li>
 <li><strong>From</strong> and <strong>To</strong>: the first and last days are included. The end must be after the start.</li>
-<li><strong>Reason</strong>: Trip, Illness or Other.</li>
+<li><strong>Reason</strong>: Trip, Rest or Other.</li>
 <li><strong>Save</strong>.</li>
 </ol>
 <p>A break can be scheduled in advance or recorded afterwards, for example once an illness is over. During the break, the Today screen shows it (<a href="#p3-pause-day">part 3</a>), and so does the child's phone (<a href="#p4-pause-day">part 4</a>).</p>
@@ -813,12 +728,12 @@ tr:last-child td{border-bottom:0}
 <li><strong>See the usual routines</strong> switches to the routines that resume afterwards, for example to prepare the new term.</li>
 <li>In the holiday version, every change only applies to the current holidays; a message says so on every save. A routine you create becomes a holiday routine.</li>
 </ol>
-<figure><a href="img/v3.jpg" target="_blank" rel="noopener"><img src="img/v3.jpg" alt="Scheduling holiday mode, then the child's phone" width="1270" height="1272" loading="lazy" decoding="async"></a><figcaption>Scheduling holiday mode, then the child's phone</figcaption></figure>
+<figure><a href="img/v3.jpg" target="_blank" rel="noopener"><img src="img/v3.jpg" alt="Scheduling holiday mode, then the child's phone" width="1270" height="1300" loading="lazy" decoding="async"></a><figcaption>Scheduling holiday mode, then the child's phone</figcaption></figure>
 <p>On the child's phone, a small 🏖️ with the name of the holidays explains why their list has changed (marker 5). The printable planner follows the holidays too: holiday routines are marked 🏖️.</p>
 <p>Reward prices are still based on the usual routines: they don't move during the holidays.</p>
 <h3 id="p6-stop">Editing or stopping holidays</h3>
 <p><strong>Name and dates</strong> changes the name and the end (and the start, as long as the holidays haven't begun). <strong>Stop</strong> ends holidays in progress: a message confirms that the last day becomes yesterday and that the usual routines resume from today. Stars already earned are kept.</p></section>
-<section class="part" id="premium"><h2><span class="num">7</span> Free and Premium</h2>
+<section class="part" id="premium"><a id="p7"></a><h2><span class="num">7</span> Free and Premium</h2>
 <p class="lead"><em>What stays free, what Premium adds</em></p>
 <p>SoisFier is free and ad-free. Everything that helps your child progress day to day stays free: routines, stars, approval, flower, rewards, reminders, breaks and the printable planner. Premium, linked to the family, lets you follow all your children and adds advanced tools for parents.</p>
 <div class="tbl"><table>
@@ -849,44 +764,6 @@ tr:last-child td{border-bottom:0}
 </div>
 <a class="top-link" href="#haut" aria-label="Back to top">↑</a>
 <div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-label="Enlarged screenshot"><button class="btn" id="vclose">✕ Close</button><img alt=""></div>
-<script>
-(() => {
-  const toc = document.getElementById("toc"), menu = document.getElementById("menu"), scrim = document.getElementById("scrim");
-  const setOpen = o => { toc.classList.toggle("open", o); scrim.classList.toggle("open", o); menu.setAttribute("aria-expanded", o); };
-  menu.addEventListener("click", () => setOpen(!toc.classList.contains("open")));
-  scrim.addEventListener("click", () => setOpen(false));
-  toc.addEventListener("click", e => { if (e.target.closest("a")) setOpen(false); });
-
-  // Sommaire actif
-  const links = [...toc.querySelectorAll("a")], byId = new Map(links.map(a => [a.hash.slice(1), a]));
-  const targets = [...document.querySelectorAll("section.part, main h3[id]")];
-  let current = null;
-  const mark = id => {
-    if (id === current) return; current = id;
-    links.forEach(a => a.classList.remove("on"));
-    const a = byId.get(id); if (!a) return; a.classList.add("on");
-    const part = a.closest("ol > li"); if (part) part.querySelector("a.p").classList.add("on");
-    if (!toc.classList.contains("open")) a.scrollIntoView({ block: "nearest" });
-  };
-  const io = new IntersectionObserver(es => {
-    const vis = targets.filter(t => t.getBoundingClientRect().top < window.innerHeight * 0.35);
-    if (vis.length) mark(vis[vis.length - 1].id);
-  }, { rootMargin: "0px 0px -60% 0px", threshold: [0, 1] });
-  targets.forEach(t => io.observe(t));
-  addEventListener("scroll", () => { const vis = targets.filter(t => t.getBoundingClientRect().top < 120); if (vis.length) mark(vis[vis.length - 1].id); }, { passive: true });
-
-  // Visionneuse
-  const v = document.getElementById("viewer"), vi = v.querySelector("img");
-  document.querySelectorAll("figure a").forEach(a => a.addEventListener("click", e => {
-    e.preventDefault(); const t = a.querySelector("img"), r = t.naturalWidth / t.naturalHeight || 1;
-    const w = Math.min(t.naturalWidth || 1400, Math.max(innerWidth - 24, (innerHeight - 90) * r));
-    vi.style.width = w + "px"; vi.src = a.href; vi.alt = t.alt; v.classList.add("open"); v.scrollTo(0, 0);
-  }));
-  const close = () => v.classList.remove("open");
-  document.getElementById("vclose").addEventListener("click", close);
-  v.addEventListener("click", e => { if (e.target === v) close(); });
-  addEventListener("keydown", e => { if (e.key === "Escape") { close(); setOpen(false); } });
-})();
-</script>
+<script src="../guide.js" defer></script>
 </body>
 </html>

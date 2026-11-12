@@ -1,6 +1,6 @@
 :root{
-  --sky:#E3F1FB; --paper:#FFFFFF; --leaf:#2E8B57; --leaf-d:#1F6B41; --leaf-l:#DDF2E5;
-  --sun:#FFC233; --sun-l:#FFF1C9; --earth:#4A2E1F; --muted:#6E5F55; --poppy:#E8484F; --line:#CFE2EF;
+  --sky:#E3F1FB; --paper:#FFFFFF; --leaf:#237A49; --leaf-d:#1F6B41; --leaf-l:#DDF2E5;
+  --sun:#FFC233; --sun-l:#FFF1C9; --earth:#4A2E1F; --muted:#6B5C52; --poppy:#C8323A; --line:#CFE2EF;
   --display:"Fredoka", ui-rounded, "Segoe UI", system-ui, sans-serif;
   --body:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }

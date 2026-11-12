@@ -67,8 +67,9 @@ jobs:
             LABEL=$(printf %s "$APERCU" | tr -cd 'A-Za-z0-9._/-')
             build _apercu_src _site/preview
             # Cache hors ligne propre à l'aperçu : il n'efface jamais celui de la production
-            sed -i 's|const CACHE = "soisfier-|const CACHE = "apercu-soisfier-|; s|if (k !== CACHE) await caches.delete(k)|if (k !== CACHE \&\& k.startsWith("apercu-")) await caches.delete(k)|' _site/preview/sw.js
+            sed -i 's|const CACHE = "soisfier-|const CACHE = "apercu-soisfier-|; s|if (k !== CACHE) await caches.delete(k)|if (k !== CACHE \&\& k.startsWith("apercu-")) await caches.delete(k)|; s|if (k !== CACHE \&\& k !== LANGCACHE) await caches.delete(k)|if (k !== CACHE \&\& k !== LANGCACHE \&\& k.startsWith("apercu-")) await caches.delete(k)|' _site/preview/sw.js
             grep -q 'apercu-soisfier-' _site/preview/sw.js || { echo "::error::Cache de l'aperçu non renommé"; exit 1; }
+            grep -q 'k.startsWith("apercu-")' _site/preview/sw.js || { echo "::error::Nettoyage des caches de l'aperçu non restreint"; exit 1; }
             # Repère visuel et non-indexation
             sed -i 's|<head>|<head>\n<meta name="robots" content="noindex">|' _site/preview/index.html
             sed -i "s|</body>|<div style=\"position:fixed;top:4px;left:50%;transform:translateX(-50%);z-index:9999;background:#E8484F;color:#fff;font:700 12px/1 sans-serif;padding:4px 10px;border-radius:999px;pointer-events:none\">APERÇU ${LABEL}</div>\n</body>|" _site/preview/index.html

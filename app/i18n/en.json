@@ -1209,5 +1209,20 @@
   "cancel": "Cancel: {name}",
   "childHere": "Child mode here for {name}",
   "connectDevice": "Connect {name}'s device"
+ },
+ "intro": {
+  "step": "Screen {i} of {n}",
+  "next": "Next",
+  "back": "Back",
+  "done": "Close",
+  "t1": "Welcome to SoisFier",
+  "x1": "SoisFier helps your family build daily routines: brushing teeth, packing the school bag, going to bed on time. The child ticks what they have done, and an adult approves it.",
+  "a1": "A sunflower growing",
+  "t2": "Stars and a flower",
+  "x2": "Each approved routine earns stars. Every good day makes the child's flower grow, and it opens at the end of the fortnight.",
+  "a2": "The child's flower, well grown",
+  "t3": "Rewards that fit",
+  "x3": "Stars are exchanged for rewards chosen by the family. To find out more, tap “?” at the top of the screen: the guide has the answers.",
+  "a3": "A flower in full bloom"
  }
 }

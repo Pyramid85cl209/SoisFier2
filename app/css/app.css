@@ -124,6 +124,7 @@ button{cursor:pointer}
 dialog#sheet{border:0;padding:0;margin:auto auto 0;width:100%;max-width:560px;max-height:92vh;border-radius:28px 28px 0 0;
   background:var(--paper);color:var(--earth)}
 dialog#sheet::backdrop{background:rgba(20,30,25,.45)}
+.intro-art{display:grid;place-items:center;margin:0 0 8px}.intro-art svg{width:120px;height:auto;max-height:150px}
 .sheet-in{padding:20px 18px calc(22px + env(safe-area-inset-bottom,0px));overflow:auto;max-height:92vh}
 .sheet-in h2{margin-bottom:14px}
 .sheet-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}

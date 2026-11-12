@@ -335,11 +335,11 @@ async def main(only=None):
             b = await s.shot(p, "w2b", sheet=True)
             await s.compose("w2", [(a, C("w2", 0)), (b, C("w2", 1))])
         # ---------- Partie 6 : Vacances et absences (v27) ----------
-        # Liste unique : pause en cours (Maladie), vacances à venir, pause qui chevauche les vacances (la pause l'emporte)
+        # Liste unique : pause en cours (Repos), vacances à venir, pause qui chevauche les vacances (la pause l'emporte)
         VAC = {"holiday_periods": [{"id": "H1", "family_id": "F", "child_id": "C1", "name": "", "start_day": d(10), "end_day": d(23), "active": True}],
                "holiday_overrides": [{"period_id": "H1", "routine_id": "R5", "family_id": "F", "child_id": "C1", "status": "off"},
                                      {"period_id": "H1", "routine_id": "R9", "family_id": "F", "child_id": "C1", "status": "required", "days": [1, 2, 3, 4, 5, 6, 7]}],
-               "pauses": [{"id": "PZ0", "family_id": "F", "child_id": "C1", "start_day": d(-2), "end_day": d(1), "reason": "sick", "created_at": d(-2) + "T07:00:00Z"},
+               "pauses": [{"id": "PZ0", "family_id": "F", "child_id": "C1", "start_day": d(-2), "end_day": d(1), "reason": "rest", "created_at": d(-2) + "T07:00:00Z"},
                           {"id": "PZ1", "family_id": "F", "child_id": "C1", "start_day": d(20), "end_day": d(27), "reason": "trip", "created_at": d(-1) + "T10:00:00Z"}]}
         VAC_JS = ("S.hp.forEach(p => p.name = t('hol.namePlaceholder')); S.holidays.forEach(p => p.name = t('hol.namePlaceholder'));"
                   "S.routines.push({ id: 'R30', family_id: 'F', child_id: 'C1', title: __FXJSON.X.waterGarden, emoji: '🪴', moment: 'soir', stars: 1, days: [1,2,3,4,5,6,7], is_bonus: false, kind: 'regular', active: true, holiday_period_id: 'H1', created_at: '2026-09-01T08:00:00Z', position: 30 });"
@@ -365,6 +365,15 @@ async def main(only=None):
             await s.act(p, "closeSheet(); render();")
             b = await s.shot(p, "v2b", [(".banner.hol p", 4, 0), ("button[data-act=toggleHabitual]", 5), ("button[data-act=newRoutine]", 6)])
             await s.compose("v2", [(a, C("v2", 0)), (b, C("v2", 1))])
+        # v3 (DT14-06, EP-09) : programmer le mode vacances (parent), puis le téléphone de l'enfant pendant les vacances
+        if await scene("v3"):
+            p = await s.page(ovr=VAC2)
+            await s.act(p, VAC2_JS + "A.tab({ dataset: { tab: 'family' } }); A.holNew({ dataset: {} }); document.getElementById('h-name').value = t('hol.namePlaceholder'); document.activeElement.blur();")
+            a = await s.shot(p, "v3a", [(".seg button", 1), ("#h-name", 2), ("#h-from", 3), ("#h-copy", 4)], sheet=True)
+            p2 = await s.page(child=True, ovr=VAC2)
+            await s.act(p2, "S.cs.holidays = [{ id: 'H2', child_id: 'C1', name: t('hol.namePlaceholder'), start_day: addDays(todayISO(), -3), end_day: addDays(todayISO(), 4), active: true, overrides: [], ov: {} }]; render();")
+            b = await s.shot(p2, "v3b", [(".hol-pill", 5)])
+            await s.compose("v3", [(a, C("v3", 0)), (b, C("v3", 1))])
         if await scene("h1"):
             p = await s.page(ovr=VAC, h=1010)
             await s.act(p, VAC_JS + "A.tab({ dataset: { tab: 'family' } }); scrollTo(0, $('[data-sec=vac]').offsetTop - 70);")

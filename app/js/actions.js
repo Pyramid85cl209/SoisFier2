@@ -71,6 +71,38 @@ A.logout = async () => {
   ["parentCache", "pushOn"].forEach(k => store.del(k));
   Object.assign(S, { session: null, family: null, children: [], routines: [], screen: "auth", tab: "today", wk: null }); render();
 };
+/* Présentation (EP-09, F14-04, ADR-48) : fenêtre de trois écrans, montrée une fois par compte (indication « vue » dans les métadonnées du compte) ; rouvrable depuis le guide (?intro=1) */
+const INTRO_N = 3;
+let introShown = false;
+const introSeen = () => !!(S.session && S.session.user && S.session.user.user_metadata && S.session.user.user_metadata.intro_seen);
+function introView(i) {
+  const n = i + 1;
+  openSheet(`<div class="intro"><div class="intro-art">${plantSVG([1, 3, 5][i], "#E58358", t("intro.a" + n))}</div>
+    <h2>${t("intro.t" + n)}</h2><p>${t("intro.x" + n)}</p><p class="muted small">${t("intro.step", { i: n, n: INTRO_N })}</p>
+    <div class="sheet-actions">${i > 0 ? `<button class="btn ghost" data-act="introBack">${t("intro.back")}</button>` : ""}${i < INTRO_N - 1 ? `<button class="btn" data-act="introNext" data-autofocus>${t("intro.next")}</button>` : ""}<button class="btn ${i < INTRO_N - 1 ? "ghost" : ""}" data-act="closeSheet" ${i === INTRO_N - 1 ? "data-autofocus" : ""}>${t("intro.done")}</button></div></div>`);
+  const f = dlg.querySelector("[data-autofocus]"); if (f) f.focus();
+  dlg.dataset.intro = String(i);
+}
+A.introNext = () => introView(Math.min(INTRO_N - 1, +dlg.dataset.intro + 1));
+A.introBack = () => introView(Math.max(0, +dlg.dataset.intro - 1));
+function showIntro() { introView(0); }
+async function markIntroSeen() {
+  if (introSeen() || !sb) return;
+  try {
+    const { error } = await sb.auth.updateUser({ data: { intro_seen: true } });
+    if (!error && S.session && S.session.user) S.session.user.user_metadata = { ...(S.session.user.user_metadata || {}), intro_seen: true };
+  } catch (_) {}   // hors ligne : sera retentée à la prochaine ouverture
+}
+// Après la création ou l'adhésion à une famille (ou à la première ouverture d'un compte qui ne l'a pas vue) : une seule fois par compte
+function maybeIntro() {
+  if (introShown || S.screen !== "parent" || S.offline || !S.session || introSeen() || dlg.open) return;
+  introShown = true; showIntro(); markIntroSeen();
+}
+// ?intro=1 (lien du guide) : rouvre la présentation, sans rien enregistrer
+function introFromLink() {
+  let on = false; try { const u = new URL(location.href); on = u.searchParams.get("intro") === "1"; if (on) { u.searchParams.delete("intro"); history.replaceState(null, "", u.pathname + u.search + u.hash); } } catch (_) {}
+  if (on) { introShown = true; showIntro(); }
+}
 A.createFamily = async () => {
   const name = $("#o-name").value.trim();
   const rel = t("rel." + $("#o-rel").value);

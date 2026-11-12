@@ -156,6 +156,7 @@ async function enterParent() {
     else { S.screen = "error"; S.err = errMsg(e); }
   }
   render();
+  if (typeof maybeIntro === "function") maybeIntro();
 }
 async function reloadParent(msg, parts) { if (parts) await refreshParts(parts); else await refreshParent(); render(); if (msg) toast(msg); if (!parts || parts.includes("r")) priceNewcomers(); }
 
