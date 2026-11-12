@@ -1,8 +1,7 @@
 {
   "name": "SoisFier",
   "short_name": "SoisFier",
-  "description": "Routines, étoiles et récompenses pour les enfants.",
-  "lang": "fr",
+  "description": "Routines, stars and rewards for children.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

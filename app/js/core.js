@@ -49,14 +49,15 @@ const guardReset = k => store.del(k);
 const LANGS = ["fr", "ar", "en"];        // langues proposées (fichier i18n/<code>.json + ligne dans public.languages)
 const RTL = ["ar"];                // écriture de droite à gauche
 const REVIEW = ["ar", "en"];             // traduction encore à relire (mention dans le choix de la langue)
-const I18N = { lang: "fr", d: {}, fr: {} };
+const FALLBACK = "en";               // langue de secours (R13-01, DEC-36) : un texte manquant, une langue du téléphone non proposée, une valeur « ?lang= » inconnue
+const I18N = { lang: FALLBACK, d: {}, fr: {}, en: {} };
 I18N.ready = new Promise(r => { I18N.done = r; });
 const lget = (o, k) => k.split(".").reduce((a, p) => (a == null ? a : a[p]), o);
 const REGION = { en: "en-GB" };   // variante régionale pour les dates et nombres (anglais britannique)
 const loc = () => (I18N.lang === "qps" ? "fr" : REGION[I18N.lang] || I18N.lang) + "-u-ca-gregory-nu-latn";   // calendrier grégorien et chiffres 0123 imposés
 const fmtNum = n => Number(n).toLocaleString(loc());
 function t(k, p = {}) {
-  let v = lget(I18N.d, k); if (v == null) v = lget(I18N.fr, k); if (v == null) return k;
+  let v = lget(I18N.d, k); if (v == null) v = lget(I18N.en, k); if (v == null) return k;
   if (v && typeof v === "object" && !Array.isArray(v) && "other" in v) v = v[new Intl.PluralRules(loc()).select(+p.n || 0)] ?? v.other;
   return typeof v === "string" ? v.replace(/\{(\w+)\}/g, (m, x) => p[x] == null ? m : typeof p[x] === "number" ? fmtNum(p[x]) : p[x]) : v;
 }
@@ -69,19 +70,30 @@ function pseudo(o) {
 }
 async function loadI18n() {
   const want = new URLSearchParams(location.search).get("lang"); if (want) store.set("lang", want);
-  const nav = (navigator.language || "fr").slice(0, 2).toLowerCase();
-  const lang = store.get("lang", LANGS.includes(nav) ? nav : "fr");
+  const nav = (navigator.language || FALLBACK).slice(0, 2).toLowerCase();
+  const lang = store.get("lang", LANGS.includes(nav) ? nav : FALLBACK);
+  I18N.lang = lang === "qps" ? "qps" : LANGS.includes(lang) ? lang : FALLBACK;
   const get = async l => { const r = await fetch(`i18n/${l}.json`); if (!r.ok) throw new Error(l); return r.json(); };
-  try { I18N.fr = await get("fr"); } catch { I18N.fr = {}; }
-  I18N.lang = lang === "qps" ? "qps" : LANGS.includes(lang) ? lang : "fr";
-  I18N.d = I18N.lang === "qps" ? pseudo(I18N.fr) : I18N.lang === "fr" ? I18N.fr : await get(I18N.lang).catch(() => I18N.fr);
+  // L'anglais (secours) est toujours chargé ; le français sert de base à la pseudo-langue ; une autre langue vient de son fichier
+  try { I18N.en = await get("en"); } catch { I18N.en = I18N.en || {}; }
+  I18N.fr = I18N.lang === "fr" || I18N.lang === "qps" ? await get("fr").catch(() => ({})) : {};
+  I18N.d = I18N.lang === "qps" ? pseudo(I18N.fr) : I18N.lang === "fr" ? I18N.fr : I18N.lang === "en" ? I18N.en : await get(I18N.lang).catch(() => I18N.en);
   document.documentElement.lang = I18N.lang === "qps" ? "fr" : I18N.lang;
   document.documentElement.dir = RTL.includes(I18N.lang) ? "rtl" : "ltr";
+  document.title = t("meta.title");
   document.querySelector('meta[name="description"]').setAttribute("content", t("meta.description"));
   $("#sheet").setAttribute("aria-label", t("dialog"));
   BADGES = buildBadges();
+  rememberLang();
   I18N.done();
 }
+// Langue de l'appareil gardée pour le service worker (texte de secours d'une notification sans texte, DT11-02) : entrée « ./sf-lang » du cache
+async function rememberLang() {
+  try { if (!("caches" in window)) return; const c = await caches.open("soisfier-lang"); await c.put("./sf-lang", new Response(I18N.lang === "qps" ? "fr" : I18N.lang)); } catch {}
+}
+// Nom de la famille : le nom par défaut de la base (« Ma famille ») s'affiche dans la langue de l'appareil tant qu'il n'a pas été changé (DT13-02)
+const DEFAULT_FAMILY = "Ma famille";
+const famName = f => (f && f.name && f.name !== DEFAULT_FAMILY ? f.name : t("onboard.defaultName"));
 
 /* ================= Dates, semaine et fuseau de la famille ================= */
 const WEEK = { start: 1, weekend: [6, 7], tz: "Europe/Paris" };   // remplacé par les réglages de la famille au chargement
@@ -173,14 +185,16 @@ const curLang = () => (I18N.lang === "qps" ? "fr" : I18N.lang);
 function errMsg(e) {
   const m = (e && (e.message || e.error_description || e.msg)) || String(e);
   const lk = /SF:code_locked:(\d+)/.exec(m); if (lk) return t("srv.code_locked", { n: lk[1] });
-  const code = /SF:(\w+)/.exec(m); if (code) return lget(I18N.fr, "srv." + code[1]) != null ? t("srv." + code[1]) : t("srv.unknown");
+  const code = /SF:(\w+)/.exec(m); if (code) return lget(I18N.en, "srv." + code[1]) != null ? t("srv." + code[1]) : t("srv.unknown");
   if (/Failed to fetch|NetworkError|Load failed|fetch/i.test(m)) return t("err.network");
   if (/Invalid login credentials/i.test(m)) return t("err.badLogin");
   if (/Email not confirmed/i.test(m)) return t("err.notConfirmed");
   if (/already registered/i.test(m)) return t("err.alreadyRegistered");
   if (/Password should be at least/i.test(m)) return t("err.passwordShort");
   if (/rate limit/i.test(m)) return t("err.rateLimit");
-  return m;
+  // DT00-01 : jamais de texte technique à l'écran ; le détail reste dans la console
+  try { console.warn("SoisFier : erreur non reconnue :", m); } catch {}
+  return t("err.generic");
 }
 const isNetErr = e => /Failed to fetch|NetworkError|Load failed|fetch/i.test((e && e.message) || String(e)) || !navigator.onLine;
 

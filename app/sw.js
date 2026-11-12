@@ -1,18 +1,19 @@
 /* SoisFier – service worker : hors ligne + notifications */
-const CACHE = "soisfier-v32-ep09c";
+const CACHE = "soisfier-v32-ep09d";
 // Vitrine provisoire : jamais mise en cache, toujours servie en direct (retours des bêta-testeurs sur la dernière version).
 const VITRINE = new URL("vitrine/", self.registration.scope).pathname;
 // Aperçu d'une branche (/preview/) : jamais servi par le service worker de la production (il a le sien).
 const APERCU = new URL("preview/", self.registration.scope).pathname;
+const LANGCACHE = "soisfier-lang";   // langue de l'appareil (écrite par l'application, entrée ./sf-lang) : survit aux changements de version
 const CORE = ["./", "./index.html", "./css/app.css", "./js/config.js", "./js/core.js", "./js/garden.js", "./js/rules.js", "./js/ui.js", "./js/premium.js", "./js/parent.js", "./js/child.js", "./js/data.js", "./js/forms.js", "./js/report.js", "./js/scan.js", "./vendor/qrcode.min.js", "./vendor/jsqr.min.js", "./js/actions.js", "./js/holidays.js", "./js/actions-parent.js", "./js/actions-family.js", "./js/boot.js",
-  "./i18n/fr.json", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
+  "./i18n/fr.json", "./i18n/en.json", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 const CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js";
 
 self.addEventListener("install", e => {
   e.waitUntil((async () => {
     const c = await caches.open(CACHE);
     await c.addAll(CORE.map(u => new Request(u, { cache: "reload" })));   // v28c : jamais depuis le cache HTTP du navigateur (fichiers de la livraison précédente)
-    // Seul le français (langue de secours) est préchargé ; les autres langues déjà utilisées sur l'appareil sont reprises, à jour.
+    // Le français et l'anglais (langue de secours) sont préchargés ; les autres langues déjà utilisées sur l'appareil sont reprises, à jour.
     const used = new Set();
     for (const k of await caches.keys()) if (k !== CACHE) for (const r of await (await caches.open(k)).keys()) if (/\/i18n\/\w+\.json$/.test(new URL(r.url).pathname)) used.add(r.url);
     for (const u of used) try { await c.add(u); } catch (_) {}
@@ -23,7 +24,7 @@ self.addEventListener("install", e => {
 
 self.addEventListener("activate", e => {
   e.waitUntil((async () => {
-    for (const k of await caches.keys()) if (k !== CACHE) await caches.delete(k);
+    for (const k of await caches.keys()) if (k !== CACHE && k !== LANGCACHE) await caches.delete(k);
     await self.clients.claim();
   })());
 });
@@ -66,13 +67,30 @@ self.addEventListener("fetch", e => {
 // v28c : l'app demande la version qui la sert (affichée dans Famille › Compte et sauvegarde)
 self.addEventListener("message", e => { if (e.data === "version" && e.source) e.source.postMessage({ version: CACHE }); });
 
+// Texte de secours d'une notification sans texte (DT11-02) : clé push.fallback du dictionnaire de la langue de l'appareil (lue dans ./sf-lang), anglais à défaut
+async function fallbackText() {
+  const NEUTRAL = "Today's routines 🌱";
+  try {
+    const l = await (await caches.open(LANGCACHE)).match("./sf-lang");
+    const lang = l ? (await l.text()).trim() : "en";
+    const c = await caches.open(CACHE);
+    for (const code of [/^\w{2}$/.test(lang) ? lang : "en", "en"]) {
+      const r = await c.match("./i18n/" + code + ".json"); if (!r) continue;
+      const j = await r.json(); if (j.push && j.push.fallback) return j.push.fallback;
+    }
+  } catch (_) {}
+  return NEUTRAL;
+}
+
 self.addEventListener("push", e => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (_) { d = { body: e.data && e.data.text() }; }
-  e.waitUntil(self.registration.showNotification(d.title || "SoisFier", {
-    body: d.body || "Pense aux routines du jour.",
-    icon: "icon-192.png", badge: "icon-192.png", tag: "soisfier-rappel", renotify: true, vibrate: [80, 40, 80]
-  }));
+  e.waitUntil((async () => {
+    const body = d.body || await fallbackText();
+    await self.registration.showNotification(d.title || "SoisFier", {
+      body, icon: "icon-192.png", badge: "icon-192.png", tag: "soisfier-rappel", renotify: true, vibrate: [80, 40, 80]
+    });
+  })());
 });
 
 self.addEventListener("notificationclick", e => {

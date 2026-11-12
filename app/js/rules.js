@@ -65,7 +65,7 @@ const TPL_X = [
 const B = (k, e, n, c, field, target) => ({ k, e, n, c, ok: s => (typeof target === "number" ? (s[field] || 0) >= target : !!s[field]), p: typeof target === "number" ? s => [Math.min(s[field] || 0, target), target] : null });
 const SERIES = (c, field, key, name, list) => list.map(([n, e], i) => B(i === 0 && key.first ? key.first : key.p + n, e, name(n), c, field, n));
 // Badges : 1 ou n (le premier palier a souvent un nom à part)
-const bn = (k, n) => n === 1 && lget(I18N.fr, `badge.${k}.first`) != null ? t(`badge.${k}.first`) : t(`badge.${k}.n`, { n });
+const bn = (k, n) => n === 1 && lget(I18N.en, `badge.${k}.first`) != null ? t(`badge.${k}.first`) : t(`badge.${k}.n`, { n });
 let BADGES = [];
 const buildBadges = () => [
   ...SERIES("routines", "done", { p: "r", first: "first" }, n => bn("routines", n),

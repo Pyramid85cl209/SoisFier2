@@ -2,7 +2,13 @@
 /* SoisFier : Feuille, dialogues, célébration, rendu, connexion, membres */
 /* ================= Feuille / dialogues ================= */
 const dlg = $("#sheet");
-function openSheet(html) { dlg.innerHTML = `<div class="sheet-in">${html}</div>`; if (!dlg.open) dlg.showModal(); const f = dlg.querySelector("input:not([type=checkbox]),select"); if (f && f.dataset.autofocus !== undefined) f.focus(); }
+// DT00-19 : la fenêtre est nommée par son titre (traduit), « Fenêtre » seulement à défaut de titre
+function nameSheet() {
+  const h = dlg.querySelector("h1,h2,h3");
+  if (h) { h.id = "sheet-title"; dlg.setAttribute("aria-labelledby", "sheet-title"); dlg.removeAttribute("aria-label"); }
+  else { dlg.removeAttribute("aria-labelledby"); dlg.setAttribute("aria-label", t("dialog")); }
+}
+function openSheet(html) { dlg.innerHTML = `<div class="sheet-in">${html}</div>`; nameSheet(); if (!dlg.open) dlg.showModal(); const f = dlg.querySelector("input:not([type=checkbox]),select"); if (f && f.dataset.autofocus !== undefined) f.focus(); }
 function closeSheet() { if (dlg.open) dlg.close(); }
 dlg.addEventListener("click", e => { if (e.target === dlg) closeSheet(); });
 function confirmSheet(title, text, okLabel, danger = false) {

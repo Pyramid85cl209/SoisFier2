@@ -81,7 +81,8 @@ function cGarden(v, routines) {
     <p class="center"><button class="btn ghost" data-act="ctab" data-tab="badges">🏅 ${t("kid.seeBadges")}</button></p>`;
 }
 // Rappels de l'enfant (v28) : icône 🔔 en bout de ligne dans Aujourd'hui (fenêtre : A.cReminders)
-const bell = () => `<button class="bell" data-act="cReminders" aria-label="${t("kid.reminders")}"><span aria-hidden="true">🔔</span></button>`;
+// Mode enfant ici (F03-06, DT11-08) : pas de rappels, pour ne jamais remplacer ceux du parent sur ce téléphone
+const bell = () => store.get("childFromParent") ? "" : `<button class="bell" data-act="cReminders" aria-label="${t("kid.reminders")}"><span aria-hidden="true">🔔</span></button>`;
 
 function cBadges(v, routines, cs) {
   const BS = visibleBadges(), bs = badgeStats(v), dates = cs.badge_dates || {}, got = BS.filter(b => hasBadge(v, b)).length;

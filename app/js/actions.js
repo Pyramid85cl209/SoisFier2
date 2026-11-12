@@ -31,14 +31,14 @@ A.login = async () => {
   const email = $("#a-email").value.trim(), password = $("#a-pass").value;
   if (!email || !password) return toast(t("auth.needBoth"), true);
   const { data, error } = await sb.auth.signInWithPassword({ email, password }); if (error) throw error;
-  S.session = data.session; await enterParent();
+  S.session = data.session; await enterParent(); saveLang();   // DT13-03
 };
 A.signup = async () => {
   const email = $("#a-email").value.trim(), password = $("#a-pass").value, name = ($("#a-name")?.value || "").trim();
   if (!email || password.length < 6) return toast(t("auth.needSignup"), true);
   const { data, error } = await sb.auth.signUp({ email, password, options: { data: { display_name: name, locale: curLang() }, emailRedirectTo: location.origin + location.pathname } });
   if (error) throw error;
-  if (data.session) { S.session = data.session; await enterParent(); }
+  if (data.session) { S.session = data.session; await enterParent(); saveLang(); }
   else { S.authMode = "login"; render(); openSheet(`<h2>${t("auth.checkMail")}</h2><p>${t("auth.checkMailText", { email: `<b>${esc(email)}</b>` })}</p><div class="sheet-actions"><button class="btn" data-act="closeSheet">${t("btn.gotIt")}</button></div>`); }
 };
 A.forgot = async () => {
@@ -50,15 +50,21 @@ A.closeSheet = () => closeSheet();
 // Langue : choisie sur l'appareil ; enregistrée aussi pour le membre connecté et pour les rappels de cet appareil
 A.pickLang = () => openSheet(`<h2>${t("lang.title")}</h2><ul class="tpl">${LANGS.map(l => `<li><button class="pen" data-act="setLang" data-v="${l}" lang="${l}"><span>${t("lang." + l)}${REVIEW.includes(l) ? ` <small class="muted">(${t("lang.toReview")})</small>` : ""}</span><span>${l === curLang() ? "✓" : ""}</span></button></li>`).join("")}</ul>
   <div class="sheet-actions"><button class="btn ghost" data-act="closeSheet">${t("btn.close")}</button></div>`);
+// Enregistre la langue de l'appareil pour le membre connecté et pour les rappels de ce téléphone (DT13-03 : avec 🌐 et à la connexion) ; un échec est sans suite
+async function saveLang() {
+  const l = I18N.lang; if (!LANGS.includes(l)) return;   // « ?lang=qps » n'est jamais enregistré
+  try {
+    if (S.screen === "parent" && S.family && S.session) await sb.from("family_members").update({ locale: l }).eq("family_id", S.family.id).eq("user_id", S.session.user.id);
+    if ("serviceWorker" in navigator) { const reg = await navigator.serviceWorker.getRegistration(); const sub = reg && await reg.pushManager.getSubscription(); if (sub) await sb.rpc("push_set_locale", { p_endpoint: sub.endpoint, p_locale: l }); }   // sans service worker (aperçu, hors ligne au premier lancement), on n'attend pas
+  } catch {}
+}
 A.setLang = async el => {
   const l = el.dataset.v; if (!LANGS.includes(l)) return;
   store.set("lang", l);
   if (new URLSearchParams(location.search).has("lang")) history.replaceState(null, "", location.pathname);
   await loadI18n(); closeSheet(); render();
-  try {
-    if (S.screen === "parent" && S.family && S.session) await sb.from("family_members").update({ locale: l }).eq("family_id", S.family.id).eq("user_id", S.session.user.id);
-    if ("serviceWorker" in navigator) { const reg = await navigator.serviceWorker.ready; const sub = await reg.pushManager.getSubscription(); if (sub) await sb.rpc("push_set_locale", { p_endpoint: sub.endpoint, p_locale: l }); }
-  } catch {}
+  S.tip = null; if (S.screen === "parent") loadTip();   // DT05-07 : l'astuce suit la langue
+  await saveLang();
 };
 A.logout = async () => {
   if (sb) await sb.auth.signOut().catch(() => {});

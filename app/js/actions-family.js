@@ -35,21 +35,23 @@ A.sound = el => store.set("sound", el.checked);
 // Rappels
 // Fenêtre « Mes rappels » de l'enfant (v28) ; ask : proposée une fois juste après la connexion du téléphone
 A.cReminders = el => {
+  if (store.get("childFromParent")) return;   // Mode enfant ici : pas de rappels (DT11-08)
   const ask = el && el.ask, pushOn = store.get("cpushOn", false), ct = store.get("cpushTimes", ["07:30", "18:00"]);
   openSheet(`<div id="rem-sheet"><h2>🔔 ${t("kid.reminders")}</h2><p class="muted">${ask ? t("kid.remindersAsk") : t("kid.remindersHelp")}</p>
-    <div class="f two"><label>${t("kid.remindMorning")}<input type="time" id="t1" value="${esc(ct[0] || "")}"></label><label>${t("kid.remindEvening")}<input type="time" id="t2" value="${esc(ct[1] || "")}"></label></div>
+    <div class="f two"><label>${t("kid.remindMorning")}<input type="time" id="t1" max="23:45" value="${esc(ct[0] || "")}"></label><label>${t("kid.remindEvening")}<input type="time" id="t2" max="23:45" value="${esc(ct[1] || "")}"></label></div>
     ${ask ? "" : `<label class="check"><input type="checkbox" id="snd" data-act="sound" ${store.get("sound", true) ? "checked" : ""}> ${t("kid.sound")}</label>`}
     <div class="sheet-actions">${ask ? `<button class="btn ghost" data-act="closeSheet">${t("kid.later")}</button>` : pushOn ? `<button class="btn ghost" data-act="pushOff">${t("btn.disable")}</button>` : ""}<button class="btn" data-act="pushChild">${pushOn ? t("push.update") : t("push.enable")}</button></div></div>`);
 };
 
 A.pushParent = async () => {
-  const times = readTimes(); if (!times.length) return toast(t("push.needTime"), true);
+  const times = readTimes(); if (!times.length) return toast(t("push.needTime"), true); if (tooLate(times)) return toast(t("push.timeTooLate"), true);
   const j = await getPushSub();
   const { error } = await sb.rpc("parent_push_subscribe", { p_family: S.family.id, p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_times: times, p_locale: curLang() }); if (error) throw error;
   store.set("pushOn", true); store.set("pushTimes", times); render(); toast(t("push.enabled"));
 };
 A.pushChild = async () => {
-  const times = readTimes(); if (!times.length) return toast(t("push.needTime"), true);
+  if (store.get("childFromParent")) return;   // Mode enfant ici : jamais d'abonnement qui remplacerait celui du parent (DT11-08)
+  const times = readTimes(); if (!times.length) return toast(t("push.needTime"), true); if (tooLate(times)) return toast(t("push.timeTooLate"), true);
   const j = await getPushSub();
   const { error } = await sb.rpc("child_push_subscribe", { p_token: store.get("childToken"), p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_times: times, p_locale: curLang() }); if (error) throw error;
   store.set("cpushOn", true); store.set("cpushTimes", times); render(); closeSheet(); toast(t("push.enabled"));
@@ -112,7 +114,7 @@ A.setPin = async () => {
   await pinSave(p); render(); toast(t("pin.saved"));
 };
 A.renameFamily = async () => {
-  openSheet(`<h2>${t("account.rename")}</h2><label class="f">${t("form.name")}<input id="fam-name" maxlength="40" value="${esc(S.family.name)}"></label><div class="sheet-actions"><button class="btn" data-act="saveFamilyName">${t("btn.save")}</button></div>`);
+  openSheet(`<h2>${t("account.rename")}</h2><label class="f">${t("form.name")}<input id="fam-name" maxlength="40" value="${esc(famName(S.family))}"></label><div class="sheet-actions"><button class="btn" data-act="saveFamilyName">${t("btn.save")}</button></div>`);
 };
 A.saveFamilyName = async () => {
   const name = $("#fam-name").value.trim(); if (!name) return toast(t("account.needName"), true);

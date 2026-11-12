@@ -138,8 +138,10 @@ function bumpStats(childId, d) {
 const newId = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : null;
 async function loadTip() {
   try {
-    let { data } = await sb.from("tips").select("text").eq("locale", curLang()).order("id");
-    if (!data || !data.length) ({ data } = await sb.from("tips").select("text").eq("locale", "fr").order("id"));
+    const lg = curLang();   // DT05-07 : astuces dans la langue en cours, anglais à défaut
+    let { data } = await sb.from("tips").select("text").eq("locale", lg).order("id");
+    if (!data || !data.length) ({ data } = await sb.from("tips").select("text").eq("locale", FALLBACK).order("id"));
+    if (lg !== curLang()) return;   // la langue a changé pendant la lecture : la lecture suivante fait foi
     if (data && data.length) { const n = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 864e5); S.tip = data[n % data.length].text; if (S.screen === "parent") render(); }
   } catch {}
 }
@@ -280,4 +282,6 @@ async function getPushSub() {
   }
   return sub.toJSON();
 }
+const LAST_TIME = "23:45";   // DT11-04 : un rappel après 23:45 ne serait jamais envoyé (le quart d'heure passe minuit)
+const tooLate = times => times.some(v => v > LAST_TIME);
 const readTimes = () => [$("#t1")?.value, $("#t2")?.value].filter(v => /^\d{2}:\d{2}$/.test(v || ""));

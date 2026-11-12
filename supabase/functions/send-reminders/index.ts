@@ -1,6 +1,6 @@
 // Envoie les rappels push. Appelée toutes les 15 min par pg_cron.
 // Authentification : en-tête x-cron-secret vérifié par la fonction SQL reminders_due.
-// Le texte est composé ici, dans la langue de l'appareil (fr, ar, en ; repli fr).
+// Le texte est composé ici, dans la langue de l'appareil (fr, ar, en ; repli en).
 // Compatible avec l'ancien format (title/body déjà rédigés par la base).
 import webpush from "npm:web-push@3.6.7";
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -36,7 +36,7 @@ const T: Record<string, { childTitle: string; childBody: (n: number) => string; 
 
 function compose(it: Item): { title: string; body: string } | null {
   if (it.title !== undefined && it.body !== undefined) return it.body ? { title: it.title, body: it.body } : null; // ancien format
-  const t = T[it.locale ?? "fr"] ?? T.fr;
+  const t = T[it.locale ?? "en"] ?? T.en;   // DEC-36 : sans langue connue, anglais
   if (it.kind === "child") return it.left && it.left > 0 ? { title: t.childTitle, body: t.childBody(it.left) } : null;
   const list = it.children ?? [];
   return list.length ? { title: t.parentTitle, body: list.map(t.line).join(t.join) } : null;

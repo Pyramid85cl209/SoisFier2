@@ -112,7 +112,8 @@
   "notConfirmed": "First confirm your e-mail address with the link you received, then sign in again.",
   "alreadyRegistered": "An account already exists with this e-mail. Please sign in.",
   "passwordShort": "The password must be at least 6 characters long.",
-  "rateLimit": "Too many attempts. Please wait a few minutes."
+  "rateLimit": "Too many attempts. Please wait a few minutes.",
+  "generic": "Something went wrong. Please try again in a moment."
  },
  "garden": {
   "species": {
@@ -722,7 +723,9 @@
   "blocked": "Notifications are blocked. Allow them in Chrome's settings for this site.",
   "needTime": "Choose at least one time.",
   "enabled": "Reminders turned on.",
-  "disabled": "Reminders turned off."
+  "disabled": "Reminders turned off.",
+  "fallback": "Today's routines 🌱",
+  "timeTooLate": "Choose a time no later than 23:45."
  },
  "print": {
   "title": "Printable planner",
@@ -955,6 +958,7 @@
   "success": "Challenge won! ⚡"
  },
  "meta": {
+  "title": "SoisFier",
   "description": "Routines, stars and rewards for children."
  },
  "dialog": "Dialog",

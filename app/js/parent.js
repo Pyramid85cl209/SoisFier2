@@ -13,7 +13,7 @@ function renderParent() {
   let body;
   if (!S.children.length && S.tab !== "family") body = `<section class="card center">${plantSVG(0)}<h1>${t("parent.startTitle")}</h1><p>${t("parent.startText")}</p><button class="btn" data-act="newChild">${t("child.add")}</button></section>`;
   else body = { today: pToday, routines: pRoutines, rewards: pRewards, history: pHistory, family: pFamily }[S.tab]();
-  app.innerHTML = `<header class="top"><div class="brand">${miniLogo()}<span>${esc(S.family?.name || "SoisFier")}</span></div><div class="top-r">${S.offline ? `<span class="pill">${t("offline")}</span>` : ""}${langBtn()}<a class="help" href="${guideHref()}" aria-label="${t("help")}">?</a></div></header>
+  app.innerHTML = `<header class="top"><div class="brand">${miniLogo()}<span>${esc(S.family ? famName(S.family) : "SoisFier")}</span></div><div class="top-r">${S.offline ? `<span class="pill">${t("offline")}</span>` : ""}${langBtn()}<a class="help" href="${guideHref()}" aria-label="${t("help")}">?</a></div></header>
     <main class="wrap">${body}</main>
     <nav class="tabbar" aria-label="${t("nav")}">${tabs.map(([k, l, e]) => `<button data-act="tab" data-tab="${k}" class="${S.tab === k ? "on" : ""}" aria-current="${S.tab === k ? "page" : "false"}"><span aria-hidden="true">${e}</span>${l}</button>`).join("")}</nav>`;
 }
@@ -119,7 +119,7 @@ function pFamily() {
       ${devs.map(d => `<div class="dev">📱 ${esc(d.label || t("family.hisPhone"))}${t("sep")}${t("family.since", { date: fmtDate(d.created_at) })} ${P ? `<button class="link" data-act="revokeDevice" data-id="${d.id}">${t("family.disconnect")}</button>` : ""}</div>`).join("")}</div>
       ${P ? `<div class="btns"><button class="btn sm" data-act="childHere" data-id="${c.id}">${t("family.childHere")}</button><button class="btn sm ghost" data-act="editChild" data-id="${c.id}">${t("btn.edit")}</button><button class="btn sm ghost" data-act="deviceCode" data-id="${c.id}">${t("family.connectDevice")}</button></div>` : ""}</div>`;
   }).join("");
-  const pushOn = store.get("pushOn", false), times = store.get("pushTimes", ["07:30", "18:30"]);
+  const pushOn = store.get("pushOn", false), times = store.get("pushTimes", ["07:30", "18:00"]);
   const members = S.members.map(m => `<div class="krow"><div class="grow"><b>${esc(relLabel(m) || m.display_name || t("role.parent"))}</b>${m.user_id === me ? " " + t("family.you") : ""}
       <div class="dev">${m.relation && m.display_name ? esc(m.display_name) + t("sep") : ""}${m.role === "helper" ? t("role.helper") : t("role.parent")}</div></div>
       ${P || m.user_id === me ? `<div class="btns"><button class="btn sm ghost" data-act="editMember" data-id="${m.user_id}">${t("btn.edit")}</button></div>` : ""}</div>`).join("");
@@ -128,7 +128,7 @@ function pFamily() {
     + (P ? fsec("vac", "🏖️ " + t("vac.title"), vacSection(), true) : "")
     + fsec("members", "👥 " + t("family.members"), `${members}${P ? `<p class="muted small">${t("family.rolesHelp")}</p><div class="actions"><button class="btn ghost" data-act="invite">${t("family.invite")}${!isPremium() && S.members.filter(m => m.role !== "helper").length >= 2 ? ptag() : ""}</button></div>` : ""}`)
     + fsec("push", "🔔 " + t("push.title"), `<p class="muted">${t("push.parentHelp")}</p>
-      <div class="f two"><label>${t("push.morning")}<input type="time" id="t1" value="${esc(times[0] || "")}"></label><label>${t("push.evening")}<input type="time" id="t2" value="${esc(times[1] || "")}"></label></div>
+      <div class="f two"><label>${t("push.morning")}<input type="time" id="t1" max="23:45" value="${esc(times[0] || "")}"></label><label>${t("push.evening")}<input type="time" id="t2" max="23:45" value="${esc(times[1] || "")}"></label></div>
       <div class="actions"><button class="btn" data-act="pushParent">${pushOn ? t("push.update") : t("push.enable")}</button>${pushOn ? `<button class="btn ghost" data-act="pushOff">${t("btn.disable")}</button>` : ""}</div>`)
     + (P ? fsec("malus", "💔 " + t("family.malus"), malusSection()) : "")
     + fsec("settings", "⚙️ " + t("family.settings"), `<h3 class="grp">${t("week.title")}</h3><p class="muted">${esc(weekSummary(WEEK))}</p><p class="muted small">${t("week.help")}</p>${P ? `<div class="actions"><button class="btn ghost" data-act="editWeek" data-mode="family">${t("btn.edit")}</button></div>` : ""}

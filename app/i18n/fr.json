@@ -112,7 +112,8 @@
   "notConfirmed": "Confirmez d'abord votre adresse e-mail avec le lien reçu, puis reconnectez-vous.",
   "alreadyRegistered": "Un compte existe déjà avec cet e-mail. Connectez-vous.",
   "passwordShort": "Le mot de passe doit contenir au moins 6 caractères.",
-  "rateLimit": "Trop de tentatives. Patientez quelques minutes."
+  "rateLimit": "Trop de tentatives. Patientez quelques minutes.",
+  "generic": "Quelque chose n'a pas fonctionné. Réessayez dans un instant."
  },
  "garden": {
   "species": {
@@ -713,7 +714,9 @@
   "blocked": "Les notifications sont bloquées. À autoriser dans les réglages de Chrome pour ce site.",
   "needTime": "Choisir au moins une heure.",
   "enabled": "Rappels activés.",
-  "disabled": "Rappels désactivés."
+  "disabled": "Rappels désactivés.",
+  "fallback": "Routines du jour 🌱",
+  "timeTooLate": "Choisir une heure au plus tard à 23:45."
  },
  "print": {
   "title": "Planning à imprimer",
@@ -946,6 +949,7 @@
   "success": "Défi réussi ! ⚡"
  },
  "meta": {
+  "title": "SoisFier",
   "description": "Routines, étoiles et récompenses pour les enfants."
  },
  "dialog": "Fenêtre",
