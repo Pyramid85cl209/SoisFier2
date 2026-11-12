@@ -744,7 +744,8 @@
   "weekStart": "Semaine du {date}",
   "routine": "Routine",
   "none": "Aucune routine.",
-  "myRewards": "Mes récompenses :"
+  "myRewards": "Mes récompenses :",
+  "printRewards": "Imprimer les récompenses"
  },
  "report": {
   "btn": "Reporter la semaine",
@@ -772,13 +773,15 @@
   },
   "sAlready": "déjà faite",
   "sNotDue": "pas prévu ce jour-là",
-  "sStopped": "Routine arrêtée depuis l'impression"
+  "sStopped": "Routine arrêtée depuis l'impression",
+  "pending": "en attente",
+  "sPending": "en attente"
  },
  "scan": {
   "btn": "Scanner une feuille",
   "manual": "Saisir sans photo",
   "title": "Scanner la feuille",
-  "help": "Posez la feuille cochée à plat, bien éclairée, sans flash. Cadrez toute la page, carrés noirs compris.",
+  "help": "Posez la feuille cochée à plat, bien éclairée, sans flash. Cadrez toute la page, carrés noirs compris. Tenez le téléphone immobile.",
   "aim": "Cadrez la feuille, puis touchez « Prendre la photo ».",
   "shoot": "Prendre la photo",
   "choose": "Choisir une photo",

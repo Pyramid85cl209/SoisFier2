@@ -183,27 +183,40 @@ A.delReward = async el => {
   const { error } = await sb.from("rewards").update({ active: false }).eq("id", el.dataset.id); if (error) throw error;
   await reloadParent(t("reward.deleted"), ["w"]);
 };
+// Prix des récompenses du référentiel (R06-05, F06-02 CA9) : chaque prix tient compte des récompenses existantes et des cases cochées de niveau inférieur ;
+// le prix affiché est celui qui sera enregistré. `checked` : indices cochés ; renvoie { indice: { costs, common } }
+function tplPrices(checked) {
+  const ids = S.children.map(k => k.id), out = {}, extra = {}; ids.forEach(id => extra[id] = []);
+  const order = TPL_W.map((x, i) => ({ ...x, i })).sort((a, b) => TIER_RANK[a.tier] - TIER_RANK[b.tier] || a.d - b.d), done = [];
+  for (const x of order) {
+    const ex = {}; ids.forEach(id => ex[id] = done.filter(d => TIER_RANK[d.tier] < TIER_RANK[x.tier] && d.res.costs[id] != null).map(d => ({ tier: d.tier, cost: d.res.costs[id] })));
+    const res = pricesFor(x.d, ids, x.tier, null, ex); out[x.i] = res;
+    if (res && checked.has(x.i)) done.push({ tier: x.tier, res });
+  }
+  return out;
+}
+const tplPriceText = (res, c) => t("reward.tplPrice", { n: res ? (res.costs[c.id] ?? res.common) : 0, name: esc(c.name) });
 A.rewardTemplates = () => {
   const have = new Set(S.rewards.map(w => w.title.toLowerCase())), c = curChild(), ids = S.children.map(k => k.id);
   if (!ids.some(hasRhythm)) return noRhythmSheet([c.id]);   // DEC-47 : message à la place de la liste
-  // prix relevé par paliers (R06-05, DT06-05) affiché : celui que l'on obtiendra ; sans rythme, prix commun (DEC-54)
-  const priceOf = x => { const r = pricesFor(x.d, ids, x.tier); return r ? (r.costs[c.id] ?? r.common) : 0; };
+  const pr = tplPrices(new Set());
   openSheet(`<h2>${t("reward.tplTitle")}</h2><p class="muted">${hasRhythm(c.id) ? t("reward.tplHelp", { name: esc(c.name), n: fmtNum(Math.round(rhythmOf(c.id) * 10) / 10) }) : t("reward.tplHelpNoRhythm", { name: esc(c.name) })}</p>
-    ${TIERS().filter(([k]) => k !== "event").map(([k, l, d]) => `<h3 class="tier-h">${l}<small>${d}</small></h3><ul class="tpl">${TPL_W.map((x, i) => ({ ...x, i })).filter(x => x.tier === k).map(x => { const had = have.has(x.t.toLowerCase()); return `<li><label class="${had ? "had" : ""}"><input type="checkbox" value="${x.i}" ${had ? "disabled" : ""}><span>${x.e} ${esc(x.t)} ${t("reward.tplPrice", { n: priceOf(x), name: esc(c.name) })}${had ? t("sep") + t("common.alreadyAdded") : ""}</span></label></li>`; }).join("")}</ul>`).join("")}
+    ${TIERS().filter(([k]) => k !== "event").map(([k, l, d]) => `<h3 class="tier-h">${l}<small>${d}</small></h3><ul class="tpl">${TPL_W.map((x, i) => ({ ...x, i })).filter(x => x.tier === k).map(x => { const had = have.has(x.t.toLowerCase()); return `<li><label class="${had ? "had" : ""}"><input type="checkbox" value="${x.i}" ${had ? "disabled" : ""}><span>${x.e} ${esc(x.t)} <span class="tp" data-i="${x.i}">${tplPriceText(pr[x.i], c)}</span>${had ? t("sep") + t("common.alreadyAdded") : ""}</span></label></li>`; }).join("")}</ul>`).join("")}
     <h3 class="tier-h">${t("tier.event.name")}<small>${t("tier.event.hint")}</small></h3><p class="muted">${t("reward.eventHelp")}</p>
     <div class="sheet-actions"><button class="btn ghost" data-act="newEvent">${t("reward.createEvent")}</button><button class="btn" data-act="addRewardTpl">${t("common.addSelection")}</button></div>`);
+  // F06-02 CA9 : à chaque case cochée ou décochée, les prix affichés sont recalculés
+  dlg.onchange = e => { if (!e.target.matches(".tpl input")) return; const chk = new Set($$(".tpl input:checked", dlg).map(i => +i.value)), p2 = tplPrices(chk);
+    $$(".tp", dlg).forEach(el => { el.textContent = tplPriceText(p2[+el.dataset.i], c); }); };
 };
 A.newEvent = () => rewardForm(null, { tier: "event", emoji: "🎪", title: t("reward.eventDefault"), duration_days: 30 });
 A.addRewardTpl = async () => {
-  const picks = $$(".tpl input:checked", dlg).map(i => TPL_W[+i.value]).sort((a, b) => TIER_RANK[a.tier] - TIER_RANK[b.tier] || a.d - b.d);
-  if (!picks.length) return toast(t("reward.needOne"), true);
+  const chk = $$(".tpl input:checked", dlg).map(i => +i.value);
+  if (!chk.length) return toast(t("reward.needOne"), true);
   const ids = S.children.map(k => k.id);
   if (!ids.some(hasRhythm)) return noRhythmSheet(ids);
-  // Les niveaux restent dans l'ordre, y compris entre les récompenses ajoutées ensemble
-  const extra = {}; ids.forEach(id => extra[id] = []);
-  const rows = picks.map(x => { const res = pricesFor(x.d, ids, x.tier, null, extra);
-    Object.entries(res.costs).forEach(([id, v]) => extra[id].push({ tier: x.tier, cost: v }));
-    return { family_id: S.family.id, title: x.t, emoji: x.e, tier: x.tier, duration_days: x.d, costs: res.costs, cost: res.common }; });
+  const pr = tplPrices(new Set(chk));   // les prix enregistrés sont ceux qui étaient affichés
+  const rows = chk.map(i => TPL_W[i]).map((x, k) => ({ x, res: pr[chk[k]] })).sort((a, b) => TIER_RANK[a.x.tier] - TIER_RANK[b.x.tier] || a.x.d - b.x.d)
+    .map(({ x, res }) => ({ family_id: S.family.id, title: x.t, emoji: x.e, tier: x.tier, duration_days: x.d, costs: res.costs, cost: res.common }));
   const { error } = await sb.from("rewards").insert(rows); if (error) throw error;
   await markPriced(ids); closeSheet(); await reloadParent(t("reward.addedN", { n: rows.length }), ["w", "c"]);
 };

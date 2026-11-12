@@ -316,6 +316,8 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
 .rp-c.done{background:var(--leaf);color:#fff;opacity:.7}
 .rp-c.done .rp-dot{border-color:#fff;background:#fff}
 .rp-c .rp-tx{font-size:.6rem;line-height:1.1;text-align:center}
+.rp-c.pend{background:var(--sun-l);box-shadow:inset 0 0 0 2px var(--sun)}
+.rp-c.pend.on{background:var(--leaf);box-shadow:none}
 .rp-c.unsure{outline:3px dashed #c77800;outline-offset:-3px;background:#fff4e0}
 .rp-warn{margin:8px 0;padding:8px 10px;border-radius:10px;background:#fff4e0;font-size:.85rem}
 .rp-stopped .rp-name{font-weight:400;color:#666;background:#eee;border-radius:10px;padding:8px 10px}
@@ -355,6 +357,7 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
   .pp .circ{display:inline-block;width:8mm;height:8mm;border:1.2px solid #aaa;border-radius:50%;vertical-align:middle}
   .pp .off{background:#e6e6e6}
   .pp .gifts{margin-top:4mm;font-size:11pt}
+  .pp-gifts .gifts{font-size:14pt;line-height:1.7}
 }
 
 /* Pause (v27) : jour neutre, la pause l'emporte sur le Mode vacances */

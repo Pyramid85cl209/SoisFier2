@@ -27,7 +27,7 @@ async function sheetQR(childId, lineIds) {
     return qr.createSvgTag({ cellSize: 4, margin: 16, scalable: true });
   } catch (e) { console.error(e); return ""; }
 }
-async function printPlanning(ids) {
+async function printPlanning(ids, withGifts = true) {   // DEC-41, DEC-48 : les récompenses sont sur une page à part, au choix
   const td = todayISO(), first = addDays(td, -((dowOf(td) - WEEK.start + 7) % 7)), order = weekOrder();
   const pages = (await Promise.all(S.children.filter(c => ids.includes(c.id)).map(async c => {
     // Semaine imprimée : chaque jour suit le Mode vacances s'il s'applique (routines en pause, statut, jours, étoiles, routines de vacances)
@@ -48,8 +48,8 @@ async function printPlanning(ids) {
     const gifts = S.rewards.filter(w => (!w.child_id || w.child_id === c.id) && (!w.event_date || w.event_date >= td));   // sans les événements passés
     return `<section class="pp"><div class="pp-head"><div><h1>${esc(c.emoji)} ${t("print.weekOf", { name: esc(c.name) })}</h1><p>${t("print.weekStart", { date: parseISO(first).toLocaleDateString(loc(), { day: "numeric", month: "long" }) })}</p>${hols.map(p => `<p>🏖️ ${esc(p.name)}${t("sep")}${holLabel(p)}</p>`).join("")}</div>${qr ? `<div class="pp-qr" aria-hidden="true">${qr}</div>` : ""}</div>
       <div class="frame"><i class="mk tl"></i><i class="mk tr"></i><i class="mk bl"></i><i class="mk br"></i>
-      <table><thead><tr><th class="n">${t("print.routine")}</th>${order.map(d => `<th>${t("days.abbr")[d - 1]}</th>`).join("")}</tr></thead><tbody>${rows || `<tr><td colspan="8">${t("print.none")}</td></tr>`}</tbody></table></div>
-      ${gifts.length ? `<div class="gifts"><b>${t("print.myRewards")}</b> ${gifts.map(w => `${esc(w.emoji)} ${esc(w.title)} (${fmtNum(costFor(w, c.id))} ⭐)`).join(t("sep"))}</div>` : ""}</section>`;
+      <table><thead><tr><th class="n">${t("print.routine")}</th>${order.map(d => `<th>${t("days.abbr")[d - 1]}</th>`).join("")}</tr></thead><tbody>${rows || `<tr><td colspan="8">${t("print.none")}</td></tr>`}</tbody></table></div></section>`
+      + (withGifts && gifts.length ? `<section class="pp pp-gifts"><h1>${esc(c.emoji)} ${esc(c.name)}</h1><div class="gifts"><b>${t("print.myRewards")}</b> ${gifts.map(w => `${esc(w.emoji)} ${esc(w.title)} (${fmtNum(costFor(w, c.id))} ⭐)`).join(t("sep"))}</div></section>` : "");
   }))).join("");
   $("#print").innerHTML = pages; setTimeout(() => window.print(), 50);
 }

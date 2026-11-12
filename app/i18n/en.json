@@ -753,7 +753,8 @@
   "weekStart": "Week of {date}",
   "routine": "Routine",
   "none": "No routines.",
-  "myRewards": "My rewards:"
+  "myRewards": "My rewards:",
+  "printRewards": "Print the rewards"
  },
  "report": {
   "btn": "Transfer the week",
@@ -781,13 +782,15 @@
   },
   "sAlready": "already done",
   "sNotDue": "not planned that day",
-  "sStopped": "Routine stopped since printing"
+  "sStopped": "Routine stopped since printing",
+  "pending": "waiting",
+  "sPending": "waiting"
  },
  "scan": {
   "btn": "Scan a sheet",
   "manual": "Enter without a photo",
   "title": "Scan the sheet",
-  "help": "Lay the ticked sheet flat in good light, without flash. Frame the whole page, black squares included.",
+  "help": "Lay the ticked sheet flat in good light, without flash. Frame the whole page, black squares included. Hold the phone still.",
   "aim": "Frame the sheet, then tap “Take the photo”.",
   "shoot": "Take the photo",
   "choose": "Choose a photo",

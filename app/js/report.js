@@ -20,6 +20,8 @@ function repRows(childId, first) {
 const repLabel = (r, dow, state) => t("report.cell", { routine: r.title, day: dayName(dow), state: t("report." + state) });
 const repState = (on, future) => future ? "future" : on ? "checked" : "unchecked";
 // Coche déjà validée ce jour-là (coches des 62 derniers jours chargées par data.js) : rond plein, désactivé, « déjà faite » (DEC-13)
+// Coche de l'enfant en attente ce jour-là : rond distinct « en attente », cochable ; reportée, elle est validée (DT04-09, DEC-40, F04-09 CA17)
+const repPending = (rid, day) => (S.completions || []).some(c => c.routine_id === rid && c.day === day && !c.validated_at);
 const repDone = (rid, day) => (S.completions || []).some(c => c.routine_id === rid && c.day === day && c.validated_at);
 // Grille pré-remplie par le scan pour une semaine : coches lues sur les jours dus, passés, pas déjà faits ; cases incertaines à part
 function repPrefill(key) {
@@ -43,8 +45,9 @@ function repGrid() {
       const abbr = `<small aria-hidden="true">${t("days.abbr")[order[i] - 1]}</small>`;
       if (repDone(r.id, d)) return `<button type="button" class="rp-c done" disabled aria-label="${esc(repLabel(r, order[i], "sAlready"))}">${abbr}<span class="rp-dot" aria-hidden="true">✓</span><small class="rp-tx" aria-hidden="true">${t("report.sAlready")}</small></button>`;
       const future = d > td, on = marks.has(repKey(r.id, d)), uns = !on && unsure.has(repKey(r.id, d));
-      const label = repLabel(r, order[i], repState(on, future)) + (uns ? t("sep") + t("scan.unsure") : "");
-      return `<button type="button" class="rp-c ${on ? "on" : ""} ${uns ? "unsure" : ""}" data-act="repToggle" data-r="${r.id}" data-d="${d}" aria-pressed="${on}" aria-label="${esc(label)}" ${future ? "disabled" : ""}>${abbr}<span class="rp-dot" aria-hidden="true">${on ? "✓" : uns ? "⚠️" : ""}</span></button>`;
+      const pend = !future && repPending(r.id, d);
+      const label = (pend && !on ? t("report.cell", { routine: r.title, day: dayName(order[i]), state: t("report.pending") }) : repLabel(r, order[i], repState(on, future))) + (uns ? t("sep") + t("scan.unsure") : "");
+      return `<button type="button" class="rp-c ${on ? "on" : ""} ${uns ? "unsure" : ""} ${pend ? "pend" : ""}" data-act="repToggle" data-r="${r.id}" data-d="${d}" aria-pressed="${on}" aria-label="${esc(label)}" ${future ? "disabled" : ""}>${abbr}<span class="rp-dot" aria-hidden="true">${on ? "✓" : uns ? "⚠️" : pend ? "⏳" : ""}</span>${pend ? `<small class="rp-tx" aria-hidden="true">${t("report.sPending")}</small>` : ""}</button>`;
     }).join("")}</div></div>`).join("");
   }).join("");
   // Lignes de la feuille dont la routine est arrêtée depuis l'impression : grisées et signalées en texte, jamais reportées (CA15, DEC-12)
@@ -104,8 +107,9 @@ A.repToggle = el => {
   REP.unsure[REP.week].delete(k);   // case incertaine touchée : vérifiée par le Parent
   const r = S.routines.find(x => x.id === el.dataset.r), dow = dowOf(el.dataset.d);
   el.classList.toggle("on", on); el.classList.remove("unsure"); el.setAttribute("aria-pressed", String(on));
-  el.setAttribute("aria-label", repLabel(r, dow, repState(on, false)));
-  el.querySelector(".rp-dot").textContent = on ? "✓" : "";
+  const pend = el.classList.contains("pend");
+  el.setAttribute("aria-label", !on && pend ? t("report.cell", { routine: r.title, day: dayName(dow), state: t("report.pending") }) : repLabel(r, dow, repState(on, false)));
+  el.querySelector(".rp-dot").textContent = on ? "✓" : pend ? "⏳" : "";
   repSync();
 };
 A.repGo = async () => {

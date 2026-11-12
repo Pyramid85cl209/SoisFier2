@@ -135,9 +135,10 @@ A.saveWeek = async () => {
 A.printPlan = () => {
   if (S.children.length === 1) return printPlanning([S.children[0].id]);
   openSheet(`<h2>${t("print.title")}</h2><ul class="tpl">${S.children.map(c => `<li><label><input type="checkbox" value="${c.id}" checked> ${esc(c.emoji)} ${esc(c.name)}</label></li>`).join("")}</ul>
+    <label class="check"><input type="checkbox" id="pr-gifts" checked> ${t("print.printRewards")}</label>
     <div class="sheet-actions"><button class="btn" data-act="doPrint">${t("btn.print")}</button></div>`);
 };
-A.doPrint = () => { const ids = $$(".tpl input:checked", dlg).map(i => i.value); closeSheet(); if (ids.length) printPlanning(ids); };
+A.doPrint = () => { const ids = $$(".tpl input:checked", dlg).map(i => i.value), g = $("#pr-gifts", dlg).checked; closeSheet(); if (ids.length) printPlanning(ids, g); };
 A.exportData = async () => {
   const fid = S.family.id;
   const names = ["children", "routines", "rewards", "completions", "redemptions", "penalties", "penalty_events", "child_badges", "flowers", "pauses"];
