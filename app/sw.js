@@ -5,6 +5,7 @@ const VITRINE = new URL("vitrine/", self.registration.scope).pathname;
 // Aperçu d'une branche (/preview/) : jamais servi par le service worker de la production (il a le sien).
 const APERCU = new URL("preview/", self.registration.scope).pathname;
 // Mode d'emploi (EP-09, DT14-09) : les 3 pages, le script et la feuille de style sont gardés pour le hors ligne ; réseau d'abord, copie seulement si le réseau manque.
+const PREFIX = CACHE.slice(0, CACHE.indexOf("-v") + 1);   // « soisfier- » ; « apercu-soisfier- » dans l'aperçu
 const GUIDE = new URL("guide/", self.registration.scope).pathname;
 const GUIDE_FILES = ["./guide/", "./guide/en/", "./guide/ar/", "./guide/guide.js", "./guide/guide.css"];
 const LANGCACHE = "soisfier-lang";   // langue de l'appareil (écrite par l'application, entrée ./sf-lang) : survit aux changements de version
@@ -28,7 +29,7 @@ self.addEventListener("install", e => {
 
 self.addEventListener("activate", e => {
   e.waitUntil((async () => {
-    for (const k of await caches.keys()) if (k !== CACHE && k !== LANGCACHE) await caches.delete(k);
+    for (const k of await caches.keys()) if (k !== CACHE && k !== LANGCACHE && k.startsWith(PREFIX)) await caches.delete(k);   // seulement les anciennes versions de CETTE application (l'aperçu, préfixe « apercu- », n'efface jamais la production)
     await self.clients.claim();
   })());
 });
