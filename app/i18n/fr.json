@@ -238,7 +238,17 @@
    "teethEvening": "Se brosser les dents (soir)",
    "laundry": "Mettre le linge sale au panier",
    "clothesTomorrow": "Préparer ses habits pour demain",
-   "toilet": "Aller aux toilettes avant le dodo"
+   "toilet": "Aller aux toilettes avant le dodo",
+   "shower": "Prendre sa douche",
+   "tidyRoom": "Ranger sa chambre",
+   "hello": "Dire bonjour, merci et s'il te plaît",
+   "calm": "Parler calmement",
+   "listen": "Écouter la première fois",
+   "help": "Aider quelqu'un de la maison",
+   "prayerMorning": "Moment de prière ou de recueillement (matin)",
+   "prayerEvening": "Moment de prière ou de recueillement (soir)",
+   "inspire": "Lire ou écouter un texte qui m'inspire",
+   "thanks": "Dire merci pour un moment de ma journée"
   },
   "w": {
    "story": "Une histoire de plus",
@@ -269,6 +279,14 @@
    "notListening": "Ne pas écouter",
    "rough": "Geste brusque",
    "lie": "Mensonge"
+  },
+  "cat": {
+   "hygiene": "Hygiène",
+   "autonomie": "Autonomie",
+   "ecole": "École",
+   "maison": "Maison",
+   "comportement": "Comportement",
+   "spiritualite": "Spiritualité"
   }
  },
  "badge": {
@@ -583,7 +601,11 @@
    "one": "{n} routine ajoutée.",
    "other": "{n} routines ajoutées."
   },
-  "print": "Imprimer la semaine"
+  "print": "Imprimer la semaine",
+  "remind": "Rappel à",
+  "noRemind": "Sans rappel",
+  "remindHelp": "Une notification arrive à cette heure si la routine est à faire ce jour-là et pas encore cochée.",
+  "remindAria": "Rappel à {time}"
  },
  "validate": {
   "title": "À valider",
@@ -960,7 +982,8 @@
   "noPlace": "Aucun",
   "timer": "Défi chrono",
   "noTimer": "Sans minuteur",
-  "minutes": "{n} minutes"
+  "minutes": "{n} minutes",
+  "for": "Pour"
  },
  "bloom": {
   "title": "Ta fleur s'est ouverte !",
@@ -1078,6 +1101,11 @@
    "emoji": "📷",
    "title": "Reportez la semaine en une fois",
    "text": "Au lieu de cocher jour par jour, photographiez la feuille papier (ou touchez ses ronds) et reportez toute la semaine d'un coup. Cela fait partie du Premium ; imprimer la feuille reste gratuit."
+  },
+  "reminder": {
+   "emoji": "⏰",
+   "title": "Un rappel à l'heure de la routine",
+   "text": "Le rappel à l'heure d'une routine fait partie du Premium."
   }
  },
  "vac": {
@@ -1262,5 +1290,30 @@
   "chosen": "Images choisies : {names}",
   "saved": "Code de {name} enregistré.",
   "change": "Code de l'enfant"
+ },
+ "quick": {
+  "open": "Démarrage rapide par âge",
+  "title": "Quel âge a {name} ?",
+  "help": "Nous proposons des routines et des récompenses adaptées à l'âge. Vous gardez ou retirez ce que vous voulez avant d'ajouter. L'âge n'est pas enregistré.",
+  "age": {
+   "0": "3-5 ans",
+   "1": "6-7 ans",
+   "2": "8-10 ans"
+  },
+  "self": "Choisir moi-même",
+  "setTitle": "{name}, {age}",
+  "routines": "Routines",
+  "rewards": "Récompenses (pour tous les enfants)",
+  "hadFor": "déjà ajoutée pour {names}",
+  "nRoutines": {
+   "one": "{n} routine",
+   "other": "{n} routines"
+  },
+  "nRewards": {
+   "one": "{n} récompense",
+   "other": "{n} récompenses"
+  },
+  "addedBoth": "{r} et {w} ajoutées.",
+  "rewardsFailed": "Les routines sont ajoutées, mais pas les récompenses. Vous pouvez les ajouter depuis l'onglet Récompenses."
  }
 }

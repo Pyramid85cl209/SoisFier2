@@ -112,38 +112,104 @@ A.seg = el => { S.form[el.dataset.group] = el.dataset.v; $$("button", el.parentE
 const syncDays = () => $$(".day", dlg).forEach(b => { const on = S.form.days.includes(+b.dataset.v); b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); });
 A.toggleDay = el => { const v = +el.dataset.v; S.form.days = S.form.days.includes(v) ? S.form.days.filter(d => d !== v) : [...S.form.days, v]; syncDays(); };
 A.daysPreset = el => { S.form.days = { all: [1, 2, 3, 4, 5, 6, 7], week: workDays(), we: weekendDays() }[el.dataset.v]; syncDays(); };
+// « Pour » (DEC-09) : à partir de deux enfants, hors vacances, la routine ou les modèles vont aux enfants cochés ; l'enfant affiché est coché d'office (au moins un reste coché)
+const forField = (firstId, id) => S.children.length < 2 || S.hctx ? "" : `<div class="f"><span id="${id}">${t("form.for")}</span><div class="chips wrap" role="group" aria-labelledby="${id}">${S.children.map(c =>
+  `<button type="button" class="chip for-chip ${c.id === firstId ? "on" : ""}" style="--c:${esc(c.color)};--cc:${esc(chipColor(c.color))}" aria-pressed="${c.id === firstId}" data-act="forToggle" data-id="${c.id}"><span aria-hidden="true">${esc(c.emoji)}</span> <bdi>${esc(c.name)}</bdi></button>`).join("")}</div></div>`;
+const forIds = () => { const on = $$(".for-chip.on", dlg).map(b => b.dataset.id); return on.length ? S.children.map(c => c.id).filter(i => on.includes(i)) : [S.currentChild]; };
+A.forToggle = el => {
+  if (el.classList.contains("on") && $$(".for-chip.on", dlg).length < 2) return;
+  const on = !el.classList.contains("on"); el.classList.toggle("on", on); el.setAttribute("aria-pressed", on);
+  if (dlg.onForChange) dlg.onForChange();
+};
+const REMIND_TIMES = (() => { const o = []; for (let h = 5; h < 24; h++) for (const m of [0, 15, 30, 45]) o.push(String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0")); return o; })();   // 05:00 à 23:45 (R11-10)
 A.saveRoutine = async el => {
   const title = $("#f-title").value.trim();
   if (!title) return toast(t("routine.needName"), true);
   if (!S.form.days.length) return toast(t("routine.needDay"), true);
   const row = { title, emoji: $("#f-emoji").value.trim() || "⭐", moment: S.form.moment, days: [...S.form.days].sort((a, b) => a - b),
     stars: +$("#f-stars").value, place: $("#f-place").value || null, timer_minutes: $("#f-timer").value ? +$("#f-timer").value : null, is_bonus: $("#f-bonus").checked };
-  const id = el.dataset.id;
-  const { error } = id ? await sb.from("routines").update(row).eq("id", id)
-    : await sb.from("routines").insert({ ...row, family_id: S.family.id, child_id: S.currentChild, holiday_period_id: S.hctx || null, position: S.routines.filter(r => r.child_id === S.currentChild).length });
+  const rem = $("#f-remind"); if (rem && !rem.disabled) row.remind_at = rem.value || null;   // gratuit : champ fermé, le serveur refuse aussi (SF:premium_reminder) ; l'heure déjà réglée est gardée
+  const id = el.dataset.id, ids = id ? [] : forIds();
+  let error;
+  if (id) ({ error } = await sb.from("routines").update(row).eq("id", id));
+  else ({ error } = await sb.from("routines").insert(ids.map(cid => ({ ...row, family_id: S.family.id, child_id: cid, holiday_period_id: S.hctx || null, position: S.routines.filter(r => r.child_id === cid).length }))));   // une seule écriture pour tous les enfants cochés (ADR-56)
   if (error) throw error;
-  await afterHolidayEdit(id ? t("routine.saved") : t("routine.added"), !!(S.hctx || (id && isHolidayR(S.routines.find(r => r.id === id) || {}))));
+  await afterHolidayEdit(id ? t("routine.saved") : ids.length > 1 ? t("routine.addedN", { n: ids.length }) : t("routine.added"), !!(S.hctx || (id && isHolidayR(S.routines.find(r => r.id === id) || {}))));
 };
 A.delRoutine = async el => {
   if (!await confirmSheet(t("routine.delTitle"), t("routine.delText"), t("btn.delete"), true)) return;
   const { error } = await sb.from("routines").update({ active: false }).eq("id", el.dataset.id); if (error) throw error;
   await reloadParent(t("routine.deletedToast"), ["r"]);
 };
+// Titres déjà présents pour un enfant, dans la langue du moment (routines habituelles et exceptionnelles ; vacances : celles de la période ouverte)
+const haveTitles = cid => new Set(S.routines.filter(r => r.child_id === cid && (!isHolidayR(r) || r.holiday_period_id === S.hctx)).map(r => r.title.toLowerCase()));
+function tplList(ids, checked) {
+  const have = {}; ids.forEach(i => { have[i] = haveTitles(i); });
+  return TPL_CATS.map(k => {
+    const list = TPL_R.map((x, i) => ({ ...x, i })).filter(x => x.c === k);
+    return `<h3 class="grp">${t("tpl.cat." + k)}</h3><ul class="tpl">${list.map(x => {
+      const by = ids.filter(i => have[i].has(x.t.toLowerCase())), all = by.length === ids.length, part = !all && by.length > 0;
+      const note = all ? t("sep") + t("common.alreadyAdded") : part ? t("sep") + t("quick.hadFor", { names: by.map(i => `<bdi>${esc(S.children.find(c => c.id === i).name)}</bdi>`).join(t("sep")) }) : "";
+      return `<li><label class="${all ? "had" : ""}"><input type="checkbox" value="${x.i}" ${all ? "disabled" : ""} ${!all && checked.has(x.i) ? "checked" : ""}><span>${x.e} ${esc(x.t)}${x.b ? " " + t("routine.bonusTag") : ""}${t("sep")}${momentLabel(x.m)}${x.d ? t("sep") + lower(t("days.week")) : ""}${note}</span></label></li>`; }).join("")}</ul>`;
+  }).join("");
+}
 A.routineTemplates = () => {
-  const c = curChild(); const have = new Set(S.routines.filter(r => r.child_id === c.id && (!isHolidayR(r) || r.holiday_period_id === S.hctx)).map(r => r.title.toLowerCase()));
-  openSheet(`<h2>${S.hctx ? "🏖️ " : ""}${t("routine.tplFor", { name: esc(c.name) })}</h2>${S.hctx ? `<p class="muted">${t("hol.tplHelp")}</p>` : ""}${MOMENTS().map(([k, l, , e]) => {
-    const list = TPL_R.map((x, i) => ({ ...x, i })).filter(x => x.m === k); if (!list.length) return "";
-    return `<h3 class="grp">${e} ${l}</h3><ul class="tpl">${list.map(x => { const had = have.has(x.t.toLowerCase()); return `<li><label class="${had ? "had" : ""}"><input type="checkbox" value="${x.i}" ${had ? "disabled" : ""}><span>${x.e} ${esc(x.t)}${x.b ? " " + t("routine.bonusTag") : ""}${x.d ? t("sep") + lower(t("days.week")) : ""}${had ? t("sep") + t("common.alreadyAdded") : ""}</span></label></li>`; }).join("")}</ul>`;
-  }).join("")}<div class="sheet-actions"><button class="btn" data-act="addRoutineTpl">${t("common.addSelection")}</button></div>`);
+  const c = curChild();
+  openSheet(`<h2>${S.hctx ? "🏖️ " : ""}${t("routine.tplFor", { name: esc(c.name) })}</h2>${S.hctx ? `<p class="muted">${t("hol.tplHelp")}</p>` : `<p><button class="btn ghost sm" data-act="quickStart" data-id="${c.id}">⚡ ${t("quick.open")}</button></p>`}${forField(c.id, "for-l")}
+    <div id="tpl-list">${tplList([c.id], new Set())}</div><div class="sheet-actions"><button class="btn" data-act="addRoutineTpl">${t("common.addSelection")}</button></div>`);
+  dlg.onForChange = () => { const keep = new Set($$("#tpl-list input:checked", dlg).map(i => +i.value)); $("#tpl-list").innerHTML = tplList(forIds(), keep); };
 };
 A.addRoutineTpl = async () => {
-  const picks = $$(".tpl input:checked", dlg).map(i => TPL_R[+i.value]);
+  const picks = $$(".tpl input:checked:not(:disabled)", dlg).map(i => TPL_R[+i.value]);
   if (!picks.length) return toast(t("routine.needOne"), true);
-  const base = S.routines.filter(r => r.child_id === S.currentChild).length;
-  const rows = picks.map((x, i) => ({ family_id: S.family.id, child_id: S.currentChild, title: x.t, emoji: x.e, moment: x.m, place: x.p != null ? PLACES()[x.p] : null,
-    stars: x.s || 1, days: tplDays(x.d), is_bonus: !!x.b, timer_minutes: x.tm || null, position: base + i, holiday_period_id: S.hctx || null }));
+  const ids = forIds(), rows = [];
+  for (const cid of ids) {   // un modèle déjà présent pour un enfant n'est créé que pour les autres (F04-02 CA10) ; une seule écriture pour tous (ADR-56)
+    const have = haveTitles(cid); let n = S.routines.filter(r => r.child_id === cid).length;
+    picks.filter(x => !have.has(x.t.toLowerCase())).forEach(x => rows.push(tplRow(x, cid, n++)));
+  }
   const { error } = await sb.from("routines").insert(rows); if (error) throw error;
   await afterHolidayEdit(t("routine.addedN", { n: rows.length }), !!S.hctx);
+};
+// Ligne de routine d'un modèle : ni catégorie ni tranche d'âge enregistrées (DEC-03, DEC-08)
+const tplRow = (x, cid, position) => ({ family_id: S.family.id, child_id: cid, title: x.t, emoji: x.e, moment: x.m, place: x.p != null ? PLACES()[x.p] : null,
+  stars: x.s || 1, days: tplDays(x.d), is_bonus: !!x.b, timer_minutes: x.tm || null, position, holiday_period_id: S.hctx || null });
+
+// Démarrage rapide par âge (F04-10, R04-12, ADR-56) : la tranche sert à choisir l'ensemble et n'est jamais enregistrée
+A.quickStart = el => {
+  const c = S.children.find(k => k.id === (el && el.dataset.id)) || curChild(); if (!c) return;
+  openSheet(`<h2>${t("quick.title", { name: `<bdi>${esc(c.name)}</bdi>` })}</h2><p class="muted">${t("quick.help")}</p>
+    <div class="ages">${STARTERS.map((st, i) => `<button class="btn" data-act="quickAge" data-id="${c.id}" data-i="${i}">${t("quick.age." + i)}</button>`).join("")}<button class="btn ghost" data-act="quickSelf" data-id="${c.id}">${t("quick.self")}</button></div>`);
+};
+A.quickSelf = el => { S.currentChild = el.dataset.id; A.routineTemplates(); };
+A.quickAge = el => {
+  const c = S.children.find(k => k.id === el.dataset.id), st = STARTERS[+el.dataset.i], haveR = haveTitles(c.id), haveW = new Set(S.rewards.map(w => w.title.toLowerCase()));
+  const rs = st.r.map(k => TPL_R.findIndex(x => x.k === k)), ws = st.w.map(k => TPL_W.findIndex(x => x.k === k));
+  const line = (x, had, extra) => `<li><label class="${had ? "had" : ""}"><input type="checkbox" class="${extra.cls}" value="${extra.i}" ${had ? "disabled" : "checked"}><span>${x.e} ${esc(x.t)}${t("sep")}${extra.note}${had ? t("sep") + t("common.alreadyAdded") : ""}</span></label></li>`;
+  openSheet(`<h2>${t("quick.setTitle", { name: `<bdi>${esc(c.name)}</bdi>`, age: t("quick.age." + el.dataset.i) })}</h2>
+    <h3 class="grp">${t("quick.routines")}</h3><ul class="tpl">${rs.map(i => line(TPL_R[i], haveR.has(TPL_R[i].t.toLowerCase()), { cls: "qr", i, note: momentLabel(TPL_R[i].m) })).join("")}</ul>
+    <h3 class="grp">${t("quick.rewards")}</h3><ul class="tpl">${ws.map(i => line(TPL_W[i], haveW.has(TPL_W[i].t.toLowerCase()), { cls: "qw", i, note: t(`tier.${TPL_W[i].tier}.name`) })).join("")}</ul>
+    <div class="sheet-actions"><button class="btn ghost" data-act="quickStart" data-id="${c.id}">${t("intro.back")}</button><button class="btn" data-act="quickAdd" data-id="${c.id}">${t("btn.add")}</button></div>`);
+};
+A.quickAdd = async el => {
+  const c = S.children.find(k => k.id === el.dataset.id);
+  const rs = $$(".qr:checked:not(:disabled)", dlg).map(i => TPL_R[+i.value]), ws = $$(".qw:checked:not(:disabled)", dlg).map(i => +i.value);
+  if (!rs.length) return toast(t("routine.needOne"), true);
+  el.disabled = true;
+  try {
+    const base = S.routines.filter(r => r.child_id === c.id).length;
+    const { data, error } = await sb.from("routines").insert(rs.map((x, i) => ({ ...tplRow(x, c.id, base + i), holiday_period_id: null }))).select(); if (error) throw error;   // routines d'abord, en une écriture
+    S.routinesAll = [...(S.routinesAll || []), ...data]; S.routines = [...S.routines, ...data];   // le rythme des prix tient compte des routines ajoutées
+    let nW = 0, failed = false;
+    if (ws.length) {
+      try {
+        const wrows = tplRewardRows(ws);
+        if (wrows.length) { const r2 = await sb.from("rewards").insert(wrows); if (r2.error) throw r2.error; await markPriced(S.children.map(k => k.id)); nW = wrows.length; }
+        else failed = true;
+      } catch (e) { console.error(e); failed = true; }
+    }
+    closeSheet(); await reloadParent(null, ["r", "w", "c"]);
+    toast(failed ? t("quick.rewardsFailed", { n: rs.length }) : nW ? t("quick.addedBoth", { r: t("quick.nRoutines", { n: rs.length }), w: t("quick.nRewards", { n: nW }) }) : t("routine.addedN", { n: rs.length }), failed);
+  } catch (e) { el.disabled = false; throw e; }
 };
 
 // Récompenses
@@ -209,14 +275,18 @@ A.rewardTemplates = () => {
     $$(".tp", dlg).forEach(el => { el.textContent = tplPriceText(p2[+el.dataset.i], c); }); };
 };
 A.newEvent = () => rewardForm(null, { tier: "event", emoji: "🎪", title: t("reward.eventDefault"), duration_days: 30 });
+// Lignes de récompenses du référentiel (indices de `TPL_W`) avec leurs prix calculés ; les prix enregistrés sont ceux qui étaient affichés (F06-02 CA9)
+function tplRewardRows(chk) {
+  const pr = tplPrices(new Set(chk));
+  return chk.map(i => ({ x: TPL_W[i], res: pr[i] })).filter(o => o.res).sort((a, b) => TIER_RANK[a.x.tier] - TIER_RANK[b.x.tier] || a.x.d - b.x.d)
+    .map(({ x, res }) => ({ family_id: S.family.id, title: x.t, emoji: x.e, tier: x.tier, duration_days: x.d, costs: res.costs, cost: res.common }));
+}
 A.addRewardTpl = async () => {
   const chk = $$(".tpl input:checked", dlg).map(i => +i.value);
   if (!chk.length) return toast(t("reward.needOne"), true);
   const ids = S.children.map(k => k.id);
   if (!ids.some(hasRhythm)) return noRhythmSheet(ids);
-  const pr = tplPrices(new Set(chk));   // les prix enregistrés sont ceux qui étaient affichés
-  const rows = chk.map(i => TPL_W[i]).map((x, k) => ({ x, res: pr[chk[k]] })).sort((a, b) => TIER_RANK[a.x.tier] - TIER_RANK[b.x.tier] || a.x.d - b.x.d)
-    .map(({ x, res }) => ({ family_id: S.family.id, title: x.t, emoji: x.e, tier: x.tier, duration_days: x.d, costs: res.costs, cost: res.common }));
+  const rows = tplRewardRows(chk);
   const { error } = await sb.from("rewards").insert(rows); if (error) throw error;
   await markPriced(ids); closeSheet(); await reloadParent(t("reward.addedN", { n: rows.length }), ["w", "c"]);
 };
@@ -252,7 +322,7 @@ A.saveChild = async el => {
   S.currentChild = res.data.id; closeSheet();
   if (!id) S.tab = "routines";
   render(); toast(id ? t("common.savedM") : t("child.joined", { name }));
-  if (!id) A.routineTemplates();
+  if (!id) A.quickStart({ dataset: { id: res.data.id } });   // F04-10 CA1 : le démarrage rapide s'ouvre après l'ajout d'un enfant
   refreshParts(["c", "w"]).then(render).catch(() => {});
 };
 A.delChild = async el => {
@@ -295,9 +365,9 @@ A.childHere = async el => {
     ids = await kidsSheet(cid, t("device.hereTitle"), t("device.hereHelp"), t("btn.validate")); if (!ids) return;
     if (ids.length > 1 && !await ensureKidCodes(ids)) return;
   }
-  // La ligne de ce téléphone est réutilisée si le serveur la reconnaît (R03-08) ; ses enfants sont mis à jour. Adresse d'envoi des rappels : lot suivant (ADR-57).
+  // La ligne de ce téléphone est réutilisée si le serveur la reconnaît (R03-08) ; ses enfants sont mis à jour. Adresse d'envoi des rappels de l'adulte : notée sur la ligne (ADR-57, R11-10).
   const map = store.get("sameDevice", {}), old = ids.map(i => map[i]).find(Boolean) || null;
-  const r = await sb.rpc("child_pair_here", { p_child: ids[0], p_label: t("device.sameLabel", { who: memberLabel(S.session.user.id) }), p_children: ids, p_token: old, p_endpoint: null }); if (r.error) throw r.error;
+  const r = await sb.rpc("child_pair_here", { p_child: ids[0], p_label: t("device.sameLabel", { who: memberLabel(S.session.user.id) }), p_children: ids, p_token: old, p_endpoint: await curEndpoint() }); if (r.error) throw r.error;
   const tok = r.data.token;
   Object.keys(map).forEach(k => { if (map[k] === old || map[k] === tok) delete map[k]; });
   ids.forEach(i => { map[i] = tok; }); store.set("sameDevice", map);

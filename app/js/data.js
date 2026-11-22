@@ -180,6 +180,7 @@ async function enterParent() {
   }
   render();
   if (typeof maybeIntro === "function") maybeIntro();
+  if (S.screen === "parent") syncHereEndpoint();
 }
 async function reloadParent(msg, parts) { if (parts) await refreshParts(parts); else await refreshParent(); render(); if (msg) toast(msg); if (!parts || parts.includes("r")) priceNewcomers(); }
 
@@ -331,6 +332,24 @@ async function getPushSub() {
     sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64(vk) });
   }
   return sub.toJSON();
+}
+// Mode enfant ici (EP-01, ADR-57) : le serveur rattache l'adresse d'envoi des rappels de ce téléphone aux lignes « Mode enfant ici » dont il reçoit les jetons (`sameDevice`)
+const hereTokens = () => [...new Set(Object.values(store.get("sameDevice", {})).filter(Boolean))];
+async function curEndpoint() {   // adresse d'envoi de l'adulte de ce téléphone ; rien tant que ses rappels ne sont pas activés
+  if (!store.get("pushOn") || !("serviceWorker" in navigator)) return null;
+  try { const reg = await navigator.serviceWorker.getRegistration(); const sub = reg && await reg.pushManager.getSubscription(); return sub ? sub.endpoint : null; } catch { return null; }
+}
+// Lignes « Mode enfant ici » créées avant ce lot : l'adresse est notée à la prochaine ouverture par le parent, avec les mêmes heures et la même famille que le réglage (jamais une autre famille)
+async function syncHereEndpoint() {
+  try {
+    const toks = hereTokens(); if (!toks.length || !S.family || !navigator.onLine) return;
+    const fam = store.get("pushFamily") || ((S.families || []).length <= 1 ? S.family.id : null); if (fam !== S.family.id) return;
+    const ep = await curEndpoint(); if (!ep) return;
+    const key = ep.slice(-24) + "|" + toks.map(x => x.slice(0, 8)).sort().join(","); if (store.get("hereSync") === key) return;
+    const reg = await navigator.serviceWorker.getRegistration(), j = (await reg.pushManager.getSubscription()).toJSON();
+    const { error } = await sb.rpc("parent_push_subscribe", { p_family: fam, p_endpoint: ep, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_times: store.get("pushTimes", ["07:30", "18:00"]), p_locale: curLang(), p_tokens: toks });
+    if (!error) store.set("hereSync", key);
+  } catch {}
 }
 const LAST_TIME = "23:45";   // DT11-04 : un rappel après 23:45 ne serait jamais envoyé (le quart d'heure passe minuit)
 const tooLate = times => times.some(v => v > LAST_TIME);

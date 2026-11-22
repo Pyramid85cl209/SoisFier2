@@ -73,8 +73,8 @@ A.cReminders = el => {
 A.pushParent = async () => {
   const times = readTimes(); if (!times.length) return toast(t("push.needTime"), true); if (tooLate(times)) return toast(t("push.timeTooLate"), true);
   const j = await getPushSub();
-  const { error } = await sb.rpc("parent_push_subscribe", { p_family: S.family.id, p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_times: times, p_locale: curLang() }); if (error) throw error;
-  store.set("pushOn", true); store.set("pushTimes", times); render(); toast(t("push.enabled"));
+  const { error } = await sb.rpc("parent_push_subscribe", { p_family: S.family.id, p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_times: times, p_locale: curLang(), p_tokens: hereTokens() }); if (error) throw error;   // jetons Mode enfant ici de ce téléphone (ADR-57)
+  store.set("pushOn", true); store.set("pushTimes", times); store.set("pushFamily", S.family.id); store.del("hereSync"); render(); toast(t("push.enabled"));
 };
 A.pushChild = async () => {
   if (store.get("childFromParent")) return;   // Mode enfant ici : jamais d'abonnement qui remplacerait celui du parent (DT11-08)

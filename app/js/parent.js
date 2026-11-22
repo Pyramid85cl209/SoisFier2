@@ -85,6 +85,7 @@ function pRoutines() {
       const parts = r.off ? [t("hol.off")] : [daysLabel(r.days)];
       if (!r.off && r.place) parts.push(esc(r.place));
       if (!r.off && r.timer_minutes) parts.push("⏱ " + t("routine.minutes", { n: r.timer_minutes }));
+      if (!r.off && r.remind_at) { const hm = String(r.remind_at).slice(0, 5); parts.push(`<span aria-hidden="true">⏰ ${hm}</span><span class="vh">${t("routine.remindAria", { time: hm })}</span>`); }   // F04-03 CA8
       if (!r.off && r.is_bonus) parts.push(t("routine.bonus"));
       if (r.adjusted) parts.push(t("hol.adjusted"));
       if (r.hol) parts.unshift("🏖️ " + t("hol.vacRoutine"));

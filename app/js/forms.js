@@ -60,7 +60,9 @@ function routineForm(r) {
   const isNew = !r;
   r = r || { title: "", emoji: "⭐", place: "", moment: "matin", stars: 1, days: [1, 2, 3, 4, 5, 6, 7], is_bonus: false, timer_minutes: null };
   S.form = { moment: r.moment, days: [...r.days] };
+  const rt = r.remind_at ? String(r.remind_at).slice(0, 5) : "", prem = isPremium();
   openSheet(`<h2>${isNew ? t("routine.new") : t("routine.edit")}</h2>
+    ${isNew ? forField(S.currentChild, "for-l") : ""}
     <label class="f">${t("form.name")}<input id="f-title" maxlength="60" value="${esc(r.title)}" placeholder="${t("routine.placeholder")}"></label>
     ${iconField("f-emoji", r.emoji, EMO_R)}
     <div class="f"><span>${t("form.moment")}</span><div class="seg" role="radiogroup">${MOMENTS().map(([k, , sh, e]) => `<button type="button" role="radio" aria-checked="${r.moment === k}" class="${r.moment === k ? "on" : ""}" data-act="seg" data-group="moment" data-v="${k}">${e} ${sh}</button>`).join("")}</div></div>
@@ -70,6 +72,8 @@ function routineForm(r) {
       <label>${t("form.place")}<select id="f-place"><option value="">${t("form.noPlace")}</option>${[...new Set([...PLACES(), ...(r.place && !PLACES().includes(r.place) ? [r.place] : [])])].map(p => `<option ${p === r.place ? "selected" : ""}>${esc(p)}</option>`).join("")}</select></label></div>
     <label class="f">${t("form.timer")}<select id="f-timer"><option value="">${t("form.noTimer")}</option>${[2, 3, 5, 10, 15, 20, 30].map(n => `<option value="${n}" ${n === r.timer_minutes ? "selected" : ""}>${t("form.minutes", { n })}</option>`).join("")}</select></label>
     <label class="check"><input type="checkbox" id="f-bonus" ${r.is_bonus ? "checked" : ""}> ${t("routine.bonusHelp")}</label>
+    <label class="f">${t("routine.remind")}${ptag()}<select id="f-remind" ${prem ? "" : "disabled"} aria-describedby="f-remind-h"><option value="">${t("routine.noRemind")}</option>${REMIND_TIMES.map(v => `<option ${v === rt ? "selected" : ""}>${v}</option>`).join("")}</select></label>
+    <p class="muted small" id="f-remind-h">${prem ? t("routine.remindHelp") : `${t("premium.reminder.text")} <a class="link" href="${premiumHref("reminder")}">${t("premium.see")}</a>`}</p>
     <div class="sheet-actions">${isNew ? "" : `<button class="btn danger ghost" data-act="delRoutine" data-id="${r.id}">${t("btn.delete")}</button>`}<button class="btn" data-act="saveRoutine" data-id="${r.id || ""}">${isNew ? t("btn.add") : t("btn.save")}</button></div>`);
 }
 function rewardForm(w, preset) {

@@ -241,7 +241,17 @@
    "teethEvening": "Brush your teeth (evening)",
    "laundry": "Put dirty clothes in the basket",
    "clothesTomorrow": "Lay out clothes for tomorrow",
-   "toilet": "Go to the toilet before bed"
+   "toilet": "Go to the toilet before bed",
+   "shower": "Take a shower",
+   "tidyRoom": "Tidy your room",
+   "hello": "Say hello, thank you and please",
+   "calm": "Speak calmly",
+   "listen": "Listen the first time",
+   "help": "Help someone at home",
+   "prayerMorning": "A moment of prayer or reflection (morning)",
+   "prayerEvening": "A moment of prayer or reflection (evening)",
+   "inspire": "Read or listen to something that inspires me",
+   "thanks": "Say thank you for a moment of my day"
   },
   "w": {
    "story": "One more story",
@@ -272,6 +282,14 @@
    "notListening": "Not listening",
    "rough": "Rough behaviour",
    "lie": "Telling a lie"
+  },
+  "cat": {
+   "hygiene": "Hygiene",
+   "autonomie": "Independence",
+   "ecole": "School",
+   "maison": "Home",
+   "comportement": "Behaviour",
+   "spiritualite": "Spirituality"
   }
  },
  "badge": {
@@ -592,7 +610,11 @@
    "one": "{n} routine added.",
    "other": "{n} routines added."
   },
-  "print": "Print the week"
+  "print": "Print the week",
+  "remind": "Remind at",
+  "noRemind": "No reminder",
+  "remindHelp": "A notification arrives at this time if the routine is due that day and not yet ticked.",
+  "remindAria": "Reminder at {time}"
  },
  "validate": {
   "title": "To approve",
@@ -969,7 +991,8 @@
   "noPlace": "None",
   "timer": "Timer challenge",
   "noTimer": "No timer",
-  "minutes": "{n} minutes"
+  "minutes": "{n} minutes",
+  "for": "For"
  },
  "bloom": {
   "title": "Your flower has opened!",
@@ -1087,6 +1110,11 @@
    "emoji": "📷",
    "title": "Transfer the whole week at once",
    "text": "Instead of ticking day by day, take a photo of the paper sheet (or tap its circles) and transfer the whole week in one go. This is part of Premium; printing the sheet stays free."
+  },
+  "reminder": {
+   "emoji": "⏰",
+   "title": "A reminder at the time of the routine",
+   "text": "A reminder at the time of a routine is part of Premium."
   }
  },
  "vac": {
@@ -1271,5 +1299,30 @@
   "chosen": "Pictures chosen: {names}",
   "saved": "{name}'s code saved.",
   "change": "Child's code"
+ },
+ "quick": {
+  "open": "Quick start by age",
+  "title": "How old is {name}?",
+  "help": "We suggest routines and rewards that suit the age. Keep or remove whatever you like before adding. The age is not saved.",
+  "age": {
+   "0": "Ages 3-5",
+   "1": "Ages 6-7",
+   "2": "Ages 8-10"
+  },
+  "self": "I'll choose myself",
+  "setTitle": "{name}, {age}",
+  "routines": "Routines",
+  "rewards": "Rewards (for all children)",
+  "hadFor": "already added for {names}",
+  "nRoutines": {
+   "one": "{n} routine",
+   "other": "{n} routines"
+  },
+  "nRewards": {
+   "one": "{n} reward",
+   "other": "{n} rewards"
+  },
+  "addedBoth": "{r} and {w} added.",
+  "rewardsFailed": "The routines were added, but not the rewards. You can add them from the Rewards tab."
  }
 }

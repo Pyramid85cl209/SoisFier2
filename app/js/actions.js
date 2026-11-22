@@ -68,7 +68,7 @@ A.setLang = async el => {
 };
 A.logout = async () => {
   if (sb) await sb.auth.signOut().catch(() => {});
-  ["parentCache", "pushOn"].forEach(k => store.del(k));
+  ["parentCache", "pushOn", "pushFamily", "hereSync"].forEach(k => store.del(k));
   Object.assign(S, { session: null, family: null, families: [], onboardBack: false, children: [], routines: [], screen: "auth", tab: "today", wk: null }); render();
 };
 /* Présentation (EP-09, F14-04, ADR-48) : fenêtre de trois écrans, montrée une fois par compte (indication « vue » dans les métadonnées du compte) ; rouvrable depuis le guide (?intro=1) */
