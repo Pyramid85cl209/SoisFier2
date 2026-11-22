@@ -1,4 +1,4 @@
-/* EP-01 lot 3 : modèles par catégorie (32), démarrage rapide par âge, ajout groupé à plusieurs enfants, « Rappel à », adresse d'envoi des rappels (jetons Mode enfant ici).
+/* EP-01 lot 3 : modèles par catégorie (33), démarrage rapide par âge, ajout groupé à plusieurs enfants, « Rappel à », adresse d'envoi des rappels (jetons Mode enfant ici).
    Sans navigateur visible, sans base : le client Supabase est remplacé par un double qui filtre de petites tables fictives. Usage : node ep01_familles_test.js [dossier de captures] */
 const { chromium } = require("playwright");
 const http = require("http"), fs = require("fs"), path = require("path");
@@ -68,17 +68,17 @@ const PIN = { "sf:pinH": '{"s":"AA==","h":"AA==","i":1}' };
 (async () => {
   browser = await chromium.launch({ executablePath: fs.existsSync("/usr/bin/google-chrome") ? "/usr/bin/google-chrome" : undefined, args: ["--no-sandbox"] });
 
-  // 1. Choisir des modèles : 32 modèles, 6 catégories dans l'ordre (F04-02 CA8, CA12)
+  // 1. Choisir des modèles : 33 modèles, 6 catégories dans l'ordre (F04-02 CA8, CA12)
   let { page, ctx, errs } = await open({ ls: PIN });
   await page.click("[data-act=routineTemplates]"); await page.waitForTimeout(200);
   const heads = await page.locator("dialog h3.grp").allTextContents();
   ok("1.1 six catégories dans l'ordre", heads.join("|") === "Hygiène|Autonomie|École|Maison|Comportement|Spiritualité", heads.join("|"));
-  ok("1.2 32 modèles", await page.locator(".tpl input").count() === 32);
+  ok("1.2 33 modèles", await page.locator(".tpl input").count() === 33);
   ok("1.3 chaque ligne donne son moment ; le matin pour la première", /Se brosser les dents \(matin\).*Matin/.test(await page.locator(".tpl li").first().textContent()), await page.locator(".tpl li").first().textContent());
   ok("1.4 un seul enfant : « Pour » absent (CA12)", await page.locator(".for-chip").count() === 0);
   ok("1.5 « Démarrage rapide par âge » proposé (F04-10 CA9)", await page.locator("[data-act=quickStart]").count() === 1);
   const spir = await page.locator(".tpl").nth(5).locator("li").allTextContents();
-  ok("1.6 Spiritualité : 4 modèles, sans nom de pratique propre à une religion ni symbole religieux", spir.length === 4 && !/messe|salat|pri[eè]re musulmane|bible|coran|église|mosquée|✝|☪|✡|🕌|⛪/i.test(spir.join(" ")) , spir.join(" / "));
+  ok("1.6 Spiritualité : 5 modèles, sans nom de pratique propre à une religion ni symbole religieux", spir.length === 5 && !/messe|salat|pri[eè]re musulmane|bible|coran|église|mosquée|✝|☪|✡|🕌|⛪/i.test(spir.join(" ")) , spir.join(" / "));
   await shot(page, "modeles-fr-clair");
   // 1b. Aucune case : message ; une case : ajout sans catégorie
   await page.click("[data-act=addRoutineTpl]"); await page.waitForTimeout(150);
@@ -100,7 +100,7 @@ const PIN = { "sf:pinH": '{"s":"AA==","h":"AA==","i":1}' };
   ok("2.1 « Quel âge a Enfant Un ? » : 3 tranches et « Choisir moi-même » (CA1)", /Quel âge a .*Enfant Un.* \?/.test(await page.locator("dialog h2").textContent()) && await page.locator("[data-act=quickAge]").count() === 3 && await page.locator("[data-act=quickSelf]").count() === 1 && /3-5 ans/.test(await page.locator("[data-act=quickAge]").first().textContent()));
   await shot(page, "rapide-age-fr-clair");
   await page.click("[data-act=quickSelf]"); await page.waitForTimeout(200);
-  ok("2.2 « Choisir moi-même » : la liste des modèles s'ouvre (CA2)", await page.locator(".tpl input").count() === 32);
+  ok("2.2 « Choisir moi-même » : la liste des modèles s'ouvre (CA2)", await page.locator(".tpl input").count() === 33);
   const counts = [];
   for (const i of [0, 1, 2]) {
     await page.click("[data-act=quickStart]"); await page.click(`[data-act=quickAge][data-i="${i}"]`); await page.waitForTimeout(150);
@@ -234,7 +234,7 @@ const PIN = { "sf:pinH": '{"s":"AA==","h":"AA==","i":1}' };
     ({ page, ctx, errs } = await open({ ls: PIN, locale: lang, dark, w: w6, q: lang === "ar" ? "?lang=ar" : "", kids: 2 }));
     ok(`6.${tag}.0 sens de lecture`, lang === "ar" ? await page.evaluate(() => document.documentElement.dir) === "rtl" : true);
     await page.click("[data-act=routineTemplates]"); await page.waitForTimeout(250); await shot(page, "modeles-" + tag);
-    ok(`6.${tag}.1 modèles : pas de défilement horizontal, 32 modèles, « Pour »`, await noHScroll(page) && await page.locator(".tpl input").count() === 32 && await page.locator(".for-chip").count() === 2);
+    ok(`6.${tag}.1 modèles : pas de défilement horizontal, 33 modèles, « Pour »`, await noHScroll(page) && await page.locator(".tpl input").count() === 33 && await page.locator(".for-chip").count() === 2);
     await page.click("[data-act=quickStart]"); await page.waitForTimeout(200); await shot(page, "rapide-age-" + tag);
     ok(`6.${tag}.2 tranches : pas de défilement horizontal, chiffres 0123`, await noHScroll(page) && /3-5/.test(await page.locator("[data-act=quickAge]").first().textContent()));
     await page.click('[data-act=quickAge][data-i="2"]'); await page.waitForTimeout(200); await shot(page, "rapide-ensemble-" + tag);

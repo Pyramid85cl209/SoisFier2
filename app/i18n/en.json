@@ -251,7 +251,8 @@
    "prayerMorning": "A moment of prayer or reflection (morning)",
    "prayerEvening": "A moment of prayer or reflection (evening)",
    "inspire": "Read or listen to something that inspires me",
-   "thanks": "Say thank you for a moment of my day"
+   "thanks": "Say thank you for a moment of my day",
+   "invocation": "Say a short prayer (invocation)"
   },
   "w": {
    "story": "One more story",

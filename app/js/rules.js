@@ -152,7 +152,7 @@ function brokenStar(s = 20) {
 }
 
 /* ================= Modèles ================= */
-// Modèles (R04-06, ADR-56) : 32 modèles rangés par catégorie (DEC-11) ; la catégorie `c` sert à ranger la liste et n'est jamais enregistrée sur la routine (DEC-08) ;
+// Modèles (R04-06, ADR-56) : 33 modèles rangés par catégorie (DEC-11) ; la catégorie `c` sert à ranger la liste et n'est jamais enregistrée sur la routine (DEC-08) ;
 // `k` = clé du texte (`tpl.r.<k>`), repère des ensembles de départ. Nouveaux modèles : 1 étoile, sans lieu ni minuteur.
 const TPL_CATS = ["hygiene", "autonomie", "ecole", "maison", "comportement", "spiritualite"];
 const TPL_R = [
@@ -187,7 +187,8 @@ const TPL_R = [
   L("tpl.r.prayerMorning", { k: "prayerMorning", c: "spiritualite", e: "✨", m: "matin" }),
   L("tpl.r.prayerEvening", { k: "prayerEvening", c: "spiritualite", e: "🌟", m: "soir" }),
   L("tpl.r.inspire", { k: "inspire", c: "spiritualite", e: "📖", m: "journee", b: true }),
-  L("tpl.r.thanks", { k: "thanks", c: "spiritualite", e: "💛", m: "soir" })
+  L("tpl.r.thanks", { k: "thanks", c: "spiritualite", e: "💛", m: "soir" }),
+  L("tpl.r.invocation", { k: "invocation", c: "spiritualite", e: "💫", m: "journee", b: true })
 ];
 // Ensembles de départ (R04-12, DEC-03, DEC-13, DEC-14) : modèles (`k`) et récompenses du référentiel (`TPL_W`, `k`) cochés d'office ; jamais de Comportement ni de Spiritualité ; la tranche n'est pas enregistrée
 const STARTERS = [
