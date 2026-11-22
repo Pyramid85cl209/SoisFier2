@@ -53,8 +53,9 @@ async function boot() {
   pinMigrate(); flushUnpair();   // ancien code parent converti en empreinte ; retraits d'appareil restés en attente
   if (!sb) { S.screen = "error"; S.err = CFG_OK ? t("error.noService") : t("error.noConfig"); return render(); }
   if (store.get("childToken")) {
-    S.screen = "child"; S.cs = store.get("childCache"); render();
-    await flushQueue(); await loadChild(); return;
+    S.screen = "child"; S.childNow = null;   // appareil commun : toujours « Qui es-tu ? » à l'ouverture (R03-10)
+    S.cs = kidsList() ? null : store.get("childCache"); render();
+    await flushQueue(); await loadChild(null); return;
   }
   const { data } = await sb.auth.getSession();
   S.session = data.session;

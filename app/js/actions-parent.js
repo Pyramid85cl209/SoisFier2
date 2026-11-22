@@ -261,15 +261,22 @@ A.delChild = async el => {
   await mutate(() => sb.from("children").delete().eq("id", c.id));
   const other = x => x.child_id !== c.id;
   S.children = S.children.filter(k => k.id !== c.id);
-  ["routines", "completions", "redemptions", "pevents", "devices", "pauses", "holidays", "hp", "ho"].forEach(k => { if (Array.isArray(S[k])) S[k] = S[k].filter(other); });
+  ["routines", "completions", "redemptions", "pevents", "pauses", "holidays", "hp", "ho"].forEach(k => { if (Array.isArray(S[k])) S[k] = S[k].filter(other); });
+  S.devices = (S.devices || []).map(d => ({ ...d, child_ids: (d.child_ids || [d.child_id]).filter(x => x !== c.id) })).filter(d => d.child_ids.length);   // l'appareil reste pour les enfants qui restent (F03-09 CA9)
   if (S.currentChild === c.id) S.currentChild = S.children[0]?.id || null;
   saveParentCache(); render(); toast(t("common.deletedM"));
   refreshParts(["c", "w", "d"]).then(render).catch(() => {});
 };
 A.deviceCode = async el => {
   const c = S.children.find(k => k.id === el.dataset.id);
-  const { data, error } = await sb.rpc("create_child_code", { p_child: c.id }); if (error) throw error;
-  openSheet(`<h2>${t("device.phoneOf", { name: esc(c.name) })}</h2><div class="code" aria-label="${t("device.codeAria", { code: data.split("").join(" ") })}">${esc(data)}</div>
+  let ids = [c.id];
+  if (S.children.length >= 2) {   // appareil commun (F03-09) : un ou plusieurs enfants ; chaque enfant d'un appareil commun a son code d'enfant (R03-11)
+    ids = await kidsSheet(c.id, t("device.pickTitle"), t("device.pickHelp"), t("device.getCode")); if (!ids) return;
+    if (ids.length > 1 && !await ensureKidCodes(ids)) return;
+  }
+  const { data, error } = await sb.rpc("create_child_code", { p_child: ids[0], p_children: ids }); if (error) throw error;
+  const who = ids.length > 1 ? ids.map(i => `<bdi>${esc(S.children.find(k => k.id === i)?.name || "")}</bdi>`).join(t("sep")) : `<bdi>${esc(c.name)}</bdi>`;
+  openSheet(`<h2>${ids.length > 1 ? t("device.sharedOf", { names: who }) : t("device.phoneOf", { name: esc(c.name) })}</h2><div class="code" aria-label="${t("device.codeAria", { code: data.split("").join(" ") })}">${esc(data)}</div>
     <p>${t("device.help")}</p>
     <div class="sheet-actions"><button class="btn" data-act="closeSheetReload">${t("btn.done")}</button></div>`);
 };
@@ -283,18 +290,21 @@ A.revokeDevice = async el => {
 };
 A.childHere = async el => {
   if (!await ensurePin()) return;
-  const cid = el.dataset.id, map = store.get("sameDevice", {});
-  let tok = map[cid];
-  if (tok) {   // déjà connecté sur ce téléphone : on réutilise le même appareil
-    const chk = await sb.rpc("child_state", { p_token: tok });
-    if (chk.error) { if (/Appareil non reconnu|SF:device_unknown|SF:device_expired/.test(chk.error.message || "")) tok = null; else throw chk.error; }
+  const cid = el.dataset.id; let ids = [cid];
+  if (S.children.length >= 2) {   // F03-06 CA8 : un ou plusieurs enfants ; plusieurs ouvrent « Qui es-tu ? » (R03-10)
+    ids = await kidsSheet(cid, t("device.hereTitle"), t("device.hereHelp"), t("btn.validate")); if (!ids) return;
+    if (ids.length > 1 && !await ensureKidCodes(ids)) return;
   }
-  if (!tok) {   // EP-09 (DT03-05) : appareil créé sans code enfant, le code en attente de l'enfant reste valable
-    const r = await sb.rpc("child_pair_here", { p_child: cid, p_label: t("device.sameLabel", { who: memberLabel(S.session.user.id) }) }); if (r.error) throw r.error;
-    tok = r.data.token; map[cid] = tok; store.set("sameDevice", map);
-  }
-  store.set("childToken", tok); store.set("childFromParent", true); store.del("queue"); store.del("lastEarned"); store.del("seenFlowers");
-  S.screen = "child"; S.ctab = "today"; S.cs = null; render(); await loadChild();
+  // La ligne de ce téléphone est réutilisée si le serveur la reconnaît (R03-08) ; ses enfants sont mis à jour. Adresse d'envoi des rappels : lot suivant (ADR-57).
+  const map = store.get("sameDevice", {}), old = ids.map(i => map[i]).find(Boolean) || null;
+  const r = await sb.rpc("child_pair_here", { p_child: ids[0], p_label: t("device.sameLabel", { who: memberLabel(S.session.user.id) }), p_children: ids, p_token: old, p_endpoint: null }); if (r.error) throw r.error;
+  const tok = r.data.token;
+  Object.keys(map).forEach(k => { if (map[k] === old || map[k] === tok) delete map[k]; });
+  ids.forEach(i => { map[i] = tok; }); store.set("sameDevice", map);
+  clearChildStore(); store.set("childToken", tok); store.set("childFromParent", true);
+  S.childNow = null; S.kidPick = null; S.kidSeq = [];
+  if (ids.length > 1) await loadKids(tok, ids[0]);   // liste des enfants reliés, pour « Qui es-tu ? »
+  S.screen = "child"; S.ctab = "today"; S.cs = null; render(); if (!kidsList()) await loadChild(null);
 };
 // « Code oublié ? » : le mot de passe du compte connecté sur ce téléphone remplace le code (DEC-28). Compteur propre, vérifié avant tout envoi (DEC-55).
 async function forgotPin(sess) {
@@ -344,7 +354,7 @@ A.exitChild = async () => {
   }
   // EP-09 (DT03-02, ADR-49) : sur le téléphone propre de l'enfant, la sortie retire l'appareil chez le parent (hors ligne : file locale, sinon purge de 3 mois)
   if (!store.get("childFromParent")) await unpairDevice(store.get("childToken"));
-  ["childToken", "childCache", "queue", "childFromParent", "cpushOn", "lastEarned", "seenFlowers"].forEach(k => store.del(k));
+  clearChildStore(); S.childNow = null; S.kidPick = null; S.kidSeq = [];
   S.cs = null;
   const { data } = await sb.auth.getSession();
   if (data.session) { S.session = data.session; S.tab = "family"; await enterParent(); if (S.askPin) { S.askPin = false; A.setPin(); } } else { S.screen = "auth"; render(); }

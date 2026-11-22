@@ -970,7 +970,15 @@
   "revokeText": "Il faudra un nouveau code pour le reconnecter.",
   "revoked": "Appareil déconnecté.",
   "sameLabel": "Téléphone de {who} (mode enfant)",
-  "revokeLost": "Les coches pas encore envoyées depuis ce téléphone seront perdues."
+  "revokeLost": "Les coches pas encore envoyées depuis ce téléphone seront perdues.",
+  "pickTitle": "Quels enfants ?",
+  "pickHelp": "Cochez un ou plusieurs enfants. À partir de deux, l'appareil demande à chacun son code pour ouvrir son écran.",
+  "pickNeed": "Cochez au moins un enfant.",
+  "getCode": "Obtenir le code",
+  "sharedOf": "Appareil de {names}",
+  "sharedWith": "avec {names}",
+  "hereTitle": "Mode enfant ici : quels enfants ?",
+  "hereHelp": "Cochez un ou plusieurs enfants. À partir de deux, chacun touche son avatar puis saisit son code d'enfant."
  },
  "timer": {
   "go": "Fais-le avant la fin du temps !",
@@ -1218,5 +1226,34 @@
   "t3": "Des récompenses à sa mesure",
   "x3": "Les étoiles s'échangent contre des récompenses choisies par la famille. Pour tout savoir, touchez « ? » en haut de l'écran : le mode d'emploi vous répond.",
   "a3": "Une fleur épanouie"
+ },
+ "kidpick": {
+  "title": "Qui es-tu ?",
+  "switch": "Changer d'enfant"
+ },
+ "kidcode": {
+  "help": "Touche tes 3 images secrètes, dans l'ordre.",
+  "wait": "Trop d'essais. Attends une minute, puis réessaie.",
+  "wrong": "Ce ne sont pas les bonnes images. Réessaie.",
+  "progress": "Image {n} sur {total}",
+  "gridAria": "Tes images secrètes",
+  "notSet": "Ton code n'est pas encore choisi. Demande à un parent.",
+  "img": [
+   "Chien",
+   "Chat",
+   "Grenouille",
+   "Tortue",
+   "Pomme",
+   "Banane",
+   "Raisin",
+   "Fraise",
+   "Poisson"
+  ],
+  "chooseTitle": "Code de {name}",
+  "chooseText": "L'enfant touchera ces 3 images, dans l'ordre, pour ouvrir son écran sur un appareil partagé. Le code n'est jamais réaffiché : s'il est oublié, vous en choisissez un nouveau.",
+  "redo": "Recommencer",
+  "chosen": "Images choisies : {names}",
+  "saved": "Code de {name} enregistré.",
+  "change": "Code de l'enfant"
  }
 }

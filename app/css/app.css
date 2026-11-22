@@ -402,3 +402,24 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
 .kid-top .lang-btn{width:44px;height:44px}
 .k-timer{min-height:44px}
 [hidden]{display:none!important}
+
+/* Appareil commun (EP-01, F03-09, R03-10, R03-11) : « Qui es-tu ? » et grille du code de l'enfant ; couleurs par les variables seulement */
+.kid-top .btn.sm{min-height:44px}
+.kpick{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.kpick-b{width:100%;min-height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:14px 10px;border:0;border-radius:24px;
+  background:var(--paper);color:var(--earth);box-shadow:var(--lift);border-block-start:8px solid var(--c,var(--leaf))}
+.kp-emo{font-size:3.2rem;line-height:1}
+.kp-name{font-family:var(--display);font-weight:600;font-size:1.3rem;overflow-wrap:anywhere;text-align:center}
+.kcode{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.kcode-who{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 28px;border-radius:24px;background:var(--paper);box-shadow:var(--lift);border-block-start:8px solid var(--c,var(--leaf))}
+.kcode-who h1{font-size:1.5rem}
+.kcode p{margin:0}
+.kdots{display:flex;gap:12px;justify-content:center;direction:ltr}
+.kdot{width:22px;height:22px;border-radius:50%;box-shadow:inset 0 0 0 3px var(--leaf);display:grid;place-items:center;font-size:1.5rem;line-height:1}
+.kdot.on{background:var(--leaf)}
+.kshow .kdot{width:52px;height:52px;border-radius:16px;background:var(--sky);box-shadow:inset 0 0 0 2px var(--line)}
+.kshow .kdot.on{background:var(--sun-l);box-shadow:inset 0 0 0 3px var(--sun)}
+.kgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;width:100%;max-width:340px;margin:8px auto}
+.kimg{aspect-ratio:1;min-height:76px;border:0;border-radius:22px;background:var(--paper);box-shadow:var(--lift),inset 0 0 0 2px var(--line);font-size:2.6rem;line-height:1}
+.kimg:active:not(:disabled){background:var(--sun-l);box-shadow:inset 0 0 0 3px var(--sun)}
+.kimg:disabled{opacity:.55}

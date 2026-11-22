@@ -105,6 +105,7 @@ function childForm(c) {
     <div class="f"><span>${t("child.avatar")}</span><div class="emo-row"><input id="k-emoji" class="emo-in" value="${esc(c.emoji)}" maxlength="8" aria-label="${t("child.avatarChosen")}">${EMO_K.map(e => `<button type="button" class="emo" data-act="pickEmoji" data-target="k-emoji" data-e="${e}" aria-label="${e}">${e}</button>`).join("")}</div></div>
     <div class="f"><span>${t("child.potColor")}</span><div class="swatches">${COLORS.map(col => `<button type="button" class="sw ${col === c.color ? "on" : ""}" style="background:${col}" data-act="pickColor" data-v="${col}" aria-pressed="${col === c.color}" aria-label="${t("child.color", { c: colorName(col) })}"></button>`).join("")}</div></div>
     <p class="muted">${t("child.privacy")}</p>
+    ${isNew ? "" : `<p><button type="button" class="btn ghost sm" data-act="kidCodeSet" data-id="${c.id}">${t("kidcode.change")}</button></p>`}
     <div class="sheet-actions">${isNew ? "" : `<button class="btn danger ghost" data-act="delChild" data-id="${c.id}">${t("btn.delete")}</button>`}<button class="btn" data-act="saveChild" data-id="${c.id || ""}">${isNew ? t("btn.add") : t("btn.save")}</button></div>`);
 }
 // Semaine et fuseau : à l'inscription (mode « onboard ») ou dans les réglages de la famille
@@ -133,6 +134,58 @@ function pinSheet(title, text, opt = {}) {
     $("#pin-ok").onclick = () => done(inp.value.trim());
     if (opt.forgot) $("#pin-forgot").onclick = () => done({ forgot: true });
   });
+}
+// Choix des enfants d'un appareil (appareil commun, Mode enfant ici) : au moins un ; l'enfant touché est coché d'office. Résout la liste des identifiants, ou null.
+function kidsSheet(firstId, title, text, okLabel) {
+  return new Promise(res => {
+    openSheet(`<h2>${esc(title)}</h2><p>${esc(text)}</p>
+      <ul class="tpl">${S.children.map(c => `<li><label><input type="checkbox" class="ks-in" value="${esc(c.id)}" ${c.id === firstId ? "checked" : ""}> <span aria-hidden="true">${esc(c.emoji)}</span> <bdi>${esc(c.name)}</bdi></label></li>`).join("")}</ul>
+      <div class="sheet-actions"><button class="btn ghost" id="ks-no">${t("btn.cancel")}</button><button class="btn" id="ks-ok">${esc(okLabel)}</button></div>`);
+    let out = null; const done = v => { out = v; closeSheet(); };
+    dlg.addEventListener("close", () => res(out), { once: true });
+    $("#ks-no").onclick = () => done(null);
+    $("#ks-ok").onclick = () => {
+      const ids = $$(".ks-in", dlg).filter(i => i.checked).map(i => i.value);
+      if (!ids.length) return toast(t("device.pickNeed"), true);
+      done(S.children.map(c => c.id).filter(id => ids.includes(id)));   // ordre de la famille
+    };
+  });
+}
+// Code de l'enfant (R03-11) : le Parent choisit 3 images parmi 9 ; l'empreinte est calculée ici et envoyée au serveur, la suite ne quitte jamais ce téléphone. Résout vrai si le code est enregistré.
+function kidCodeSheet(c) {
+  return new Promise(res => {
+    let seq = [], ok = false;
+    openSheet(`<h2>${t("kidcode.chooseTitle", { name: `<bdi>${esc(c.name)}</bdi>` })}</h2><p>${t("kidcode.chooseText")}</p>
+      <div class="kdots kshow" id="kd-slots" aria-hidden="true">${kidDots(0)}</div><p class="vh" id="kd-live" role="status" aria-live="polite"></p>
+      <div class="kgrid" role="group" aria-label="${t("kidcode.gridAria")}">${KID_IMGS.map((e, i) => `<button type="button" class="kimg" data-i="${i}" aria-label="${t("kidcode.img." + i)}"><span aria-hidden="true">${e}</span></button>`).join("")}</div>
+      <div class="sheet-actions"><button class="btn ghost" id="kd-no">${t("btn.cancel")}</button><button class="btn ghost" id="kd-redo" disabled>${t("kidcode.redo")}</button><button class="btn" id="kd-ok" disabled>${t("btn.validate")}</button></div>`);
+    const upd = () => {
+      $("#kd-slots").innerHTML = Array.from({ length: KID_LEN }, (_, i) => `<span class="kdot ${i < seq.length ? "on" : ""}">${i < seq.length ? KID_IMGS[seq[i]] : ""}</span>`).join("");
+      $("#kd-live").textContent = seq.length ? t("kidcode.chosen", { n: seq.length, total: KID_LEN, names: seq.map(i => t("kidcode.img." + i)).join(t("sep")) }) : "";
+      $("#kd-ok").disabled = seq.length < KID_LEN; $("#kd-redo").disabled = !seq.length;
+      $$(".kimg", dlg).forEach(b => { b.disabled = seq.length >= KID_LEN; });
+    };
+    $$(".kimg", dlg).forEach(b => { b.onclick = () => { if (seq.length < KID_LEN) { seq.push(+b.dataset.i); upd(); } }; });
+    $("#kd-redo").onclick = () => { seq = []; upd(); };
+    dlg.addEventListener("close", () => res(ok), { once: true });
+    $("#kd-no").onclick = () => closeSheet();
+    $("#kd-ok").onclick = async () => {
+      if (seq.length < KID_LEN) return;
+      $("#kd-ok").disabled = true;
+      try {
+        const { error } = await sb.rpc("set_child_code", { p_child: c.id, p_verifier: await kidVerifier(seq) }); if (error) throw error;
+        kidCodeMark(c.id); ok = true; closeSheet(); toast(t("kidcode.saved", { name: c.name }));
+      } catch (e) { console.error(e); toast(errMsg(e), true); $("#kd-ok").disabled = false; }
+    };
+  });
+}
+// Avant de relier plusieurs enfants : chaque enfant dont ce téléphone n'a pas encore choisi le code en reçoit un (la base ne dit pas qui en a déjà un, ADR-53)
+async function ensureKidCodes(ids) {
+  for (const id of ids) {
+    const c = S.children.find(k => k.id === id); if (!c || kidCodeKnown(id)) continue;
+    if (!await kidCodeSheet(c)) return false;
+  }
+  return true;
 }
 // Mot de passe du compte connecté sur ce téléphone (« Code oublié ? », DEC-28)
 function passwordSheet() {

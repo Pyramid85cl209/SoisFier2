@@ -979,7 +979,15 @@
   "revokeText": "A new code will be needed to reconnect it.",
   "revoked": "Device disconnected.",
   "sameLabel": "{who}'s phone (child mode)",
-  "revokeLost": "Ticks not yet sent from this phone will be lost."
+  "revokeLost": "Ticks not yet sent from this phone will be lost.",
+  "pickTitle": "Which children?",
+  "pickHelp": "Tick one or more children. From two, the device asks each child for their code to open their screen.",
+  "pickNeed": "Tick at least one child.",
+  "getCode": "Get the code",
+  "sharedOf": "Device for {names}",
+  "sharedWith": "with {names}",
+  "hereTitle": "Child mode here: which children?",
+  "hereHelp": "Tick one or more children. From two, each child taps their avatar, then enters their child code."
  },
  "timer": {
   "go": "Do it before time runs out!",
@@ -1227,5 +1235,34 @@
   "t3": "Rewards that fit",
   "x3": "Stars are exchanged for rewards chosen by the family. To find out more, tap “?” at the top of the screen: the guide has the answers.",
   "a3": "A flower in full bloom"
+ },
+ "kidpick": {
+  "title": "Who are you?",
+  "switch": "Switch child"
+ },
+ "kidcode": {
+  "help": "Tap your 3 secret pictures, in order.",
+  "wait": "Too many tries. Wait a minute, then try again.",
+  "wrong": "Those are not the right pictures. Try again.",
+  "progress": "Picture {n} of {total}",
+  "gridAria": "Your secret pictures",
+  "notSet": "Your code has not been chosen yet. Ask a parent.",
+  "img": [
+   "Dog",
+   "Cat",
+   "Frog",
+   "Turtle",
+   "Apple",
+   "Banana",
+   "Grapes",
+   "Strawberry",
+   "Fish"
+  ],
+  "chooseTitle": "{name}'s code",
+  "chooseText": "The child taps these 3 pictures, in order, to open their screen on a shared device. The code is never shown again: if it is forgotten, you choose a new one.",
+  "redo": "Start over",
+  "chosen": "Pictures chosen: {names}",
+  "saved": "{name}'s code saved.",
+  "change": "Child's code"
  }
 }

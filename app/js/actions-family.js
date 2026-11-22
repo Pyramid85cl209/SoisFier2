@@ -2,11 +2,38 @@
 /* SoisFier : Actions : mode enfant, rappels, famille et réglages */
 // Mode enfant
 A.cToggle = el => { const rid = el.dataset.id, day = todayISO(); const done = S.cs.completions.some(c => c.routine_id === rid && c.day === day); childToggle(rid, !done); };
+// Code de l'enfant, depuis sa fiche (R03-11) : un code oublié se remplace, il n'est jamais réaffiché
+A.kidCodeSet = async el => { const c = S.children.find(k => k.id === el.dataset.id); if (!c) return; await kidCodeSheet(c); };   // la fenêtre de la fiche reste ouverte : son contenu est remplacé
+// Appareil commun (EP-01) : choisir son avatar, saisir son code, changer d'enfant sans code
+A.kidPick = el => { S.kidPick = el.dataset.id; S.kidSeq = []; render(); };
+A.kidBack = () => { S.kidPick = null; S.kidSeq = []; render(); };
+A.kidSwitch = async () => { await flushQueue(); S.childNow = null; S.cs = null; S.kidPick = null; S.kidSeq = []; S.ctab = "today"; render(); scrollTo(0, 0); };
+let kidBusy = false;
+A.kidImg = async el => {
+  const k = (kidsList() || []).find(x => x.id === S.kidPick); if (!k || kidBusy || kidGuardLeft(k.id)) return;
+  S.kidSeq.push(+el.dataset.i);
+  const d = $("#kc-dots"), live = $("#kc-live");
+  if (d) d.innerHTML = kidDots(S.kidSeq.length);
+  if (live) live.textContent = t("kidcode.progress", { n: S.kidSeq.length, total: KID_LEN });
+  if (S.kidSeq.length < KID_LEN) return;
+  const seq = S.kidSeq; S.kidSeq = []; kidBusy = true;
+  try {
+    if (!k.verifier) { toast(t("kidcode.notSet"), true); return renderKidCode(k); }   // aucun code choisi pour cet enfant : un Parent doit le choisir
+    if (await kidCheck(seq, k.verifier)) {
+      kidGuardReset(k.id); S.kidPick = null; S.childNow = k.id; S.ctab = "today";
+      S.cs = store.get(ckey("childCache", k.id)); render(); await loadChild(k.id);
+    } else {
+      const w = kidGuardFail(k.id);
+      if (navigator.vibrate) navigator.vibrate(200);   // en plus du message, jamais seule
+      toast(w ? t("kidcode.wait") : t("kidcode.wrong"), true); renderKidCode(k);
+    }
+  } finally { kidBusy = false; }
+};
 A.cRedeem = async el => {
   const w = S.cs.rewards.find(x => x.id === el.dataset.id);
   if (!await confirmSheet(`${w.emoji} ${w.title}`, t("kid.exchangeConfirm", { n: w.cost }), t("kid.yesChoose"))) return;
   await flushQueue();
-  const { error } = await sb.rpc("child_redeem", { p_token: store.get("childToken"), p_reward: w.id });
+  const { error } = await sb.rpc("child_redeem", { p_token: store.get("childToken"), p_child: S.cs.child.id, p_reward: w.id });
   if (error) { if (isNetErr(error)) return toast(t("kid.needInternet"), true); throw error; }
   celebrate(true); await loadChild();
   openSheet(`<h2>${t("kid.bravo")} ${esc(w.emoji)}</h2><p>${t("kid.showParents", { title: esc(w.title) })}</p><div class="sheet-actions"><button class="btn" data-act="closeSheet">${t("kid.super")}</button></div>`);

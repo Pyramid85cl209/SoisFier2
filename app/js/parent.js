@@ -113,10 +113,10 @@ function pRewards() {
 function pFamily() {
   const P = isParent(), me = S.session?.user.id;
   const kids = S.children.map(c => {
-    const devs = S.devices.filter(d => d.child_id === c.id);
+    const devs = S.devices.filter(d => (d.child_ids || [d.child_id]).includes(c.id));
     const gn = gardenNow(S.gardens[c.id]);
     return `<div class="krow kid-row">${gn ? stageSVG(gn.stage, gn.species, c.color) : plantSVG(0, c.color)}<div class="grow"><b>${esc(c.emoji)} ${esc(c.name)}</b>
-      ${devs.map(d => `<div class="dev">📱 ${esc(d.label || t("family.hisPhone"))}${t("sep")}${t("family.since", { date: fmtDate(d.created_at) })} ${P ? `<button class="link" data-act="revokeDevice" data-id="${d.id}" aria-label="${esc(t("a11y.disconnectDevice", { name: d.label || t("family.hisPhone") }))}">${t("family.disconnect")}</button>` : ""}</div>`).join("")}</div>
+      ${devs.map(d => `<div class="dev">📱 ${esc(d.label || t("family.hisPhone"))}${t("sep")}${t("family.since", { date: fmtDate(d.created_at) })}${(d.child_ids || []).length > 1 ? t("sep") + t("device.sharedWith", { names: d.child_ids.filter(i => i !== c.id).map(i => `<bdi>${esc(S.children.find(k => k.id === i)?.name || "")}</bdi>`).join(t("sep")) }) : ""} ${P ? `<button class="link" data-act="revokeDevice" data-id="${d.id}" aria-label="${esc(t("a11y.disconnectDevice", { name: d.label || t("family.hisPhone") }))}">${t("family.disconnect")}</button>` : ""}</div>`).join("")}</div>
       ${P ? `<div class="btns"><button class="btn sm" data-act="childHere" data-id="${c.id}" aria-label="${t("a11y.childHere", { name: c.name })}">${t("family.childHere")}</button><button class="btn sm ghost" data-act="editChild" data-id="${c.id}" aria-label="${t("a11y.edit", { name: c.name })}">${t("btn.edit")}</button><button class="btn sm ghost" data-act="deviceCode" data-id="${c.id}" aria-label="${t("a11y.connectDevice", { name: c.name })}">${t("family.connectDevice")}</button></div>` : ""}</div>`;
   }).join("");
   const pushOn = store.get("pushOn", false), times = store.get("pushTimes", ["07:30", "18:00"]);

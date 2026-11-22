@@ -122,8 +122,13 @@ A.pair = async () => {
   const code = $("#p-code").value.trim(); if (code.length < 6) return toast(t("pair.need6"), true);
   const { data, error } = await sb.rpc("child_pair", { p_code: code, p_label: null }); if (error) throw error;
   if (!data || data.error) throw new Error("SF:bad_code");   // EP-09 : code faux = réponse « error », pour que l'échec reste compté
-  store.set("childToken", data.token); store.del("queue"); store.del("pin"); store.del("pinH"); store.del("pinGuard"); store.del("lastEarned"); store.del("seenFlowers");
-  S.screen = "child"; S.ctab = "today"; S.cs = null; render(); await loadChild(); celebrate(true);
+  const ids = Array.isArray(data.child_ids) ? data.child_ids : [];
+  clearChildStore(); store.set("childToken", data.token); store.del("pin"); store.del("pinH"); store.del("pinGuard");
+  S.childNow = null; S.kidPick = null; S.kidSeq = [];
+  if (ids.length > 1) {   // appareil commun : « Qui es-tu ? » ; la liste des enfants vient du serveur
+    try { await loadKids(data.token, ids[0]); } catch (e) { clearChildStore(); throw e; }
+  }
+  S.screen = "child"; S.ctab = "today"; S.cs = null; render(); if (!kidsList()) await loadChild(null); celebrate(true);
   setTimeout(() => { if (S.screen === "child" && !dlg.open) A.cReminders({ ask: true }); }, 1800);   // v28 : rappels proposés une fois, sur le téléphone de l'enfant seulement
 };
 

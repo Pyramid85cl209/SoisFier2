@@ -7,14 +7,40 @@ const validatorName = x => {
   if (x.validated_label === "member") return x.validated_rel ? t("rel." + x.validated_rel) : x.validated_custom || t("member.aParent");
   return x.validated_label;
 };
+/* ---------- Appareil commun : « Qui es-tu ? » et code de l'enfant (EP-01, F03-09, R03-10, R03-11) ---------- */
+// Avatar, couleur et prénom portent le sens (l'enfant peut ne pas savoir lire) ; boutons natifs d'au moins 44 px, prénom lu par le lecteur d'écran
+function renderKidPick() {
+  const kids = kidsList(), pick = S.kidPick && kids.find(k => k.id === S.kidPick);
+  if (pick) return renderKidCode(pick);
+  app.innerHTML = `<header class="top kid-top"><h1 class="hello">${t("kidpick.title")}</h1>${langBtn()}<button class="lock" data-act="exitChild" aria-label="${t("kid.parentSpace")}">🔒</button></header>
+    ${S.offline ? `<p class="center"><span class="pill">${t("kid.offline")}</span></p>` : ""}
+    <main class="wrap"><ul class="kpick">${kids.map(k => `<li><button class="kpick-b" style="--c:${esc(k.color)}" data-act="kidPick" data-id="${esc(k.id)}" aria-label="${esc(k.name)}">
+      <span class="kp-emo" aria-hidden="true">${esc(k.emoji)}</span><span class="kp-name"><bdi>${esc(k.name)}</bdi></span></button></li>`).join("")}</ul></main>`;
+}
+const kidDots = n => Array.from({ length: KID_LEN }, (_, i) => `<span class="kdot ${i < n ? "on" : ""}"></span>`).join("");
+let kidTimer = null;
+function renderKidCode(k) {
+  const left = kidGuardLeft(k.id);
+  app.innerHTML = `<header class="top kid-top"><button class="btn ghost sm" data-act="kidBack">${t("btn.back")}</button>${langBtn()}</header>
+    <main class="wrap"><section class="kcode">
+      <div class="kcode-who" style="--c:${esc(k.color)}"><span class="kp-emo" aria-hidden="true">${esc(k.emoji)}</span><h1><bdi>${esc(k.name)}</bdi></h1></div>
+      <p id="kc-help" ${left ? `role="alert"` : ""}>${left ? t("kidcode.wait") : t("kidcode.help")}</p>
+      <div class="kdots" id="kc-dots" aria-hidden="true">${kidDots(S.kidSeq.length)}</div>
+      <p class="vh" id="kc-live" role="status" aria-live="polite">${S.kidSeq.length ? t("kidcode.progress", { n: S.kidSeq.length, total: KID_LEN }) : ""}</p>
+      <div class="kgrid" role="group" aria-label="${t("kidcode.gridAria")}">${KID_IMGS.map((e, i) => `<button class="kimg" data-act="kidImg" data-i="${i}" aria-label="${t("kidcode.img." + i)}" ${left ? "disabled" : ""}><span aria-hidden="true">${e}</span></button>`).join("")}</div>
+    </section></main>`;
+  clearTimeout(kidTimer);
+  if (left) kidTimer = setTimeout(() => { if (S.screen === "child" && S.kidPick === k.id) render(); }, left * 1000 + 200);
+}
 function renderChild() {
   const cs = S.cs;
+  if (kidsList() && !S.childNow) return renderKidPick();
   if (!cs) { app.innerHTML = `<div class="loading">${plantSVG(1)}</div>`; return; }
   const c = cs.child; const routines = cs.routines.map(r => ({ ...r, child_id: c.id }));
   const v = computeView({ child: c, routines, completions: cs.completions, stats: cs.stats, badges: cs.badges, garden: cs.garden, penalties: cs.penalties, oneoffDone: cs.oneoff_done });
   const tabs = [["today", t("ctab.today"), "☀️"], ["gifts", t("ctab.gifts"), "🎁"], ["garden", t("ctab.garden"), "🌼"], ["badges", t("ctab.badges"), "🏅"]];
   const body = { today: cToday, gifts: cGifts, garden: cGarden, badges: cBadges }[S.ctab](v, routines, cs);
-  app.innerHTML = `<header class="top kid-top"><span class="hello">${t("kid.hello", { name: esc(c.name) })} ${esc(c.emoji)}</span><span class="star-count" aria-label="${t("kid.starsAria", { n: v.balance })}">⭐ ${fmtNum(v.balance)}</span>${langBtn()}<button class="lock" data-act="exitChild" aria-label="${t("kid.parentSpace")}">🔒</button></header>
+  app.innerHTML = `<header class="top kid-top"><span class="hello">${t("kid.hello", { name: esc(c.name) })} ${esc(c.emoji)}</span><span class="star-count" aria-label="${t("kid.starsAria", { n: v.balance })}">⭐ ${fmtNum(v.balance)}</span>${langBtn()}${kidsList() ? `<button class="lock" data-act="kidSwitch" aria-label="${t("kidpick.switch")}">👥</button>` : ""}<button class="lock" data-act="exitChild" aria-label="${t("kid.parentSpace")}">🔒</button></header>
     ${S.offline ? `<p class="center"><span class="pill">${t("kid.offline")}</span></p>` : ""}
     <main class="wrap">${body}</main>
     <nav class="tabbar" aria-label="${t("nav")}">${tabs.map(([k, l, e]) => `<button data-act="ctab" data-tab="${k}" class="${S.ctab === k ? "on" : ""}" aria-current="${S.ctab === k ? "page" : "false"}"><span aria-hidden="true">${e}</span>${l}</button>`).join("")}</nav>`;
