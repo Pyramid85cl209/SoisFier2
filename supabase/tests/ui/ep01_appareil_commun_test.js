@@ -37,6 +37,7 @@ async function open(opts) {
           return { data: { ...base, child: { id: c.id, name: c.name, emoji: c.emoji, color: c.color, garden_start: "2026-10-01" }, common: list.length > 1, device_children: list.length > 1 ? list : [] }, error: null };
         }
         if (n === "child_pair") return { data: window.__pair, error: null };
+        if (n === "child_code_status") return { data: (window.__codes || {}).rows || [{ child_id: "k1", has_code: false }, { child_id: "k2", has_code: false }], error: null };
         if (n === "create_child_code") return { data: "ABC234", error: null };
         if (n === "child_pair_here") return { data: { token: "tok-here", child_id: a.p_child, child_ids: a.p_children }, error: null };
         return { data: null, error: null };
@@ -165,7 +166,9 @@ const txt = async p => (await p.locator("#toast").textContent()) || "";
   await page.click("#kd-ok"); await page.waitForTimeout(900);
   const cc = await calls(page, "create_child_code");
   ok("6.8 enfin create_child_code(p_child, p_children) et le code d'appareil s'affiche", cc.length === 2 && cc[1].p_children.length === 2 && /ABC234/.test(await page.locator("#sheet .code").textContent()), JSON.stringify(cc));
-  ok("6.9 code d'enfant déjà choisi depuis ce téléphone : pas redemandé", await page.evaluate(() => kidCodeKnown("k1") && kidCodeKnown("k2")));
+  const cs = await calls(page, "child_code_status");
+  ok("6.9 la base dit quels enfants ont un code (child_code_status, famille ouverte) ; plus de mémoire locale", cs.length === 1 && cs[0].p_family === "f1" && await page.evaluate(() => localStorage.getItem("sf:kidCodeSet") === null), JSON.stringify(cs));
+  await page.evaluate(() => { window.__codes = { rows: [{ child_id: "k1", has_code: true }, { child_id: "k2", has_code: true }] }; });   // le serveur a gardé les deux codes
   await shot(page, "code-appareil-fr-clair");
   await page.evaluate(() => closeSheet()); await page.waitForTimeout(200);
   // Mode enfant ici, deux enfants
@@ -183,6 +186,21 @@ const txt = async p => (await p.locator("#toast").textContent()) || "";
   await page.click('[data-act=editChild][data-id="k1"]'); await page.click("[data-act=kidCodeSet]"); await page.waitForTimeout(300);
   ok("6.15 fiche de l'enfant : « Code de l'enfant » ouvre le choix des 3 images", await page.locator(".kimg").count() === 9);
   await ctx.close();
+  // 6b2. Un enfant a déjà un code : seul l'autre en reçoit un
+  ({ page, ctx, errs } = await PARENT());
+  await page.evaluate(() => { window.__codes = { rows: [{ child_id: "k1", has_code: true }, { child_id: "k2", has_code: false }] }; });
+  await page.click('[data-act=deviceCode][data-id="k1"]'); await page.check(".ks-in >> nth=1"); await page.click("#ks-ok"); await page.waitForTimeout(500);
+  ok("6.17 enfant déjà doté d'un code : on ne demande que l'enfant sans code", await page.locator(".kimg").count() === 9 && /Enfant Deux/.test(await page.locator("#sheet h2").textContent()));
+  for (const i of [4, 5, 6]) await page.click(`.kimg[data-i="${i}"]`);
+  await page.click("#kd-ok"); await page.waitForTimeout(900);
+  const sc2 = await calls(page, "set_child_code");
+  ok("6.18 un seul set_child_code (pour l'enfant sans code), puis le code d'appareil", sc2.length === 1 && sc2[0].p_child === "k2" && /ABC234/.test(await page.locator("#sheet .code").textContent()), JSON.stringify(sc2).slice(0, 80));
+  await page.evaluate(() => closeSheet()); await page.waitForTimeout(200);
+  await page.evaluate(() => { window.__codes = { rows: [{ child_id: "k1", has_code: true }, { child_id: "k2", has_code: true }] }; window.__calls = []; });
+  await page.click('[data-act=deviceCode][data-id="k1"]'); await page.check(".ks-in >> nth=1"); await page.click("#ks-ok"); await page.waitForTimeout(500);
+  ok("6.19 les deux ont un code : aucun code redemandé (le code existant n'est pas remplacé)", await page.locator(".kimg").count() === 0 && (await calls(page, "set_child_code")).length === 0 && /ABC234/.test(await page.locator("#sheet .code").textContent()));
+  await ctx.close();
+
   // 6c. Un seul enfant dans la famille : pas de choix, comme avant
   ({ page, ctx, errs } = await PARENT());
   await page.evaluate(() => { S.children = S.children.slice(0, 1); render(); });

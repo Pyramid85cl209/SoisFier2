@@ -66,9 +66,6 @@ function kidGuardFail(id) {
   store.set(kidGuardKey(id), g); return kidGuardLeft(id);
 }
 const kidGuardReset = id => store.del(kidGuardKey(id));
-// Codes d'enfant choisis depuis ce téléphone de Parent (la base ne dit pas si un enfant a déjà un code : il est hors API, ADR-53)
-const kidCodeKnown = id => !!(store.get("kidCodeSet", {}) || {})[id];
-const kidCodeMark = id => { const m = store.get("kidCodeSet", {}) || {}; m[id] = 1; store.set("kidCodeSet", m); };
 // Efface tout ce que l'appareil garde d'un enfant (copies, files, compteurs) : sortie du mode enfant, appareil retiré
 const CHILD_KEYS = ["childToken", "childKids", "childCache", "queue", "childFromParent", "cpushOn", "lastEarned", "seenFlowers", "kidGuard"];
 function clearChildStore() {

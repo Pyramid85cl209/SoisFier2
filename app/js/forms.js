@@ -174,15 +174,17 @@ function kidCodeSheet(c) {
       $("#kd-ok").disabled = true;
       try {
         const { error } = await sb.rpc("set_child_code", { p_child: c.id, p_verifier: await kidVerifier(seq) }); if (error) throw error;
-        kidCodeMark(c.id); ok = true; closeSheet(); toast(t("kidcode.saved", { name: c.name }));
+        ok = true; closeSheet(); toast(t("kidcode.saved", { name: c.name }));
       } catch (e) { console.error(e); toast(errMsg(e), true); $("#kd-ok").disabled = false; }
     };
   });
 }
-// Avant de relier plusieurs enfants : chaque enfant dont ce téléphone n'a pas encore choisi le code en reçoit un (la base ne dit pas qui en a déjà un, ADR-53)
+// Avant de relier plusieurs enfants : la base dit quels enfants ont déjà un code (sans jamais donner l'empreinte, child_code_status, Parent seul) ; seuls ceux qui n'en ont pas en reçoivent un
 async function ensureKidCodes(ids) {
+  const { data, error } = await sb.rpc("child_code_status", { p_family: S.family.id }); if (error) throw error;
+  const has = new Set((data || []).filter(r => r.has_code).map(r => r.child_id));
   for (const id of ids) {
-    const c = S.children.find(k => k.id === id); if (!c || kidCodeKnown(id)) continue;
+    const c = S.children.find(k => k.id === id); if (!c || has.has(id)) continue;
     if (!await kidCodeSheet(c)) return false;
   }
   return true;
