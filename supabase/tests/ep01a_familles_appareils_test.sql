@@ -83,7 +83,7 @@ insert into public.child_device_children(device_id, child_id, family_id)
 select d.id, d.child_id, d.family_id from public.child_devices d where d.child_id is not null
 on conflict do nothing;
 
--- Dès maintenant, child_devices.child_id n'est plus la source : colonne facultative, sans suppression en cascade
+-- Dès maintenant, child_devices.child_id n'est plus la source (il reste rempli avec le premier enfant jusqu'au retrait) : facultatif, sans suppression en cascade
 -- (la colonne et la contrainte sont retirées par supabase/editeur-sql/ep01_retraits.sql)
 alter table public.child_devices alter column child_id drop not null;
 alter table public.child_devices drop constraint if exists child_devices_child_id_family_id_fkey;
@@ -166,8 +166,8 @@ begin
     return json_build_object('error', 'bad_code');
   end if;
   tok := encode(extensions.gen_random_bytes(32), 'hex');
-  insert into public.child_devices(family_id, token_hash, label)
-  values (rec.family_id, encode(extensions.digest(tok, 'sha256'), 'hex'), nullif(left(trim(p_label), 60), '')) returning id into did;
+  insert into public.child_devices(child_id, family_id, token_hash, label)
+  values (rec.child_id, rec.family_id, encode(extensions.digest(tok, 'sha256'), 'hex'), nullif(left(trim(p_label), 60), '')) returning id into did;
   insert into public.child_device_children(device_id, child_id, family_id)
   select did, c.id, c.family_id from public.children c
   where c.family_id = rec.family_id and c.id = any(coalesce(rec.child_ids, array[rec.child_id]));
@@ -205,8 +205,8 @@ begin
   select c.family_id into fid from public.children c where c.id = p_child;
   if fid is null or not private.is_parent(fid) then raise exception 'SF:device_parent_only'; end if;
   tok := encode(extensions.gen_random_bytes(32), 'hex');
-  insert into public.child_devices(family_id, token_hash, label, mode_here)
-  values (fid, encode(extensions.digest(tok, 'sha256'), 'hex'), nullif(left(trim(p_label), 60), ''), true) returning id into did;
+  insert into public.child_devices(child_id, family_id, token_hash, label, mode_here)
+  values (p_child, fid, encode(extensions.digest(tok, 'sha256'), 'hex'), nullif(left(trim(p_label), 60), ''), true) returning id into did;
   insert into public.child_device_children(device_id, child_id, family_id) values (did, p_child, fid);
   return json_build_object('token', tok, 'child_id', p_child);
 end $$;
@@ -232,8 +232,8 @@ begin
     update public.child_devices set here_endpoint = coalesce(ep, here_endpoint), last_seen = now() where id = did;
   else
     tok := encode(extensions.gen_random_bytes(32), 'hex');
-    insert into public.child_devices(family_id, token_hash, label, mode_here, here_endpoint)
-    values (fid, encode(extensions.digest(tok, 'sha256'), 'hex'), nullif(left(trim(p_label), 60), ''), true, ep) returning id into did;
+    insert into public.child_devices(child_id, family_id, token_hash, label, mode_here, here_endpoint)
+    values (p_child, fid, encode(extensions.digest(tok, 'sha256'), 'hex'), nullif(left(trim(p_label), 60), ''), true, ep) returning id into did;
   end if;
   insert into public.child_device_children(device_id, child_id, family_id)
   select did, x, fid from unnest(ids) x on conflict do nothing;
@@ -472,7 +472,7 @@ begin
   j := public.child_pair(code, 'Tablette');
   tok := j ->> 'token';
   reset role;
-  res := res || ' 6.liens=' || (select count(*) from public.child_device_children l join public.child_devices d on d.id = l.device_id where d.label = 'Tablette') || '/child_id_null=' || (select child_id is null from public.child_devices where label = 'Tablette');
+  res := res || ' 6.liens=' || (select count(*) from public.child_device_children l join public.child_devices d on d.id = l.device_id where d.label = 'Tablette') || '/child_id_rempli=' || (select child_id is not null from public.child_devices where label = 'Tablette');
   set local role anon;
   begin perform public.child_state(tok, null); res := res || ' 7.sans_enfant=ok'; exception when others then res := res || ' 7.sans_enfant=' || sqlerrm; end;
   begin perform public.child_state(tok); res := res || ' 7b.ancienne_sig=ok'; exception when others then res := res || ' 7b.ancienne_sig=' || sqlerrm; end;
