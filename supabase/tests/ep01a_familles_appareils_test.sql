@@ -436,12 +436,13 @@ begin
   -- Familles
   perform set_config('request.jwt.claims', json_build_object('sub', u1, 'role', 'authenticated')::text, true);
   set local role authenticated;
-  f1 := public.create_family('F1', 'P1', 1::smallint, '{6,7}'::smallint[], 'Europe/Paris');
+  begin f1 := public.create_family('F1', 'P1', 1::smallint, '{6,7}'::smallint[], 'Europe/Paris');
   res := res || ' 1.ancienne_idem=' || (public.create_family('F1bis', 'P1', 1::smallint, '{6,7}'::smallint[], 'Europe/Paris') = f1);
   res := res || ' 1b.nouvelle_sans_autre=' || (public.create_family('F1ter', 'P1', 1::smallint, '{6,7}'::smallint[], 'Europe/Paris', false) = f1);
   f2 := public.create_family('F2', 'P1', 1::smallint, '{6,7}'::smallint[], 'Europe/Paris', true);
   f3 := public.create_family('F3', 'P1', 1::smallint, '{6,7}'::smallint[], 'Europe/Paris', true);
   res := res || ' 2.trois_familles=' || (f1 <> f2 and f2 <> f3) || '/membre_de=' || (select count(*) from public.family_members where user_id = u1);
+  exception when others then res := res || ' 1.x=' || sqlerrm; end;
   begin f4 := public.create_family('F4', 'P1', 1::smallint, '{6,7}'::smallint[], 'Europe/Paris', true); res := res || ' 3.quatrieme=cree';
   exception when others then res := res || ' 3.quatrieme=' || sqlerrm; end;
   reset role;
@@ -466,46 +467,56 @@ begin
   perform set_config('request.jwt.claims', json_build_object('sub', u1, 'role', 'authenticated')::text, true);
   set local role authenticated;
   code := public.create_child_code(a, array[b]);
-  begin perform public.create_child_code(a, array[(select id from public.children where family_id = fx limit 1)]); res := res || ' 5.autre_famille_ignoree=ok';
-  exception when others then res := res || ' 5.x=' || sqlerrm; end;
   reset role; set local role anon;
   j := public.child_pair(code, 'Tablette');
   tok := j ->> 'token';
   reset role;
+  res := res || ' 5a.jeton=' || (tok is not null);
+  if tok is null then res := res || ' 5b.pair=' || j::text; end if;
   res := res || ' 6.liens=' || (select count(*) from public.child_device_children l join public.child_devices d on d.id = l.device_id where d.label = 'Tablette') || '/child_id_rempli=' || (select child_id is not null from public.child_devices where label = 'Tablette');
+  perform set_config('request.jwt.claims', json_build_object('sub', u1, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin code2 := public.create_child_code(a, array[(select id from public.children where family_id = fx limit 1)]); res := res || ' 5.autre_famille_ignoree=' || (select array_length(child_ids,1) from public.child_device_codes where code = code2);
+  exception when others then res := res || ' 5.x=' || sqlerrm; end;
+  reset role;
   set local role anon;
   begin perform public.child_state(tok, null); res := res || ' 7.sans_enfant=ok'; exception when others then res := res || ' 7.sans_enfant=' || sqlerrm; end;
   begin perform public.child_state(tok); res := res || ' 7b.ancienne_sig=ok'; exception when others then res := res || ' 7b.ancienne_sig=' || sqlerrm; end;
   begin perform public.child_state(tok, c); res := res || ' 8.enfant_non_relie=ok'; exception when others then res := res || ' 8.enfant_non_relie=' || sqlerrm; end;
-  j := public.child_state(tok, a);
+  begin j := public.child_state(tok, a);
   res := res || ' 9.etat_A=' || (j -> 'child' ->> 'name') || '/common=' || (j ->> 'common') || '/enfants=' || json_array_length(j -> 'device_children')
      || '/routines=' || (select string_agg(r ->> 'title', ',') from json_array_elements(j -> 'routines') r)
      || '/cles_autres=' || (select string_agg(k, ',' order by k) from json_object_keys((j -> 'device_children' ->> 0)::json) k);
-  perform public.child_toggle(tok, a, ra, td, true, 'child');
+  exception when others then res := res || ' 9.x=' || sqlerrm; end;
+  begin perform public.child_toggle(tok, a, ra, td, true, 'child'); exception when others then res := res || ' 10a.x=' || sqlerrm; end;
   begin perform public.child_toggle(tok, a, rb, td, true, 'child'); res := res || ' 10.coche_autre=ok'; exception when others then res := res || ' 10.coche_autre=' || sqlerrm; end;
   begin perform public.child_toggle(tok, null, ra, td, true, 'child'); res := res || ' 10b.coche_sans_enfant=ok'; exception when others then res := res || ' 10b.coche_sans_enfant=' || sqlerrm; end;
-  perform public.child_badges_seen(tok, b, array['x']);
+  begin perform public.child_badges_seen(tok, b, array['x']); exception when others then res := res || ' 10c.x=' || sqlerrm; end;
   reset role;
   res := res || ' 11.coches=' || (select count(*) from public.completions where routine_id = ra and day = td) || '/' || (select count(*) from public.completions where routine_id = rb);
-  -- Code de l'enfant
+  -- Code de l'enfant (12 : un compte sans droit sur la famille)
+  perform set_config('request.jwt.claims', json_build_object('sub', u3, 'role', 'authenticated')::text, true);
   set local role authenticated;
   begin perform public.set_child_code(a, '{"salt":"s","hash":"h"}'::jsonb); res := res || ' 12.set_code_sans_droit=ok'; exception when others then res := res || ' 12.set_code_sans_droit=' || sqlerrm; end;
   begin perform public.set_child_code(a, '{"x":1}'::jsonb); res := res || ' 12b.mauvais=ok'; exception when others then res := res || ' 12b.mauvais=' || sqlerrm; end;
   reset role;
   perform set_config('request.jwt.claims', json_build_object('sub', u1, 'role', 'authenticated')::text, true);
   set local role authenticated;
-  perform public.set_child_code(a, '{"salt":"s","hash":"h"}'::jsonb);
+  begin perform public.set_child_code(a, '{"salt":"s","hash":"h"}'::jsonb); exception when others then res := res || ' 12c.x=' || sqlerrm; end;
   reset role; set local role anon;
-  j := public.child_state(tok, b);
+  begin j := public.child_state(tok, b);
   res := res || ' 13.verifier=' || coalesce((select string_agg((e ->> 'name') || ':' || coalesce((e -> 'verifier')::text, 'null'), ',' order by e ->> 'name') from json_array_elements(j -> 'device_children') e), '');
+  exception when others then res := res || ' 13.x=' || sqlerrm; end;
   begin perform count(*) from private.child_codes; res := res || ' 14.anon_lit_codes=ok'; exception when others then res := res || ' 14.anon_lit_codes=refuse'; end;
   reset role;
   -- RLS de la liaison
   perform set_config('request.jwt.claims', json_build_object('sub', u1, 'role', 'authenticated')::text, true);
   set local role authenticated;
+  begin
   res := res || ' 15.liaison_vue_membre=' || (select count(*) from public.child_device_children);
   begin insert into public.child_device_children(device_id, child_id, family_id) select device_id, c, f1 from public.child_device_children limit 1; res := res || ' 16.ecriture=ok';
   exception when others then res := res || ' 16.ecriture=refuse'; end;
+  exception when others then res := res || ' 15.x=' || sqlerrm; end;
   reset role;
   perform set_config('request.jwt.claims', json_build_object('sub', u3, 'role', 'authenticated')::text, true);
   set local role authenticated;
@@ -514,26 +525,30 @@ begin
   -- Appareil d'un seul enfant : ancienne et nouvelle signature
   perform set_config('request.jwt.claims', json_build_object('sub', u1, 'role', 'authenticated')::text, true);
   set local role authenticated;
-  code2 := public.create_child_code(c);
+  begin code2 := public.create_child_code(c);
   reset role; set local role anon;
   tok1 := (public.child_pair(code2, 'Seul')) ->> 'token';
-  res := res || ' 18.seul=' || (public.child_state(tok1) -> 'child' ->> 'name') || '/' || (public.child_state(tok1, null) -> 'child' ->> 'name') || '/common=' || (public.child_state(tok1, null) ->> 'common');
+  res := res || ' 18.jeton=' || (tok1 is not null) || ' seul=' || (public.child_state(tok1) -> 'child' ->> 'name') || '/' || (public.child_state(tok1, null) -> 'child' ->> 'name') || '/common=' || (public.child_state(tok1, null) ->> 'common');
+  exception when others then res := res || ' 18.x=' || sqlerrm; end;
   reset role;
   -- Mode enfant ici : plusieurs enfants, réutilisation de la ligne
   perform set_config('request.jwt.claims', json_build_object('sub', u1, 'role', 'authenticated')::text, true);
   set local role authenticated;
-  j := public.child_pair_here(a, 'Ici', array[b], null, 'https://ep.invalid/x');
+  begin j := public.child_pair_here(a, 'Ici', array[b], null, 'https://ep.invalid/x');
   res := res || ' 19.ici=' || (select count(*) from public.child_device_children where device_id = (select id from public.child_devices where label = 'Ici')) || '/mode_here=' || (select mode_here from public.child_devices where label = 'Ici');
   j := public.child_pair_here(a, 'Ici', array[c], j ->> 'token', null);
   res := res || ' 19b.reutilise=' || (select count(*) from public.child_devices where label = 'Ici') || '/enfants=' || (select count(*) from public.child_device_children where device_id = (select id from public.child_devices where label = 'Ici')) || '/endpoint_gardee=' || (select here_endpoint from public.child_devices where label = 'Ici');
   res := res || ' 19c.ancienne_sig=' || (public.child_pair_here(a, 'Ici2') ->> 'child_id' = a::text);
+  exception when others then res := res || ' 19.x=' || sqlerrm; end;
   reset role;
   -- Suppression d'enfants : l'appareil reste tant qu'un enfant lui est relié
+  begin
   delete from public.children where id = b;
   res := res || ' 20.apres_B=' || (select count(*) from public.child_devices where label = 'Tablette');
   delete from public.children where id = a;
   res := res || ' 21.apres_A=' || (select count(*) from public.child_devices where label = 'Tablette') || '/codes=' || (select count(*) from private.child_codes);
   -- Droits des nouvelles fonctions
+  exception when others then res := res || ' 20.x=' || sqlerrm; end;
   res := res || ' 22.droits=anon_cree_famille:' || has_function_privilege('anon', 'public.create_family(text,text,smallint,smallint[],text,boolean)', 'execute')
      || '/anon_set_code:' || has_function_privilege('anon', 'public.set_child_code(uuid,jsonb)', 'execute')
      || '/anon_state:' || has_function_privilege('anon', 'public.child_state(text,uuid)', 'execute');
