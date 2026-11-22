@@ -104,13 +104,14 @@ function renderPair() {
 }
 function renderOnboard() {
   if (!S.wk) S.wk = detectWeek();
+  const another = !!S.family && S.onboardBack, limit = familyLimitReached();   // F01-04 CA8, CA9
   app.innerHTML = `<main class="wrap auth">${topButtons()}<div class="auth-hero">${plantSVG(1)}<h1>${t("onboard.welcome")}</h1><p>${t("onboard.intro")}</p></div>
-    <form class="card" novalidate><h2>${t("onboard.create")}</h2><label class="f">${t("onboard.familyName")}<input id="o-name" placeholder="${t("onboard.familyPlaceholder")}" maxlength="40"></label><label class="f">${t("onboard.iAm")}<select id="o-rel">${RELATIONS().map(k => `<option value="${k}">${t("rel." + k)}</option>`).join("")}</select></label>
+    ${limit ? `<div class="card"><h2>${t("onboard.create")}</h2><p role="status">${t("srv.family_limit")}</p></div>` : `<form class="card" novalidate><h2>${t("onboard.create")}</h2><label class="f">${t("onboard.familyName")}<input id="o-name" placeholder="${t("onboard.familyPlaceholder")}" maxlength="40"></label><label class="f">${t("onboard.iAm")}<select id="o-rel">${RELATIONS().map(k => `<option value="${k}">${t("rel." + k)}</option>`).join("")}</select></label>
     <p class="muted small"><span id="o-week">${esc(weekSummary(S.wk))}</span> <button type="button" class="link" data-act="editWeek" data-mode="onboard">${t("btn.edit")}</button></p>
-    <button class="btn wide" data-act="createFamily">${t("btn.create")}</button></form>
+    <button class="btn wide" data-act="createFamily">${t("btn.create")}</button></form>`}
     <form class="card" novalidate><h2>${t("onboard.join")}</h2><label class="f">${t("onboard.inviteCode")}<input id="o-code" class="pin" maxlength="6" autocapitalize="characters" autocomplete="off"></label>
     <button class="btn ghost wide" data-act="joinFamily">${t("onboard.joinBtn")}</button></form>
-    <p class="center"><button class="link" data-act="logout">${t("btn.logout")}</button></p></main>`;
+    <p class="center">${another ? `<button class="link" data-act="backFromOnboard">${t("btn.back")}</button> ` : ""}<button class="link" data-act="logout">${t("btn.logout")}</button></p></main>`;
 }
 
 /* ---------- Membres ---------- */

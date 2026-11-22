@@ -9,7 +9,7 @@ document.addEventListener("visibilitychange", () => {
   else if (S.screen === "parent" && S.family) {
     // DT15-01 : retour après minuit : on revient au jour en cours, sauf si l'adulte avait choisi un autre jour
     const nt = todayISO(); if (S.lastToday && S.lastToday !== nt && S.day === S.lastToday) S.day = nt; S.lastToday = nt;
-    if (S.day > nt) S.day = nt; refreshParent().then(render).catch(() => {}); }
+    if (S.day > nt) S.day = nt; loadParent().then(render).catch(() => {}); }   // loadParent : une famille perdue ouvre une autre famille (R01-07 CA3)
 });
 if (sb) sb.auth.onAuthStateChange((event, session) => {
   if (event === "PASSWORD_RECOVERY") {
@@ -47,6 +47,8 @@ function swSetup() {
   }).catch(() => {});
   askVersion();
 }
+// Message gardé à travers un rechargement complet (famille rejointe)
+function flashToast() { const f = store.get("flash"); if (f) { store.del("flash"); toast(t(f)); } }
 async function boot() {
   swSetup();
   await loadI18n();
@@ -60,6 +62,6 @@ async function boot() {
   const { data } = await sb.auth.getSession();
   S.session = data.session;
   if (!S.session) { S.screen = "auth"; render(); introFromLink(); return; }
-  await enterParent(); introFromLink();
+  await enterParent(); introFromLink(); flashToast();
 }
 boot();

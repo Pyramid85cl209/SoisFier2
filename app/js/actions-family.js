@@ -179,3 +179,13 @@ A.exportData = async () => {
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `soisfier-${todayISO()}.json`; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 5000); toast(t("backup.done"));
 };
+
+/* ---------- Mes familles (EP-01, F01-09, ADR-54) : on change de famille depuis Famille seulement (DEC-06) ---------- */
+A.switchFamily = async el => {
+  const id = el.dataset.id; if (!id || id === S.family?.id) return;
+  if (!navigator.onLine || S.offline) return toast(t("family.needNet"), true);   // DEC-16 : en ligne seulement
+  if (PENDING > 0) return toast(t("family.busy"), true);   // une écriture est en cours : on attend
+  openFamilyNow(id);
+};
+A.anotherFamily = () => { S.onboardBack = true; S.screen = "onboard"; render(); };   // Bienvenue avec « Retour »
+A.backFromOnboard = () => { S.onboardBack = false; S.screen = "parent"; render(); };

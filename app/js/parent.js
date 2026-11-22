@@ -119,12 +119,18 @@ function pFamily() {
       ${devs.map(d => `<div class="dev">📱 ${esc(d.label || t("family.hisPhone"))}${t("sep")}${t("family.since", { date: fmtDate(d.created_at) })}${(d.child_ids || []).length > 1 ? t("sep") + t("device.sharedWith", { names: d.child_ids.filter(i => i !== c.id).map(i => `<bdi>${esc(S.children.find(k => k.id === i)?.name || "")}</bdi>`).join(t("sep")) }) : ""} ${P ? `<button class="link" data-act="revokeDevice" data-id="${d.id}" aria-label="${esc(t("a11y.disconnectDevice", { name: d.label || t("family.hisPhone") }))}">${t("family.disconnect")}</button>` : ""}</div>`).join("")}</div>
       ${P ? `<div class="btns"><button class="btn sm" data-act="childHere" data-id="${c.id}" aria-label="${t("a11y.childHere", { name: c.name })}">${t("family.childHere")}</button><button class="btn sm ghost" data-act="editChild" data-id="${c.id}" aria-label="${t("a11y.edit", { name: c.name })}">${t("btn.edit")}</button><button class="btn sm ghost" data-act="deviceCode" data-id="${c.id}" aria-label="${t("a11y.connectDevice", { name: c.name })}">${t("family.connectDevice")}</button></div>` : ""}</div>`;
   }).join("");
+  // Mes familles (F01-09) : dès que le compte est dans deux familles ; « Créer ou rejoindre une autre famille » est toujours proposé
+  const fams = S.families || [], anotherBtn = `<button class="btn ghost" data-act="anotherFamily">${t("family.another")}</button>`;
+  const famList = fams.length >= 2 ? fsec("families", "🏡 " + t("family.mine"), `<p class="muted">${t("family.mineHelp")}</p>
+      <div class="flist" role="listbox" aria-label="${t("family.mine")}">${fams.map(f => `<button type="button" class="frow ${f.id === S.family?.id ? "on" : ""}" role="option" aria-selected="${f.id === S.family?.id}" data-act="switchFamily" data-id="${f.id}"><span><b><bdi>${esc(f.name)}</bdi></b>${t("sep")}${f.role === "helper" ? t("role.helper") : t("role.parent")}</span>${f.id === S.family?.id ? `<span class="fopen">✓ ${t("family.opened")}</span>` : ""}</button>`).join("")}</div>
+      <div class="actions">${anotherBtn}</div>`, true) : "";
   const pushOn = store.get("pushOn", false), times = store.get("pushTimes", ["07:30", "18:00"]);
   const members = S.members.map(m => `<div class="krow"><div class="grow"><b>${esc(relLabel(m) || m.display_name || t("role.parent"))}</b>${m.user_id === me ? " " + t("family.you") : ""}
       <div class="dev">${m.relation && m.display_name ? esc(m.display_name) + t("sep") : ""}${m.role === "helper" ? t("role.helper") : t("role.parent")}</div></div>
       ${P || m.user_id === me ? `<div class="btns"><button class="btn sm ghost" data-act="editMember" data-id="${m.user_id}" aria-label="${t("a11y.edit", { name: relLabel(m) || m.display_name || t("role.parent") })}">${t("btn.edit")}</button></div>` : ""}</div>`).join("");
   // Ordre par fréquence d'usage (v28) ; sections repliables, Enfants et Vacances ouvertes par défaut, état retenu sur le téléphone
   return fsec("kids", "🧒 " + t("family.children"), `${kids || `<p class="muted">${t("family.noChild")}</p>`}${P ? `<div class="actions"><button class="btn" data-act="newChild">${t("child.add")}${S.children.length >= 1 ? ptag() : ""}</button></div>` : ""}`, true)
+    + famList
     + (P ? fsec("vac", "🏖️ " + t("vac.title"), vacSection(), true) : "")
     + fsec("members", "👥 " + t("family.members"), `${members}${P ? `<p class="muted small">${t("family.rolesHelp")}</p><div class="actions"><button class="btn ghost" data-act="invite">${t("family.invite")}${!isPremium() && S.members.filter(m => m.role !== "helper").length >= 2 ? ptag() : ""}</button></div>` : ""}`)
     + fsec("push", "🔔 " + t("push.title"), `<p class="muted">${t("push.parentHelp")}</p>
@@ -137,6 +143,7 @@ function pFamily() {
       <h3 class="grp">${t("pin.title")}</h3><p class="muted">${t("pin.help")}</p><div class="actions"><button class="btn ghost" data-act="setPin">${hasPin() ? t("pin.change") : t("pin.create")}</button></div>`)
     + (P ? fsec("plan", "⭐ " + t("premium.myPlan"), planSection()) : "")
     + fsec("account", "👤 " + t("family.account"), `<p class="muted">${esc(S.session?.user.email || "")}</p>${installBtn() || P ? `<div class="actions">${installBtn()}${P ? `<button class="btn ghost" data-act="renameFamily">${t("account.rename")}</button>` : ""}</div>` : ""}
+      ${fams.length < 2 ? `<div class="actions">${anotherBtn}</div>` : ""}
       <h3 class="grp">${t("backup.title")}</h3><p class="muted">${t("backup.help")}</p><div class="actions"><button class="btn ghost" data-act="exportData">${t("backup.btn")}</button></div>
       <div class="actions"><button class="btn danger ghost" data-act="logout">${t("btn.logout")}</button></div>
       ${S.version ? `<p class="muted small app-version">${t("account.version", { v: esc(S.version) })}</p>` : ""}`);

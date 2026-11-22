@@ -1,14 +1,27 @@
 "use strict";
 /* SoisFier : Données parent et enfant, rechargements, notifications */
 /* ================= Données parent ================= */
+// Familles du compte (EP-01, ADR-54, R01-07) : toutes sont lues ; la famille ouverte est la dernière ouverte sur ce téléphone (sf:family:<compte>),
+// sinon la plus ancienne ; aucune famille : Bienvenue. Changer de famille recharge toute la page (changeFamily), jamais en place.
+const famKey = uid => "family:" + uid;
 async function loadParent() {
   const uid = S.session.user.id;
-  const { data: mem, error } = await sb.from("family_members").select("family_id,display_name,role,created_at,families(name)").eq("user_id", uid).order("created_at").limit(1);
+  let { data: mem, error } = await sb.from("family_members").select("family_id,display_name,role,created_at,families(name,created_by)").eq("user_id", uid).order("created_at");
+  if (error) ({ data: mem, error } = await sb.from("family_members").select("family_id,display_name,role,created_at,families(name)").eq("user_id", uid).order("created_at"));   // base pas encore à jour : sans le créateur
   if (error) throw error;
-  if (!mem.length) { S.screen = "onboard"; return; }
-  S.family = { id: mem[0].family_id, name: mem[0].families?.name || t("onboard.defaultName") }; S.me = mem[0];
+  S.families = (mem || []).map(m => ({ id: m.family_id, name: m.families?.name || t("onboard.defaultName"), role: m.role, created_by: m.families?.created_by || null }));
+  if (!mem || !mem.length) { S.family = null; S.screen = "onboard"; store.del(famKey(uid)); return; }
+  const want = store.get(famKey(uid)), pick = mem.find(m => m.family_id === want) || mem[0];
+  if (S.family && S.family.id !== pick.family_id) {   // la famille ouverte n'est plus accessible (R01-07 CA3) : une autre s'ouvre, sans rien garder de l'ancienne
+    store.set(famKey(uid), pick.family_id); store.del("parentCache"); return location.reload();
+  }
+  store.set(famKey(uid), pick.family_id);
+  S.family = { id: pick.family_id, name: pick.families?.name || t("onboard.defaultName") }; S.me = pick;
   await refreshParent();
 }
+// Familles créées par ce compte (DEC-19) : 3 au plus ; le serveur refuse aussi la 4e (SF:family_limit)
+const FAMILY_MAX = 3;
+const familyLimitReached = () => (S.families || []).filter(f => f.created_by && f.created_by === S.session?.user.id).length >= FAMILY_MAX;
 // Appareils et enfants reliés (EP-01, ADR-52) : la table de liaison est la source ; à défaut (base pas encore à jour), le premier enfant de l'appareil
 async function devicesQuery(f) {
   const [a, b] = await Promise.all([
@@ -80,12 +93,13 @@ function applyParts(o) {
 }
 // Cache du parent, rattaché au compte : affiché dès l'ouverture, puis remplacé par les données fraîches
 function saveParentCache() {
-  store.set("parentCache", { uid: S.session?.user.id, family: S.family, me: S.me, children: S.children, routines: S.routines, routinesAll: S.routinesAll, rsets: S.rsets, rewards: S.rewards, completions: S.completions, redemptions: S.redemptions, stats: S.stats, members: S.members, devices: S.devices,
+  store.set("parentCache", { uid: S.session?.user.id, family: S.family, me: S.me, families: S.families, children: S.children, routines: S.routines, routinesAll: S.routinesAll, rsets: S.rsets, rewards: S.rewards, completions: S.completions, redemptions: S.redemptions, stats: S.stats, members: S.members, devices: S.devices,
     autoValidate: S.autoValidate, penalties: S.penalties, pevents: S.pevents, badges: S.badges, pauses: S.pauses, gardens: S.gardens, week: { ...WEEK }, plan: S.plan, holidays: S.holidays, hp: S.hp, ho: S.ho, oneoffTpl: S.oneoffTpl });
 }
 function parentCache() {
   const c = store.get("parentCache"), uid = S.session?.user.id;
-  return c && c.family && uid && (c.uid || c.me?.user_id) === uid ? c : null;   // jamais le cache d'un autre compte
+  const want = uid ? store.get(famKey(uid)) : null;
+  return c && c.family && uid && (c.uid || c.me?.user_id) === uid && (!want || c.family.id === want) ? c : null;   // jamais le cache d'un autre compte ni d'une autre famille que la famille ouverte
 }
 function useParentCache(c) { const { uid, ...rest } = c; Object.assign(S, rest); if (c.week) Object.assign(WEEK, c.week); }
 // Écritures en cours : une lecture qui croise une écriture est ignorée (pas de retour en arrière visible).

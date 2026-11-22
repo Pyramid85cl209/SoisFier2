@@ -69,7 +69,7 @@ A.setLang = async el => {
 A.logout = async () => {
   if (sb) await sb.auth.signOut().catch(() => {});
   ["parentCache", "pushOn"].forEach(k => store.del(k));
-  Object.assign(S, { session: null, family: null, children: [], routines: [], screen: "auth", tab: "today", wk: null }); render();
+  Object.assign(S, { session: null, family: null, families: [], onboardBack: false, children: [], routines: [], screen: "auth", tab: "today", wk: null }); render();
 };
 /* Présentation (EP-09, F14-04, ADR-48) : fenêtre de trois écrans, montrée une fois par compte (indication « vue » dans les métadonnées du compte) ; rouvrable depuis le guide (?intro=1) */
 const INTRO_N = 3;
@@ -103,19 +103,30 @@ function introFromLink() {
   let on = false; try { const u = new URL(location.href); on = u.searchParams.get("intro") === "1"; if (on) { u.searchParams.delete("intro"); history.replaceState(null, "", u.pathname + u.search + u.hash); } } catch (_) {}
   if (on) { introShown = true; showIntro(); }
 }
+// Ouvrir une autre famille aussitôt (créée ou rejointe depuis Famille, F01-04 CA7, R01-07) : rechargement complet, rien de l'ancienne ne reste (ADR-54)
+function openFamilyNow(fid, flash) {
+  store.set(famKey(S.session.user.id), fid); store.del("parentCache"); if (flash) store.set("flash", flash);
+  location.reload();
+}
 A.createFamily = async () => {
+  const another = !!S.family;   // depuis Famille : une nouvelle famille (3 créées au plus, DEC-19) ; sinon comme avant
+  if (another && familyLimitReached()) return toast(t("srv.family_limit"), true);
   const name = $("#o-name").value.trim();
   const rel = t("rel." + $("#o-rel").value);
   const w = S.wk || detectWeek();
   const { data: fid, error } = await sb.rpc("create_family", { p_name: name || t("onboard.defaultName"), p_display_name: S.session.user.user_metadata?.display_name || "",
-    p_week_start: w.start, p_weekend: w.weekend, p_timezone: w.tz }); if (error) throw error;
+    p_week_start: w.start, p_weekend: w.weekend, p_timezone: w.tz, p_another: another }); if (error) throw error;
   await sb.from("family_members").update({ relation: rel }).eq("family_id", fid).eq("user_id", S.session.user.id);
+  if (another) return openFamilyNow(fid);
+  store.set(famKey(S.session.user.id), fid);
   await enterParent();
 };
 A.joinFamily = async () => {
   const code = $("#o-code").value.trim(); if (code.length < 6) return toast(t("pair.need6"), true);
   const { data, error } = await sb.rpc("join_family", { p_code: code, p_display_name: S.session.user.user_metadata?.display_name || "" }); if (error) throw error;
   if (!data) throw new Error("SF:bad_code");   // EP-09 : le serveur répond « vide » pour un code faux (l'échec reste compté)
+  if (S.family) return openFamilyNow(data, "onboard.joined");   // R01-07 CA5 : la famille rejointe s'ouvre, l'autre reste
+  store.set(famKey(S.session.user.id), data);
   await enterParent(); toast(t("onboard.joined"));
 };
 A.pair = async () => {
