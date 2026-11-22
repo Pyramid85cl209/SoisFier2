@@ -71,19 +71,27 @@ A.logout = async () => {
   ["parentCache", "pushOn"].forEach(k => store.del(k));
   Object.assign(S, { session: null, family: null, children: [], routines: [], screen: "auth", tab: "today", wk: null }); render();
 };
-/* Présentation (EP-09, F14-04, ADR-48) : fenêtre de trois écrans, montrée une fois par compte (indication « vue » dans les métadonnées du compte) ; rouvrable depuis le guide (?intro=1) */
-const INTRO_N = 3;
+/* Présentation « Comment démarrer » (EP-09 puis EP-01 DEC-10, F14-04, ADR-48) : quatre écrans, montrés une fois par compte (indication « vue » dans les métadonnées du compte) ; rouvrable depuis le guide (?intro=1) */
+const INTRO_N = 4;
 let introShown = false;
 const introSeen = () => !!(S.session && S.session.user && S.session.user.user_metadata && S.session.user.user_metadata.intro_seen);
+// Dernier écran (F14-04 CA10) : un Parent d'une famille sans enfant est mené à l'ajout d'un enfant, les autres à Aujourd'hui
+const introAddsChild = () => S.screen === "parent" && isParent() && !S.children.length;
 function introView(i) {
-  const n = i + 1;
-  openSheet(`<div class="intro"><div class="intro-art">${plantSVG([1, 3, 5][i], "#E58358", t("intro.a" + n))}</div>
+  const n = i + 1, last = i === INTRO_N - 1;
+  const cta = last ? `<button class="btn" data-act="introEnd" data-autofocus>${t(introAddsChild() ? "intro.addChild" : "intro.start")}</button>` : `<button class="btn" data-act="introNext" data-autofocus>${t("intro.next")}</button>`;
+  openSheet(`<div class="intro"><div class="intro-art">${plantSVG([0, 1, 3, 5][i], "#E58358", t("intro.a" + n))}</div>
     <h2>${t("intro.t" + n)}</h2><p>${t("intro.x" + n)}</p><p class="muted small">${t("intro.step", { i: n, n: INTRO_N })}</p>
-    <div class="sheet-actions">${i > 0 ? `<button class="btn ghost" data-act="introBack">${t("intro.back")}</button>` : ""}${i < INTRO_N - 1 ? `<button class="btn" data-act="introNext" data-autofocus>${t("intro.next")}</button>` : ""}<button class="btn ${i < INTRO_N - 1 ? "ghost" : ""}" data-act="closeSheet" ${i === INTRO_N - 1 ? "data-autofocus" : ""}>${t("intro.done")}</button></div></div>`);
+    <div class="sheet-actions">${i > 0 ? `<button class="btn ghost" data-act="introBack">${t("intro.back")}</button>` : ""}${cta}${last ? "" : `<button class="btn ghost" data-act="closeSheet">${t("intro.skip")}</button>`}</div></div>`);
   const f = dlg.querySelector("[data-autofocus]"); if (f) f.focus();
   dlg.dataset.intro = String(i);
 }
 A.introNext = () => introView(Math.min(INTRO_N - 1, +dlg.dataset.intro + 1));
+A.introEnd = () => {
+  const add = introAddsChild(); closeSheet();
+  if (add) return A.newChild();
+  if (S.screen === "parent") { S.tab = "today"; S.reviewing = null; S.day = todayISO(); render(); scrollTo(0, 0); }
+};
 A.introBack = () => introView(Math.max(0, +dlg.dataset.intro - 1));
 function showIntro() { introView(0); }
 async function markIntroSeen() {
