@@ -476,9 +476,10 @@ begin
   res := res || ' 6.liens=' || (select count(*) from public.child_device_children l join public.child_devices d on d.id = l.device_id where d.label = 'Tablette') || '/child_id_rempli=' || (select child_id is not null from public.child_devices where label = 'Tablette');
   perform set_config('request.jwt.claims', json_build_object('sub', u1, 'role', 'authenticated')::text, true);
   set local role authenticated;
-  begin code2 := public.create_child_code(a, array[(select id from public.children where family_id = fx limit 1)]); res := res || ' 5.autre_famille_ignoree=' || (select array_length(child_ids,1) from public.child_device_codes where code = code2);
+  begin code2 := public.create_child_code(a, array[(select id from public.children where family_id = fx limit 1)]);
   exception when others then res := res || ' 5.x=' || sqlerrm; end;
   reset role;
+  res := res || ' 5.autre_famille_ignoree=' || coalesce((select array_length(child_ids,1)::text from public.child_device_codes where code = code2), 'code_introuvable');
   set local role anon;
   begin perform public.child_state(tok, null); res := res || ' 7.sans_enfant=ok'; exception when others then res := res || ' 7.sans_enfant=' || sqlerrm; end;
   begin perform public.child_state(tok); res := res || ' 7b.ancienne_sig=ok'; exception when others then res := res || ' 7b.ancienne_sig=' || sqlerrm; end;
