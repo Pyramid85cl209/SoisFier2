@@ -1283,8 +1283,8 @@
  },
  "kidcode": {
   "help": "Tap your 3 secret pictures, in order.",
-  "wait": "Too many tries. Wait a minute, then try again.",
-  "wrong": "Those are not the right pictures. Try again.",
+  "wait": "Wait a little, then try again.",
+  "wrong": "That's not your code.",
   "progress": "Picture {n} of {total}",
   "gridAria": "Your secret pictures",
   "notSet": "Your code has not been chosen yet. Ask a parent.",
@@ -1303,7 +1303,7 @@
   "chooseText": "The child taps these 3 pictures, in order, to open their screen on a shared device. The code is never shown again: if it is forgotten, you choose a new one.",
   "redo": "Start over",
   "chosen": "Pictures chosen: {names}",
-  "saved": "{name}'s code saved.",
+  "saved": "{name}'s code is saved.",
   "change": "Child's code"
  },
  "quick": {

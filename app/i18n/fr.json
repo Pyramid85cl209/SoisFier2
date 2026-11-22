@@ -1274,8 +1274,8 @@
  },
  "kidcode": {
   "help": "Touche tes 3 images secrètes, dans l'ordre.",
-  "wait": "Trop d'essais. Attends une minute, puis réessaie.",
-  "wrong": "Ce ne sont pas les bonnes images. Réessaie.",
+  "wait": "Attends un peu, puis réessaie.",
+  "wrong": "Ce n'est pas ton code.",
   "progress": "Image {n} sur {total}",
   "gridAria": "Tes images secrètes",
   "notSet": "Ton code n'est pas encore choisi. Demande à un parent.",
@@ -1294,7 +1294,7 @@
   "chooseText": "L'enfant touchera ces 3 images, dans l'ordre, pour ouvrir son écran sur un appareil partagé. Le code n'est jamais réaffiché : s'il est oublié, vous en choisissez un nouveau.",
   "redo": "Recommencer",
   "chosen": "Images choisies : {names}",
-  "saved": "Code de {name} enregistré.",
+  "saved": "Le code de {name} est enregistré.",
   "change": "Code de l'enfant"
  },
  "quick": {
