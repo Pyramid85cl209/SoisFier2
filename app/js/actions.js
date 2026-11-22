@@ -18,7 +18,8 @@ A.upsell = el => upsell(el.dataset.key, el.dataset.n ? { n: +el.dataset.n, year:
 A.dismissNudge = el => { store.set("nudge:" + el.dataset.k, Date.now()); store.set("nudgeAt", Date.now()); if (el.tagName === "A") location.href = el.getAttribute("href"); else render(); };
 A.tab = el => { S.tab = el.dataset.tab; S.reviewing = null; if (el.dataset.child) S.currentChild = el.dataset.child; if (S.tab === "today") S.day = todayISO(); render(); scrollTo(0, 0); };
 A.ctab = el => { S.ctab = el.dataset.tab; render(); scrollTo(0, 0); };
-A.pickChild = el => { S.currentChild = el.dataset.id; render(); };
+A.pickChild = el => { S.currentChild = el.dataset.id; S.viewAll = false; shownSave(); render(); };
+A.pickAll = () => { S.viewAll = true; shownSave(); render(); };
 A.dayPrev = () => { S.day = addDays(S.day, -1); render(); };
 A.dayNext = () => { if (S.day < todayISO()) S.day = addDays(S.day, 1); render(); };
 A.install = async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice; installEvt = null; render(); };
@@ -68,8 +69,8 @@ A.setLang = async el => {
 };
 A.logout = async () => {
   if (sb) await sb.auth.signOut().catch(() => {});
-  ["parentCache", "pushOn", "pushFamily", "hereSync"].forEach(k => store.del(k));
-  Object.assign(S, { session: null, family: null, families: [], onboardBack: false, children: [], routines: [], screen: "auth", tab: "today", wk: null }); render();
+  ["parentCache", "pushOn", "pushFamily", "hereSync", S.family ? "shown:" + S.family.id : "x"].forEach(k => store.del(k));
+  Object.assign(S, { shownRead: false, viewAll: true, session: null, family: null, families: [], onboardBack: false, children: [], routines: [], screen: "auth", tab: "today", wk: null }); render();
 };
 /* Présentation (EP-09, F14-04, ADR-48) : fenêtre de trois écrans, montrée une fois par compte (indication « vue » dans les métadonnées du compte) ; rouvrable depuis le guide (?intro=1) */
 const INTRO_N = 3;
@@ -104,8 +105,8 @@ function introFromLink() {
   if (on) { introShown = true; showIntro(); }
 }
 // Ouvrir une autre famille aussitôt (créée ou rejointe depuis Famille, F01-04 CA7, R01-07) : rechargement complet, rien de l'ancienne ne reste (ADR-54)
-function openFamilyNow(fid, flash) {
-  store.set(famKey(S.session.user.id), fid); store.del("parentCache"); if (flash) store.set("flash", flash);
+function openFamilyNow(fid, flash) {   // R00-10 : changer de famille revient à « Tous » (store "shown:" effacé)
+  store.set(famKey(S.session.user.id), fid); store.del("parentCache"); store.del("shown:" + fid); if (flash) store.set("flash", flash);
   location.reload();
 }
 A.createFamily = async () => {
@@ -176,10 +177,11 @@ A.refuseOne = async el => {
     () => sb.from("completions").delete().eq("routine_id", id).eq("day", day).is("validated_at", null), ["x", "s"], t("validate.refused"));
 };
 A.validateAll = async () => {
-  const now = new Date().toISOString(), me = S.session?.user.id, pend = S.completions.filter(c => !c.validated_at); if (!pend.length) return;
+  const now = new Date().toISOString(), me = S.session?.user.id, pend = pendingOf(); if (!pend.length) return;   // F05-03 CA9 : l'enfant affiché seulement
+  const ids = [...new Set(pend.map(c => c.child_id))];
   celebrate(true);
-  return instant(() => { S.completions = S.completions.map(c => c.validated_at ? c : { ...c, validated_at: now, validated_by: me }); pend.forEach(c => bumpStats(c.child_id, earnStats(c))); },
-    () => sb.from("completions").update({ validated_at: now }).eq("family_id", S.family.id).is("validated_at", null), ["x", "s"], t("validate.allDone"));
+  return instant(() => { S.completions = S.completions.map(c => c.validated_at || !ids.includes(c.child_id) ? c : { ...c, validated_at: now, validated_by: me }); pend.forEach(c => bumpStats(c.child_id, earnStats(c))); },
+    () => sb.from("completions").update({ validated_at: now }).eq("family_id", S.family.id).in("child_id", ids).is("validated_at", null), ["x", "s"], t("validate.allDone"));
 };
 A.toggleAuto = async el => {
   const v = el.checked;

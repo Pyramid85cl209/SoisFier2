@@ -1324,5 +1324,9 @@
   },
   "addedBoth": "{r} and {w} added.",
   "rewardsFailed": "The routines were added, but not the rewards. You can add them from the Rewards tab."
+ },
+ "kidrow": {
+  "label": "Choose the child shown",
+  "all": "All"
  }
 }

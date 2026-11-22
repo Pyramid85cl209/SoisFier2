@@ -244,7 +244,7 @@ const isNetErr = e => /Failed to fetch|NetworkError|Load failed|fetch/i.test((e 
 const S = {
   screen: "loading", tab: "today", day: todayISO(), lastToday: todayISO(), authMode: "login",
   session: null, family: null, me: null, children: [], routines: [], rewards: [], completions: [], redemptions: [],
-  stats: {}, members: [], devices: [], currentChild: null, tip: null, offline: false,
+  stats: {}, members: [], devices: [], currentChild: null, viewAll: true, tip: null, offline: false,
   penalties: [], pevents: [], badges: {}, autoValidate: true, pauses: [], gardens: {}, oneoffTpl: [],
   cs: null, ctab: "today", form: {}, childNow: null, kidPick: null, kidSeq: []
 };

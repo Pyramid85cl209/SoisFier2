@@ -1315,5 +1315,9 @@
   },
   "addedBoth": "{r} et {w} ajoutées.",
   "rewardsFailed": "Les routines sont ajoutées, mais pas les récompenses. Vous pouvez les ajouter depuis l'onglet Récompenses."
+ },
+ "kidrow": {
+  "label": "Choisir l'enfant affiché",
+  "all": "Tous"
  }
 }

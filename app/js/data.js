@@ -90,6 +90,7 @@ function applyParts(o) {
   S.offline = false;
   if (!isParent() && S.tab === "routines") S.tab = "today";
   if (!S.children.find(k => k.id === S.currentChild)) S.currentChild = S.children[0]?.id || null;
+  if (!S.shownRead) { S.shownRead = true; shownLoad(); }
 }
 // Cache du parent, rattaché au compte : affiché dès l'ouverture, puis remplacé par les données fraîches
 function saveParentCache() {

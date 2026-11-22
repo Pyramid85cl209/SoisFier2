@@ -5,9 +5,22 @@ const curChild = () => S.children.find(c => c.id === S.currentChild) || S.childr
 function viewFor(c) {
   return computeView({ child: c, routines: S.routines, completions: S.completions.filter(x => x.child_id === c.id), stats: S.stats[c.id], badges: S.badges[c.id], garden: S.gardens[c.id], penalties: S.pevents.filter(e => e.child_id === c.id) });
 }
-function chips() {
-  return `<div class="chips" role="tablist">${S.children.map(c => `<button role="tab" aria-selected="${c.id === S.currentChild}" class="chip ${c.id === S.currentChild ? "on" : ""}" style="--c:${esc(c.color)};--cc:${esc(chipColor(c.color))}" data-act="pickChild" data-id="${c.id}">${esc(c.emoji)} ${esc(c.name)}</button>`).join("")}</div>`;
+// Rangée d'avatars commune aux quatre onglets (R00-10, DEC-12). « Tous » seulement sur Aujourd'hui ; un seul enfant : aucune rangée, sauf Routines (F04-01 CA1).
+function shownSave() { if (S.family) store.set("shown:" + S.family.id, { all: S.viewAll, child: S.currentChild }); }
+function shownLoad() {
+  const o = S.family ? store.get("shown:" + S.family.id) : null;
+  if (o && S.children.find(k => k.id === o.child)) S.currentChild = o.child;
+  S.viewAll = !o || o.all !== false || !S.children.find(k => k.id === o.child);
 }
+function chips() {
+  const n = S.children.length, today = S.tab === "today";
+  if (n < 2 && S.tab !== "routines") return "";
+  const all = today && n > 1;
+  const on = c => all ? !S.viewAll && c.id === S.currentChild : c.id === curChild().id;
+  return `<div class="chips wrap kidrow" role="tablist" aria-label="${t("kidrow.label")}">${all ? `<button role="tab" aria-selected="${S.viewAll}" class="chip kidchip all ${S.viewAll ? "on" : ""}" data-act="pickAll"><span aria-hidden="true">👨‍👩‍👧‍👦</span> ${t("kidrow.all")}</button>` : ""}${S.children.map(c => `<button role="tab" aria-selected="${on(c)}" class="chip kidchip ${on(c) ? "on" : ""}" style="--c:${esc(c.color)};--cc:${esc(chipColor(c.color))}" data-act="pickChild" data-id="${c.id}"><span aria-hidden="true">${esc(c.emoji)}</span> <bdi>${esc(c.name)}</bdi></button>`).join("")}</div>`;
+}
+// Enfants montrés sur Aujourd'hui : « Tous » ou le seul enfant choisi
+const shownKids = () => S.viewAll || S.children.length < 2 ? S.children : S.children.filter(c => c.id === curChild().id);
 function renderParent() {
   const tabs = [["today", t("tab.today"), "☀️"], ["routines", t("tab.routines"), "📋"], ["rewards", t("tab.rewards"), "🎁"], ["history", t("tab.history"), "📜"], ["family", t("tab.family"), "🏡"]].filter(x => isParent() || x[0] !== "routines");
   let body;
@@ -30,8 +43,9 @@ function rowP(c, r, day, v) {
     <span class="rt-txt"><b>${esc(r.title)}</b><small>${parts.join(t("sep"))}</small></span>
     <span class="rt-stars">+${fmtNum(r.stars)} ⭐</span><span class="pot" aria-hidden="true">${val ? "🌱" : d ? "⏳" : ""}</span></button></li>`;
 }
+const pendingOf = () => { const ids = shownKids().map(c => c.id); return S.completions.filter(x => !x.validated_at && ids.includes(x.child_id)); };
 function pendingBlock() {
-  const pend = S.completions.filter(x => !x.validated_at).sort((a, b) => a.day < b.day ? -1 : 1);
+  const pend = pendingOf().sort((a, b) => a.day < b.day ? -1 : 1);
   if (!pend.length) return "";
   return `<section class="validate"><div class="v-head"><h2>${t("validate.title")}</h2><button class="btn sm" data-act="validateAll">${t("validate.all", { n: pend.length })}</button></div>
     <ul class="vlist">${pend.map(x => {
@@ -50,7 +64,7 @@ function pToday() {
   const day = S.day, td = todayISO();
   const nav = `<div class="daynav"><button data-act="dayPrev" aria-label="${t("day.prev")}" ${day <= addDays(td, -6) ? "disabled" : ""}>‹</button><h1>${fmtDay(day)}</h1><button data-act="dayNext" aria-label="${t("day.next")}" ${day >= td ? "disabled" : ""}>›</button></div>`;
   const tip = S.tip && day === td ? `<aside class="tip"><span aria-hidden="true">💡</span><p>${esc(S.tip)}</p></aside>` : "";
-  const blocks = S.children.map(c => {
+  const blocks = shownKids().map(c => {
     const v = viewFor(c), due = dueOn(S.routinesAll || S.routines, c.id, day, S.completions);
     const main = due.filter(r => !r.is_bonus), bonus = due.filter(r => r.is_bonus), ring = ringOf(main, day, S.completions);   // compteur : DEC-32
     const nd = ring.filter(r => v.done.has(r.id + "|" + day)).length;
@@ -66,7 +80,7 @@ function pToday() {
       ${day === td ? `<div class="actions" style="margin:10px 0 0"><button class="btn sm ghost" data-act="newOneoff" data-child="${c.id}">+ ${t("oneoff.btn")}${ptag()}</button></div>` : ""}
     </section>`;
   }).join("");
-  return nav + (day === td ? pendingBlock() + nudge() : "") + tip + blocks;
+  return chips() + nav + (day === td ? pendingBlock() + nudge() : "") + tip + blocks;
 }
 function pRoutines() {
   const c = curChild(), t0 = todayISO(), hp = periodOn(c.id, t0), vac = !!hp && !S.showHabitual;

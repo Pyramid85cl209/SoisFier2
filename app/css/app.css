@@ -432,6 +432,9 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
 
 /* EP-01 lot 3 : « Pour » (plusieurs enfants), démarrage rapide */
 .chips.wrap{flex-wrap:wrap;overflow:visible}
+.kidrow{gap:8px;padding:4px 0 10px}
+.kidchip{min-height:44px;min-width:44px;display:inline-flex;align-items:center;gap:6px;max-inline-size:100%;overflow:hidden;text-overflow:ellipsis}
 .for-chip{min-height:44px}
 .ages{display:grid;gap:10px;margin:16px 0 4px}
 .ages .btn{width:100%}
+.kidchip.all.on{background:var(--earth);color:var(--sky)}
