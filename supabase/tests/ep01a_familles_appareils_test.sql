@@ -430,7 +430,7 @@ do $t$
 declare
   u1 uuid := gen_random_uuid(); u2 uuid := gen_random_uuid(); u3 uuid := gen_random_uuid();
   f1 uuid; f2 uuid; f3 uuid; f4 uuid; fx uuid; fa uuid; a uuid; b uuid; c uuid; ra uuid; rb uuid; rc uuid;
-  code text; code2 text; j json; tok text; tok1 text; res text := ''; n int; td date;
+  code1 text; code2 text; j json; tok text; tok1 text; res text := ''; n int; td date;
 begin
   insert into auth.users(id, email) values (u1, 'p1.test@example.invalid'), (u2, 'p2.test@example.invalid'), (u3, 'p3.test@example.invalid');
   -- Familles
@@ -466,9 +466,9 @@ begin
   -- Appareil commun A+B
   perform set_config('request.jwt.claims', json_build_object('sub', u1, 'role', 'authenticated')::text, true);
   set local role authenticated;
-  code := public.create_child_code(a, array[b]);
+  code1 := public.create_child_code(a, array[b]);
   reset role; set local role anon;
-  j := public.child_pair(code, 'Tablette');
+  j := public.child_pair(code1, 'Tablette');
   tok := j ->> 'token';
   reset role;
   res := res || ' 5a.jeton=' || (tok is not null);
@@ -498,10 +498,10 @@ begin
   perform set_config('request.jwt.claims', json_build_object('sub', u3, 'role', 'authenticated')::text, true);
   set local role authenticated;
   begin perform public.set_child_code(a, '{"salt":"s","hash":"h"}'::jsonb); res := res || ' 12.set_code_sans_droit=ok'; exception when others then res := res || ' 12.set_code_sans_droit=' || sqlerrm; end;
-  begin perform public.set_child_code(a, '{"x":1}'::jsonb); res := res || ' 12b.mauvais=ok'; exception when others then res := res || ' 12b.mauvais=' || sqlerrm; end;
   reset role;
   perform set_config('request.jwt.claims', json_build_object('sub', u1, 'role', 'authenticated')::text, true);
   set local role authenticated;
+  begin perform public.set_child_code(a, '{"x":1}'::jsonb); res := res || ' 12b.mauvais_parent=ok'; exception when others then res := res || ' 12b.mauvais_parent=' || sqlerrm; end;
   begin perform public.set_child_code(a, '{"salt":"s","hash":"h"}'::jsonb); exception when others then res := res || ' 12c.x=' || sqlerrm; end;
   reset role; set local role anon;
   begin j := public.child_state(tok, b);
