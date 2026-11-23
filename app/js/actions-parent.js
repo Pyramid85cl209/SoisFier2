@@ -141,14 +141,25 @@ A.delRoutine = async el => {
   const { error } = await sb.from("routines").update({ active: false }).eq("id", el.dataset.id); if (error) throw error;
   await reloadParent(t("routine.deletedToast"), ["r"]);
 };
-// Titres déjà présents pour un enfant, dans la langue du moment (routines habituelles et exceptionnelles ; vacances : celles de la période ouverte)
-const haveTitles = cid => new Set(S.routines.filter(r => r.child_id === cid && (!isHolidayR(r) || r.holiday_period_id === S.hctx)).map(r => r.title.toLowerCase()));
+// Modèles déjà présents pour un enfant (routines habituelles et exceptionnelles ; vacances : celles de la période ouverte) : par la clé du modèle, quelle que soit la langue de l'ajout ;
+// à défaut de clé (routine écrite à la main, ajoutée par la v32), par le titre dans la langue du moment (ADR-58, A2)
+const haveSet = (list, f) => ({ k: new Set(list.filter(f).map(r => r.template_key).filter(Boolean)), t: new Set(list.filter(f).filter(r => !r.template_key).map(r => r.title.toLowerCase())) });
+const haveTitles = cid => haveSet(S.routines, r => r.child_id === cid && (!isHolidayR(r) || r.holiday_period_id === S.hctx));
+const haveRewards = () => haveSet(S.rewards, () => true);   // récompense : même famille
+const hasTpl = (h, x) => h.k.has(x.k) || h.t.has(x.t.toLowerCase());
+// Écrit des lignes qui portent `template_key` ; tant que la colonne n'existe pas en base (migration ep01d pas encore appliquée), la clé est laissée de côté
+async function insertKeyed(table, rows, wantRows) {
+  const go = rs => wantRows ? sb.from(table).insert(rs).select() : sb.from(table).insert(rs);
+  const r = await go(rows);
+  if (r.error && /template_key/.test(r.error.message || "")) return go(rows.map(({ template_key, ...x }) => x));
+  return r;
+}
 function tplList(ids, checked) {
   const have = {}; ids.forEach(i => { have[i] = haveTitles(i); });
   return TPL_CATS.map(k => {
     const list = TPL_R.map((x, i) => ({ ...x, i })).filter(x => x.c === k);
     return `<h3 class="grp">${t("tpl.cat." + k)}</h3><ul class="tpl">${list.map(x => {
-      const by = ids.filter(i => have[i].has(x.t.toLowerCase())), all = by.length === ids.length, part = !all && by.length > 0;
+      const by = ids.filter(i => hasTpl(have[i], x)), all = by.length === ids.length, part = !all && by.length > 0;
       const note = all ? t("sep") + t("common.alreadyAdded") : part ? t("sep") + t("quick.hadFor", { names: by.map(i => `<bdi>${esc(S.children.find(c => c.id === i).name)}</bdi>`).join(t("sep")) }) : "";
       return `<li><label class="${all ? "had" : ""}"><input type="checkbox" value="${x.i}" ${all ? "disabled" : ""} ${!all && checked.has(x.i) ? "checked" : ""}><span>${x.e} ${esc(x.t)}${x.b ? " " + t("routine.bonusTag") : ""}${t("sep")}${momentLabel(x.m)}${x.d ? t("sep") + lower(t("days.week")) : ""}${note}</span></label></li>`; }).join("")}</ul>`;
   }).join("");
@@ -165,14 +176,14 @@ A.addRoutineTpl = async () => {
   const ids = forIds(), rows = [];
   for (const cid of ids) {   // un modèle déjà présent pour un enfant n'est créé que pour les autres (F04-02 CA10) ; une seule écriture pour tous (ADR-56)
     const have = haveTitles(cid); let n = S.routines.filter(r => r.child_id === cid).length;
-    picks.filter(x => !have.has(x.t.toLowerCase())).forEach(x => rows.push(tplRow(x, cid, n++)));
+    picks.filter(x => !hasTpl(have, x)).forEach(x => rows.push(tplRow(x, cid, n++)));
   }
-  const { error } = await sb.from("routines").insert(rows); if (error) throw error;
+  const { error } = await insertKeyed("routines", rows); if (error) throw error;
   await afterHolidayEdit(t("routine.addedN", { n: rows.length }), !!S.hctx);
 };
 // Ligne de routine d'un modèle : ni catégorie ni tranche d'âge enregistrées (DEC-03, DEC-08)
 const tplRow = (x, cid, position) => ({ family_id: S.family.id, child_id: cid, title: x.t, emoji: x.e, moment: x.m, place: x.p != null ? PLACES()[x.p] : null,
-  stars: x.s || 1, days: tplDays(x.d), is_bonus: !!x.b, timer_minutes: x.tm || null, position, holiday_period_id: S.hctx || null });
+  stars: x.s || 1, days: tplDays(x.d), is_bonus: !!x.b, timer_minutes: x.tm || null, position, holiday_period_id: S.hctx || null, template_key: x.k });
 
 // Démarrage rapide par âge (F04-10, R04-12, ADR-56) : la tranche sert à choisir l'ensemble et n'est jamais enregistrée
 A.quickStart = el => {
@@ -182,12 +193,12 @@ A.quickStart = el => {
 };
 A.quickSelf = el => { S.currentChild = el.dataset.id; A.routineTemplates(); };
 A.quickAge = el => {
-  const c = S.children.find(k => k.id === el.dataset.id), st = STARTERS[+el.dataset.i], haveR = haveTitles(c.id), haveW = new Set(S.rewards.map(w => w.title.toLowerCase()));
+  const c = S.children.find(k => k.id === el.dataset.id), st = STARTERS[+el.dataset.i], haveR = haveTitles(c.id), haveW = haveRewards();
   const rs = st.r.map(k => TPL_R.findIndex(x => x.k === k)), ws = st.w.map(k => TPL_W.findIndex(x => x.k === k));
   const line = (x, had, extra) => `<li><label class="${had ? "had" : ""}"><input type="checkbox" class="${extra.cls}" value="${extra.i}" ${had ? "disabled" : "checked"}><span>${x.e} ${esc(x.t)}${t("sep")}${extra.note}${had ? t("sep") + t("common.alreadyAdded") : ""}</span></label></li>`;
   openSheet(`<h2>${t("quick.setTitle", { name: `<bdi>${esc(c.name)}</bdi>`, age: t("quick.age." + el.dataset.i) })}</h2>
-    <h3 class="grp">${t("quick.routines")}</h3><ul class="tpl">${rs.map(i => line(TPL_R[i], haveR.has(TPL_R[i].t.toLowerCase()), { cls: "qr", i, note: momentLabel(TPL_R[i].m) })).join("")}</ul>
-    <h3 class="grp">${t("quick.rewards")}</h3><ul class="tpl">${ws.map(i => line(TPL_W[i], haveW.has(TPL_W[i].t.toLowerCase()), { cls: "qw", i, note: t(`tier.${TPL_W[i].tier}.name`) })).join("")}</ul>
+    <h3 class="grp">${t("quick.routines")}</h3><ul class="tpl">${rs.map(i => line(TPL_R[i], hasTpl(haveR, TPL_R[i]), { cls: "qr", i, note: momentLabel(TPL_R[i].m) })).join("")}</ul>
+    <h3 class="grp">${t("quick.rewards")}</h3><ul class="tpl">${ws.map(i => line(TPL_W[i], hasTpl(haveW, TPL_W[i]), { cls: "qw", i, note: t(`tier.${TPL_W[i].tier}.name`) })).join("")}</ul>
     <div class="sheet-actions"><button class="btn ghost" data-act="quickStart" data-id="${c.id}">${t("intro.back")}</button><button class="btn" data-act="quickAdd" data-id="${c.id}">${t("btn.add")}</button></div>`);
 };
 A.quickAdd = async el => {
@@ -197,13 +208,13 @@ A.quickAdd = async el => {
   el.disabled = true;
   try {
     const base = S.routines.filter(r => r.child_id === c.id).length;
-    const { data, error } = await sb.from("routines").insert(rs.map((x, i) => ({ ...tplRow(x, c.id, base + i), holiday_period_id: null }))).select(); if (error) throw error;   // routines d'abord, en une écriture
+    const { data, error } = await insertKeyed("routines", rs.map((x, i) => ({ ...tplRow(x, c.id, base + i), holiday_period_id: null })), true); if (error) throw error;   // routines d'abord, en une écriture
     S.routinesAll = [...(S.routinesAll || []), ...data]; S.routines = [...S.routines, ...data];   // le rythme des prix tient compte des routines ajoutées
     let nW = 0, failed = false;
     if (ws.length) {
       try {
         const wrows = tplRewardRows(ws);
-        if (wrows.length) { const r2 = await sb.from("rewards").insert(wrows); if (r2.error) throw r2.error; await markPriced(S.children.map(k => k.id)); nW = wrows.length; }
+        if (wrows.length) { const r2 = await insertKeyed("rewards", wrows); if (r2.error) throw r2.error; await markPriced(S.children.map(k => k.id)); nW = wrows.length; }
         else failed = true;
       } catch (e) { console.error(e); failed = true; }
     }
@@ -263,11 +274,11 @@ function tplPrices(checked) {
 }
 const tplPriceText = (res, c) => t("reward.tplPrice", { n: res ? (res.costs[c.id] ?? res.common) : 0, name: esc(c.name) });
 A.rewardTemplates = () => {
-  const have = new Set(S.rewards.map(w => w.title.toLowerCase())), c = curChild(), ids = S.children.map(k => k.id);
+  const have = haveRewards(), c = curChild(), ids = S.children.map(k => k.id);
   if (!ids.some(hasRhythm)) return noRhythmSheet([c.id]);   // DEC-47 : message à la place de la liste
   const pr = tplPrices(new Set());
   openSheet(`<h2>${t("reward.tplTitle")}</h2><p class="muted">${hasRhythm(c.id) ? t("reward.tplHelp", { name: esc(c.name), n: fmtNum(Math.round(rhythmOf(c.id) * 10) / 10) }) : t("reward.tplHelpNoRhythm", { name: esc(c.name) })}</p>
-    ${TIERS().filter(([k]) => k !== "event").map(([k, l, d]) => `<h3 class="tier-h">${l}<small>${d}</small></h3><ul class="tpl">${TPL_W.map((x, i) => ({ ...x, i })).filter(x => x.tier === k).map(x => { const had = have.has(x.t.toLowerCase()); return `<li><label class="${had ? "had" : ""}"><input type="checkbox" value="${x.i}" ${had ? "disabled" : ""}><span>${x.e} ${esc(x.t)} <span class="tp" data-i="${x.i}">${tplPriceText(pr[x.i], c)}</span>${had ? t("sep") + t("common.alreadyAdded") : ""}</span></label></li>`; }).join("")}</ul>`).join("")}
+    ${TIERS().filter(([k]) => k !== "event").map(([k, l, d]) => `<h3 class="tier-h">${l}<small>${d}</small></h3><ul class="tpl">${TPL_W.map((x, i) => ({ ...x, i })).filter(x => x.tier === k).map(x => { const had = hasTpl(have, x); return `<li><label class="${had ? "had" : ""}"><input type="checkbox" value="${x.i}" ${had ? "disabled" : ""}><span>${x.e} ${esc(x.t)} <span class="tp" data-i="${x.i}">${tplPriceText(pr[x.i], c)}</span>${had ? t("sep") + t("common.alreadyAdded") : ""}</span></label></li>`; }).join("")}</ul>`).join("")}
     <h3 class="tier-h">${t("tier.event.name")}<small>${t("tier.event.hint")}</small></h3><p class="muted">${t("reward.eventHelp")}</p>
     <div class="sheet-actions"><button class="btn ghost" data-act="newEvent">${t("reward.createEvent")}</button><button class="btn" data-act="addRewardTpl">${t("common.addSelection")}</button></div>`);
   // F06-02 CA9 : à chaque case cochée ou décochée, les prix affichés sont recalculés
@@ -279,7 +290,7 @@ A.newEvent = () => rewardForm(null, { tier: "event", emoji: "🎪", title: t("re
 function tplRewardRows(chk) {
   const pr = tplPrices(new Set(chk));
   return chk.map(i => ({ x: TPL_W[i], res: pr[i] })).filter(o => o.res).sort((a, b) => TIER_RANK[a.x.tier] - TIER_RANK[b.x.tier] || a.x.d - b.x.d)
-    .map(({ x, res }) => ({ family_id: S.family.id, title: x.t, emoji: x.e, tier: x.tier, duration_days: x.d, costs: res.costs, cost: res.common }));
+    .map(({ x, res }) => ({ family_id: S.family.id, title: x.t, emoji: x.e, tier: x.tier, duration_days: x.d, costs: res.costs, cost: res.common, template_key: x.k }));
 }
 A.addRewardTpl = async () => {
   const chk = $$(".tpl input:checked", dlg).map(i => +i.value);
@@ -287,7 +298,7 @@ A.addRewardTpl = async () => {
   const ids = S.children.map(k => k.id);
   if (!ids.some(hasRhythm)) return noRhythmSheet(ids);
   const rows = tplRewardRows(chk);
-  const { error } = await sb.from("rewards").insert(rows); if (error) throw error;
+  const { error } = await insertKeyed("rewards", rows); if (error) throw error;
   await markPriced(ids); closeSheet(); await reloadParent(t("reward.addedN", { n: rows.length }), ["w", "c"]);
 };
 A.pRedeem = async el => {

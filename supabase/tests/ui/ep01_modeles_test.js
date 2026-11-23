@@ -42,7 +42,7 @@ async function open(o = {}) {
   await ctx.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
   await ctx.addInitScript(([o, fam, mem, kids]) => {
     window.__session = { user: { id: "u1", email: "parent.test@example.invalid", user_metadata: { display_name: "Parent Test", intro_seen: true } } };
-    window.__db = { families: [fam], family_members: [mem], children: kids.slice(0, o.kids || 1), routines: (o.routines || []).map((r, i) => ({ id: "r" + i, family_id: "fA", active: true, kind: "regular", days: [1, 2, 3, 4, 5, 6, 7], stars: 1, moment: "matin", emoji: "⭐", ...r })), rewards: [], completions: [], devices: [], child_devices: [], child_device_children: [] };
+    window.__db = { families: [fam], family_members: [mem], children: kids.slice(0, o.kids || 1), routines: (o.routines || []).map((r, i) => ({ id: "r" + i, family_id: "fA", active: true, kind: "regular", days: [1, 2, 3, 4, 5, 6, 7], stars: 1, moment: "matin", emoji: "⭐", ...r })), rewards: [], rewards: (o.rewards || []).map((r, i) => ({ id: "w" + i, family_id: "fA", active: true, cost: 10, tier: "coup", emoji: "⭐", ...r })), completions: [], devices: [], child_devices: [], child_device_children: [] };
     window.__rpc = async (n, a) => {
       if (n === "child_pair_here") return { data: { token: "tok-new", child_id: "k1", child_ids: ["k1"] }, error: null };
       return { data: null, error: null };
@@ -93,6 +93,21 @@ const PIN = { "sf:pinH": '{"s":"AA==","h":"AA==","i":1}' };
   await page.click("[data-act=routineTemplates]"); await page.waitForTimeout(200);
   ok("1.11 déjà ajoutée : grisée, dite par un texte, non cochable (CA2)", await page.locator(".tpl label.had", { hasText: "déjà ajoutée" }).count() === 2 && await page.locator(".tpl label.had input:disabled").count() === 2);
   await ctx.close();
+
+  // 1b. A2 (ADR-58) : « déjà ajoutée » par la clé du modèle, quelle que soit la langue de l'ajout ; à défaut de clé, par le titre affiché
+  ({ page, ctx, errs } = await open({ ls: PIN, locale: "en-GB", q: "?lang=en", routines: [{ child_id: "k1", title: "Faire son lit", template_key: "bed" }, { child_id: "k1", title: "Se coiffer" }, { child_id: "k1", title: "Brush teeth (morning)" }] }));
+  await page.click("[data-act=routineTemplates]"); await page.waitForTimeout(200);
+  const had = await page.locator(".tpl label.had").allTextContents();
+  ok("1.12 en anglais : routine ajoutée en français avec clé reconnue ; sans clé, reconnue seulement par le titre affiché", had.length === 1 && /Make your bed|bed/i.test(had[0]) && /already added/.test(had[0]), JSON.stringify(had));
+  await page.locator(".tpl label", { hasText: /Wash your face|Wash face|face/i }).first().click();
+  await page.click("[data-act=addRoutineTpl]"); await page.waitForTimeout(500);
+  w = await writes(page, "routines");
+  ok("1.13 la clé du modèle est enregistrée avec la routine", w.length === 1 && w[0].rows.length === 1 && w[0].rows[0].template_key === "face", JSON.stringify(w[0] && w[0].rows.map(r => r.template_key)));
+  await ctx.close();
+  ({ page, ctx, errs } = await open({ ls: PIN, rewards: [{ title: "Une histoire", template_key: "story" }, { title: "Un dessert au choix" }] }));
+  ok("1.14 récompenses : même famille, reconnues par la clé ou le titre", await page.evaluate(() => { const h = haveRewards(); return hasTpl(h, TPL_W[0]) && h.k.has("story") && h.t.has("un dessert au choix"); }));
+  await ctx.close();
+
 
   // 2. Démarrage rapide (F04-10, R04-12)
   ({ page, ctx, errs } = await open({ ls: PIN }));
