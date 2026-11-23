@@ -68,7 +68,7 @@ const toast = async p => (await p.locator("#toast").textContent()) || "";
   for (const t of ["routines", "rewards", "history"]) { await page.evaluate(t => { S.tab = t; render(); }, t); if (await page.locator("[data-act=switchFamily]").count()) ok("1.3b " + t, false); }
   await page.evaluate(() => { S.tab = "family"; render(); });
   const rows = page.locator(".frow");
-  ok("1.4 Mes familles : « Alpha · Parent » et « Beta · Proche »", await rows.count() === 2 && /Alpha.*Parent/.test(await rows.nth(0).textContent()) && /Beta.*Proche/.test(await rows.nth(1).textContent()), await page.locator(".flist").textContent());
+  ok("1.4 Mes familles : « Alpha · Parent » et « Beta · Proche »", await rows.count() === 2 && /Alpha · Parent/.test(await rows.nth(0).textContent()) && /Beta · Proche/.test(await rows.nth(1).textContent()), await page.locator(".flist").textContent());
   ok("1.5 la famille ouverte est annoncée sélectionnée (role option, aria-selected)", await page.locator(".flist").getAttribute("role") === "listbox" && await rows.nth(0).getAttribute("aria-selected") === "true" && await rows.nth(1).getAttribute("aria-selected") === "false" && /Ouverte/.test(await rows.nth(0).textContent()));
   await shot(page, "familles-fr-clair");
   // 2. Changer de famille : rechargement complet, Aujourd'hui, droits de la famille B (F01-09 CA3)
@@ -152,6 +152,9 @@ const toast = async p => (await p.locator("#toast").textContent()) || "";
     const dir = await page.evaluate(() => document.documentElement.dir), tag = `${lang}-${dark ? "sombre" : "clair"}`;
     ok(`9.${tag}.0 sens de lecture`, lang === "ar" ? dir === "rtl" : dir !== "rtl");
     ok(`9.${tag}.1 Mes familles lu et marqué`, await page.locator(".frow").count() === 2 && await page.locator('.frow[aria-selected="true"]').count() === 1 && await page.locator(".frow .fopen").count() === 1);
+    const cr = await page.evaluate(() => { const rgb = c => c.match(/[\d.]+/g).slice(0, 3).map(Number), L = c => { const [r, g, b] = rgb(c).map(v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }); return .2126 * r + .7152 * g + .0722 * b; };
+      const e = document.querySelector(".frow .fopen"), a = L(getComputedStyle(e).color), b = L(getComputedStyle(e.parentElement).backgroundColor); return (Math.max(a, b) + .05) / (Math.min(a, b) + .05); });
+    ok(`9.${tag}.1b « ✓ Ouverte » : contraste d'au moins 4,5:1 (X-ACC-05)`, cr >= 4.5, cr.toFixed(2));
     ok(`9.${tag}.2 pas de défilement horizontal`, !(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)));
     await shot(page, "familles-" + tag);
     await page.click("[data-act=anotherFamily]"); await page.waitForTimeout(200); await shot(page, "bienvenue-autre-" + tag);

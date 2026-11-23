@@ -1007,6 +1007,7 @@
   "help": "On their phone, open SoisFier, tap “I have a child code” and enter this code. It expires in 15 minutes.",
   "revokeTitle": "Disconnect this device?",
   "revokeText": "A new code will be needed to reconnect it.",
+  "revokeShared": "This device is linked to several children ({names}): it will be disconnected for all of them.",
   "revoked": "Device disconnected.",
   "sameLabel": "{who}'s phone (child mode)",
   "revokeLost": "Ticks not yet sent from this phone will be lost.",

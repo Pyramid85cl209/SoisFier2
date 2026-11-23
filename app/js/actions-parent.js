@@ -353,7 +353,9 @@ A.deviceCode = async el => {
 A.closeSheetReload = async () => { closeSheet(); await reloadParent(null, ["d"]); };   // l'appareil relié apparaît
 A.revokeDevice = async el => {
   const id = el.dataset.id;
-  if (!await confirmSheet(t("device.revokeTitle"), t("device.revokeText") + " " + t("device.revokeLost"), t("family.disconnect"), true)) return;
+  const dv = (S.devices || []).find(d => d.id === id), many = (dv?.child_ids || []).length > 1;   // appareil commun : la confirmation le dit (F03-09 CA8)
+  const names = many ? dv.child_ids.map(i => S.children.find(k => k.id === i)?.name).filter(Boolean).join(t("sep")) : "";
+  if (!await confirmSheet(t("device.revokeTitle"), (many ? t("device.revokeShared", { names }) + " " : "") + t("device.revokeText") + " " + t("device.revokeLost"), t("family.disconnect"), true)) return;
   await mutate(() => sb.from("child_devices").delete().eq("id", id));
   S.devices = S.devices.filter(d => d.id !== id); saveParentCache(); render(); toast(t("device.revoked"));
   refreshParts(["d"]).then(render).catch(() => {});

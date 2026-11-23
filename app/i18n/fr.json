@@ -998,6 +998,7 @@
   "help": "Sur son téléphone, ouvrez SoisFier, touchez « J'ai un code enfant » et saisissez ce code. Il expire dans 15 minutes.",
   "revokeTitle": "Déconnecter cet appareil ?",
   "revokeText": "Il faudra un nouveau code pour le reconnecter.",
+  "revokeShared": "Cet appareil est relié à plusieurs enfants ({names}) : il sera déconnecté pour tous.",
   "revoked": "Appareil déconnecté.",
   "sameLabel": "Téléphone de {who} (mode enfant)",
   "revokeLost": "Les coches pas encore envoyées depuis ce téléphone seront perdues.",

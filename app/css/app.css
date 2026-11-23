@@ -118,6 +118,7 @@ button{cursor:pointer}
 .krow>svg{width:44px;height:58px;flex:none}
 .krow .grow{flex:1}
 .krow .btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.dev-t{flex:1 1 auto;min-width:0}   /* une seule ligne de texte, qui passe à la ligne comme un paragraphe (F03-09 CA7) */
 .dev{font-size:.88rem;color:var(--muted);display:flex;gap:8px;align-items:center;margin:2px 0}
 
 /* Feuille (dialog) */
@@ -429,6 +430,7 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
 .frow{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;min-height:48px;width:100%;text-align:start;border:0;border-radius:16px;padding:10px 14px;background:var(--paper);box-shadow:inset 0 0 0 2px var(--line)}
 .frow.on{box-shadow:inset 0 0 0 3px var(--leaf);background:var(--leaf-l)}
 .frow .fopen{margin-inline-start:auto;font-weight:700;color:var(--leaf-d)}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .frow .fopen{color:var(--leaf)} }   /* sombre : 4,96:1 sur le fond de la ligne ouverte (X-ACC-05) */
 
 /* EP-01 lot 3 : « Pour » (plusieurs enfants), démarrage rapide */
 .chips.wrap{flex-wrap:wrap;overflow:visible}
