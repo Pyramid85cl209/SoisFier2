@@ -1276,6 +1276,10 @@
  "kidcode": {
   "help": "Touche tes 3 images secrètes, dans l'ordre.",
   "wait": "Attends un peu, puis réessaie.",
+  "waitLeft": {
+   "one": "Attends un peu, puis réessaie dans {n} minute.",
+   "other": "Attends un peu, puis réessaie dans {n} minutes."
+  },
   "wrong": "Ce n'est pas ton code.",
   "progress": "Image {n} sur {total}",
   "gridAria": "Tes images secrètes",

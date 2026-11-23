@@ -5,7 +5,10 @@ A.cToggle = el => { const rid = el.dataset.id, day = todayISO(); const done = S.
 // Code de l'enfant, depuis sa fiche (R03-11) : un code oublié se remplace, il n'est jamais réaffiché
 A.kidCodeSet = async el => { const c = S.children.find(k => k.id === el.dataset.id); if (!c) return; await kidCodeSheet(c); };   // la fenêtre de la fiche reste ouverte : son contenu est remplacé
 // Appareil commun (EP-01) : choisir son avatar, saisir son code, changer d'enfant sans code
-A.kidPick = el => { S.kidPick = el.dataset.id; S.kidSeq = []; render(); };
+A.kidPick = el => {
+  const k = (kidsList() || []).find(x => x.id === el.dataset.id);
+  if (k && !k.verifier) { toast(t("kidcode.notSet"), true); return; }   // aucun code choisi : le message au toucher de l'avatar, la grille ne s'ouvre pas (R03-11 CA11)
+  S.kidPick = el.dataset.id; S.kidSeq = []; render(); };
 A.kidBack = () => { S.kidPick = null; S.kidSeq = []; render(); };
 A.kidSwitch = async () => { await flushQueue(); S.childNow = null; S.cs = null; S.kidPick = null; S.kidSeq = []; S.ctab = "today"; render(); scrollTo(0, 0); };
 let kidBusy = false;
@@ -25,7 +28,7 @@ A.kidImg = async el => {
     } else {
       const w = kidGuardFail(k.id);
       if (navigator.vibrate) navigator.vibrate(200);   // en plus du message, jamais seule
-      toast(w ? t("kidcode.wait") : t("kidcode.wrong"), true); renderKidCode(k);
+      if (w) { clearToast(); renderKidCode(k); } else { toast(t("kidcode.wrong"), true); renderKidCode(k); }   // l'attente s'affiche dans l'écran du code, une seule fois
     }
   } finally { kidBusy = false; }
 };

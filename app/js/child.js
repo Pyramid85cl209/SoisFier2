@@ -20,13 +20,13 @@ function renderKidPick() {
 const kidDots = n => Array.from({ length: KID_LEN }, (_, i) => `<span class="kdot ${i < n ? "on" : ""}"></span>`).join("");
 let kidTimer = null;
 function renderKidCode(k) {
-  const left = kidGuardLeft(k.id);
+  const left = kidGuardLeft(k.id), waitMsg = left ? t("kidcode.waitLeft", { n: Math.ceil(left / 60) }) : "";   // le message d'attente est écrit une fois, annoncé par la seule zone « status » de l'écran (R03-11 CA4)
   app.innerHTML = `<header class="top kid-top"><button class="btn ghost sm" data-act="kidBack">${t("btn.back")}</button>${langBtn()}</header>
     <main class="wrap"><section class="kcode">
       <div class="kcode-who" style="--c:${esc(k.color)}"><span class="kp-emo" aria-hidden="true">${esc(k.emoji)}</span><h1><bdi>${esc(k.name)}</bdi></h1></div>
-      <p id="kc-help" ${left ? `role="alert"` : ""}>${left ? t("kidcode.wait") : t("kidcode.help")}</p>
+      <p id="kc-help">${left ? waitMsg : t("kidcode.help")}</p>
       <div class="kdots" id="kc-dots" aria-hidden="true">${kidDots(S.kidSeq.length)}</div>
-      <p class="vh" id="kc-live" role="status" aria-live="polite">${S.kidSeq.length ? t("kidcode.progress", { n: S.kidSeq.length, total: KID_LEN }) : ""}</p>
+      <p class="vh" id="kc-live" role="status" aria-live="polite">${left ? waitMsg : S.kidSeq.length ? t("kidcode.progress", { n: S.kidSeq.length, total: KID_LEN }) : ""}</p>
       <div class="kgrid" role="group" aria-label="${t("kidcode.gridAria")}">${KID_IMGS.map((e, i) => `<button class="kimg" data-act="kidImg" data-i="${i}" aria-label="${t("kidcode.img." + i)}" ${left ? "disabled" : ""}><span aria-hidden="true">${e}</span></button>`).join("")}</div>
     </section></main>`;
   clearTimeout(kidTimer);

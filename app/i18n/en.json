@@ -1285,6 +1285,10 @@
  "kidcode": {
   "help": "Tap your 3 secret pictures, in order.",
   "wait": "Wait a little, then try again.",
+  "waitLeft": {
+   "one": "Wait a little, then try again in {n} minute.",
+   "other": "Wait a little, then try again in {n} minutes."
+  },
   "wrong": "That's not your code.",
   "progress": "Picture {n} of {total}",
   "gridAria": "Your secret pictures",

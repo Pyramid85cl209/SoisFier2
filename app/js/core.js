@@ -221,8 +221,9 @@ function daysLabel(days) {
 }
 function toast(msg, err = false) {
   const el = $("#toast"); el.textContent = msg; el.className = "show" + (err ? " err" : "");
-  clearTimeout(toast._t); toast._t = setTimeout(() => el.className = "", 2800);
+  clearTimeout(toast._t); toast._t = setTimeout(() => { el.className = ""; el.textContent = ""; }, 2800);   // texte effacé : pas de message périmé ni dans l'ancienne langue
 }
+function clearToast() { const el = $("#toast"); clearTimeout(toast._t); el.className = ""; el.textContent = ""; }
 const curLang = () => (I18N.lang === "qps" ? "fr" : I18N.lang);
 function errMsg(e) {
   const m = (e && (e.message || e.error_description || e.msg)) || String(e);

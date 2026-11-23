@@ -206,6 +206,16 @@ async function refreshKids(tok, failed) {
   }
   return false;
 }
+// À l'ouverture d'un appareil commun : liste des enfants relus auprès du serveur (enfant supprimé absent, un seul restant : son écran directement), déconnexion vue (F03-09 CA9, R03-05). Sans réseau : la liste gardée sert.
+async function syncKids(tok) {
+  let gone = true;
+  for (const k of kidsList() || []) {
+    try { await loadKids(tok, k.id); gone = false; break; }
+    catch (e) { if (!/Appareil non reconnu|SF:device_unknown|SF:device_expired/.test(e.message || "")) return; }   // réseau absent ou autre erreur : on garde la liste
+  }
+  if (gone) { clearChildStore(); S.childNow = null; S.kidPick = null; S.cs = null; S.screen = "auth"; render(); toast(t("kid.disconnected"), true); return false; }
+  return true;
+}
 async function loadChild(cid) {
   const tok = store.get("childToken");
   cid = cid || S.childNow || null;

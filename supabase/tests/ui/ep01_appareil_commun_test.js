@@ -27,7 +27,7 @@ async function open(opts) {
   await ctx.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
   const page = await ctx.newPage(); const errs = []; page.on("pageerror", e => errs.push(String(e)));
   await page.addInitScript(([o, base, kids]) => {
-    window.__net = "on";
+    window.__net = "on"; if (o.badTok) window.__badTok = o.badTok;
     window.__mock = { session: o.session ? { user: { id: "u1", email: "parent.test@example.invalid" } } : null,
       rpc: async (n, a) => {
         if (n === "child_state") {
@@ -65,7 +65,8 @@ const txt = async p => (await p.locator("#toast").textContent()) || "";
   ok("1.1 « Qui es-tu ? » : un bouton par enfant", await page.locator(".kpick-b").count() === 2);
   ok("1.2 prénom lu par le lecteur d'écran (nom accessible)", await page.locator(".kpick-b").first().getAttribute("aria-label") === "Enfant Un");
   ok("1.3 cible d'au moins 44 px", (await page.locator(".kpick-b").first().boundingBox()).height >= 44);
-  ok("1.4 aucun appel child_state avant le choix", (await calls(page, "child_state")).length === 0);
+  ok("1.4 à l'ouverture, une seule relecture de la liste (A7), aucun écran d'enfant ouvert", (await calls(page, "child_state")).length === 1 && await page.locator(".star-count").count() === 0);
+  await page.evaluate(() => { window.__calls = []; });
   await shot(page, "pick-fr-clair");
   await page.click('.kpick-b[data-id="k1"]');
   ok("1.5 grille du code : 9 images, cible d'au moins 44 px", await page.locator(".kimg").count() === 9 && (await page.locator(".kimg").first().boundingBox()).height >= 44);
@@ -78,6 +79,7 @@ const txt = async p => (await p.locator("#toast").textContent()) || "";
   ok("1.8 aucun appel serveur pour vérifier le code (sur l'appareil)", (await calls(page, "child_state")).length === 0);
   for (let i = 0; i < 4; i++) await seq(page, [8, 8, 8]);
   ok("1.9 5 suites fausses : attente d'une minute, images désactivées", /Attends un peu/.test(await page.locator("#kc-help").textContent()) && await page.locator(".kimg:disabled").count() === 9, await page.locator("#kc-help").textContent());
+  ok("1.9b attente : temps restant, une seule zone « status » porte le message", /dans 1 minute/.test(await page.locator("#kc-help").textContent()) && (await page.locator('[role=status]').evaluateAll(a => a.filter(x => /dans 1 minute/.test(x.textContent)).length)) === 1 && (await txt(page)) === "", await page.locator("#kc-help").textContent());
   await shot(page, "code-attente-fr-clair");
   ok("1.10 l'attente vaut pour cet enfant seulement", await page.evaluate(() => kidGuardLeft("k2")) === 0);
   await page.click("[data-act=kidBack]");
@@ -106,6 +108,45 @@ const txt = async p => (await p.locator("#toast").textContent()) || "";
   await page.evaluate(() => { window.__net = "off"; });
   await page.click('.kpick-b[data-id="k1"]'); await seq(page, [0, 1, 2]);
   ok("2.1 hors ligne : code vérifié sur place, copie de l'enfant affichée", /Enfant Un/.test(await page.locator(".hello").textContent()) && await page.locator(".pill").count() >= 1);
+  await ctx.close();
+
+  // 2b. DEC-21 (R03-11 CA12) : après l'ouverture d'un enfant, un rechargement ramène à « Qui es-tu ? » (code redemandé)
+  ({ page, ctx, errs } = await open({ ls: LS }));
+  await page.click('.kpick-b[data-id="k1"]'); await seq(page, [0, 1, 2]);
+  ok("2b.1 enfant ouvert avec son code", /Enfant Un/.test(await page.locator(".hello").textContent()));
+  await page.reload(); await page.waitForTimeout(800);
+  ok("2b.2 rechargement : « Qui es-tu ? », aucun écran d'enfant", await page.locator(".kpick-b").count() === 2 && await page.locator(".star-count").count() === 0);
+  await page.click('.kpick-b[data-id="k1"]');
+  ok("2b.3 le code est redemandé", await page.locator(".kimg").count() === 9);
+  await ctx.close();
+
+  // 2c. DEC-21 : appareil commun refermé puis rouvert (retour au premier plan) sans rechargement : « Qui es-tu ? »
+  ({ page, ctx, errs } = await open({ ls: LS }));
+  await page.click('.kpick-b[data-id="k1"]'); await seq(page, [0, 1, 2]);
+  await page.evaluate(() => { Object.defineProperty(document, "visibilityState", { value: "visible", configurable: true }); document.dispatchEvent(new Event("visibilitychange")); }); await page.waitForTimeout(700);
+  ok("2c.1 retour au premier plan : « Qui es-tu ? », code redemandé", await page.locator(".kpick-b").count() === 2 && await page.locator(".star-count").count() === 0);
+  await ctx.close();
+
+  // 2d. A7 : à l'ouverture, la liste est relue ; un enfant supprimé est absent, le dernier enfant ouvre son écran directement
+  ({ page, ctx, errs } = await open({ ls: LS, nkids: 1 }));
+  ok("2d.1 un seul enfant restant : son écran directement, liste locale effacée", /Enfant Un/.test(await page.locator(".hello").textContent()) && await page.locator(".kpick-b").count() === 0 && await page.evaluate(() => localStorage.getItem("sf:childKids") === null));
+  await ctx.close();
+  // 2e. A7 : appareil retiré par le parent : déconnexion vue à l'ouverture, message dans la langue courante, effacé ensuite
+  ({ page, ctx, errs } = await open({ ls: LS, badTok: "tok-commun" }));
+  ok("2e.1 déconnexion vue à l'ouverture (écran d'accueil, message, rien gardé)", await page.locator("[data-act=login], #a-email, form").count() > 0 && /déconnecté par un parent/.test(await txt(page)) && await page.evaluate(() => localStorage.getItem("sf:childToken") === null && localStorage.getItem("sf:childKids") === null), await txt(page));
+  await page.waitForTimeout(3000);
+  ok("2e.2 message effacé après son affichage", (await txt(page)) === "");
+  await ctx.close();
+  ({ page, ctx, errs } = await open({ ls: LS, badTok: "tok-commun", locale: "ar", q: "?lang=ar" }));
+  ok("2e.3 message de déconnexion en arabe", /فصل أحد الوالدين/.test(await txt(page)), await txt(page));
+  await ctx.close();
+
+  // 2f. A4 : enfant sans code : message au toucher de l'avatar, la grille ne s'ouvre pas
+  const NOCODE = JSON.stringify(KV.map((k, i) => i === 0 ? { ...k, verifier: null } : k));
+  ({ page, ctx, errs } = await open({ ls: LS }));
+  await page.evaluate(k => { store.set("childKids", JSON.parse(k)); render(); }, NOCODE);
+  await page.click('.kpick-b[data-id="k1"]');
+  ok("2f.1 sans code : message affiché, pas de grille", /pas encore choisi/.test(await txt(page)) && await page.locator(".kimg").count() === 0 && await page.locator(".kpick-b").count() === 2, await txt(page));
   await ctx.close();
 
   // 3. Un enfant relié disparaît (supprimé par le parent) : l'appareil reste pour les autres
