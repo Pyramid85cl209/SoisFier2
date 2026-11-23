@@ -120,11 +120,11 @@ const txt = async p => (await p.locator("#toast").textContent()) || "";
   ok("2b.3 le code est redemandé", await page.locator(".kimg").count() === 9);
   await ctx.close();
 
-  // 2c. DEC-21 : appareil commun refermé puis rouvert (retour au premier plan) sans rechargement : « Qui es-tu ? »
+  // 2c. DEC-21 (décision du pilote) : le code n'est redemandé qu'à l'ouverture et au rechargement, pas au retour au premier plan
   ({ page, ctx, errs } = await open({ ls: LS }));
   await page.click('.kpick-b[data-id="k1"]'); await seq(page, [0, 1, 2]);
   await page.evaluate(() => { Object.defineProperty(document, "visibilityState", { value: "visible", configurable: true }); document.dispatchEvent(new Event("visibilitychange")); }); await page.waitForTimeout(700);
-  ok("2c.1 retour au premier plan : « Qui es-tu ? », code redemandé", await page.locator(".kpick-b").count() === 2 && await page.locator(".star-count").count() === 0);
+  ok("2c.1 retour au premier plan : l'écran de l'enfant reste ouvert", await page.locator(".kpick-b").count() === 0 && /Enfant Un/.test(await page.locator(".hello").textContent()));
   await ctx.close();
 
   // 2d. A7 : à l'ouverture, la liste est relue ; un enfant supprimé est absent, le dernier enfant ouvre son écran directement

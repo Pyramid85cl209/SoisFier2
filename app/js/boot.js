@@ -5,9 +5,7 @@ window.addEventListener("online", () => { flushQueue(); flushUnpair(); if (S.scr
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState !== "visible") return;
   flushUnpair();
-  if (S.screen === "child" && kidsList() && S.childNow && !store.get("childFromParent")) {   // appareil commun rouvert : retour à « Qui es-tu ? », le code est redemandé (R03-11 CA12, DEC-21)
-    flushQueue().then(async () => { S.childNow = null; S.kidPick = null; S.kidSeq = []; S.cs = null; S.ctab = "today"; clearToast(); render(); if (await syncKids(store.get("childToken"))) { if (!kidsList()) await loadChild(null); else render(); } }); }
-  else if (S.screen === "child") { flushQueue().then(loadChild); }
+  if (S.screen === "child") { flushQueue().then(loadChild); }
   else if (S.screen === "parent" && S.family) {
     // DT15-01 : retour après minuit : on revient au jour en cours, sauf si l'adulte avait choisi un autre jour
     const nt = todayISO(); if (S.lastToday && S.lastToday !== nt && S.day === S.lastToday) S.day = nt; S.lastToday = nt;
