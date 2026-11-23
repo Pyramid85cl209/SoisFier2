@@ -366,7 +366,14 @@ A.childHere = async el => {
     if (ids.length > 1 && !await ensureKidCodes(ids)) return;
   }
   // La ligne de ce téléphone est réutilisée si le serveur la reconnaît (R03-08) ; ses enfants sont mis à jour. Adresse d'envoi des rappels de l'adulte : notée sur la ligne (ADR-57, R11-10).
-  const map = store.get("sameDevice", {}), old = ids.map(i => map[i]).find(Boolean) || null;
+  // Un jeton gardé peut être périmé (ligne déconnectée depuis) : on prend le premier que le serveur reconnaît, pas le premier de la liste (A1)
+  const map = store.get("sameDevice", {}); let old = null;
+  for (const i of ids) {
+    const cand = map[i]; if (!cand || cand === old) continue;
+    const chk = await sb.rpc("child_state", { p_token: cand, p_child: i });
+    if (!chk.error) { old = cand; break; }
+    if (!/Appareil non reconnu|SF:device_unknown|SF:device_expired/.test(chk.error.message || "")) throw chk.error;
+  }
   const r = await sb.rpc("child_pair_here", { p_child: ids[0], p_label: t("device.sameLabel", { who: memberLabel(S.session.user.id) }), p_children: ids, p_token: old, p_endpoint: await curEndpoint() }); if (r.error) throw r.error;
   const tok = r.data.token;
   Object.keys(map).forEach(k => { if (map[k] === old || map[k] === tok) delete map[k]; });

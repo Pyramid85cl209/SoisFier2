@@ -32,6 +32,7 @@ async function open(opts) {
       rpc: async (n, a) => {
         if (n === "child_state") {
           if (window.__net === "off") return { data: null, error: { message: "TypeError: Failed to fetch" } };
+          if (window.__badTok && a.p_token === window.__badTok) return { data: null, error: { message: "SF:device_unknown" } };
           if (window.__gone && a.p_child === window.__gone) return { data: null, error: { message: "SF:device_unknown" } };
           const list = window.__kids; const c = list.find(k => k.id === (a.p_child || list[0].id));
           return { data: { ...base, child: { id: c.id, name: c.name, emoji: c.emoji, color: c.color, garden_start: "2026-10-01" }, common: list.length > 1, device_children: list.length > 1 ? list : [] }, error: null };
@@ -199,6 +200,25 @@ const txt = async p => (await p.locator("#toast").textContent()) || "";
   await page.evaluate(() => { window.__codes = { rows: [{ child_id: "k1", has_code: true }, { child_id: "k2", has_code: true }] }; window.__calls = []; });
   await page.click('[data-act=deviceCode][data-id="k1"]'); await page.check(".ks-in >> nth=1"); await page.click("#ks-ok"); await page.waitForTimeout(500);
   ok("6.19 les deux ont un code : aucun code redemandé (le code existant n'est pas remplacé)", await page.locator(".kimg").count() === 0 && (await calls(page, "set_child_code")).length === 0 && /ABC234/.test(await page.locator("#sheet .code").textContent()));
+  await ctx.close();
+
+  // 6d. A1 (R03-08) : la ligne du téléphone (jeton de la v32 gardé dans sameDevice) est réutilisée quand on passe à deux enfants
+  ({ page, ctx, errs } = await PARENT({ "sf:sameDevice": '{"k1":"tok-v32"}' }));
+  await page.evaluate(() => { window.__codes = { rows: [{ child_id: "k1", has_code: true }, { child_id: "k2", has_code: true }] }; });
+  await page.click('[data-act=childHere][data-id="k2"]'); await page.waitForTimeout(300);
+  await page.check(".ks-in >> nth=0"); await page.click("#ks-ok"); await page.waitForTimeout(900);
+  const ph2 = await calls(page, "child_pair_here");
+  ok("6.20 Mode enfant ici, deux enfants : le jeton du téléphone est envoyé (même ligne)", ph2.length === 1 && ph2[0].p_token === "tok-v32" && ph2[0].p_children.length === 2, JSON.stringify(ph2));
+  ok("6.21 jeton gardé pour les deux enfants, rien d'ancien en trop", await page.evaluate(() => { const m = store.get("sameDevice"); return m.k1 === "tok-here" && m.k2 === "tok-here" && Object.keys(m).length === 2; }));
+  await ctx.close();
+
+  // 6e. A1 : jeton périmé pour un enfant (ligne déconnectée depuis), valide pour l'autre : la ligne valide est réutilisée
+  ({ page, ctx, errs } = await PARENT({ "sf:sameDevice": '{"k1":"tok-perime","k2":"tok-valide"}' }));
+  await page.evaluate(() => { window.__badTok = "tok-perime"; window.__codes = { rows: [{ child_id: "k1", has_code: true }, { child_id: "k2", has_code: true }] }; });
+  await page.click('[data-act=childHere][data-id="k2"]'); await page.waitForTimeout(300);
+  await page.check(".ks-in >> nth=0"); await page.click("#ks-ok"); await page.waitForTimeout(900);
+  const ph3 = await calls(page, "child_pair_here");
+  ok("6.22 jeton périmé en tête de liste : le jeton valide est envoyé", ph3.length === 1 && ph3[0].p_token === "tok-valide", JSON.stringify(ph3));
   await ctx.close();
 
   // 6c. Un seul enfant dans la famille : pas de choix, comme avant
