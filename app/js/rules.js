@@ -152,29 +152,49 @@ function brokenStar(s = 20) {
 }
 
 /* ================= Modèles ================= */
+// Modèles (R04-06, ADR-56) : 33 modèles rangés par catégorie (DEC-11) ; la catégorie `c` sert à ranger la liste et n'est jamais enregistrée sur la routine (DEC-08) ;
+// `k` = clé du texte (`tpl.r.<k>`), repère des ensembles de départ. Nouveaux modèles : 1 étoile, sans lieu ni minuteur.
+const TPL_CATS = ["hygiene", "autonomie", "ecole", "maison", "comportement", "spiritualite"];
 const TPL_R = [
-  L("tpl.r.bed", { e: "🛏️", m: "matin", p: 0 }),
-  L("tpl.r.dress", { e: "👕", m: "matin", p: 0 }),
-  L("tpl.r.breakfast", { e: "🥣", m: "matin", p: 2 }),
-  L("tpl.r.teethMorning", { e: "🪥", m: "matin", p: 1, tm: 2 }),
-  L("tpl.r.face", { e: "🧼", m: "matin", p: 1 }),
-  L("tpl.r.hair", { e: "💇", m: "matin", p: 1 }),
-  L("tpl.r.shoes", { e: "👟", m: "matin", p: 4, tm: 3 }),
-  L("tpl.r.schoolbag", { e: "🎒", m: "matin", p: 4, d: "work" }),
-  L("tpl.r.hands", { e: "🧼", m: "midi", p: 1 }),
-  L("tpl.r.setTable", { e: "🍽️", m: "midi", p: 2, s: 2 }),
-  L("tpl.r.clearPlate", { e: "🍽️", m: "midi", p: 2 }),
-  L("tpl.r.toys", { e: "🧸", m: "journee", p: 0, s: 2, tm: 10 }),
-  L("tpl.r.homework", { e: "✏️", m: "journee", p: 0, d: "homework", s: 2 }),
-  L("tpl.r.read", { e: "📚", m: "journee", p: 3, b: true }),
-  L("tpl.r.plants", { e: "🪴", m: "journee", p: 3, b: true }),
-  L("tpl.r.pet", { e: "🐟", m: "journee", p: 2 }),
-  L("tpl.r.bath", { e: "🛁", m: "soir", p: 1 }),
-  L("tpl.r.pyjamas", { e: "🌙", m: "soir", p: 0, tm: 5 }),
-  L("tpl.r.teethEvening", { e: "🪥", m: "soir", p: 1, tm: 2 }),
-  L("tpl.r.laundry", { e: "🧺", m: "soir", p: 1 }),
-  L("tpl.r.clothesTomorrow", { e: "👕", m: "soir", p: 0 }),
-  L("tpl.r.toilet", { e: "🚽", m: "soir", p: 1 })
+  L("tpl.r.teethMorning", { k: "teethMorning", c: "hygiene", e: "🪥", m: "matin", p: 1, tm: 2 }),
+  L("tpl.r.face", { k: "face", c: "hygiene", e: "🧼", m: "matin", p: 1 }),
+  L("tpl.r.hair", { k: "hair", c: "hygiene", e: "💇", m: "matin", p: 1 }),
+  L("tpl.r.hands", { k: "hands", c: "hygiene", e: "🧼", m: "midi", p: 1 }),
+  L("tpl.r.bath", { k: "bath", c: "hygiene", e: "🛁", m: "soir", p: 1 }),
+  L("tpl.r.shower", { k: "shower", c: "hygiene", e: "🚿", m: "soir" }),
+  L("tpl.r.teethEvening", { k: "teethEvening", c: "hygiene", e: "🪥", m: "soir", p: 1, tm: 2 }),
+  L("tpl.r.toilet", { k: "toilet", c: "hygiene", e: "🚽", m: "soir", p: 1 }),
+  L("tpl.r.bed", { k: "bed", c: "autonomie", e: "🛏️", m: "matin", p: 0 }),
+  L("tpl.r.dress", { k: "dress", c: "autonomie", e: "👕", m: "matin", p: 0 }),
+  L("tpl.r.breakfast", { k: "breakfast", c: "autonomie", e: "🥣", m: "matin", p: 2 }),
+  L("tpl.r.shoes", { k: "shoes", c: "autonomie", e: "👟", m: "matin", p: 4, tm: 3 }),
+  L("tpl.r.pyjamas", { k: "pyjamas", c: "autonomie", e: "🌙", m: "soir", p: 0, tm: 5 }),
+  L("tpl.r.clothesTomorrow", { k: "clothesTomorrow", c: "autonomie", e: "👕", m: "soir", p: 0 }),
+  L("tpl.r.schoolbag", { k: "schoolbag", c: "ecole", e: "🎒", m: "matin", p: 4, d: "work" }),
+  L("tpl.r.homework", { k: "homework", c: "ecole", e: "✏️", m: "journee", p: 0, d: "homework", s: 2 }),
+  L("tpl.r.read", { k: "read", c: "ecole", e: "📚", m: "journee", p: 3, b: true }),
+  L("tpl.r.setTable", { k: "setTable", c: "maison", e: "🍽️", m: "midi", p: 2, s: 2 }),
+  L("tpl.r.clearPlate", { k: "clearPlate", c: "maison", e: "🍽️", m: "midi", p: 2 }),
+  L("tpl.r.toys", { k: "toys", c: "maison", e: "🧸", m: "journee", p: 0, s: 2, tm: 10 }),
+  L("tpl.r.plants", { k: "plants", c: "maison", e: "🪴", m: "journee", p: 3, b: true }),
+  L("tpl.r.pet", { k: "pet", c: "maison", e: "🐟", m: "journee", p: 2 }),
+  L("tpl.r.tidyRoom", { k: "tidyRoom", c: "maison", e: "🧹", m: "journee" }),
+  L("tpl.r.laundry", { k: "laundry", c: "maison", e: "🧺", m: "soir", p: 1 }),
+  L("tpl.r.hello", { k: "hello", c: "comportement", e: "👋", m: "journee" }),
+  L("tpl.r.calm", { k: "calm", c: "comportement", e: "😌", m: "journee" }),
+  L("tpl.r.listen", { k: "listen", c: "comportement", e: "👂", m: "journee" }),
+  L("tpl.r.help", { k: "help", c: "comportement", e: "🤝", m: "journee", b: true }),
+  L("tpl.r.prayerMorning", { k: "prayerMorning", c: "spiritualite", e: "✨", m: "matin" }),
+  L("tpl.r.prayerEvening", { k: "prayerEvening", c: "spiritualite", e: "🌟", m: "soir" }),
+  L("tpl.r.inspire", { k: "inspire", c: "spiritualite", e: "📖", m: "journee", b: true }),
+  L("tpl.r.thanks", { k: "thanks", c: "spiritualite", e: "💛", m: "soir" }),
+  L("tpl.r.invocation", { k: "invocation", c: "spiritualite", e: "💫", m: "journee", b: true })
+];
+// Ensembles de départ (R04-12, DEC-03, DEC-13, DEC-14) : modèles (`k`) et récompenses du référentiel (`TPL_W`, `k`) cochés d'office ; jamais de Comportement ni de Spiritualité ; la tranche n'est pas enregistrée
+const STARTERS = [
+  { age: "3-5", r: ["teethMorning", "dress", "hands", "toys", "teethEvening"], w: ["story", "sticker", "bubbleBath", "hut"] },
+  { age: "6-7", r: ["teethMorning", "dress", "schoolbag", "clearPlate", "homework", "pyjamas", "teethEvening"], w: ["dessert", "cartoon", "cake", "picnic"] },
+  { age: "8-10", r: ["bed", "teethMorning", "schoolbag", "homework", "setTable", "shower", "teethEvening", "clothesTomorrow"], w: ["lateBed", "dinner", "movie", "toy"] }
 ];
 // Jours d'un modèle : « work » = jours d'école de la famille ; « homework » = idem sans le jour d'école court (mercredi en France)
 const tplDays = d => !d ? [1, 2, 3, 4, 5, 6, 7] : d === "work" ? workDays() : workDays().filter(x => !(WEEK.start === 1 && WEEK.weekend.join() === "6,7" && x === 3));
@@ -182,14 +202,14 @@ const TIER_K = ["coup", "petit", "moment", "sortie", "grand", "event"];
 const TIERS = () => TIER_K.map(k => [k, t(`tier.${k}.name`), t(`tier.${k}.hint`)]);
 const TIER_DAYS = { coup: 1, petit: 3, moment: 10, sortie: 30, grand: 90, event: 30 };
 const TPL_W = [
-  L("tpl.w.story", { e: "📖", tier: "coup", d: 1 }), L("tpl.w.music", { e: "🎵", tier: "coup", d: 1 }), L("tpl.w.sticker", { e: "⭐", tier: "coup", d: 1 }),
-  L("tpl.w.game", { e: "🎲", tier: "petit", d: 2 }), L("tpl.w.dessert", { e: "🍽️", tier: "petit", d: 2 }),
-  L("tpl.w.bubbleBath", { e: "🛁", tier: "petit", d: 3 }), L("tpl.w.lateBed", { e: "⏰", tier: "petit", d: 3 }), L("tpl.w.cartoon", { e: "📺", tier: "petit", d: 4 }),
-  L("tpl.w.art", { e: "🎨", tier: "moment", d: 7 }), L("tpl.w.cake", { e: "🧁", tier: "moment", d: 7 }),
-  L("tpl.w.dinner", { e: "🍕", tier: "moment", d: 10 }), L("tpl.w.hut", { e: "🏕️", tier: "moment", d: 10 }), L("tpl.w.movie", { e: "🎬", tier: "moment", d: 14 }),
-  L("tpl.w.picnic", { e: "🧺", tier: "sortie", d: 21 }), L("tpl.w.library", { e: "📚", tier: "sortie", d: 21 }),
-  L("tpl.w.pool", { e: "🏊", tier: "sortie", d: 30 }), L("tpl.w.farm", { e: "🐐", tier: "sortie", d: 30 }),
-  L("tpl.w.toy", { e: "🚲", tier: "grand", d: 90 }), L("tpl.w.themePark", { e: "🎢", tier: "grand", d: 90 }), L("tpl.w.myDay", { e: "👑", tier: "grand", d: 90 })
+  L("tpl.w.story", { k: "story", e: "📖", tier: "coup", d: 1 }), L("tpl.w.music", { k: "music", e: "🎵", tier: "coup", d: 1 }), L("tpl.w.sticker", { k: "sticker", e: "⭐", tier: "coup", d: 1 }),
+  L("tpl.w.game", { k: "game", e: "🎲", tier: "petit", d: 2 }), L("tpl.w.dessert", { k: "dessert", e: "🍽️", tier: "petit", d: 2 }),
+  L("tpl.w.bubbleBath", { k: "bubbleBath", e: "🛁", tier: "petit", d: 3 }), L("tpl.w.lateBed", { k: "lateBed", e: "⏰", tier: "petit", d: 3 }), L("tpl.w.cartoon", { k: "cartoon", e: "📺", tier: "petit", d: 4 }),
+  L("tpl.w.art", { k: "art", e: "🎨", tier: "moment", d: 7 }), L("tpl.w.cake", { k: "cake", e: "🧁", tier: "moment", d: 7 }),
+  L("tpl.w.dinner", { k: "dinner", e: "🍕", tier: "moment", d: 10 }), L("tpl.w.hut", { k: "hut", e: "🏕️", tier: "moment", d: 10 }), L("tpl.w.movie", { k: "movie", e: "🎬", tier: "moment", d: 14 }),
+  L("tpl.w.picnic", { k: "picnic", e: "🧺", tier: "sortie", d: 21 }), L("tpl.w.library", { k: "library", e: "📚", tier: "sortie", d: 21 }),
+  L("tpl.w.pool", { k: "pool", e: "🏊", tier: "sortie", d: 30 }), L("tpl.w.farm", { k: "farm", e: "🐐", tier: "sortie", d: 30 }),
+  L("tpl.w.toy", { k: "toy", e: "🚲", tier: "grand", d: 90 }), L("tpl.w.themePark", { k: "themePark", e: "🎢", tier: "grand", d: 90 }), L("tpl.w.myDay", { k: "myDay", e: "👑", tier: "grand", d: 90 })
 ];
 const TIER_RANK = { coup: 0, petit: 1, moment: 2, sortie: 3, grand: 4, event: 3 };
 // Rythme (R06-02, DEC-47) : étoiles des routines habituelles obligatoires sur une semaine ÷ 7 × 0,75 ; 0 = pas de rythme (aucune routine habituelle obligatoire, plus de valeur de secours)

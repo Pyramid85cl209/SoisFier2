@@ -1,13 +1,35 @@
 "use strict";
 /* SoisFier : Données parent et enfant, rechargements, notifications */
 /* ================= Données parent ================= */
+// Familles du compte (EP-01, ADR-54, R01-07) : toutes sont lues ; la famille ouverte est la dernière ouverte sur ce téléphone (sf:family:<compte>),
+// sinon la plus ancienne ; aucune famille : Bienvenue. Changer de famille recharge toute la page (changeFamily), jamais en place.
+const famKey = uid => "family:" + uid;
 async function loadParent() {
   const uid = S.session.user.id;
-  const { data: mem, error } = await sb.from("family_members").select("family_id,display_name,role,created_at,families(name)").eq("user_id", uid).order("created_at").limit(1);
+  let { data: mem, error } = await sb.from("family_members").select("family_id,display_name,role,created_at,families(name,created_by)").eq("user_id", uid).order("created_at");
+  if (error) ({ data: mem, error } = await sb.from("family_members").select("family_id,display_name,role,created_at,families(name)").eq("user_id", uid).order("created_at"));   // base pas encore à jour : sans le créateur
   if (error) throw error;
-  if (!mem.length) { S.screen = "onboard"; return; }
-  S.family = { id: mem[0].family_id, name: mem[0].families?.name || t("onboard.defaultName") }; S.me = mem[0];
+  S.families = (mem || []).map(m => ({ id: m.family_id, name: m.families?.name || t("onboard.defaultName"), role: m.role, created_by: m.families?.created_by || null }));
+  if (!mem || !mem.length) { S.family = null; S.screen = "onboard"; store.del(famKey(uid)); return; }
+  const want = store.get(famKey(uid)), pick = mem.find(m => m.family_id === want) || mem[0];
+  if (S.family && S.family.id !== pick.family_id) {   // la famille ouverte n'est plus accessible (R01-07 CA3) : une autre s'ouvre, sans rien garder de l'ancienne
+    store.set(famKey(uid), pick.family_id); store.del("parentCache"); return location.reload();
+  }
+  store.set(famKey(uid), pick.family_id);
+  S.family = { id: pick.family_id, name: pick.families?.name || t("onboard.defaultName") }; S.me = pick;
   await refreshParent();
+}
+// Familles créées par ce compte (DEC-19) : 3 au plus ; le serveur refuse aussi la 4e (SF:family_limit)
+const FAMILY_MAX = 3;
+const familyLimitReached = () => (S.families || []).filter(f => f.created_by && f.created_by === S.session?.user.id).length >= FAMILY_MAX;
+// Appareils et enfants reliés (EP-01, ADR-52) : la table de liaison est la source ; à défaut (base pas encore à jour), le premier enfant de l'appareil
+async function devicesQuery(f) {
+  const [a, b] = await Promise.all([
+    sb.from("child_devices").select("id,child_id,created_at,last_seen,label").eq("family_id", f).order("created_at"),
+    sb.from("child_device_children").select("device_id,child_id").eq("family_id", f)]);
+  if (a.error) return a;
+  const by = {}; if (!b.error) b.data.forEach(l => (by[l.device_id] = by[l.device_id] || []).push(l.child_id));
+  return { data: a.data.map(d => ({ ...d, child_ids: by[d.id] || (d.child_id ? [d.child_id] : []) })), error: null };
 }
 /* Requêtes du parent, par partie : refreshParent recharge tout, refreshParts seulement ce qu'une action a changé */
 const PQ = {
@@ -19,7 +41,7 @@ const PQ = {
   z: f => sb.from("redemptions").select("*").eq("family_id", f).gte("created_at", addDays(todayISO(), -30)).order("created_at", { ascending: false }),   // DT07-02 : 30 jours, pas un nombre de lignes
   s: f => sb.from("child_stats").select("*").eq("family_id", f),
   m: f => sb.from("family_members").select("user_id,display_name,relation,relation_key,role").eq("family_id", f),
-  d: f => sb.from("child_devices").select("id,child_id,created_at,last_seen,label").eq("family_id", f).order("created_at"),
+  d: devicesQuery,
   f: f => sb.from("families").select("name,auto_validate,week_start,weekend_days,timezone,plan").eq("id", f),
   pe: f => sb.from("penalties").select("*").eq("family_id", f).eq("active", true).order("stars").order("created_at"),
   pv: f => sb.from("penalty_events").select("*").eq("family_id", f).gte("created_at", addDays(todayISO(), -30)).order("created_at", { ascending: false }),
@@ -68,15 +90,17 @@ function applyParts(o) {
   S.offline = false;
   if (!isParent() && S.tab === "routines") S.tab = "today";
   if (!S.children.find(k => k.id === S.currentChild)) S.currentChild = S.children[0]?.id || null;
+  if (!S.shownRead) { S.shownRead = true; shownLoad(); }
 }
 // Cache du parent, rattaché au compte : affiché dès l'ouverture, puis remplacé par les données fraîches
 function saveParentCache() {
-  store.set("parentCache", { uid: S.session?.user.id, family: S.family, me: S.me, children: S.children, routines: S.routines, routinesAll: S.routinesAll, rsets: S.rsets, rewards: S.rewards, completions: S.completions, redemptions: S.redemptions, stats: S.stats, members: S.members, devices: S.devices,
+  store.set("parentCache", { uid: S.session?.user.id, family: S.family, me: S.me, families: S.families, children: S.children, routines: S.routines, routinesAll: S.routinesAll, rsets: S.rsets, rewards: S.rewards, completions: S.completions, redemptions: S.redemptions, stats: S.stats, members: S.members, devices: S.devices,
     autoValidate: S.autoValidate, penalties: S.penalties, pevents: S.pevents, badges: S.badges, pauses: S.pauses, gardens: S.gardens, week: { ...WEEK }, plan: S.plan, holidays: S.holidays, hp: S.hp, ho: S.ho, oneoffTpl: S.oneoffTpl });
 }
 function parentCache() {
   const c = store.get("parentCache"), uid = S.session?.user.id;
-  return c && c.family && uid && (c.uid || c.me?.user_id) === uid ? c : null;   // jamais le cache d'un autre compte
+  const want = uid ? store.get(famKey(uid)) : null;
+  return c && c.family && uid && (c.uid || c.me?.user_id) === uid && (!want || c.family.id === want) ? c : null;   // jamais le cache d'un autre compte ni d'une autre famille que la famille ouverte
 }
 function useParentCache(c) { const { uid, ...rest } = c; Object.assign(S, rest); if (c.week) Object.assign(WEEK, c.week); }
 // Écritures en cours : une lecture qui croise une écriture est ignorée (pas de retour en arrière visible).
@@ -157,30 +181,65 @@ async function enterParent() {
   }
   render();
   if (typeof maybeIntro === "function") maybeIntro();
+  if (S.screen === "parent") syncHereEndpoint();
 }
 async function reloadParent(msg, parts) { if (parts) await refreshParts(parts); else await refreshParent(); render(); if (msg) toast(msg); if (!parts || parts.includes("r")) priceNewcomers(); }
 
 /* ================= Données enfant ================= */
-async function loadChild() {
+// Appareil commun (EP-01, ADR-52) : liste des enfants reliés gardée sur l'appareil (prénom, avatar, couleur, empreinte du code) ; copie, compteurs et coches par enfant
+const kidsList = () => { const k = store.get("childKids"); return Array.isArray(k) && k.length > 1 ? k : null; };
+const ckey = (k, id) => kidsList() ? k + ":" + id : k;
+// Lit la liste des enfants reliés auprès du serveur (un seul appel suffit, quel que soit l'enfant) ; sans appareil commun, la liste est effacée
+async function loadKids(tok, childId) {
+  const { data, error } = await sb.rpc("child_state", { p_token: tok, p_child: childId }); if (error) throw error;
+  if (data.common && Array.isArray(data.device_children) && data.device_children.length > 1) store.set("childKids", data.device_children); else store.del("childKids");
+  return data;
+}
+// Un enfant relié a disparu (supprimé par le parent) : liste relue par un autre enfant ; faux si plus aucun ne répond (appareil retiré)
+async function refreshKids(tok, failed) {
+  for (const k of kidsList() || []) {
+    if (k.id === failed) continue;
+    try { await loadKids(tok, k.id); } catch { continue; }
+    S.childNow = null; S.kidPick = null; S.cs = null; S.screen = "child";
+    if (!kidsList()) await loadChild(null); else render();
+    return true;
+  }
+  return false;
+}
+// À l'ouverture d'un appareil commun : liste des enfants relus auprès du serveur (enfant supprimé absent, un seul restant : son écran directement), déconnexion vue (F03-09 CA9, R03-05). Sans réseau : la liste gardée sert.
+async function syncKids(tok) {
+  let gone = true;
+  for (const k of kidsList() || []) {
+    try { await loadKids(tok, k.id); gone = false; break; }
+    catch (e) { if (!/Appareil non reconnu|SF:device_unknown|SF:device_expired/.test(e.message || "")) return; }   // réseau absent ou autre erreur : on garde la liste
+  }
+  if (gone) { clearChildStore(); S.childNow = null; S.kidPick = null; S.cs = null; S.screen = "auth"; render(); toast(t("kid.disconnected"), true); return false; }
+  return true;
+}
+async function loadChild(cid) {
   const tok = store.get("childToken");
+  cid = cid || S.childNow || null;
+  if (kidsList() && !cid) return render();   // appareil commun : « Qui es-tu ? » d'abord
   try {
-    const { data, error } = await sb.rpc("child_state", { p_token: tok });
+    const { data, error } = await sb.rpc("child_state", { p_token: tok, p_child: cid });
     if (error) throw error;
+    if (data.common && Array.isArray(data.device_children) && data.device_children.length > 1) store.set("childKids", data.device_children); else { store.del("childKids"); S.childNow = null; }
     S.cs = data; S.offline = false; setWeek(data.family);
     S.cs.badges = S.cs.badges || []; S.cs.penalties = S.cs.penalties || [];
     S.cs.holidays = (S.cs.holidays || []).map(p => ({ ...p, child_id: S.cs.child.id, ov: Object.fromEntries((p.overrides || []).map(o => [o.routine_id, o])) }));
+    const id = S.cs.child.id;
     applyQueueToState();
-    const last = store.get("lastEarned"), e = S.cs.stats.earned || 0;
+    const last = store.get(ckey("lastEarned", id)), e = S.cs.stats.earned || 0;
     let gain = null;
     if (last != null && e > last) gain = { diff: e - last };
-    store.set("lastEarned", e);
-    const fls = (S.cs.garden && S.cs.garden.flowers) || [], seen = store.get("seenFlowers");
+    store.set(ckey("lastEarned", id), e);
+    const fls = (S.cs.garden && S.cs.garden.flowers) || [], seen = store.get(ckey("seenFlowers", id));
     const fresh = seen == null ? [] : fls.slice(seen);
-    store.set("seenFlowers", fls.length);
+    store.set(ckey("seenFlowers", id), fls.length);
     if (fresh.length) setTimeout(() => bloomCeremony(fresh[fresh.length - 1]), 900);
     const nb = S.cs.badges_new || [];   // badges mérités et pas encore annoncés (le serveur décide, ADR-44)
-    if (nb.length) sb.rpc("child_badges_seen", { p_token: tok, p_keys: nb }).then(() => {}, () => {});
-    store.set("childCache", S.cs);
+    if (nb.length) sb.rpc("child_badges_seen", { p_token: tok, p_child: id, p_keys: nb }).then(() => {}, () => {});
+    store.set(ckey("childCache", id), S.cs);
     const shown = nb.map(k => visibleBadges().find(b => b.k === k)).filter(Boolean);
     if (gain || shown.length) setTimeout(() => {
       celebrate(true);
@@ -191,18 +250,20 @@ async function loadChild() {
   } catch (e) {
     if (/Appareil non reconnu|SF:device_unknown|SF:device_expired/.test(e.message || "")) {
       const expired = /SF:device_expired/.test(e.message || "");   // 3 mois sans usage : message propre, appareil retiré du serveur (sinon par la purge quotidienne)
+      if (!expired && kidsList() && cid && await refreshKids(tok, cid)) return;   // un seul enfant retiré de l'appareil : les autres restent
       if (expired) await unpairDevice(tok);
-      store.del("childToken"); store.del("childCache"); store.del("queue");
+      clearChildStore(); S.childNow = null;
       S.screen = "auth"; render(); toast(expired ? t("srv.device_expired") : t("kid.disconnected"), true); return;
     }
-    S.cs = store.get("childCache"); S.offline = true; if (S.cs) setWeek(S.cs.family);
+    S.cs = store.get(ckey("childCache", cid)); S.offline = true; if (S.cs) setWeek(S.cs.family);
     if (!S.cs) { S.screen = "error"; S.err = errMsg(e); }
   }
   render();
 }
 function applyQueueToState() {
-  const q = store.get("queue", []), st = S.cs.stats;
+  const q = store.get("queue", []), st = S.cs.stats, me = S.cs.child.id;
   for (const op of q) {
+    if (op.cid && op.cid !== me) continue;   // coche d'un autre enfant du même appareil
     const i = S.cs.completions.findIndex(c => c.routine_id === op.rid && c.day === op.day);
     const r = S.cs.routines.find(x => x.id === op.rid); if (!r) continue;
     if (op.done && i < 0) { S.cs.completions.push({ routine_id: op.rid, day: op.day, stars: r.stars, source: op.source, validated: false }); st.pending_stars = (st.pending_stars || 0) + r.stars; st.pending_count = (st.pending_count || 0) + 1; }
@@ -236,12 +297,12 @@ async function flushQueue() {
     while (q.length) {
       const op = q[0];
       let res;
-      try { res = await sb.rpc("child_toggle", { p_token: store.get("childToken"), p_routine: op.rid, p_day: op.day, p_done: op.done, p_source: op.source }); }
+      try { res = await sb.rpc("child_toggle", { p_token: store.get("childToken"), p_child: op.cid || null, p_routine: op.rid, p_day: op.day, p_done: op.done, p_source: op.source }); }
       catch (e) { res = { error: e }; }
       if (res.error && isNetErr(res.error)) { S.offline = true; break; }
       q.shift(); store.set("queue", q);
     }
-    if (!q.length && S.offline) { S.offline = false; if (S.screen === "child") await loadChild(); }
+    if (!q.length && S.offline) { S.offline = false; if (S.screen === "child" && (S.childNow || !kidsList())) await loadChild(); }
   } finally { flushing = false; }
 }
 function childToggle(rid, makeDone, source = "child") {
@@ -253,8 +314,8 @@ function childToggle(rid, makeDone, source = "child") {
     st.pending_stars -= cs.completions[i].stars; st.pending_count--; cs.completions.splice(i, 1);
   }
   else return;
-  store.set("childCache", cs);
-  const q = store.get("queue", []); q.push({ rid, day, done: makeDone, source }); store.set("queue", q);
+  store.set(ckey("childCache", cs.child.id), cs);
+  const q = store.get("queue", []); q.push({ rid, day, done: makeDone, source, cid: cs.child.id }); store.set("queue", q);
   if (makeDone) {
     S.bump = true; render(); S.bump = false;
     const routines = cs.routines.map(x => ({ ...x, child_id: cs.child.id }));
@@ -282,6 +343,24 @@ async function getPushSub() {
     sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64(vk) });
   }
   return sub.toJSON();
+}
+// Mode enfant ici (EP-01, ADR-57) : le serveur rattache l'adresse d'envoi des rappels de ce téléphone aux lignes « Mode enfant ici » dont il reçoit les jetons (`sameDevice`)
+const hereTokens = () => [...new Set(Object.values(store.get("sameDevice", {})).filter(Boolean))];
+async function curEndpoint() {   // adresse d'envoi de l'adulte de ce téléphone ; rien tant que ses rappels ne sont pas activés
+  if (!store.get("pushOn") || !("serviceWorker" in navigator)) return null;
+  try { const reg = await navigator.serviceWorker.getRegistration(); const sub = reg && await reg.pushManager.getSubscription(); return sub ? sub.endpoint : null; } catch { return null; }
+}
+// Lignes « Mode enfant ici » créées avant ce lot : l'adresse est notée à la prochaine ouverture par le parent, avec les mêmes heures et la même famille que le réglage (jamais une autre famille)
+async function syncHereEndpoint() {
+  try {
+    const toks = hereTokens(); if (!toks.length || !S.family || !navigator.onLine) return;
+    const fam = store.get("pushFamily") || ((S.families || []).length <= 1 ? S.family.id : null); if (fam !== S.family.id) return;
+    const ep = await curEndpoint(); if (!ep) return;
+    const key = ep.slice(-24) + "|" + toks.map(x => x.slice(0, 8)).sort().join(","); if (store.get("hereSync") === key) return;
+    const reg = await navigator.serviceWorker.getRegistration(), j = (await reg.pushManager.getSubscription()).toJSON();
+    const { error } = await sb.rpc("parent_push_subscribe", { p_family: fam, p_endpoint: ep, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_times: store.get("pushTimes", ["07:30", "18:00"]), p_locale: curLang(), p_tokens: toks });
+    if (!error) store.set("hereSync", key);
+  } catch {}
 }
 const LAST_TIME = "23:45";   // DT11-04 : un rappel après 23:45 ne serait jamais envoyé (le quart d'heure passe minuit)
 const tooLate = times => times.some(v => v > LAST_TIME);

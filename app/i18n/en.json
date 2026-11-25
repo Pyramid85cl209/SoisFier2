@@ -241,7 +241,18 @@
    "teethEvening": "Brush your teeth (evening)",
    "laundry": "Put dirty clothes in the basket",
    "clothesTomorrow": "Lay out clothes for tomorrow",
-   "toilet": "Go to the toilet before bed"
+   "toilet": "Go to the toilet before bed",
+   "shower": "Take a shower",
+   "tidyRoom": "Tidy your room",
+   "hello": "Say hello, thank you and please",
+   "calm": "Speak calmly",
+   "listen": "Listen the first time",
+   "help": "Help someone at home",
+   "prayerMorning": "A moment of prayer or reflection (morning)",
+   "prayerEvening": "A moment of prayer or reflection (evening)",
+   "inspire": "Read or listen to something that inspires me",
+   "thanks": "Say thank you for a moment of my day",
+   "invocation": "Say a short prayer (invocation)"
   },
   "w": {
    "story": "One more story",
@@ -272,6 +283,14 @@
    "notListening": "Not listening",
    "rough": "Rough behaviour",
    "lie": "Telling a lie"
+  },
+  "cat": {
+   "hygiene": "Hygiene",
+   "autonomie": "Independence",
+   "ecole": "School",
+   "maison": "Home",
+   "comportement": "Behaviour",
+   "spiritualite": "Spirituality"
   }
  },
  "badge": {
@@ -592,7 +611,11 @@
    "one": "{n} routine added.",
    "other": "{n} routines added."
   },
-  "print": "Print the week"
+  "print": "Print the week",
+  "remind": "Remind at",
+  "noRemind": "No reminder",
+  "remindHelp": "A notification arrives at this time if the routine is due that day and not yet ticked.",
+  "remindAria": "Reminder at {time}"
  },
  "validate": {
   "title": "To approve",
@@ -686,6 +709,12 @@
   "connectDevice": "Connect their device",
   "childHere": "Child mode here",
   "you": "(you)",
+  "mine": "My families",
+  "mineHelp": "Tap a family to open it. It will open again next time on this phone.",
+  "opened": "Open",
+  "another": "Create or join another family",
+  "needNet": "You need an internet connection to switch family.",
+  "busy": "Something is in progress. Try again in a moment.",
   "children": "Children",
   "noChild": "No children yet.",
   "members": "Family members",
@@ -963,7 +992,8 @@
   "noPlace": "None",
   "timer": "Timer challenge",
   "noTimer": "No timer",
-  "minutes": "{n} minutes"
+  "minutes": "{n} minutes",
+  "for": "For"
  },
  "bloom": {
   "title": "Your flower has opened!",
@@ -977,9 +1007,18 @@
   "help": "On their phone, open SoisFier, tap “I have a child code” and enter this code. It expires in 15 minutes.",
   "revokeTitle": "Disconnect this device?",
   "revokeText": "A new code will be needed to reconnect it.",
+  "revokeShared": "This device is linked to several children ({names}): it will be disconnected for all of them.",
   "revoked": "Device disconnected.",
   "sameLabel": "{who}'s phone (child mode)",
-  "revokeLost": "Ticks not yet sent from this phone will be lost."
+  "revokeLost": "Ticks not yet sent from this phone will be lost.",
+  "pickTitle": "Which children?",
+  "pickHelp": "Tick one or more children. From two, the device asks each child for their code to open their screen.",
+  "pickNeed": "Tick at least one child.",
+  "getCode": "Get the code",
+  "sharedOf": "Device for {names}",
+  "sharedWith": "with {names}",
+  "hereTitle": "Child mode here: which children?",
+  "hereHelp": "Tick one or more children. From two, each child taps their avatar, then enters their child code."
  },
  "timer": {
   "go": "Do it before time runs out!",
@@ -1073,6 +1112,11 @@
    "emoji": "📷",
    "title": "Transfer the whole week at once",
    "text": "Instead of ticking day by day, take a photo of the paper sheet (or tap its circles) and transfer the whole week in one go. This is part of Premium; printing the sheet stays free."
+  },
+  "reminder": {
+   "emoji": "⏰",
+   "title": "A reminder at the time of the routine",
+   "text": "A reminder at the time of a routine is part of Premium."
   }
  },
  "vac": {
@@ -1158,6 +1202,7 @@
   "oneoff_out_of_range": "One-off routine outside its dates.",
   "validated_by_parent": "Already approved by a parent.",
   "device_parent_only": "Only a parent can connect a device.",
+  "family_limit": "You have already created 3 families, the maximum. You can still join a family with a code.",
   "login_required": "Sign-in required.",
   "invite_parent_only": "Only a parent can invite.",
   "unknown_role": "Unknown rights.",
@@ -1217,15 +1262,83 @@
   "step": "Screen {i} of {n}",
   "next": "Next",
   "back": "Back",
+  "skip": "Skip",
   "done": "Close",
-  "t1": "Welcome to SoisFier",
-  "x1": "SoisFier helps your family build daily routines: brushing teeth, packing the school bag, going to bed on time. The child ticks what they have done, and an adult approves it.",
-  "a1": "A sunflower growing",
-  "t2": "Stars and a flower",
-  "x2": "Each approved routine earns stars. Every good day makes the child's flower grow, and it opens at the end of the fortnight.",
-  "a2": "The child's flower, well grown",
-  "t3": "Rewards that fit",
-  "x3": "Stars are exchanged for rewards chosen by the family. To find out more, tap “?” at the top of the screen: the guide has the answers.",
-  "a3": "A flower in full bloom"
+  "addChild": "Add my child",
+  "start": "Get started",
+  "t1": "Add your child",
+  "x1": "Enter their first name and choose their age: routines and rewards are ready and waiting. You can change anything afterwards.",
+  "a1": "A young sprout",
+  "t2": "Your child ticks their routines",
+  "x2": "On their own phone, a shared tablet or yours in “Child mode here”, they tick what they have done during the day.",
+  "a2": "A plant growing",
+  "t3": "You approve, the stars arrive",
+  "x3": "You check what they ticked: each approved routine earns stars, which they swap for the family's rewards.",
+  "a3": "A well-grown plant",
+  "t4": "Their flower grows",
+  "x4": "Every good day makes their flower grow. It opens at the end of the fortnight and joins their garden.",
+  "a4": "A flower in full bloom"
+ },
+ "kidpick": {
+  "title": "Who are you?",
+  "switch": "Switch child"
+ },
+ "kidcode": {
+  "help": "Tap your 3 secret pictures, in order.",
+  "wait": "Wait a little, then try again.",
+  "waitLeft": {
+   "one": "Wait a little, then try again in {n} minute.",
+   "other": "Wait a little, then try again in {n} minutes."
+  },
+  "wrong": "That's not your code.",
+  "progress": "Picture {n} of {total}",
+  "gridAria": "Your secret pictures",
+  "notSet": "Your code has not been chosen yet. Ask a parent.",
+  "img": [
+   "Dog",
+   "Cat",
+   "Frog",
+   "Turtle",
+   "Apple",
+   "Banana",
+   "Grapes",
+   "Strawberry",
+   "Fish"
+  ],
+  "chooseTitle": "{name}'s code",
+  "chooseText": "The child taps these 3 pictures, in order, to open their screen on a shared device. The code is never shown again: if it is forgotten, you choose a new one.",
+  "redo": "Start over",
+  "chosen": "Pictures chosen: {names}",
+  "saved": "{name}'s code is saved.",
+  "change": "Child's code"
+ },
+ "quick": {
+  "open": "Quick start by age",
+  "title": "How old is {name}?",
+  "help": "We suggest routines and rewards that suit the age. Keep or remove whatever you like before adding. The age is not saved.",
+  "age": {
+   "0": "Ages 3-5",
+   "1": "Ages 6-7",
+   "2": "Ages 8-10"
+  },
+  "self": "I'll choose myself",
+  "setTitle": "{name}, {age}",
+  "routines": "Routines",
+  "rewards": "Rewards (for all children)",
+  "hadFor": "already added for {names}",
+  "nRoutines": {
+   "one": "{n} routine",
+   "other": "{n} routines"
+  },
+  "nRewards": {
+   "one": "{n} reward",
+   "other": "{n} rewards"
+  },
+  "addedBoth": "{r} and {w} added.",
+  "rewardsFailed": "The routines were added, but not the rewards. You can add them from the Rewards tab."
+ },
+ "kidrow": {
+  "label": "Choose the child shown",
+  "all": "All"
  }
 }

@@ -118,6 +118,7 @@ button{cursor:pointer}
 .krow>svg{width:44px;height:58px;flex:none}
 .krow .grow{flex:1}
 .krow .btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.dev-t{flex:1 1 auto;min-width:0}   /* une seule ligne de texte, qui passe à la ligne comme un paragraphe (F03-09 CA7) */
 .dev{font-size:.88rem;color:var(--muted);display:flex;gap:8px;align-items:center;margin:2px 0}
 
 /* Feuille (dialog) */
@@ -402,3 +403,40 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
 .kid-top .lang-btn{width:44px;height:44px}
 .k-timer{min-height:44px}
 [hidden]{display:none!important}
+
+/* Appareil commun (EP-01, F03-09, R03-10, R03-11) : « Qui es-tu ? » et grille du code de l'enfant ; couleurs par les variables seulement */
+.kid-top .btn.sm{min-height:44px}
+.kpick{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.kpick-b{width:100%;min-height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:14px 10px;border:0;border-radius:24px;
+  background:var(--paper);color:var(--earth);box-shadow:var(--lift);border-block-start:8px solid var(--c,var(--leaf))}
+.kp-emo{font-size:3.2rem;line-height:1}
+.kp-name{font-family:var(--display);font-weight:600;font-size:1.3rem;overflow-wrap:anywhere;text-align:center}
+.kcode{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.kcode-who{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 28px;border-radius:24px;background:var(--paper);box-shadow:var(--lift);border-block-start:8px solid var(--c,var(--leaf))}
+.kcode-who h1{font-size:1.5rem}
+.kcode p{margin:0}
+.kdots{display:flex;gap:12px;justify-content:center;direction:ltr}
+.kdot{width:22px;height:22px;border-radius:50%;box-shadow:inset 0 0 0 3px var(--leaf);display:grid;place-items:center;font-size:1.5rem;line-height:1}
+.kdot.on{background:var(--leaf)}
+.kshow .kdot{width:52px;height:52px;border-radius:16px;background:var(--sky);box-shadow:inset 0 0 0 2px var(--line)}
+.kshow .kdot.on{background:var(--sun-l);box-shadow:inset 0 0 0 3px var(--sun)}
+.kgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;width:100%;max-width:340px;margin:8px auto}
+.kimg{aspect-ratio:1;min-height:76px;border:0;border-radius:22px;background:var(--paper);box-shadow:var(--lift),inset 0 0 0 2px var(--line);font-size:2.6rem;line-height:1}
+.kimg:active:not(:disabled){background:var(--sun-l);box-shadow:inset 0 0 0 3px var(--sun)}
+.kimg:disabled{opacity:.55}
+
+/* Mes familles (EP-01, F01-09) : liste de choix, la famille ouverte est marquée en texte et par le contour */
+.flist{display:flex;flex-direction:column;gap:8px;margin-block:10px}
+.frow{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;min-height:48px;width:100%;text-align:start;border:0;border-radius:16px;padding:10px 14px;background:var(--paper);box-shadow:inset 0 0 0 2px var(--line)}
+.frow.on{box-shadow:inset 0 0 0 3px var(--leaf);background:var(--leaf-l)}
+.frow .fopen{margin-inline-start:auto;font-weight:700;color:var(--leaf-d)}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .frow .fopen{color:var(--leaf)} }   /* sombre : 4,96:1 sur le fond de la ligne ouverte (X-ACC-05) */
+
+/* EP-01 lot 3 : « Pour » (plusieurs enfants), démarrage rapide */
+.chips.wrap{flex-wrap:wrap;overflow:visible}
+.kidrow{gap:8px;padding:4px 0 10px}
+.kidchip{min-height:44px;min-width:44px;display:inline-flex;align-items:center;gap:6px;max-inline-size:100%;overflow:hidden;text-overflow:ellipsis}
+.for-chip{min-height:44px}
+.ages{display:grid;gap:10px;margin:16px 0 4px}
+.ages .btn{width:100%}
+.kidchip.all.on{background:var(--earth);color:var(--sky)}

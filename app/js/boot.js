@@ -9,7 +9,7 @@ document.addEventListener("visibilitychange", () => {
   else if (S.screen === "parent" && S.family) {
     // DT15-01 : retour après minuit : on revient au jour en cours, sauf si l'adulte avait choisi un autre jour
     const nt = todayISO(); if (S.lastToday && S.lastToday !== nt && S.day === S.lastToday) S.day = nt; S.lastToday = nt;
-    if (S.day > nt) S.day = nt; refreshParent().then(render).catch(() => {}); }
+    if (S.day > nt) S.day = nt; loadParent().then(render).catch(() => {}); }   // loadParent : une famille perdue ouvre une autre famille (R01-07 CA3)
 });
 if (sb) sb.auth.onAuthStateChange((event, session) => {
   if (event === "PASSWORD_RECOVERY") {
@@ -47,18 +47,23 @@ function swSetup() {
   }).catch(() => {});
   askVersion();
 }
+// Message gardé à travers un rechargement complet (famille rejointe)
+function flashToast() { const f = store.get("flash"); if (f) { store.del("flash"); toast(t(f)); } }
 async function boot() {
   swSetup();
   await loadI18n();
   pinMigrate(); flushUnpair();   // ancien code parent converti en empreinte ; retraits d'appareil restés en attente
   if (!sb) { S.screen = "error"; S.err = CFG_OK ? t("error.noService") : t("error.noConfig"); return render(); }
   if (store.get("childToken")) {
-    S.screen = "child"; S.cs = store.get("childCache"); render();
-    await flushQueue(); await loadChild(); return;
+    S.screen = "child"; S.childNow = null;   // appareil commun : toujours « Qui es-tu ? » à l'ouverture (R03-10)
+    S.cs = kidsList() ? null : store.get("childCache"); S.kidPick = null; S.kidSeq = []; clearToast(); render();
+    await flushQueue();
+    if (kidsList() && await syncKids(store.get("childToken")) === false) return;   // appareil commun : liste à jour, déconnexion vue
+    await loadChild(null); return;
   }
   const { data } = await sb.auth.getSession();
   S.session = data.session;
   if (!S.session) { S.screen = "auth"; render(); introFromLink(); return; }
-  await enterParent(); introFromLink();
+  await enterParent(); introFromLink(); flashToast();
 }
 boot();

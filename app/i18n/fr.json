@@ -238,7 +238,18 @@
    "teethEvening": "Se brosser les dents (soir)",
    "laundry": "Mettre le linge sale au panier",
    "clothesTomorrow": "Préparer ses habits pour demain",
-   "toilet": "Aller aux toilettes avant le dodo"
+   "toilet": "Aller aux toilettes avant le dodo",
+   "shower": "Prendre sa douche",
+   "tidyRoom": "Ranger sa chambre",
+   "hello": "Dire bonjour, merci et s'il te plaît",
+   "calm": "Parler calmement",
+   "listen": "Écouter la première fois",
+   "help": "Aider quelqu'un de la maison",
+   "prayerMorning": "Moment de prière ou de recueillement (matin)",
+   "prayerEvening": "Moment de prière ou de recueillement (soir)",
+   "inspire": "Lire ou écouter un texte qui m'inspire",
+   "thanks": "Dire merci pour un moment de ma journée",
+   "invocation": "Faire une invocation"
   },
   "w": {
    "story": "Une histoire de plus",
@@ -269,6 +280,14 @@
    "notListening": "Ne pas écouter",
    "rough": "Geste brusque",
    "lie": "Mensonge"
+  },
+  "cat": {
+   "hygiene": "Hygiène",
+   "autonomie": "Autonomie",
+   "ecole": "École",
+   "maison": "Maison",
+   "comportement": "Comportement",
+   "spiritualite": "Spiritualité"
   }
  },
  "badge": {
@@ -583,7 +602,11 @@
    "one": "{n} routine ajoutée.",
    "other": "{n} routines ajoutées."
   },
-  "print": "Imprimer la semaine"
+  "print": "Imprimer la semaine",
+  "remind": "Rappel à",
+  "noRemind": "Sans rappel",
+  "remindHelp": "Une notification arrive à cette heure si la routine est à faire ce jour-là et pas encore cochée.",
+  "remindAria": "Rappel à {time}"
  },
  "validate": {
   "title": "À valider",
@@ -677,6 +700,12 @@
   "connectDevice": "Connecter son appareil",
   "childHere": "Mode enfant ici",
   "you": "(vous)",
+  "mine": "Mes familles",
+  "mineHelp": "Touchez une famille pour l'ouvrir. Elle se rouvrira la prochaine fois sur ce téléphone.",
+  "opened": "Ouverte",
+  "another": "Créer ou rejoindre une autre famille",
+  "needNet": "Il faut une connexion internet pour changer de famille.",
+  "busy": "Une action est en cours. Réessayez dans un instant.",
   "children": "Enfants",
   "noChild": "Aucun enfant pour l'instant.",
   "members": "Membres de la famille",
@@ -954,7 +983,8 @@
   "noPlace": "Aucun",
   "timer": "Défi chrono",
   "noTimer": "Sans minuteur",
-  "minutes": "{n} minutes"
+  "minutes": "{n} minutes",
+  "for": "Pour"
  },
  "bloom": {
   "title": "Ta fleur s'est ouverte !",
@@ -968,9 +998,18 @@
   "help": "Sur son téléphone, ouvrez SoisFier, touchez « J'ai un code enfant » et saisissez ce code. Il expire dans 15 minutes.",
   "revokeTitle": "Déconnecter cet appareil ?",
   "revokeText": "Il faudra un nouveau code pour le reconnecter.",
+  "revokeShared": "Cet appareil est relié à plusieurs enfants ({names}) : il sera déconnecté pour tous.",
   "revoked": "Appareil déconnecté.",
   "sameLabel": "Téléphone de {who} (mode enfant)",
-  "revokeLost": "Les coches pas encore envoyées depuis ce téléphone seront perdues."
+  "revokeLost": "Les coches pas encore envoyées depuis ce téléphone seront perdues.",
+  "pickTitle": "Quels enfants ?",
+  "pickHelp": "Cochez un ou plusieurs enfants. À partir de deux, l'appareil demande à chacun son code pour ouvrir son écran.",
+  "pickNeed": "Cochez au moins un enfant.",
+  "getCode": "Obtenir le code",
+  "sharedOf": "Appareil de {names}",
+  "sharedWith": "avec {names}",
+  "hereTitle": "Mode enfant ici : quels enfants ?",
+  "hereHelp": "Cochez un ou plusieurs enfants. À partir de deux, chacun touche son avatar puis saisit son code d'enfant."
  },
  "timer": {
   "go": "Fais-le avant la fin du temps !",
@@ -1064,6 +1103,11 @@
    "emoji": "📷",
    "title": "Reportez la semaine en une fois",
    "text": "Au lieu de cocher jour par jour, photographiez la feuille papier (ou touchez ses ronds) et reportez toute la semaine d'un coup. Cela fait partie du Premium ; imprimer la feuille reste gratuit."
+  },
+  "reminder": {
+   "emoji": "⏰",
+   "title": "Un rappel à l'heure de la routine",
+   "text": "Le rappel à l'heure d'une routine fait partie du Premium."
   }
  },
  "vac": {
@@ -1149,6 +1193,7 @@
   "oneoff_out_of_range": "Routine exceptionnelle hors de ses dates.",
   "validated_by_parent": "Déjà validée par un parent.",
   "device_parent_only": "Seul un parent peut connecter un appareil.",
+  "family_limit": "Vous avez déjà créé 3 familles, le maximum. Vous pouvez encore rejoindre une famille avec un code.",
   "login_required": "Connexion requise.",
   "invite_parent_only": "Seul un parent peut inviter.",
   "unknown_role": "Droits inconnus.",
@@ -1208,15 +1253,83 @@
   "step": "Écran {i} sur {n}",
   "next": "Suivant",
   "back": "Retour",
+  "skip": "Passer",
   "done": "Fermer",
-  "t1": "Bienvenue dans SoisFier",
-  "x1": "SoisFier aide votre famille à installer les routines du quotidien : se brosser les dents, préparer son cartable, se coucher à l'heure. L'enfant coche ce qu'il a fait, un adulte valide.",
-  "a1": "Un tournesol qui pousse",
-  "t2": "Des étoiles, une fleur",
-  "x2": "Chaque routine validée rapporte des étoiles. Chaque bonne journée fait grandir la fleur de l'enfant, qui s'ouvre à la fin de la quinzaine.",
-  "a2": "La fleur de l'enfant, bien développée",
-  "t3": "Des récompenses à sa mesure",
-  "x3": "Les étoiles s'échangent contre des récompenses choisies par la famille. Pour tout savoir, touchez « ? » en haut de l'écran : le mode d'emploi vous répond.",
-  "a3": "Une fleur épanouie"
+  "addChild": "Ajouter mon enfant",
+  "start": "Commencer",
+  "t1": "Ajoutez votre enfant",
+  "x1": "Donnez son prénom et choisissez son âge : des routines et des récompenses toutes prêtes l'attendent. Vous pourrez tout changer ensuite.",
+  "a1": "Une jeune pousse",
+  "t2": "Votre enfant coche ses routines",
+  "x2": "Sur son téléphone, sur une tablette commune ou sur le vôtre en « Mode enfant ici », il coche ce qu'il a fait dans la journée.",
+  "a2": "Une plante qui grandit",
+  "t3": "Vous validez, les étoiles arrivent",
+  "x3": "Vous contrôlez ses coches : chaque routine validée rapporte des étoiles, qu'il échange ensuite contre les récompenses de la famille.",
+  "a3": "Une plante bien développée",
+  "t4": "Sa fleur grandit",
+  "x4": "Chaque bonne journée fait grandir sa fleur. Elle s'ouvre à la fin de la quinzaine et rejoint son jardin.",
+  "a4": "Une fleur épanouie"
+ },
+ "kidpick": {
+  "title": "Qui es-tu ?",
+  "switch": "Changer d'enfant"
+ },
+ "kidcode": {
+  "help": "Touche tes 3 images secrètes, dans l'ordre.",
+  "wait": "Attends un peu, puis réessaie.",
+  "waitLeft": {
+   "one": "Attends un peu, puis réessaie dans {n} minute.",
+   "other": "Attends un peu, puis réessaie dans {n} minutes."
+  },
+  "wrong": "Ce n'est pas ton code.",
+  "progress": "Image {n} sur {total}",
+  "gridAria": "Tes images secrètes",
+  "notSet": "Ton code n'est pas encore choisi. Demande à un parent.",
+  "img": [
+   "Chien",
+   "Chat",
+   "Grenouille",
+   "Tortue",
+   "Pomme",
+   "Banane",
+   "Raisin",
+   "Fraise",
+   "Poisson"
+  ],
+  "chooseTitle": "Code de {name}",
+  "chooseText": "L'enfant touchera ces 3 images, dans l'ordre, pour ouvrir son écran sur un appareil partagé. Le code n'est jamais réaffiché : s'il est oublié, vous en choisissez un nouveau.",
+  "redo": "Recommencer",
+  "chosen": "Images choisies : {names}",
+  "saved": "Le code de {name} est enregistré.",
+  "change": "Code de l'enfant"
+ },
+ "quick": {
+  "open": "Démarrage rapide par âge",
+  "title": "Quel âge a {name} ?",
+  "help": "Nous proposons des routines et des récompenses adaptées à l'âge. Vous gardez ou retirez ce que vous voulez avant d'ajouter. L'âge n'est pas enregistré.",
+  "age": {
+   "0": "3-5 ans",
+   "1": "6-7 ans",
+   "2": "8-10 ans"
+  },
+  "self": "Choisir moi-même",
+  "setTitle": "{name}, {age}",
+  "routines": "Routines",
+  "rewards": "Récompenses (pour tous les enfants)",
+  "hadFor": "déjà ajoutée pour {names}",
+  "nRoutines": {
+   "one": "{n} routine",
+   "other": "{n} routines"
+  },
+  "nRewards": {
+   "one": "{n} récompense",
+   "other": "{n} récompenses"
+  },
+  "addedBoth": "{r} et {w} ajoutées.",
+  "rewardsFailed": "Les routines sont ajoutées, mais pas les récompenses. Vous pouvez les ajouter depuis l'onglet Récompenses."
+ },
+ "kidrow": {
+  "label": "Choisir l'enfant affiché",
+  "all": "Tous"
  }
 }

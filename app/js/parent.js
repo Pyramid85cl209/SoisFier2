@@ -5,9 +5,22 @@ const curChild = () => S.children.find(c => c.id === S.currentChild) || S.childr
 function viewFor(c) {
   return computeView({ child: c, routines: S.routines, completions: S.completions.filter(x => x.child_id === c.id), stats: S.stats[c.id], badges: S.badges[c.id], garden: S.gardens[c.id], penalties: S.pevents.filter(e => e.child_id === c.id) });
 }
-function chips() {
-  return `<div class="chips" role="tablist">${S.children.map(c => `<button role="tab" aria-selected="${c.id === S.currentChild}" class="chip ${c.id === S.currentChild ? "on" : ""}" style="--c:${esc(c.color)};--cc:${esc(chipColor(c.color))}" data-act="pickChild" data-id="${c.id}">${esc(c.emoji)} ${esc(c.name)}</button>`).join("")}</div>`;
+// Rangée d'avatars commune aux quatre onglets (R00-10, DEC-12). « Tous » seulement sur Aujourd'hui ; un seul enfant : aucune rangée, sauf Routines (F04-01 CA1).
+function shownSave() { if (S.family) store.set("shown:" + S.family.id, { all: S.viewAll, child: S.currentChild }); }
+function shownLoad() {
+  const o = S.family ? store.get("shown:" + S.family.id) : null;
+  if (o && S.children.find(k => k.id === o.child)) S.currentChild = o.child;
+  S.viewAll = !o || o.all !== false || !S.children.find(k => k.id === o.child);
 }
+function chips() {
+  const n = S.children.length, today = S.tab === "today";
+  if (n < 2 && S.tab !== "routines") return "";
+  const all = today && n > 1;
+  const on = c => all ? !S.viewAll && c.id === S.currentChild : c.id === curChild().id;
+  return `<div class="chips wrap kidrow" role="tablist" aria-label="${t("kidrow.label")}">${all ? `<button role="tab" aria-selected="${S.viewAll}" class="chip kidchip all ${S.viewAll ? "on" : ""}" data-act="pickAll"><span aria-hidden="true">👨‍👩‍👧‍👦</span> ${t("kidrow.all")}</button>` : ""}${S.children.map(c => `<button role="tab" aria-selected="${on(c)}" class="chip kidchip ${on(c) ? "on" : ""}" style="--c:${esc(c.color)};--cc:${esc(chipColor(c.color))}" data-act="pickChild" data-id="${c.id}"><span aria-hidden="true">${esc(c.emoji)}</span> <bdi>${esc(c.name)}</bdi></button>`).join("")}</div>`;
+}
+// Enfants montrés sur Aujourd'hui : « Tous » ou le seul enfant choisi
+const shownKids = () => S.viewAll || S.children.length < 2 ? S.children : S.children.filter(c => c.id === curChild().id);
 function renderParent() {
   const tabs = [["today", t("tab.today"), "☀️"], ["routines", t("tab.routines"), "📋"], ["rewards", t("tab.rewards"), "🎁"], ["history", t("tab.history"), "📜"], ["family", t("tab.family"), "🏡"]].filter(x => isParent() || x[0] !== "routines");
   let body;
@@ -30,8 +43,9 @@ function rowP(c, r, day, v) {
     <span class="rt-txt"><b>${esc(r.title)}</b><small>${parts.join(t("sep"))}</small></span>
     <span class="rt-stars">+${fmtNum(r.stars)} ⭐</span><span class="pot" aria-hidden="true">${val ? "🌱" : d ? "⏳" : ""}</span></button></li>`;
 }
+const pendingOf = () => { const ids = shownKids().map(c => c.id); return S.completions.filter(x => !x.validated_at && ids.includes(x.child_id)); };
 function pendingBlock() {
-  const pend = S.completions.filter(x => !x.validated_at).sort((a, b) => a.day < b.day ? -1 : 1);
+  const pend = pendingOf().sort((a, b) => a.day < b.day ? -1 : 1);
   if (!pend.length) return "";
   return `<section class="validate"><div class="v-head"><h2>${t("validate.title")}</h2><button class="btn sm" data-act="validateAll">${t("validate.all", { n: pend.length })}</button></div>
     <ul class="vlist">${pend.map(x => {
@@ -50,7 +64,7 @@ function pToday() {
   const day = S.day, td = todayISO();
   const nav = `<div class="daynav"><button data-act="dayPrev" aria-label="${t("day.prev")}" ${day <= addDays(td, -6) ? "disabled" : ""}>‹</button><h1>${fmtDay(day)}</h1><button data-act="dayNext" aria-label="${t("day.next")}" ${day >= td ? "disabled" : ""}>›</button></div>`;
   const tip = S.tip && day === td ? `<aside class="tip"><span aria-hidden="true">💡</span><p>${esc(S.tip)}</p></aside>` : "";
-  const blocks = S.children.map(c => {
+  const blocks = shownKids().map(c => {
     const v = viewFor(c), due = dueOn(S.routinesAll || S.routines, c.id, day, S.completions);
     const main = due.filter(r => !r.is_bonus), bonus = due.filter(r => r.is_bonus), ring = ringOf(main, day, S.completions);   // compteur : DEC-32
     const nd = ring.filter(r => v.done.has(r.id + "|" + day)).length;
@@ -66,7 +80,7 @@ function pToday() {
       ${day === td ? `<div class="actions" style="margin:10px 0 0"><button class="btn sm ghost" data-act="newOneoff" data-child="${c.id}">+ ${t("oneoff.btn")}${ptag()}</button></div>` : ""}
     </section>`;
   }).join("");
-  return nav + (day === td ? pendingBlock() + nudge() : "") + tip + blocks;
+  return chips() + nav + (day === td ? pendingBlock() + nudge() : "") + tip + blocks;
 }
 function pRoutines() {
   const c = curChild(), t0 = todayISO(), hp = periodOn(c.id, t0), vac = !!hp && !S.showHabitual;
@@ -85,6 +99,7 @@ function pRoutines() {
       const parts = r.off ? [t("hol.off")] : [daysLabel(r.days)];
       if (!r.off && r.place) parts.push(esc(r.place));
       if (!r.off && r.timer_minutes) parts.push("⏱ " + t("routine.minutes", { n: r.timer_minutes }));
+      if (!r.off && r.remind_at) { const hm = String(r.remind_at).slice(0, 5); parts.push(`<span aria-hidden="true">⏰ ${hm}</span><span class="vh">${t("routine.remindAria", { time: hm })}</span>`); }   // F04-03 CA8
       if (!r.off && r.is_bonus) parts.push(t("routine.bonus"));
       if (r.adjusted) parts.push(t("hol.adjusted"));
       if (r.hol) parts.unshift("🏖️ " + t("hol.vacRoutine"));
@@ -113,18 +128,24 @@ function pRewards() {
 function pFamily() {
   const P = isParent(), me = S.session?.user.id;
   const kids = S.children.map(c => {
-    const devs = S.devices.filter(d => d.child_id === c.id);
+    const devs = S.devices.filter(d => (d.child_ids || [d.child_id]).includes(c.id));
     const gn = gardenNow(S.gardens[c.id]);
     return `<div class="krow kid-row">${gn ? stageSVG(gn.stage, gn.species, c.color) : plantSVG(0, c.color)}<div class="grow"><b>${esc(c.emoji)} ${esc(c.name)}</b>
-      ${devs.map(d => `<div class="dev">📱 ${esc(d.label || t("family.hisPhone"))}${t("sep")}${t("family.since", { date: fmtDate(d.created_at) })} ${P ? `<button class="link" data-act="revokeDevice" data-id="${d.id}" aria-label="${esc(t("a11y.disconnectDevice", { name: d.label || t("family.hisPhone") }))}">${t("family.disconnect")}</button>` : ""}</div>`).join("")}</div>
+      ${devs.map(d => `<div class="dev"><span class="dev-t">📱 ${esc(d.label || t("family.hisPhone"))}${t("sep")}${t("family.since", { date: fmtDate(d.created_at) })}${(d.child_ids || []).length > 1 ? t("sep") + t("device.sharedWith", { names: d.child_ids.filter(i => i !== c.id).map(i => `<bdi>${esc(S.children.find(k => k.id === i)?.name || "")}</bdi>`).join(t("sep")) }) : ""}</span> ${P ? `<button class="link" data-act="revokeDevice" data-id="${d.id}" aria-label="${esc(t("a11y.disconnectDevice", { name: d.label || t("family.hisPhone") }))}">${t("family.disconnect")}</button>` : ""}</div>`).join("")}</div>
       ${P ? `<div class="btns"><button class="btn sm" data-act="childHere" data-id="${c.id}" aria-label="${t("a11y.childHere", { name: c.name })}">${t("family.childHere")}</button><button class="btn sm ghost" data-act="editChild" data-id="${c.id}" aria-label="${t("a11y.edit", { name: c.name })}">${t("btn.edit")}</button><button class="btn sm ghost" data-act="deviceCode" data-id="${c.id}" aria-label="${t("a11y.connectDevice", { name: c.name })}">${t("family.connectDevice")}</button></div>` : ""}</div>`;
   }).join("");
+  // Mes familles (F01-09) : dès que le compte est dans deux familles ; « Créer ou rejoindre une autre famille » est toujours proposé
+  const fams = S.families || [], anotherBtn = `<button class="btn ghost" data-act="anotherFamily">${t("family.another")}</button>`;
+  const famList = fams.length >= 2 ? fsec("families", "🏡 " + t("family.mine"), `<p class="muted">${t("family.mineHelp")}</p>
+      <div class="flist" role="listbox" aria-label="${t("family.mine")}">${fams.map(f => `<button type="button" class="frow ${f.id === S.family?.id ? "on" : ""}" role="option" aria-selected="${f.id === S.family?.id}" data-act="switchFamily" data-id="${f.id}"><span><b><bdi>${esc(f.name)}</bdi></b> · ${f.role === "helper" ? t("role.helper") : t("role.parent")}</span>${f.id === S.family?.id ? `<span class="fopen">✓ ${t("family.opened")}</span>` : ""}</button>`).join("")}</div>
+      <div class="actions">${anotherBtn}</div>`, true) : "";
   const pushOn = store.get("pushOn", false), times = store.get("pushTimes", ["07:30", "18:00"]);
   const members = S.members.map(m => `<div class="krow"><div class="grow"><b>${esc(relLabel(m) || m.display_name || t("role.parent"))}</b>${m.user_id === me ? " " + t("family.you") : ""}
       <div class="dev">${m.relation && m.display_name ? esc(m.display_name) + t("sep") : ""}${m.role === "helper" ? t("role.helper") : t("role.parent")}</div></div>
       ${P || m.user_id === me ? `<div class="btns"><button class="btn sm ghost" data-act="editMember" data-id="${m.user_id}" aria-label="${t("a11y.edit", { name: relLabel(m) || m.display_name || t("role.parent") })}">${t("btn.edit")}</button></div>` : ""}</div>`).join("");
   // Ordre par fréquence d'usage (v28) ; sections repliables, Enfants et Vacances ouvertes par défaut, état retenu sur le téléphone
   return fsec("kids", "🧒 " + t("family.children"), `${kids || `<p class="muted">${t("family.noChild")}</p>`}${P ? `<div class="actions"><button class="btn" data-act="newChild">${t("child.add")}${S.children.length >= 1 ? ptag() : ""}</button></div>` : ""}`, true)
+    + famList
     + (P ? fsec("vac", "🏖️ " + t("vac.title"), vacSection(), true) : "")
     + fsec("members", "👥 " + t("family.members"), `${members}${P ? `<p class="muted small">${t("family.rolesHelp")}</p><div class="actions"><button class="btn ghost" data-act="invite">${t("family.invite")}${!isPremium() && S.members.filter(m => m.role !== "helper").length >= 2 ? ptag() : ""}</button></div>` : ""}`)
     + fsec("push", "🔔 " + t("push.title"), `<p class="muted">${t("push.parentHelp")}</p>
@@ -137,6 +158,7 @@ function pFamily() {
       <h3 class="grp">${t("pin.title")}</h3><p class="muted">${t("pin.help")}</p><div class="actions"><button class="btn ghost" data-act="setPin">${hasPin() ? t("pin.change") : t("pin.create")}</button></div>`)
     + (P ? fsec("plan", "⭐ " + t("premium.myPlan"), planSection()) : "")
     + fsec("account", "👤 " + t("family.account"), `<p class="muted">${esc(S.session?.user.email || "")}</p>${installBtn() || P ? `<div class="actions">${installBtn()}${P ? `<button class="btn ghost" data-act="renameFamily">${t("account.rename")}</button>` : ""}</div>` : ""}
+      ${fams.length < 2 ? `<div class="actions">${anotherBtn}</div>` : ""}
       <h3 class="grp">${t("backup.title")}</h3><p class="muted">${t("backup.help")}</p><div class="actions"><button class="btn ghost" data-act="exportData">${t("backup.btn")}</button></div>
       <div class="actions"><button class="btn danger ghost" data-act="logout">${t("btn.logout")}</button></div>
       ${S.version ? `<p class="muted small app-version">${t("account.version", { v: esc(S.version) })}</p>` : ""}`);

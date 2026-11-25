@@ -44,6 +44,38 @@ function guardFail(k) {
   store.set(k, g); return guardLeft(k);
 }
 const guardReset = k => store.del(k);
+/* ================= Code de l'enfant (EP-01, R03-11, ADR-53) =================
+   Suite de 3 images touchées parmi 9. Empreinte PBKDF2 calculée sur le téléphone du Parent (salée, 100 000 itérations), vérifiée sur l'appareil, aussi sans réseau.
+   Secret faible assumé (729 suites, DEC-17) : protège un enfant de ses frères et sœurs. 5 suites fausses de suite : 1 minute d'attente pour cet enfant (compteur gardé sur l'appareil). */
+const KID_IMGS = ["🐶", "🐱", "🐸", "🐢", "🍎", "🍌", "🍇", "🍓", "🐟"], KID_LEN = 3, KID_WAIT = 60;
+async function kidDerive(seq, salt) { return pinDerive(seq.join(""), salt); }
+async function kidVerifier(seq) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  return { salt: b64(salt), hash: b64(await kidDerive(seq, salt)), i: 100000 };
+}
+async function kidCheck(seq, v) {
+  if (!v || !v.salt || !v.hash) return false;
+  const h = await kidDerive(seq, unb64(v.salt)), e = unb64(v.hash);
+  return h.length === e.length && h.every((x, i) => x === e[i]);
+}
+const kidGuardKey = id => "kidGuard:" + id;
+const kidGuardLeft = id => { const g = store.get(kidGuardKey(id)); return g && g.until > Date.now() ? Math.ceil((g.until - Date.now()) / 1000) : 0; };   // secondes restantes, 0 = libre
+function kidGuardFail(id) {
+  const g = store.get(kidGuardKey(id), { f: 0, until: 0 }); g.f++;
+  if (g.f >= 5) { g.until = Date.now() + KID_WAIT * 1000; g.f = 0; }
+  store.set(kidGuardKey(id), g); return kidGuardLeft(id);
+}
+const kidGuardReset = id => store.del(kidGuardKey(id));
+// Efface tout ce que l'appareil garde d'un enfant (copies, files, compteurs) : sortie du mode enfant, appareil retiré
+const CHILD_KEYS = ["childToken", "childKids", "childCache", "queue", "childFromParent", "cpushOn", "lastEarned", "seenFlowers", "kidGuard"];
+function clearChildStore() {
+  try {
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith("sf:") && CHILD_KEYS.some(c => k === "sf:" + c || k.startsWith("sf:" + c + ":"))) localStorage.removeItem(k);
+    }
+  } catch {}
+}
 /* ================= Langues ================= */
 // Textes dans i18n/<langue>.json ; « ?lang=qps » active une pseudo-langue de contrôle (textes déformés : tout texte resté en clair est un oubli).
 const LANGS = ["fr", "ar", "en"];        // langues proposées (fichier i18n/<code>.json + ligne dans public.languages)
@@ -189,8 +221,9 @@ function daysLabel(days) {
 }
 function toast(msg, err = false) {
   const el = $("#toast"); el.textContent = msg; el.className = "show" + (err ? " err" : "");
-  clearTimeout(toast._t); toast._t = setTimeout(() => el.className = "", 2800);
+  clearTimeout(toast._t); toast._t = setTimeout(() => { el.className = ""; el.textContent = ""; }, 2800);   // texte effacé : pas de message périmé ni dans l'ancienne langue
 }
+function clearToast() { const el = $("#toast"); clearTimeout(toast._t); el.className = ""; el.textContent = ""; }
 const curLang = () => (I18N.lang === "qps" ? "fr" : I18N.lang);
 function errMsg(e) {
   const m = (e && (e.message || e.error_description || e.msg)) || String(e);
@@ -212,7 +245,7 @@ const isNetErr = e => /Failed to fetch|NetworkError|Load failed|fetch/i.test((e 
 const S = {
   screen: "loading", tab: "today", day: todayISO(), lastToday: todayISO(), authMode: "login",
   session: null, family: null, me: null, children: [], routines: [], rewards: [], completions: [], redemptions: [],
-  stats: {}, members: [], devices: [], currentChild: null, tip: null, offline: false,
+  stats: {}, members: [], devices: [], currentChild: null, viewAll: true, tip: null, offline: false,
   penalties: [], pevents: [], badges: {}, autoValidate: true, pauses: [], gardens: {}, oneoffTpl: [],
-  cs: null, ctab: "today", form: {}
+  cs: null, ctab: "today", form: {}, childNow: null, kidPick: null, kidSeq: []
 };

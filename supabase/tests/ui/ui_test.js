@@ -217,7 +217,7 @@ async function typeCode(p, c) { await p.fill("#pin-in", c); await p.click("#pin-
     vm.runInNewContext(swSrc, ctxv); let pr; L.push({ data: data, waitUntil: p => { pr = p; } }); await pr; return shown[0];
   };
   const dict = l => JSON.stringify(JSON.parse(fs.readFileSync(ROOT + "/i18n/" + l + ".json", "utf8")));
-  const C = "soisfier-v32-ep09h";
+  const C = "soisfier-v33-ep01b";
   const sw1 = await runSw({ "soisfier-lang": { "./sf-lang": "ar" }, [C]: { "./i18n/ar.json": dict("ar"), "./i18n/en.json": dict("en") } }, null);
   ok("10.15 notification sans texte, téléphone en arabe : texte de secours arabe", sw1[1] === JSON.parse(dict("ar")).push.fallback && /[؀-ۿ]/.test(sw1[1]), sw1.join(" | "));
   const sw2 = await runSw({ [C]: { "./i18n/en.json": dict("en") } }, null);
@@ -345,8 +345,8 @@ async function typeCode(p, c) { await p.fill("#pin-in", c); await p.click("#pin-
     S.screen = "parent"; S.offline = false; S.session = { user: { id: "u1", user_metadata: { display_name: "X" } } };
     const out = {}; introShown = false; maybeIntro();
     out.open1 = dlg.open; out.t1 = dlg.querySelector("h2").textContent; out.step1 = dlg.querySelector(".muted").textContent;
-    A.introNext(); out.t2 = dlg.querySelector("h2").textContent; A.introNext(); out.t3 = dlg.querySelector("h2").textContent; out.alt = dlg.querySelector(".intro-art svg").getAttribute("aria-label");
-    out.last = [...dlg.querySelectorAll("button")].map(b => b.dataset.act).join(","); A.introBack(); out.back = dlg.querySelector("h2").textContent === out.t2;
+    A.introNext(); out.t2 = dlg.querySelector("h2").textContent; A.introNext(); out.t3 = dlg.querySelector("h2").textContent; A.introNext(); out.t4 = dlg.querySelector("h2").textContent; out.alt = dlg.querySelector(".intro-art svg").getAttribute("aria-label");
+    out.last = [...dlg.querySelectorAll("button")].map(b => b.dataset.act).join(","); A.introBack(); out.back = dlg.querySelector("h2").textContent === out.t3;
     closeSheet(); await new Promise(r => setTimeout(r, 50));
     out.calls = JSON.stringify(calls); out.seen = introSeen();
     introShown = false; maybeIntro(); out.again = dlg.open;           // déjà vue : ne se rouvre pas
@@ -355,7 +355,7 @@ async function typeCode(p, c) { await p.fill("#pin-in", c); await p.click("#pin-
     out.link = dlg.open && calls.length === 0 && !/intro=1/.test(location.search); closeSheet();
     S.session.user.user_metadata = {}; S.offline = true; introShown = false; maybeIntro(); out.offline = dlg.open; S.offline = false;   // hors ligne : pas de présentation
     return out; });
-  ok("14.1 présentation : s'ouvre pour un compte qui ne l'a pas vue, trois écrans, Retour/Suivant/Fermer", it.open1 && it.t1 && it.t2 && it.t3 && it.t1 !== it.t2 && it.t2 !== it.t3 && it.back && /3/.test(it.step1) && it.last === "introBack,closeSheet", JSON.stringify(it));
+  ok("14.1 présentation : s'ouvre pour un compte qui ne l'a pas vue, quatre écrans, Retour/Commencer au dernier", it.open1 && it.t1 && it.t2 && it.t3 && it.t4 && new Set([it.t1, it.t2, it.t3, it.t4]).size === 4 && it.back && /4/.test(it.step1) && it.last === "introBack,introEnd", JSON.stringify(it));
   ok("14.2 image avec texte de remplacement", !!it.alt, it.alt);
   ok("14.3 « vue » enregistrée dans les métadonnées du compte (auth.updateUser) ; ne se rouvre pas ensuite", it.calls === JSON.stringify([{ data: { intro_seen: true } }]) && it.seen && !it.again && !it.seenNoShow, it.calls);
   ok("14.4 lien du guide ?intro=1 : s'ouvre, n'enregistre rien, retire le paramètre ; pas de présentation hors ligne", it.link && !it.offline, JSON.stringify([it.link, it.offline]));

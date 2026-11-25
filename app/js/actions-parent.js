@@ -112,38 +112,115 @@ A.seg = el => { S.form[el.dataset.group] = el.dataset.v; $$("button", el.parentE
 const syncDays = () => $$(".day", dlg).forEach(b => { const on = S.form.days.includes(+b.dataset.v); b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); });
 A.toggleDay = el => { const v = +el.dataset.v; S.form.days = S.form.days.includes(v) ? S.form.days.filter(d => d !== v) : [...S.form.days, v]; syncDays(); };
 A.daysPreset = el => { S.form.days = { all: [1, 2, 3, 4, 5, 6, 7], week: workDays(), we: weekendDays() }[el.dataset.v]; syncDays(); };
+// « Pour » (DEC-09) : à partir de deux enfants, hors vacances, la routine ou les modèles vont aux enfants cochés ; l'enfant affiché est coché d'office (au moins un reste coché)
+const forField = (firstId, id) => S.children.length < 2 || S.hctx ? "" : `<div class="f"><span id="${id}">${t("form.for")}</span><div class="chips wrap" role="group" aria-labelledby="${id}">${S.children.map(c =>
+  `<button type="button" class="chip for-chip ${c.id === firstId ? "on" : ""}" style="--c:${esc(c.color)};--cc:${esc(chipColor(c.color))}" aria-pressed="${c.id === firstId}" data-act="forToggle" data-id="${c.id}"><span aria-hidden="true">${esc(c.emoji)}</span> <bdi>${esc(c.name)}</bdi></button>`).join("")}</div></div>`;
+const forIds = () => { const on = $$(".for-chip.on", dlg).map(b => b.dataset.id); return on.length ? S.children.map(c => c.id).filter(i => on.includes(i)) : [S.currentChild]; };
+A.forToggle = el => {
+  if (el.classList.contains("on") && $$(".for-chip.on", dlg).length < 2) return;
+  const on = !el.classList.contains("on"); el.classList.toggle("on", on); el.setAttribute("aria-pressed", on);
+  if (dlg.onForChange) dlg.onForChange();
+};
+const REMIND_TIMES = (() => { const o = []; for (let h = 5; h < 24; h++) for (const m of [0, 15, 30, 45]) o.push(String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0")); return o; })();   // 05:00 à 23:45 (R11-10)
 A.saveRoutine = async el => {
   const title = $("#f-title").value.trim();
   if (!title) return toast(t("routine.needName"), true);
   if (!S.form.days.length) return toast(t("routine.needDay"), true);
   const row = { title, emoji: $("#f-emoji").value.trim() || "⭐", moment: S.form.moment, days: [...S.form.days].sort((a, b) => a - b),
     stars: +$("#f-stars").value, place: $("#f-place").value || null, timer_minutes: $("#f-timer").value ? +$("#f-timer").value : null, is_bonus: $("#f-bonus").checked };
-  const id = el.dataset.id;
-  const { error } = id ? await sb.from("routines").update(row).eq("id", id)
-    : await sb.from("routines").insert({ ...row, family_id: S.family.id, child_id: S.currentChild, holiday_period_id: S.hctx || null, position: S.routines.filter(r => r.child_id === S.currentChild).length });
+  const rem = $("#f-remind"); if (rem && !rem.disabled) row.remind_at = rem.value || null;   // gratuit : champ fermé, le serveur refuse aussi (SF:premium_reminder) ; l'heure déjà réglée est gardée
+  const id = el.dataset.id, ids = id ? [] : forIds();
+  let error;
+  if (id) ({ error } = await sb.from("routines").update(row).eq("id", id));
+  else ({ error } = await sb.from("routines").insert(ids.map(cid => ({ ...row, family_id: S.family.id, child_id: cid, holiday_period_id: S.hctx || null, position: S.routines.filter(r => r.child_id === cid).length }))));   // une seule écriture pour tous les enfants cochés (ADR-56)
   if (error) throw error;
-  await afterHolidayEdit(id ? t("routine.saved") : t("routine.added"), !!(S.hctx || (id && isHolidayR(S.routines.find(r => r.id === id) || {}))));
+  await afterHolidayEdit(id ? t("routine.saved") : ids.length > 1 ? t("routine.addedN", { n: ids.length }) : t("routine.added"), !!(S.hctx || (id && isHolidayR(S.routines.find(r => r.id === id) || {}))));
 };
 A.delRoutine = async el => {
   if (!await confirmSheet(t("routine.delTitle"), t("routine.delText"), t("btn.delete"), true)) return;
   const { error } = await sb.from("routines").update({ active: false }).eq("id", el.dataset.id); if (error) throw error;
   await reloadParent(t("routine.deletedToast"), ["r"]);
 };
+// Modèles déjà présents pour un enfant (routines habituelles et exceptionnelles ; vacances : celles de la période ouverte) : par la clé du modèle, quelle que soit la langue de l'ajout ;
+// à défaut de clé (routine écrite à la main, ajoutée par la v32), par le titre dans la langue du moment (ADR-58, A2)
+const haveSet = (list, f) => ({ k: new Set(list.filter(f).map(r => r.template_key).filter(Boolean)), t: new Set(list.filter(f).filter(r => !r.template_key).map(r => r.title.toLowerCase())) });
+const haveTitles = cid => haveSet(S.routines, r => r.child_id === cid && (!isHolidayR(r) || r.holiday_period_id === S.hctx));
+const haveRewards = () => haveSet(S.rewards, () => true);   // récompense : même famille
+const hasTpl = (h, x) => h.k.has(x.k) || h.t.has(x.t.toLowerCase());
+// Écrit des lignes qui portent `template_key` ; tant que la colonne n'existe pas en base (migration ep01d pas encore appliquée), la clé est laissée de côté
+async function insertKeyed(table, rows, wantRows) {
+  const go = rs => wantRows ? sb.from(table).insert(rs).select() : sb.from(table).insert(rs);
+  const r = await go(rows);
+  if (r.error && /template_key/.test(r.error.message || "")) return go(rows.map(({ template_key, ...x }) => x));
+  return r;
+}
+function tplList(ids, checked) {
+  const have = {}; ids.forEach(i => { have[i] = haveTitles(i); });
+  return TPL_CATS.map(k => {
+    const list = TPL_R.map((x, i) => ({ ...x, i })).filter(x => x.c === k);
+    return `<h3 class="grp">${t("tpl.cat." + k)}</h3><ul class="tpl">${list.map(x => {
+      const by = ids.filter(i => hasTpl(have[i], x)), all = by.length === ids.length, part = !all && by.length > 0;
+      const note = all ? t("sep") + t("common.alreadyAdded") : part ? t("sep") + t("quick.hadFor", { names: by.map(i => `<bdi>${esc(S.children.find(c => c.id === i).name)}</bdi>`).join(t("sep")) }) : "";
+      return `<li><label class="${all ? "had" : ""}"><input type="checkbox" value="${x.i}" ${all ? "disabled" : ""} ${!all && checked.has(x.i) ? "checked" : ""}><span>${x.e} ${esc(x.t)}${x.b ? " " + t("routine.bonusTag") : ""}${t("sep")}${momentLabel(x.m)}${x.d ? t("sep") + lower(t("days.week")) : ""}${note}</span></label></li>`; }).join("")}</ul>`;
+  }).join("");
+}
 A.routineTemplates = () => {
-  const c = curChild(); const have = new Set(S.routines.filter(r => r.child_id === c.id && (!isHolidayR(r) || r.holiday_period_id === S.hctx)).map(r => r.title.toLowerCase()));
-  openSheet(`<h2>${S.hctx ? "🏖️ " : ""}${t("routine.tplFor", { name: esc(c.name) })}</h2>${S.hctx ? `<p class="muted">${t("hol.tplHelp")}</p>` : ""}${MOMENTS().map(([k, l, , e]) => {
-    const list = TPL_R.map((x, i) => ({ ...x, i })).filter(x => x.m === k); if (!list.length) return "";
-    return `<h3 class="grp">${e} ${l}</h3><ul class="tpl">${list.map(x => { const had = have.has(x.t.toLowerCase()); return `<li><label class="${had ? "had" : ""}"><input type="checkbox" value="${x.i}" ${had ? "disabled" : ""}><span>${x.e} ${esc(x.t)}${x.b ? " " + t("routine.bonusTag") : ""}${x.d ? t("sep") + lower(t("days.week")) : ""}${had ? t("sep") + t("common.alreadyAdded") : ""}</span></label></li>`; }).join("")}</ul>`;
-  }).join("")}<div class="sheet-actions"><button class="btn" data-act="addRoutineTpl">${t("common.addSelection")}</button></div>`);
+  const c = curChild();
+  openSheet(`<h2>${S.hctx ? "🏖️ " : ""}${t("routine.tplFor", { name: esc(c.name) })}</h2>${S.hctx ? `<p class="muted">${t("hol.tplHelp")}</p>` : `<p><button class="btn ghost sm" data-act="quickStart" data-id="${c.id}">⚡ ${t("quick.open")}</button></p>`}${forField(c.id, "for-l")}
+    <div id="tpl-list">${tplList([c.id], new Set())}</div><div class="sheet-actions"><button class="btn" data-act="addRoutineTpl">${t("common.addSelection")}</button></div>`);
+  dlg.onForChange = () => { const keep = new Set($$("#tpl-list input:checked", dlg).map(i => +i.value)); $("#tpl-list").innerHTML = tplList(forIds(), keep); };
 };
 A.addRoutineTpl = async () => {
-  const picks = $$(".tpl input:checked", dlg).map(i => TPL_R[+i.value]);
+  const picks = $$(".tpl input:checked:not(:disabled)", dlg).map(i => TPL_R[+i.value]);
   if (!picks.length) return toast(t("routine.needOne"), true);
-  const base = S.routines.filter(r => r.child_id === S.currentChild).length;
-  const rows = picks.map((x, i) => ({ family_id: S.family.id, child_id: S.currentChild, title: x.t, emoji: x.e, moment: x.m, place: x.p != null ? PLACES()[x.p] : null,
-    stars: x.s || 1, days: tplDays(x.d), is_bonus: !!x.b, timer_minutes: x.tm || null, position: base + i, holiday_period_id: S.hctx || null }));
-  const { error } = await sb.from("routines").insert(rows); if (error) throw error;
+  const ids = forIds(), rows = [];
+  for (const cid of ids) {   // un modèle déjà présent pour un enfant n'est créé que pour les autres (F04-02 CA10) ; une seule écriture pour tous (ADR-56)
+    const have = haveTitles(cid); let n = S.routines.filter(r => r.child_id === cid).length;
+    picks.filter(x => !hasTpl(have, x)).forEach(x => rows.push(tplRow(x, cid, n++)));
+  }
+  const { error } = await insertKeyed("routines", rows); if (error) throw error;
   await afterHolidayEdit(t("routine.addedN", { n: rows.length }), !!S.hctx);
+};
+// Ligne de routine d'un modèle : ni catégorie ni tranche d'âge enregistrées (DEC-03, DEC-08)
+const tplRow = (x, cid, position) => ({ family_id: S.family.id, child_id: cid, title: x.t, emoji: x.e, moment: x.m, place: x.p != null ? PLACES()[x.p] : null,
+  stars: x.s || 1, days: tplDays(x.d), is_bonus: !!x.b, timer_minutes: x.tm || null, position, holiday_period_id: S.hctx || null, template_key: x.k });
+
+// Démarrage rapide par âge (F04-10, R04-12, ADR-56) : la tranche sert à choisir l'ensemble et n'est jamais enregistrée
+A.quickStart = el => {
+  const c = S.children.find(k => k.id === (el && el.dataset.id)) || curChild(); if (!c) return;
+  openSheet(`<h2>${t("quick.title", { name: `<bdi>${esc(c.name)}</bdi>` })}</h2><p class="muted">${t("quick.help")}</p>
+    <div class="ages">${STARTERS.map((st, i) => `<button class="btn" data-act="quickAge" data-id="${c.id}" data-i="${i}">${t("quick.age." + i)}</button>`).join("")}<button class="btn ghost" data-act="quickSelf" data-id="${c.id}">${t("quick.self")}</button></div>`);
+};
+A.quickSelf = el => { S.currentChild = el.dataset.id; A.routineTemplates(); };
+A.quickAge = el => {
+  const c = S.children.find(k => k.id === el.dataset.id), st = STARTERS[+el.dataset.i], haveR = haveTitles(c.id), haveW = haveRewards();
+  const rs = st.r.map(k => TPL_R.findIndex(x => x.k === k)), ws = st.w.map(k => TPL_W.findIndex(x => x.k === k));
+  const line = (x, had, extra) => `<li><label class="${had ? "had" : ""}"><input type="checkbox" class="${extra.cls}" value="${extra.i}" ${had ? "disabled" : "checked"}><span>${x.e} ${esc(x.t)}${t("sep")}${extra.note}${had ? t("sep") + t("common.alreadyAdded") : ""}</span></label></li>`;
+  openSheet(`<h2>${t("quick.setTitle", { name: `<bdi>${esc(c.name)}</bdi>`, age: t("quick.age." + el.dataset.i) })}</h2>
+    <h3 class="grp">${t("quick.routines")}</h3><ul class="tpl">${rs.map(i => line(TPL_R[i], hasTpl(haveR, TPL_R[i]), { cls: "qr", i, note: momentLabel(TPL_R[i].m) })).join("")}</ul>
+    <h3 class="grp">${t("quick.rewards")}</h3><ul class="tpl">${ws.map(i => line(TPL_W[i], hasTpl(haveW, TPL_W[i]), { cls: "qw", i, note: t(`tier.${TPL_W[i].tier}.name`) })).join("")}</ul>
+    <div class="sheet-actions"><button class="btn ghost" data-act="quickStart" data-id="${c.id}">${t("intro.back")}</button><button class="btn" data-act="quickAdd" data-id="${c.id}">${t("btn.add")}</button></div>`);
+};
+A.quickAdd = async el => {
+  const c = S.children.find(k => k.id === el.dataset.id);
+  const rs = $$(".qr:checked:not(:disabled)", dlg).map(i => TPL_R[+i.value]), ws = $$(".qw:checked:not(:disabled)", dlg).map(i => +i.value);
+  if (!rs.length) return toast(t("routine.needOne"), true);
+  el.disabled = true;
+  try {
+    const base = S.routines.filter(r => r.child_id === c.id).length;
+    const { data, error } = await insertKeyed("routines", rs.map((x, i) => ({ ...tplRow(x, c.id, base + i), holiday_period_id: null })), true); if (error) throw error;   // routines d'abord, en une écriture
+    S.routinesAll = [...(S.routinesAll || []), ...data]; S.routines = [...S.routines, ...data];   // le rythme des prix tient compte des routines ajoutées
+    let nW = 0, failed = false;
+    if (ws.length) {
+      try {
+        const wrows = tplRewardRows(ws);
+        if (wrows.length) { const r2 = await insertKeyed("rewards", wrows); if (r2.error) throw r2.error; await markPriced(S.children.map(k => k.id)); nW = wrows.length; }
+        else failed = true;
+      } catch (e) { console.error(e); failed = true; }
+    }
+    closeSheet(); await reloadParent(null, ["r", "w", "c"]);
+    toast(failed ? t("quick.rewardsFailed", { n: rs.length }) : nW ? t("quick.addedBoth", { r: t("quick.nRoutines", { n: rs.length }), w: t("quick.nRewards", { n: nW }) }) : t("routine.addedN", { n: rs.length }), failed);
+  } catch (e) { el.disabled = false; throw e; }
 };
 
 // Récompenses
@@ -197,11 +274,11 @@ function tplPrices(checked) {
 }
 const tplPriceText = (res, c) => t("reward.tplPrice", { n: res ? (res.costs[c.id] ?? res.common) : 0, name: esc(c.name) });
 A.rewardTemplates = () => {
-  const have = new Set(S.rewards.map(w => w.title.toLowerCase())), c = curChild(), ids = S.children.map(k => k.id);
+  const have = haveRewards(), c = curChild(), ids = S.children.map(k => k.id);
   if (!ids.some(hasRhythm)) return noRhythmSheet([c.id]);   // DEC-47 : message à la place de la liste
   const pr = tplPrices(new Set());
   openSheet(`<h2>${t("reward.tplTitle")}</h2><p class="muted">${hasRhythm(c.id) ? t("reward.tplHelp", { name: esc(c.name), n: fmtNum(Math.round(rhythmOf(c.id) * 10) / 10) }) : t("reward.tplHelpNoRhythm", { name: esc(c.name) })}</p>
-    ${TIERS().filter(([k]) => k !== "event").map(([k, l, d]) => `<h3 class="tier-h">${l}<small>${d}</small></h3><ul class="tpl">${TPL_W.map((x, i) => ({ ...x, i })).filter(x => x.tier === k).map(x => { const had = have.has(x.t.toLowerCase()); return `<li><label class="${had ? "had" : ""}"><input type="checkbox" value="${x.i}" ${had ? "disabled" : ""}><span>${x.e} ${esc(x.t)} <span class="tp" data-i="${x.i}">${tplPriceText(pr[x.i], c)}</span>${had ? t("sep") + t("common.alreadyAdded") : ""}</span></label></li>`; }).join("")}</ul>`).join("")}
+    ${TIERS().filter(([k]) => k !== "event").map(([k, l, d]) => `<h3 class="tier-h">${l}<small>${d}</small></h3><ul class="tpl">${TPL_W.map((x, i) => ({ ...x, i })).filter(x => x.tier === k).map(x => { const had = hasTpl(have, x); return `<li><label class="${had ? "had" : ""}"><input type="checkbox" value="${x.i}" ${had ? "disabled" : ""}><span>${x.e} ${esc(x.t)} <span class="tp" data-i="${x.i}">${tplPriceText(pr[x.i], c)}</span>${had ? t("sep") + t("common.alreadyAdded") : ""}</span></label></li>`; }).join("")}</ul>`).join("")}
     <h3 class="tier-h">${t("tier.event.name")}<small>${t("tier.event.hint")}</small></h3><p class="muted">${t("reward.eventHelp")}</p>
     <div class="sheet-actions"><button class="btn ghost" data-act="newEvent">${t("reward.createEvent")}</button><button class="btn" data-act="addRewardTpl">${t("common.addSelection")}</button></div>`);
   // F06-02 CA9 : à chaque case cochée ou décochée, les prix affichés sont recalculés
@@ -209,15 +286,19 @@ A.rewardTemplates = () => {
     $$(".tp", dlg).forEach(el => { el.textContent = tplPriceText(p2[+el.dataset.i], c); }); };
 };
 A.newEvent = () => rewardForm(null, { tier: "event", emoji: "🎪", title: t("reward.eventDefault"), duration_days: 30 });
+// Lignes de récompenses du référentiel (indices de `TPL_W`) avec leurs prix calculés ; les prix enregistrés sont ceux qui étaient affichés (F06-02 CA9)
+function tplRewardRows(chk) {
+  const pr = tplPrices(new Set(chk));
+  return chk.map(i => ({ x: TPL_W[i], res: pr[i] })).filter(o => o.res).sort((a, b) => TIER_RANK[a.x.tier] - TIER_RANK[b.x.tier] || a.x.d - b.x.d)
+    .map(({ x, res }) => ({ family_id: S.family.id, title: x.t, emoji: x.e, tier: x.tier, duration_days: x.d, costs: res.costs, cost: res.common, template_key: x.k }));
+}
 A.addRewardTpl = async () => {
   const chk = $$(".tpl input:checked", dlg).map(i => +i.value);
   if (!chk.length) return toast(t("reward.needOne"), true);
   const ids = S.children.map(k => k.id);
   if (!ids.some(hasRhythm)) return noRhythmSheet(ids);
-  const pr = tplPrices(new Set(chk));   // les prix enregistrés sont ceux qui étaient affichés
-  const rows = chk.map(i => TPL_W[i]).map((x, k) => ({ x, res: pr[chk[k]] })).sort((a, b) => TIER_RANK[a.x.tier] - TIER_RANK[b.x.tier] || a.x.d - b.x.d)
-    .map(({ x, res }) => ({ family_id: S.family.id, title: x.t, emoji: x.e, tier: x.tier, duration_days: x.d, costs: res.costs, cost: res.common }));
-  const { error } = await sb.from("rewards").insert(rows); if (error) throw error;
+  const rows = tplRewardRows(chk);
+  const { error } = await insertKeyed("rewards", rows); if (error) throw error;
   await markPriced(ids); closeSheet(); await reloadParent(t("reward.addedN", { n: rows.length }), ["w", "c"]);
 };
 A.pRedeem = async el => {
@@ -252,7 +333,7 @@ A.saveChild = async el => {
   S.currentChild = res.data.id; closeSheet();
   if (!id) S.tab = "routines";
   render(); toast(id ? t("common.savedM") : t("child.joined", { name }));
-  if (!id) A.routineTemplates();
+  if (!id) A.quickStart({ dataset: { id: res.data.id } });   // F04-10 CA1 : le démarrage rapide s'ouvre après l'ajout d'un enfant
   refreshParts(["c", "w"]).then(render).catch(() => {});
 };
 A.delChild = async el => {
@@ -261,40 +342,59 @@ A.delChild = async el => {
   await mutate(() => sb.from("children").delete().eq("id", c.id));
   const other = x => x.child_id !== c.id;
   S.children = S.children.filter(k => k.id !== c.id);
-  ["routines", "completions", "redemptions", "pevents", "devices", "pauses", "holidays", "hp", "ho"].forEach(k => { if (Array.isArray(S[k])) S[k] = S[k].filter(other); });
+  ["routines", "completions", "redemptions", "pevents", "pauses", "holidays", "hp", "ho"].forEach(k => { if (Array.isArray(S[k])) S[k] = S[k].filter(other); });
+  S.devices = (S.devices || []).map(d => ({ ...d, child_ids: (d.child_ids || [d.child_id]).filter(x => x !== c.id) })).filter(d => d.child_ids.length);   // l'appareil reste pour les enfants qui restent (F03-09 CA9)
   if (S.currentChild === c.id) S.currentChild = S.children[0]?.id || null;
   saveParentCache(); render(); toast(t("common.deletedM"));
   refreshParts(["c", "w", "d"]).then(render).catch(() => {});
 };
 A.deviceCode = async el => {
   const c = S.children.find(k => k.id === el.dataset.id);
-  const { data, error } = await sb.rpc("create_child_code", { p_child: c.id }); if (error) throw error;
-  openSheet(`<h2>${t("device.phoneOf", { name: esc(c.name) })}</h2><div class="code" aria-label="${t("device.codeAria", { code: data.split("").join(" ") })}">${esc(data)}</div>
+  let ids = [c.id];
+  if (S.children.length >= 2) {   // appareil commun (F03-09) : un ou plusieurs enfants ; chaque enfant d'un appareil commun a son code d'enfant (R03-11)
+    ids = await kidsSheet(c.id, t("device.pickTitle"), t("device.pickHelp"), t("device.getCode")); if (!ids) return;
+    if (ids.length > 1 && !await ensureKidCodes(ids)) return;
+  }
+  const { data, error } = await sb.rpc("create_child_code", { p_child: ids[0], p_children: ids }); if (error) throw error;
+  const who = ids.length > 1 ? ids.map(i => `<bdi>${esc(S.children.find(k => k.id === i)?.name || "")}</bdi>`).join(t("sep")) : `<bdi>${esc(c.name)}</bdi>`;
+  openSheet(`<h2>${ids.length > 1 ? t("device.sharedOf", { names: who }) : t("device.phoneOf", { name: esc(c.name) })}</h2><div class="code" aria-label="${t("device.codeAria", { code: data.split("").join(" ") })}">${esc(data)}</div>
     <p>${t("device.help")}</p>
     <div class="sheet-actions"><button class="btn" data-act="closeSheetReload">${t("btn.done")}</button></div>`);
 };
 A.closeSheetReload = async () => { closeSheet(); await reloadParent(null, ["d"]); };   // l'appareil relié apparaît
 A.revokeDevice = async el => {
   const id = el.dataset.id;
-  if (!await confirmSheet(t("device.revokeTitle"), t("device.revokeText") + " " + t("device.revokeLost"), t("family.disconnect"), true)) return;
+  const dv = (S.devices || []).find(d => d.id === id), many = (dv?.child_ids || []).length > 1;   // appareil commun : la confirmation le dit (F03-09 CA8)
+  const names = many ? dv.child_ids.map(i => S.children.find(k => k.id === i)?.name).filter(Boolean).join(t("sep")) : "";
+  if (!await confirmSheet(t("device.revokeTitle"), (many ? t("device.revokeShared", { names }) + " " : "") + t("device.revokeText") + " " + t("device.revokeLost"), t("family.disconnect"), true)) return;
   await mutate(() => sb.from("child_devices").delete().eq("id", id));
   S.devices = S.devices.filter(d => d.id !== id); saveParentCache(); render(); toast(t("device.revoked"));
   refreshParts(["d"]).then(render).catch(() => {});
 };
 A.childHere = async el => {
   if (!await ensurePin()) return;
-  const cid = el.dataset.id, map = store.get("sameDevice", {});
-  let tok = map[cid];
-  if (tok) {   // déjà connecté sur ce téléphone : on réutilise le même appareil
-    const chk = await sb.rpc("child_state", { p_token: tok });
-    if (chk.error) { if (/Appareil non reconnu|SF:device_unknown|SF:device_expired/.test(chk.error.message || "")) tok = null; else throw chk.error; }
+  const cid = el.dataset.id; let ids = [cid];
+  if (S.children.length >= 2) {   // F03-06 CA8 : un ou plusieurs enfants ; plusieurs ouvrent « Qui es-tu ? » (R03-10)
+    ids = await kidsSheet(cid, t("device.hereTitle"), t("device.hereHelp"), t("btn.validate")); if (!ids) return;
+    if (ids.length > 1 && !await ensureKidCodes(ids)) return;
   }
-  if (!tok) {   // EP-09 (DT03-05) : appareil créé sans code enfant, le code en attente de l'enfant reste valable
-    const r = await sb.rpc("child_pair_here", { p_child: cid, p_label: t("device.sameLabel", { who: memberLabel(S.session.user.id) }) }); if (r.error) throw r.error;
-    tok = r.data.token; map[cid] = tok; store.set("sameDevice", map);
+  // La ligne de ce téléphone est réutilisée si le serveur la reconnaît (R03-08) ; ses enfants sont mis à jour. Adresse d'envoi des rappels de l'adulte : notée sur la ligne (ADR-57, R11-10).
+  // Un jeton gardé peut être périmé (ligne déconnectée depuis) : on prend le premier que le serveur reconnaît, pas le premier de la liste (A1)
+  const map = store.get("sameDevice", {}); let old = null;
+  for (const i of ids) {
+    const cand = map[i]; if (!cand || cand === old) continue;
+    const chk = await sb.rpc("child_state", { p_token: cand, p_child: i });
+    if (!chk.error) { old = cand; break; }
+    if (!/Appareil non reconnu|SF:device_unknown|SF:device_expired/.test(chk.error.message || "")) throw chk.error;
   }
-  store.set("childToken", tok); store.set("childFromParent", true); store.del("queue"); store.del("lastEarned"); store.del("seenFlowers");
-  S.screen = "child"; S.ctab = "today"; S.cs = null; render(); await loadChild();
+  const r = await sb.rpc("child_pair_here", { p_child: ids[0], p_label: t("device.sameLabel", { who: memberLabel(S.session.user.id) }), p_children: ids, p_token: old, p_endpoint: await curEndpoint() }); if (r.error) throw r.error;
+  const tok = r.data.token;
+  Object.keys(map).forEach(k => { if (map[k] === old || map[k] === tok) delete map[k]; });
+  ids.forEach(i => { map[i] = tok; }); store.set("sameDevice", map);
+  clearChildStore(); store.set("childToken", tok); store.set("childFromParent", true);
+  S.childNow = null; S.kidPick = null; S.kidSeq = [];
+  if (ids.length > 1) await loadKids(tok, ids[0]);   // liste des enfants reliés, pour « Qui es-tu ? »
+  S.screen = "child"; S.ctab = "today"; S.cs = null; render(); if (!kidsList()) await loadChild(null);
 };
 // « Code oublié ? » : le mot de passe du compte connecté sur ce téléphone remplace le code (DEC-28). Compteur propre, vérifié avant tout envoi (DEC-55).
 async function forgotPin(sess) {
@@ -344,7 +444,7 @@ A.exitChild = async () => {
   }
   // EP-09 (DT03-02, ADR-49) : sur le téléphone propre de l'enfant, la sortie retire l'appareil chez le parent (hors ligne : file locale, sinon purge de 3 mois)
   if (!store.get("childFromParent")) await unpairDevice(store.get("childToken"));
-  ["childToken", "childCache", "queue", "childFromParent", "cpushOn", "lastEarned", "seenFlowers"].forEach(k => store.del(k));
+  clearChildStore(); S.childNow = null; S.kidPick = null; S.kidSeq = [];
   S.cs = null;
   const { data } = await sb.auth.getSession();
   if (data.session) { S.session = data.session; S.tab = "family"; await enterParent(); if (S.askPin) { S.askPin = false; A.setPin(); } } else { S.screen = "auth"; render(); }
